@@ -288,6 +288,25 @@
         border-color: black;
         border-style: solid;
       }
+      
+      #snackbar {
+        visibility: hidden;
+        min-width: 250px;
+        margin-left: -125px;
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        border-radius: 2px;
+        padding: 16px;
+        position: fixed;
+        z-index: 1;
+        left: 50%;
+        bottom: 30px;
+      }
+  
+      #snackbar.show {
+        visibility: visible;
+    }
     </style>
     <link
       href="static/toastr.min.css"
@@ -392,6 +411,50 @@
             }
         }
         getQuota()
+    </script>
+    <div id="snackbar">Una nueva versión de TeleSec está disponible, <a id="reload">Pulsa aqui para actualizar.</a></div>
+    <script id="pwa">
+      let newWorker;
+
+      function showUpdateBar() {
+        let snackbar = document.getElementById('snackbar');
+        snackbar.className = 'show';
+      }
+    
+      // The click event on the pop up notification
+      document.getElementById('reload').addEventListener('click', function(){
+        newWorker.postMessage({ action: 'skipWaiting' });
+      });
+    
+      if ('serviceWorker' in navigator) {
+    
+        navigator.serviceWorker.register('/sw.js').then(reg => {
+          reg.addEventListener('updatefound', () => {
+            // A wild service worker has appeared in reg.installing!
+            newWorker = reg.installing;
+    
+            newWorker.addEventListener('statechange', () => {
+              // Has network.state changed?
+              switch (newWorker.state) {
+                case 'installed':
+                  if (navigator.serviceWorker.controller) {
+                    // new update available
+                    showUpdateBar();
+                  }
+                  // No update available
+                  break;
+              }
+            });
+          });
+        });
+    
+        let refreshing;
+        navigator.serviceWorker.addEventListener('controllerchange', function () {
+          if (refreshing) return;
+          window.location.reload();
+          refreshing = true;
+        });
+      }
     </script>
     <script>
       var EVENTLISTENER = null;
