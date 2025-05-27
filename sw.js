@@ -8,7 +8,6 @@ self.addEventListener('install', event => {
         "icon512_rounded.png",
         "index.html",
         "manifest.json",
-        "redirect.html",
         "static/axe.js",
         "static/gun.js",
         "static/jquery.js",
