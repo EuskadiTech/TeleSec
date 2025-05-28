@@ -74,7 +74,7 @@
       }
 
       main {
-        margin-bottom: 115px;
+        margin-bottom: 25rem;
       }
 
       button,
@@ -951,7 +951,8 @@
             key: "Leche",
             className: "btn3",
             img: [
-              "static/ico/milk.png",
+              "static/ico/cow.png",
+              "static/ico/add.png",
             ],
           },
           {
@@ -1949,6 +1950,7 @@
             var btn_borrar = safeuuid();
             container.innerHTML = `
                 <h1>Comanda <code id="${nameh1}"></code></h1>
+                <button onclick="setUrlHash("supercafe");">Salir</button>
                 <fieldset style="text-align: center;">
                     <legend>Rellenar comanda</legend>
                     <label style="display: none;">
