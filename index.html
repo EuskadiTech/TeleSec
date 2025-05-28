@@ -331,7 +331,7 @@
       <i>Todos los datos están encriptados.</i>
     </details>
     <main>
-      <header class="no_print">
+      <header class="no_print" id="header_hide_query">
         <details id="LinkAccount_details" open>
           <summary>
             <b
@@ -466,6 +466,9 @@
       var EVENTLISTENER = null;
       var EVENTLISTENER2 = null;
       var urlParams = new URLSearchParams(location.search);
+      if (urlParams.get("hidenav") == "yes") {
+        document.getElementById("header_hide_query").style.display = "none";
+      }
       var GROUPID = "";
       // const PUBLIC_KEY = "~cppGiuA4UFUPGTDoC-4r2izVC3F7MfpaCmF3iZdESN4.vntmjgbAVUpF_zfinYY6EKVFuuTYxh5xOrL4KmtdTmc"
       var TABLE = GROUPID + ":telesec.tech.eus";
