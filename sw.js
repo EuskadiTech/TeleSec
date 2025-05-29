@@ -1,4 +1,4 @@
-var cacheName = 'telesec_2025-05-28_2';
+var cacheName = 'telesec_2025-05-29_1';
 
 self.addEventListener('install', event => {
   event.waitUntil(
@@ -9,6 +9,7 @@ self.addEventListener('install', event => {
         "index.html",
         "manifest.json",
         "static/axe.js",
+        "static/doublescroll.js",
         "static/gun.js",
         "static/jquery.js",
         "static/load.js",
