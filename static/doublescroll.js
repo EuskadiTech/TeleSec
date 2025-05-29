@@ -104,7 +104,7 @@
 			
 			// set the width of the wrappers
 			$(options.topScrollBarInnerSelector, $topScrollBar).width($contentElement.outerWidth());
-			$topScrollBar.width($self.width());
+			$topScrollBar.width("100%");
 			$topScrollBar.scrollLeft($self.scrollLeft());
 			
 		}

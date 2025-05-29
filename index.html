@@ -374,6 +374,7 @@
         </button>
       </details>
     </footer> -->
+    <img id="connectStatus" style="bottom: 15px; right: 15px; position: fixed;">
   </main>
   <script src="static/showdown.min.js"></script>
   <script src="static/jquery.js"></script>
@@ -527,6 +528,12 @@
       });
       peerListEl.innerHTML = list.innerHTML;
       peerCountEl.innerText = peerCount;
+      if (peerCount < 2){
+        document.getElementById("connectStatus").src = "static/connect_ko.svg"
+      } else {
+        document.getElementById("connectStatus").src = "static/connect_ok.svg"
+        
+      }
     }
     getPeers();
     setInterval(() => {
