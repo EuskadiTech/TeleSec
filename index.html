@@ -1464,7 +1464,7 @@
           container.innerHTML = `
                 <h1>Materiales</h1>
                 <button id="${btn_new}">Nuevo Material</button>
-                <table id="scrolltable">
+                <div id="scrolltable"><table>
                     <thead>
                         <tr>
                             <th>Referencia</th>
@@ -1476,7 +1476,7 @@
                     </thead>
                     <tbody id="${tablebody}">
                     </tbody>
-                </table>
+                </table></div>
                 `;
           tableScroll("#scrolltable")
           var tablebody_EL = document.getElementById(tablebody);
@@ -1831,7 +1831,7 @@
           container.innerHTML = `
                 <h1>Personas</h1>
                 <button id="${btn_new}">Nueva Persona</button>
-                <table id="scrolltable">
+                <div id="scrolltable"><table>
                     <thead>
                         <tr>
                             <th>Nombre</th>
@@ -1842,7 +1842,7 @@
                     </thead>
                     <tbody id="${tablebody}">
                     </tbody>
-                </table>
+                </table></div>
                 `;
           tableScroll("#scrolltable") // id="scrolltable"
           var tablebody_EL = document.getElementById(tablebody);
@@ -2074,7 +2074,7 @@
           container.innerHTML = `
                 <h1>SuperCafé</h1>
                 <button id="${btn_new}">Nueva comanda</button>
-                <table id="scrolltable">
+                <div id="scrolltable"><table>
                     <thead>
                         <tr>
                           <th>Zona</th>
@@ -2086,7 +2086,7 @@
                     </thead>
                     <tbody id="${tablebody}">
                     </tbody>
-                </table>
+                </table></div>
                 `;
 
           tableScroll("#scrolltable") // id="scrolltable"
@@ -2451,7 +2451,7 @@
           container.innerHTML = `
                 <h1>Notificaciones</h1>
                 <button id="${btn_new}">Nueva notificación</button>
-                <table id="scrolltable">
+                <div id="scrolltable"><table>
                     <thead>
                         <tr>
                             <th>Fecha</th>
@@ -2462,7 +2462,7 @@
                     </thead>
                     <tbody id="${tablebody}">
                     </tbody>
-                </table>
+                </table></div>
                 `;
           tableScroll("#scrolltable") // id="scrolltable"
           var tablebody_EL = document.getElementById(tablebody);
