@@ -1,4 +1,4 @@
-var cacheName = 'telesec_2025-05-29_5';
+var cacheName = 'telesec_2025-05-29_6';
 
 self.addEventListener('install', event => {
   event.waitUntil(

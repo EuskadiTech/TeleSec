@@ -32,7 +32,7 @@
 			},
 			onlyIfScroll: false, // top scrollbar is not shown if the bottom one is not present
 			resetOnWindowResize: false, // recompute the top ScrollBar requirements when the window is resized
-			timeToWaitForResize: 30 // wait for the last update event (usefull when browser fire resize event constantly during ressing)
+			timeToWaitForResize: 3 // wait for the last update event (usefull when browser fire resize event constantly during ressing)
 		};
 	
 		$.extend(true, options, userOptions);
