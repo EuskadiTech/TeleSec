@@ -530,6 +530,7 @@
       peerCountEl.innerText = peerCount;
       if (peerCount < 2){
         document.getElementById("connectStatus").src = "static/ico/connect_ko.svg"
+        gun.opt({peers: RELAYS});
       } else {
         document.getElementById("connectStatus").src = "static/ico/connect_ok.svg"
         
@@ -538,7 +539,7 @@
     getPeers();
     setInterval(() => {
       getPeers();
-    }, 1000);
+    }, 5000);
     function safeuuid(prefix = "AXLUID_") {
       return prefix + crypto.randomUUID().split("-")[4];
     }
@@ -686,10 +687,10 @@
       });
       setTimeout(() => {
         ref.put(data);
-      }, 500);
+      }, 250);
       setTimeout(() => {
         ref.put(data);
-      }, 1500);
+      }, 500);
     }
     setInterval(() => {
       betterGunPut(
