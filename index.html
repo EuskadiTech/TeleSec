@@ -376,6 +376,7 @@
     </footer> -->
     <img id="connectStatus" style="bottom: 15px; right: 15px; position: fixed; width: 50px;">
   </main>
+  <img id="actionStatus" src="static/ico/statusok.png" style="z-index: 2048;margin: 0px;position: fixed;top: 50%;left: 50%;transform: translate(-50%, -50%);width: 200px;height: 200px;display: none;">
   <script src="static/showdown.min.js"></script>
   <script src="static/jquery.js"></script>
   <script src="static/gun.js"></script>
@@ -1444,12 +1445,14 @@
               Notas: document.getElementById(field_notas).value,
             };
             var enc = SEA.encrypt(data, SECRET, (encrypted) => {
+              document.getElementById("actionStatus").style.display = "block"
               betterGunPut(
                 gun.get(TABLE).get("materiales").get(mid),
                 encrypted
               );
               toastr.success("Guardado!");
               setTimeout(() => {
+                document.getElementById("actionStatus").style.display = "none"
                 setUrlHash("materiales");
               }, 1500);
             });
@@ -1811,12 +1814,14 @@
               markdown: document.getElementById(field_notas).value,
             };
             var enc = SEA.encrypt(data, SECRET, (encrypted) => {
+              document.getElementById("actionStatus").style.display = "block"
               betterGunPut(
                 gun.get(TABLE).get("personas").get(mid),
                 encrypted
               );
               toastr.success("Guardado!");
               setTimeout(() => {
+                document.getElementById("actionStatus").style.display = "none"
                 setUrlHash("personas");
               }, 1500);
             });
@@ -2051,12 +2056,14 @@
                 .value.replace("%%", "Pedido"),
             };
             var enc = SEA.encrypt(data, SECRET, (encrypted) => {
+              document.getElementById("actionStatus").style.display = "block"
               betterGunPut(
                 gun.get(TABLE).get("supercafe").get(mid),
                 encrypted
               );
               toastr.success("Guardado!");
               setTimeout(() => {
+                document.getElementById("actionStatus").style.display = "none"
                 setUrlHash("supercafe");
               }, 1500);
             });
@@ -2237,7 +2244,7 @@
                 document.getElementById(btn_Pagado).onclick = () => {
                   window.event.cancelBubble = true;
                   window.event.stopPropagation();
-
+                  if (!confirm("¿Quieres marcar como pagado? - Se borrara la comanda y se actualizarán los puntos.")) {return}
                   data.Estado = "Pagado";
                   betterGunPut(
                     gun.get(TABLE).get("supercafe").get(data._key),
@@ -2428,12 +2435,14 @@
                 .value.replace("%%", "por_leer"),
             };
             var enc = SEA.encrypt(data, SECRET, (encrypted) => {
+              document.getElementById("actionStatus").style.display = "block"
               betterGunPut(
                 gun.get(TABLE).get("notificaciones").get(mid),
                 encrypted
               );
               toastr.success("Guardado!");
               setTimeout(() => {
+                document.getElementById("actionStatus").style.display = "none"
                 setUrlHash("notificaciones");
               }, 1500);
             });
