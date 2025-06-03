@@ -1,4 +1,4 @@
-var cacheName = 'telesec_2025-05-30_2';
+var cacheName = 'telesec_2025-06-03_1';
 
 self.addEventListener('install', event => {
   event.waitUntil(
@@ -30,6 +30,11 @@ self.addEventListener('install', event => {
         "static/webrtc.js",
         "static/yson.js",
         "static/ico/add.png",
+        "static/ico/azucar-moreno.png",
+        "static/ico/azucar-blanco.jpg",
+        "static/ico/stevia.jpg",
+        "static/ico/stevia-gotas.webp",
+        "static/ico/sacarina.jpg",
         "static/ico/arrow_down_blue.png",
         "static/ico/arrow_left_green.png",
         "static/ico/arrow_up_red.png",
