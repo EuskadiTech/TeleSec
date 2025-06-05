@@ -2313,7 +2313,8 @@
                   if (JSON.stringify(rows2[key]) != JSON.stringify(data)) {
                     console.log("SC:Updated:", data)
                     if (tts) {
-                      let utterance = new SpeechSynthesisUtterance("Comanda del " + SC_Personas[data.Persona].Region + ": " + SC_Personas[data.Persona].Region  ". " + data.Estado);
+                      var msg = `Comanda de ${SC_Personas[data.Persona].Region}. ${SC_Personas[data.Persona].Nombre}. ${data.Estado}`
+                      let utterance = new SpeechSynthesisUtterance(msg);
                       utterance.rate = 0.9
                       utterance.voice = speechSynthesis.getVoices()[7]
                       speechSynthesis.speak(utterance);
