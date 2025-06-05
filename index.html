@@ -2100,7 +2100,7 @@
           var tts = false;
           var sc_nobtn = ""
           if (urlParams.get("sc_nobtn") == "yes") {
-            sc_nobtn = "display: none"
+            sc_nobtn = "pointer-events: none"
           }
           setTimeout(() => {tts = true; console.log("TTS Enabled"); toastr.info("Texto a voz disponible")}, 7500)
           const tablebody = safeuuid();
@@ -2324,7 +2324,7 @@
                   if (old[key] != data.Estado) {
                     console.log("SC:Updated:", data)
                     if (tts && document.getElementById(tts_check).checked) {
-                      var msg = `Comanda de ${SC_Personas[data.Persona].Region}. - ${SC_Personas[data.Persona].Nombre}. - ${data.Estado}`
+                      var msg = `Comanda de ${SC_Personas[data.Persona].Region}. - ${JSON.parse(data.Comanda)["Selección"]}. - ${data.Estado}`
                       console.log("TTS: " + msg)
                       let utterance = new SpeechSynthesisUtterance(msg);
                       utterance.rate = 0.9
