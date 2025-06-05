@@ -2098,6 +2098,10 @@
         },
         index: function () {
           var tts = false;
+          var sc_nobtn = ""
+          if (urlParams.get("sc_nobtn") == "yes") {
+            sc_nobtn = "display: none"
+          }
           setTimeout(() => {tts = true; console.log("TTS Enabled"); toastr.info("Texto a voz disponible")}, 7500)
           const tablebody = safeuuid();
           var btn_new = safeuuid();
@@ -2112,7 +2116,7 @@
                         <tr>
                           <th>Zona</th>
                           <th>Persona</th>
-                          <th>Estado</th>
+                          <th style="${sc_nobtn};">Estado</th>
                           <th>Comanda</th>
                           <th>Precio</th>
                         </tr>
@@ -2177,7 +2181,7 @@
                   }" height="50"><br> ${persona.Nombre || ""
                   }<br> <span style="font-size: 25px;">${persona.Puntos || "0"
                   } pts.</span></td>
-                        <td style="font-size: 17px;">
+                        <td style="font-size: 17px; ${sc_nobtn};">
                           <button id="${btn_Pedido}" class="">Pedido</button>
                           <br><button id="${btn_Preparacion}" class="">En preparación</button>
                           <br><button id="${btn_Hecho}" class="">Hecho</button>
