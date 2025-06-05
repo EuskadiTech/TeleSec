@@ -2317,10 +2317,11 @@
                   if (old[key] == undefined) {
                     old[key] = "";
                   }
-                  if (old[key] != data.Estado && document.getElementById(tts_check).checked) {
+                  if (old[key] != data.Estado) {
                     console.log("SC:Updated:", data)
-                    if (tts) {
+                    if (tts && document.getElementById(tts_check).checked) {
                       var msg = `Comanda de ${SC_Personas[data.Persona].Region}. ${SC_Personas[data.Persona].Nombre}. ${data.Estado}`
+                      console.log("TTS: " + msg)
                       let utterance = new SpeechSynthesisUtterance(msg);
                       utterance.rate = 0.9
                       utterance.voice = speechSynthesis.getVoices()[7]
