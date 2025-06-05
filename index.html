@@ -2310,7 +2310,7 @@
               function add_row(data, key) {
                 if (data != null) {
                   data["_key"] = key;
-                  if (JSON.stringify(row2[key]) != JSON.stringify(data)) {
+                  if (JSON.stringify(rows2[key]) != JSON.stringify(data)) {
                     console.log("SC:Updated:", data)
                   }
                   rows2[key] = data;
