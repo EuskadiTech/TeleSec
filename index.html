@@ -2324,7 +2324,7 @@
                   if (old[key] != data.Estado) {
                     console.log("SC:Updated:", data)
                     if (tts && document.getElementById(tts_check).checked) {
-                      var msg = `Comanda de ${SC_Personas[data.Persona].Region}. - ${JSON.parse(data.Comanda)["Selección"]}. - ${data.Estado}`
+                      var msg = `Comanda de ${SC_Personas[data.Persona].Region}. - ${JSON.parse(data.Comanda)["Selección"]}. - ${SC_Personas[data.Persona].Nombre}. - ${data.Estado}`
                       console.log("TTS: " + msg)
                       let utterance = new SpeechSynthesisUtterance(msg);
                       utterance.rate = 0.9
