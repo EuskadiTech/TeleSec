@@ -2310,7 +2310,7 @@
               function add_row(data, key) {
                 if (data != null) {
                   data["_key"] = key;
-                  if (JSON.stringify(rows2[key]) != JSON.stringify(data)) {
+                  if (rows2[key].Estado != data.Estado) {
                     console.log("SC:Updated:", data)
                     if (tts) {
                       var msg = `Comanda de ${SC_Personas[data.Persona].Region}. ${SC_Personas[data.Persona].Nombre}. ${data.Estado}`
