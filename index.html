@@ -2312,6 +2312,12 @@
                   data["_key"] = key;
                   if (JSON.stringify(rows2[key]) != JSON.stringify(data)) {
                     console.log("SC:Updated:", data)
+                    if (tts) {
+                      let utterance = new SpeechSynthesisUtterance("Comanda del " + SC_Personas[data.Persona].Region + ": " + SC_Personas[data.Persona].Region  ". " + data.Estado);
+                      utterance.rate = 0.9
+                      utterance.voice = speechSynthesis.getVoices()[7]
+                      speechSynthesis.speak(utterance);
+                    }
                   }
                   rows2[key] = data;
                   old[key] = data;
