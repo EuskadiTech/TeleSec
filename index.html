@@ -2174,6 +2174,8 @@
                 if (persona == DefaultPersona) {
                   data.Persona = "135733281028030249";
                 }
+                if (sc_nobtn != "") {new_tr.style.pointerEvents = "none"}
+                
                 new_tr.innerHTML = `
                   <td>${persona.Region.toUpperCase() || "?"}</td>
                   <td class="TextBorder" style="background-color: ${persona.SC_Anilla
