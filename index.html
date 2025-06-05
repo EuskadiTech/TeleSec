@@ -2097,6 +2097,8 @@
           };
         },
         index: function () {
+          var tts = false;
+          setTimeout(() => {tts = true}, 7500)
           const tablebody = safeuuid();
           var btn_new = safeuuid();
           container.innerHTML = `
@@ -2297,6 +2299,7 @@
                 };
               });
           }
+          var old = {};
           gun
             .get(TABLE)
             .get("supercafe")
@@ -2307,10 +2310,15 @@
               function add_row(data, key) {
                 if (data != null) {
                   data["_key"] = key;
+                  if (JSON.stringify(row2[key]) != JSON.stringify(data)) {
+                    console.log("SC:Updated:", data)
+                  }
                   rows2[key] = data;
+                  old[key] = data;
                 } else {
                   // console.log("delete", key);
                   delete rows2[key];
+                  delete old[key];
                 }
                 render();
               }
