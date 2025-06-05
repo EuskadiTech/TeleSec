@@ -2215,6 +2215,8 @@
                 if (SC_Personas[data.Persona].Puntos >= 10) {
                   document.getElementById(span_precio).innerHTML =
                     "Gratis!<br> Usando puntos";
+                } else {
+                  document.getElementById(span_precio).innerHTML = `Pagando ${precio}`
                 }
                 // Acciónes
                 document.getElementById(btn_Pedido).onclick = () => {
