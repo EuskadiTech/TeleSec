@@ -2187,7 +2187,7 @@
                         <td style="font-size: 17px; ${sc_nobtn};">
                           <button id="${btn_Pedido}" class="">Pedido</button>
                           <br><button id="${btn_Preparacion}" class="">En preparación</button>
-                          <br><button id="${btn_Hecho}" class="">Hecho</button>
+                          <br><button id="${btn_Hecho}" class="">Listo</button>
                           <br><button id="${btn_Entregado}" class="">Entregado</button>
                           <br><button id="${btn_Pagado}" class="">Pagado</button></td>
                         <td><pre style="font-size: 17px;">${SC_parse(JSON.parse(data.Comanda)) +
@@ -2204,7 +2204,7 @@
                   document.getElementById(btn_Preparacion).classList = "rojo";
                   new_tr.style.backgroundColor = "#FFCCCB";
                 }
-                if (data.Estado == "Hecho") {
+                if (data.Estado == "Listo") {
                   new_tr.style.backgroundColor = "gold";
                   document.getElementById(btn_Hecho).classList = "rojo";
                 }
@@ -2249,7 +2249,7 @@
                 document.getElementById(btn_Hecho).onclick = () => {
                   window.event.cancelBubble = true;
                   window.event.stopPropagation();
-                  data.Estado = "Hecho";
+                  data.Estado = "Listo";
                   var enc = SEA.encrypt(data, SECRET, (encrypted) => {
                     betterGunPut(
                       gun.get(TABLE).get("supercafe").get(data._key),
