@@ -1198,7 +1198,7 @@
         valores += "ColaCao = 20c\n";
       }
       valores += "<hr>Total: " + precio + "c\n";
-      return precio, valores;
+      return [precio, valores];
     }
     function PERSONAS_Sorter(a, b) {
       if (a[1].Region < b[1].Region) {
@@ -2168,8 +2168,9 @@
                 var span_precio = safeuuid();
                 var persona = SC_Personas[data.Persona] || DefaultPersona;
                 var new_tr = document.createElement("tr");
-                var precio,
-                  resumen = SC_priceCalc(JSON.parse(data.Comanda));
+                var pcalc = SC_priceCalc(JSON.parse(data.Comanda));
+                var precio = pcalc[0]
+                var resumen = pcalc[1]
                 if (persona == DefaultPersona) {
                   data.Persona = "135733281028030249";
                 }
