@@ -2098,12 +2098,15 @@
         },
         index: function () {
           var tts = false;
-          setTimeout(() => {tts = true}, 7500)
+          setTimeout(() => {tts = true}, 12500)
           const tablebody = safeuuid();
           var btn_new = safeuuid();
+          var tts_check = safeuuid();
           container.innerHTML = `
                 <h1>SuperCafé</h1>
                 <button id="${btn_new}">Nueva comanda</button>
+                <label><b>Habilitar avisos:</b> <input type="checkbox" id="${tts_check}" checked></label>
+
                 <div id="scrolltable"><table>
                     <thead>
                         <tr>
@@ -2314,7 +2317,7 @@
                   if (old[key] == undefined) {
                     old[key] = "";
                   }
-                  if (old[key] != data.Estado) {
+                  if (old[key] != data.Estado && document.getElementById(tts_check).checked) {
                     console.log("SC:Updated:", data)
                     if (tts) {
                       var msg = `Comanda de ${SC_Personas[data.Persona].Region}. ${SC_Personas[data.Persona].Nombre}. ${data.Estado}`
