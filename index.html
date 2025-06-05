@@ -2324,7 +2324,7 @@
                       console.log("TTS: " + msg)
                       let utterance = new SpeechSynthesisUtterance(msg);
                       utterance.rate = 0.9
-                      utterance.voice = speechSynthesis.getVoices()[7]
+                      // utterance.voice = speechSynthesis.getVoices()[7]
                       speechSynthesis.speak(utterance);
                     }
                   }
