@@ -2098,7 +2098,7 @@
         },
         index: function () {
           var tts = false;
-          setTimeout(() => {tts = true}, 12500)
+          setTimeout(() => {tts = true; console.log("TTS Enabled")}, 12500)
           const tablebody = safeuuid();
           var btn_new = safeuuid();
           var tts_check = safeuuid();
