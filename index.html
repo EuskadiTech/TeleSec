@@ -2100,16 +2100,20 @@
           var tts = false;
           var sc_nobtn = ""
           if (urlParams.get("sc_nobtn") == "yes") {
-            sc_nobtn = "pointer-events: none"
+            sc_nobtn = "pointer-events: none; opacity: 0.5"
           }
-          setTimeout(() => {tts = true; console.log("TTS Enabled"); toastr.info("Texto a voz disponible")}, 7500)
+          setTimeout(() => {tts = true; console.log("TTS Enabled"); toastr.info("Texto a voz disponible")}, 6500)
           const tablebody = safeuuid();
           var btn_new = safeuuid();
           var tts_check = safeuuid();
           container.innerHTML = `
                 <h1>SuperCafé</h1>
                 <button id="${btn_new}" style="${sc_nobtn};">Nueva comanda</button>
-                <label><b>Habilitar avisos:</b> <input type="checkbox" id="${tts_check}" style="height: 25px;width: 25px;"></label>
+                <br>
+                <label>
+                  <b>Habilitar avisos:</b>
+                  <input type="checkbox" id="${tts_check}" style="height: 25px;width: 25px;">
+                </label>
 
                 <div id="scrolltable"><table>
                     <thead>
