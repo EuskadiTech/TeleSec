@@ -298,7 +298,6 @@
     #snackbar {
       visibility: hidden;
       min-width: 250px;
-      margin-left: -125px;
       background-color: #333;
       color: #fff;
       text-align: center;
@@ -306,7 +305,7 @@
       padding: 16px;
       position: fixed;
       z-index: 1;
-      left: 50%;
+      right: 30px;
       bottom: 30px;
     }
 
@@ -410,7 +409,7 @@
     }
     getQuota()
   </script>
-  <div id="snackbar">Una nueva versión de TeleSec está disponible, <a id="reload">Pulsa aqui para actualizar.</a></div>
+  <div id="snackbar">Hay una nueva versión de TeleSec.<br><a id="reload">Pulsa aqui para actualizar.</a></div>
   <script id="pwa">
     let newWorker;
 
