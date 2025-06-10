@@ -2186,7 +2186,7 @@
                 if (sc_nobtn != "") {new_tr.style.pointerEvents = "none"}
                 
                 new_tr.innerHTML = `
-                  <td>${persona.Region.toUpperCase() || "?"}${data.Fecha}<br></td>
+                  <td>${persona.Region.toUpperCase() || "?"}<br><br>${data.Fecha}</td>
                   <td class="TextBorder" style="background-color: ${persona.SC_Anilla
                   }; text-align: center; font-size: 17px;"><img src="${persona.Foto ||
                   "static/ico/user_generic.png"
