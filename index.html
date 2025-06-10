@@ -702,6 +702,11 @@
     }, 5000);
   </script>
   <script id="app_modules">
+    try {
+      await navigator.wakeLock.request("screen");
+    } catch {
+      console.log("ScreenLock Failed")
+    }
     function addCategory(
       parent,
       name,
@@ -2167,6 +2172,7 @@
                 var btn_Preparacion = safeuuid();
                 var btn_Hecho = safeuuid();
                 var btn_Entregado = safeuuid();
+                var btn_Deuda = safeuuid();
                 var btn_Pagado = safeuuid();
                 var span_precio = safeuuid();
                 var persona = SC_Personas[data.Persona] || DefaultPersona;
@@ -2192,6 +2198,7 @@
                           <br><button id="${btn_Preparacion}" class="">En preparación</button>
                           <br><button id="${btn_Hecho}" class="">Listo</button>
                           <br><button id="${btn_Entregado}" class="">Entregado</button>
+                          <br><button id="${btn_Deuda}" class="">Deuda</button>
                           <br><button id="${btn_Pagado}" class="">Pagado</button></td>
                         <td><pre style="font-size: 17px;">${SC_parse(JSON.parse(data.Comanda)) +
                   "<hr>" +
@@ -2214,6 +2221,10 @@
                 if (data.Estado == "Entregado") {
                   document.getElementById(btn_Entregado).classList = "rojo";
                   new_tr.style.backgroundColor = "lightgreen";
+                }
+                if (data.Estado == "Deuda") {
+                  document.getElementById(btn_Deuda).classList = "rojo";
+                  new_tr.style.backgroundColor = "hotpink";
                 }
                 new_tr.onclick = () => {
                   setUrlHash("supercafe," + data._key);
