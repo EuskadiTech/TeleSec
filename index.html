@@ -2284,6 +2284,18 @@
                     toastr.success("Guardado!");
                   });
                 };
+                document.getElementById(btn_Deuda).onclick = () => {
+                  window.event.cancelBubble = true;
+                  window.event.stopPropagation();
+                  data.Estado = "Deuda";
+                  var enc = SEA.encrypt(data, SECRET, (encrypted) => {
+                    betterGunPut(
+                      gun.get(TABLE).get("supercafe").get(data._key),
+                      encrypted
+                    );
+                    toastr.success("Guardado!");
+                  });
+                };
                 document.getElementById(btn_Pagado).onclick = () => {
                   window.event.cancelBubble = true;
                   window.event.stopPropagation();
