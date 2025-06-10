@@ -703,7 +703,7 @@
   </script>
   <script id="app_modules">
     try {
-      await navigator.wakeLock.request("screen");
+      navigator.wakeLock.request("screen");
     } catch {
       console.log("ScreenLock Failed")
     }
