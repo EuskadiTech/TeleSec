@@ -375,7 +375,8 @@
     </footer> -->
     <img id="connectStatus" style="bottom: 15px; right: 15px; position: fixed; width: 50px;">
   </main>
-  <img id="actionStatus" src="static/ico/statusok.png" style="z-index: 2048;margin: 0px;position: fixed;top: 50%;left: 50%;transform: translate(-50%, -50%);width: 100px;height: 100px;display: none;">
+  <img id="actionStatus" src="static/ico/statusok.png"
+    style="z-index: 2048;margin: 0px;position: fixed;top: 50%;left: 50%;transform: translate(-50%, -50%);width: 100px;height: 100px;display: none;">
   <script src="static/showdown.min.js"></script>
   <script src="static/jquery.js"></script>
   <script src="static/gun.js"></script>
@@ -466,7 +467,7 @@
     // const PUBLIC_KEY = "~cppGiuA4UFUPGTDoC-4r2izVC3F7MfpaCmF3iZdESN4.vntmjgbAVUpF_zfinYY6EKVFuuTYxh5xOrL4KmtdTmc"
     var TABLE = GROUPID + ":telesec.tech.eus";
     const RELAYS = [
-      "https://gun-es01.tech.eus/gun",
+      // "https://gun-es01.tech.eus/gun",
       "https://gun-es02.tech.eus/gun",
       "https://gun-es03.tech.eus/gun",
       "https://gun-es04.tech.eus/gun",
@@ -528,12 +529,12 @@
       });
       peerListEl.innerHTML = list.innerHTML;
       peerCountEl.innerText = peerCount;
-      if (peerCount < 2){
+      if (peerCount < 2) {
         document.getElementById("connectStatus").src = "static/ico/connect_ko.svg"
-        gun.opt({peers: RELAYS});
+        gun.opt({ peers: RELAYS });
       } else {
         document.getElementById("connectStatus").src = "static/ico/connect_ok.svg"
-        
+
       }
     }
     getPeers();
@@ -2101,289 +2102,334 @@
           };
         },
         index: function () {
-          var tts = false;
-          var sc_nobtn = ""
-          if (urlParams.get("sc_nobtn") == "yes") {
-            sc_nobtn = "pointer-events: none; opacity: 0.5"
+          function setLayeredImages(comanda, key) {
+            // Base paths for each layer type (adjust paths as needed)
+            const basePaths = {
+              Selección: "static/ico/layered1/",
+              Café: "static/ico/layered1/",
+              Endulzante: "static/ico/layered1/",
+              Cafeina: "static/ico/layered1/",
+              Leche: "static/ico/layered1/",
+            };
+
+            // Map for Selección to filenames
+            const selectionMap = {
+              "ColaCao con leche": "Selección-ColaCao.png",
+              "Infusión": "Selección-Infusion.png",
+              "Café con leche": "Selección-CaféLeche.png",
+              "Solo Leche": "Selección-Leche.png",
+              "Solo café (sin leche)": "Selección-CaféSolo.png",
+            };
+
+            // Start div with relative positioning for layering
+            let html = `<div style="position: relative; width: 200px; height: 200px; background: white; display: inline-block;">`;
+
+            // Layer 1: Selección image
+            const selection = comanda["Selección"];
+            console.log(selection)
+            if (selectionMap[selection]) {
+              html += `<img id="img1-${key}" src="${basePaths.Selección + selectionMap[selection]}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">`;
+            }
+
+            // Layer 2: Café
+            if (comanda.Café) {
+              html += `<img id="img2-${key}" src="${basePaths.Café}Café-${comanda.Café}.png" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">`;
+            }
+
+            // Layer 3: Endulzante
+            if (comanda.Endulzante) {
+              html += `<img id="img3-${key}" src="${basePaths.Endulzante}Azucar-${comanda.Endulzante}.png" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">`;
+            }
+
+            // Layer 4: Cafeina
+            if (comanda.Cafeina) {
+              html += `<img id="img4-${key}" src="${basePaths.Cafeina}Cafeina-${comanda.Cafeina}.png" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">`;
+            }
+            // Layer 5: Leche
+            if (comanda.Leche) {
+              html += `<img id="img5-${key}" src="${basePaths.Leche}Leche-${comanda.Leche}.png" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">`;
+            }
+            // Layer 6: Temperatura
+            if (comanda.Temperatura) {
+              html += `<img id="img6-${key}" src="${basePaths.Leche}Temperatura-${comanda.Temperatura}.png" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">`;
+            }
+            // Layer 7: Tamaño
+            if (comanda.Tamaño) {
+              html += `<img id="img7-${key}" src="${basePaths.Leche}Tamaño-${comanda.Tamaño}.png" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">`;
+            }
+
+            // Close div
+            html += "</div>";
+
+            return html;
           }
-          setTimeout(() => {tts = true; console.log("TTS Enabled"); toastr.info("Texto a voz disponible")}, 6500)
+
+
+          var tts = false;
+          var sc_nobtn = "";
+          if (urlParams.get("sc_nobtn") == "yes") {
+            sc_nobtn = "pointer-events: none; opacity: 0.5";
+          }
+          setTimeout(() => {
+            tts = true;
+            console.log("TTS Enabled");
+            toastr.info("Texto a voz disponible");
+          }, 6500);
+
           const tablebody = safeuuid();
           var btn_new = safeuuid();
           var tts_check = safeuuid();
           container.innerHTML = `
-                <h1>SuperCafé</h1>
-                <button id="${btn_new}" style="${sc_nobtn};">Nueva comanda</button>
-                <br>
-                <label>
-                  <b>Habilitar avisos:</b>
-                  <input type="checkbox" id="${tts_check}" style="height: 25px;width: 25px;">
-                </label>
+    <h1>SuperCafé</h1>
+    <button id="${btn_new}" style="${sc_nobtn};">Nueva comanda</button>
+    <br>
+    <label>
+      <b>Habilitar avisos:</b>
+      <input type="checkbox" id="${tts_check}" style="height: 25px;width: 25px;">
+    </label>
+    <div id="scrolltable"><table>
+      <thead>
+        <tr>
+          <th>Zona</th>
+          <th>Persona</th>
+          <th style="${sc_nobtn};">Estado</th>
+          <th>Comanda</th>
+          <th>Precio</th>
+        </tr>
+      </thead>
+      <tbody id="${tablebody}"></tbody>
+    </table></div>
+  `;
 
-                <div id="scrolltable"><table>
-                    <thead>
-                        <tr>
-                          <th>Zona</th>
-                          <th>Persona</th>
-                          <th style="${sc_nobtn};">Estado</th>
-                          <th>Comanda</th>
-                          <th>Precio</th>
-                        </tr>
-                    </thead>
-                    <tbody id="${tablebody}">
-                    </tbody>
-                </table></div>
-                `;
-
-          tableScroll("#scrolltable") // id="scrolltable"
+          tableScroll("#scrolltable");
           var tablebody_EL = document.getElementById(tablebody);
           var rows2 = {};
-          function render() {
-            function sorter(a, b) {
-              if (
-                SC_Personas[a.Persona].Region.toUpperCase() <
-                SC_Personas[b.Persona].Region.toUpperCase()
-              ) {
-                return -1;
-              }
-              if (
-                SC_Personas[a.Persona].Region.toUpperCase() >
-                SC_Personas[b.Persona].Region.toUpperCase()
-              ) {
-                return 1;
-              }
-              return 0;
-            }
-            var tablebody_EL = document.getElementById(tablebody);
-            tablebody_EL.innerHTML = "";
-            var DefaultPersona = {
-              Foto: "static/ico/user_generic.png",
-              Nombre: "Desconocido??",
-              Puntos: "1",
-              Region: "SIN AULA",
-              Roles: "Cafe_SiCaf",
-              SC_Anilla: "#000000",
-              markdown: "Fantasma",
-              _key: "135733281028030249",
-            };
-            Object.values(rows2)
-              .sort(sorter)
-              .forEach((data) => {
-                var btn_Pedido = safeuuid();
-                var btn_Preparacion = safeuuid();
-                var btn_Hecho = safeuuid();
-                var btn_Entregado = safeuuid();
-                var btn_Deuda = safeuuid();
-                var btn_Pagado = safeuuid();
-                var span_precio = safeuuid();
-                var persona = SC_Personas[data.Persona] || DefaultPersona;
-                var new_tr = document.createElement("tr");
-                var pcalc = SC_priceCalc(JSON.parse(data.Comanda));
-                var precio = pcalc[0]
-                var resumen = pcalc[1]
-                if (persona == DefaultPersona) {
-                  data.Persona = "135733281028030249";
-                }
-                if (sc_nobtn != "") {new_tr.style.pointerEvents = "none"}
-                
-                new_tr.innerHTML = `
-                  <td>${persona.Region.toUpperCase() || "?"}<br><br>${data.Fecha}</td>
-                  <td class="TextBorder" style="background-color: ${persona.SC_Anilla
-                  }; text-align: center; font-size: 17px;"><img src="${persona.Foto ||
-                  "static/ico/user_generic.png"
-                  }" height="50"><br> ${persona.Nombre || ""
-                  }<br> <span style="font-size: 25px;">${persona.Puntos || "0"
-                  } pts.</span></td>
-                        <td style="font-size: 17px; ${sc_nobtn};">
-                          <button id="${btn_Pedido}" class="">Pedido</button>
-                          <br><button id="${btn_Preparacion}" class="">En preparación</button>
-                          <br><button id="${btn_Hecho}" class="">Listo</button>
-                          <br><button id="${btn_Entregado}" class="">Entregado</button>
-                          <br><button id="${btn_Deuda}" class="">Deuda</button>
-                          <br><button id="${btn_Pagado}" class="">Pagado</button></td>
-                        <td><pre style="font-size: 17px;">${SC_parse(JSON.parse(data.Comanda)) +
-                  "<hr>" +
-                  data.Notas
-                  }</pre></td>
-                        <td><pre>${resumen}</pre><span style="font-size: 20px;" id="${span_precio}"></span></td>
-                        `;
-                tablebody_EL.append(new_tr);
-                if (data.Estado == "Pedido") {
-                  document.getElementById(btn_Pedido).classList = "rojo";
-                }
-                if (data.Estado == "En preparación") {
-                  document.getElementById(btn_Preparacion).classList = "rojo";
-                  new_tr.style.backgroundColor = "#FFCCCB";
-                }
-                if (data.Estado == "Listo") {
-                  new_tr.style.backgroundColor = "gold";
-                  document.getElementById(btn_Hecho).classList = "rojo";
-                }
-                if (data.Estado == "Entregado") {
-                  document.getElementById(btn_Entregado).classList = "rojo";
-                  new_tr.style.backgroundColor = "lightgreen";
-                }
-                if (data.Estado == "Deuda") {
-                  document.getElementById(btn_Deuda).classList = "rojo";
-                  new_tr.style.backgroundColor = "hotpink";
-                }
-                new_tr.onclick = () => {
-                  setUrlHash("supercafe," + data._key);
-                };
-                if (SC_Personas[data.Persona].Puntos >= 10) {
-                  document.getElementById(span_precio).innerHTML =
-                    "Gratis!<br> Usando puntos";
-                } else {
-                  document.getElementById(span_precio).innerHTML = `Pagando ${precio}c`
-                }
-                // Acciónes
-                document.getElementById(btn_Pedido).onclick = () => {
-                  window.event.cancelBubble = true;
-                  window.event.stopPropagation();
-                  data.Estado = "Pedido";
-                  var enc = SEA.encrypt(data, SECRET, (encrypted) => {
-                    betterGunPut(
-                      gun.get(TABLE).get("supercafe").get(data._key),
-                      encrypted
-                    );
-                    toastr.success("Guardado!");
-                  });
-                };
-                document.getElementById(btn_Preparacion).onclick = () => {
-                  window.event.cancelBubble = true;
-                  window.event.stopPropagation();
-                  data.Estado = "En preparación";
-                  var enc = SEA.encrypt(data, SECRET, (encrypted) => {
-                    betterGunPut(
-                      gun.get(TABLE).get("supercafe").get(data._key),
-                      encrypted
-                    );
-                    toastr.success("Guardado!");
-                  });
-                };
-                document.getElementById(btn_Hecho).onclick = () => {
-                  window.event.cancelBubble = true;
-                  window.event.stopPropagation();
-                  data.Estado = "Listo";
-                  var enc = SEA.encrypt(data, SECRET, (encrypted) => {
-                    betterGunPut(
-                      gun.get(TABLE).get("supercafe").get(data._key),
-                      encrypted
-                    );
-                    toastr.success("Guardado!");
-                  });
-                };
-                document.getElementById(btn_Entregado).onclick = () => {
-                  window.event.cancelBubble = true;
-                  window.event.stopPropagation();
-                  data.Estado = "Entregado";
-                  var enc = SEA.encrypt(data, SECRET, (encrypted) => {
-                    betterGunPut(
-                      gun.get(TABLE).get("supercafe").get(data._key),
-                      encrypted
-                    );
-                    toastr.success("Guardado!");
-                  });
-                };
-                document.getElementById(btn_Deuda).onclick = () => {
-                  window.event.cancelBubble = true;
-                  window.event.stopPropagation();
-                  data.Estado = "Deuda";
-                  var enc = SEA.encrypt(data, SECRET, (encrypted) => {
-                    betterGunPut(
-                      gun.get(TABLE).get("supercafe").get(data._key),
-                      encrypted
-                    );
-                    toastr.success("Guardado!");
-                  });
-                };
-                document.getElementById(btn_Pagado).onclick = () => {
-                  window.event.cancelBubble = true;
-                  window.event.stopPropagation();
-                  if (!confirm("¿Quieres marcar como pagado? - Se borrara la comanda y se actualizarán los puntos.")) {return}
-                  data.Estado = "Pagado";
-                  betterGunPut(
-                    gun.get(TABLE).get("supercafe").get(data._key),
-                    null
-                  );
-                  //setUrlHash("personas");
-                  //setUrlHash("supercafe");
-                  toastr.success("Guardado!");
-                  if (SC_Personas[data.Persona].Puntos >= 10) {
-                    SC_Personas[data.Persona].Puntos -= 10;
-                    toastr.success(
-                      "¡Comada gratis para " +
-                      SC_Personas[data.Persona].Nombre +
-                      "!"
-                    );
-                    toastr.success(
-                      "¡Comada gratis para " +
-                      SC_Personas[data.Persona].Nombre +
-                      "!"
-                    );
-                  } else {
-                    SC_Personas[data.Persona].Puntos += 1;
-                    toastr.success("¡Comada DE PAGO!");
-                  }
-                  SEA.encrypt(
-                    SC_Personas[data.Persona],
-                    SECRET,
-                    (encrypted) => {
-                      betterGunPut(
-                        gun.get(TABLE).get("personas").get(data.Persona),
-                        encrypted
-                      );
-                    }
-                  );
-                };
-              });
-          }
+          var renderedRows = {};
           var old = {};
-          gun
-            .get(TABLE)
-            .get("supercafe")
-            .map()
-            .on((data, key, _msg, _ev) => {
-              EVENTLISTENER = _ev;
-              //alert("sc_map_on")
-              function add_row(data, key) {
-                if (data != null) {
-                  data["_key"] = key;
-                  console.log(old[key], data.Estado)
-                  if (old[key] == undefined) {
-                    old[key] = "";
-                  }
-                  if (old[key] != data.Estado) {
-                    console.log("SC:Updated:", data)
-                    if (tts && document.getElementById(tts_check).checked) {
-                      var msg = `Comanda de ${SC_Personas[data.Persona].Region}. - ${JSON.parse(data.Comanda)["Selección"]}. - ${SC_Personas[data.Persona].Nombre}. - ${data.Estado}`
-                      console.log("TTS: " + msg)
-                      let utterance = new SpeechSynthesisUtterance(msg);
-                      utterance.rate = 0.9
-                      // utterance.voice = speechSynthesis.getVoices()[7]
-                      speechSynthesis.speak(utterance);
-                    }
-                  }
-                  rows2[key] = data;
-                  old[key] = data.Estado;
-                } else {
-                  // console.log("delete", key);
-                  delete rows2[key];
-                  delete old[key];
-                }
-                render();
-              }
-              if (typeof data == "string") {
-                SEA.decrypt(data, SECRET, (data) => {
-                  add_row(data, key);
-                });
-              } else {
-                add_row(data, key);
-              }
-            });
-          document.getElementById(btn_new).onclick = () => {
-            setUrlHash("supercafe," + safeuuid(""));
+          var old2 = {};
+
+          var DefaultPersona = {
+            Foto: "static/ico/user_generic.png",
+            Nombre: "Desconocido??",
+            Puntos: "1",
+            Region: "SIN AULA",
+            Roles: "Cafe_SiCaf",
+            SC_Anilla: "#000000",
+            markdown: "Fantasma",
+            _key: "135733281028030249",
           };
-        },
+
+          // Sorting: Fecha desc, then Region, then Nombre
+          function sortRows(a, b) {
+            const fechaA = new Date(a.Fecha);
+            const fechaB = new Date(b.Fecha);
+            if (fechaA < fechaB) return 1;
+            if (fechaA > fechaB) return -1;
+
+            const regionA = (SC_Personas[a.Persona]?.Region || "").toUpperCase();
+            const regionB = (SC_Personas[b.Persona]?.Region || "").toUpperCase();
+            if (regionA < regionB) return -1;
+            if (regionA > regionB) return 1;
+
+            const nombreA = (SC_Personas[a.Persona]?.Nombre || "").toUpperCase();
+            const nombreB = (SC_Personas[b.Persona]?.Nombre || "").toUpperCase();
+            if (nombreA < nombreB) return -1;
+            if (nombreA > nombreB) return 1;
+
+            return 0;
+          }
+
+          function createRow(data) {
+            var persona = SC_Personas[data.Persona] || DefaultPersona;
+            var pcalc = SC_priceCalc(JSON.parse(data.Comanda));
+            var precio = pcalc[0];
+            var resumen = pcalc[1];
+
+            var new_tr = document.createElement("tr");
+            new_tr.id = "row-" + data._key;
+            if (sc_nobtn != "") {
+              new_tr.style.pointerEvents = "none";
+              new_tr.style.opacity = "0.5";
+            }
+            const ESTADOS = ["Pedido", "En preparación", "Listo", "Entregado", "Deuda", "Pagado"];
+
+            function createEstadoButtons(currentEstado, key) {
+              return ESTADOS.map(estado => {
+                const active = estado === currentEstado ? 'disabled class="rojo"' : '';
+                return `<button ${active} data-key="${key}" data-estado="${estado}" style="margin:2px;">${estado}</button><br>`;
+              }).join(" ");
+            }
+
+            // Set color for estado buttons and row background (simplified to text here)
+            var estadoClass = "";
+            var bgColor = "";
+            switch (data.Estado) {
+              case "Pedido": estadoClass = "rojo"; break;
+              case "En preparación": estadoClass = "rojo"; bgColor = "#FFCCCB"; break;
+              case "Listo": estadoClass = "rojo"; bgColor = "gold"; break;
+              case "Entregado": estadoClass = "rojo"; bgColor = "lightgreen"; break;
+              case "Deuda": estadoClass = "rojo"; bgColor = "hotpink"; break;
+              case "Pagado": estadoClass = ""; break;
+            }
+            new_tr.style.backgroundColor = bgColor;
+
+            new_tr.innerHTML = `
+      <td>${persona.Region.toUpperCase() || "?"}<br><br>${data.Fecha}</td>
+      <td class="TextBorder" style="background-color: ${persona.SC_Anilla}; text-align: center; font-size: 17px;">
+        <img src="${persona.Foto}" height="50"><br>${persona.Nombre}<br>
+        <span style="font-size: 25px;">${persona.Puntos} pts.</span>
+      </td>
+      <td style="font-size: 17px;">
+        ${createEstadoButtons(data.Estado, data._key)}
+      </td>
+      <td>
+        ${setLayeredImages(JSON.parse(data.Comanda), data._key)}
+        <pre style="font-size: 17px; display: inline-block;">${SC_parse(JSON.parse(data.Comanda))}<hr>${data.Notas}</pre>
+      </td>
+      <td><pre>${resumen}</pre>${persona.Puntos >= 10 ? "<br><span style='font-size:20px;'>Gratis! Usando puntos</span>" : `<br><span style='font-size:20px;'>Pagando ${precio}c</span>`}</td>
+    `;
+
+            // Add click to set URL hash
+            new_tr.onclick = () => {
+              setUrlHash("supercafe," + data._key);
+            };
+
+            return new_tr;
+          }
+
+          function insertSortedRow(tr, data) {
+            // Insert `tr` into `tablebody_EL` sorted per sortRows
+            const rows = Array.from(tablebody_EL.children);
+            let inserted = false;
+            for (let i = 0; i < rows.length; i++) {
+              let key = rows[i].id.replace("row-", "");
+              if (!rows2[key]) continue;
+              if (sortRows(data, rows2[key]) < 0) {
+                tablebody_EL.insertBefore(tr, rows[i]);
+                inserted = true;
+                break;
+              }
+            }
+            if (!inserted) {
+              tablebody_EL.appendChild(tr);
+            }
+          }
+
+          function renderRow(data) {
+            // Create and insert sorted row
+            const tr = createRow(data);
+            insertSortedRow(tr, data);
+            renderedRows[data._key] = tr;
+          }
+
+          function updateRow(data) {
+            const tr = renderedRows[data._key];
+            if (!tr) return;
+            const ESTADOS = ["Pedido", "En preparación", "Listo", "Entregado", "Deuda", "Pagado"];
+
+            function createEstadoButtons(currentEstado, key) {
+              return ESTADOS.map(estado => {
+                const active = estado === currentEstado ? 'disabled class="rojo"' : '';
+                return `<button ${active} data-key="${key}" data-estado="${estado}" style="margin:2px;">${estado}</button><br>`;
+              }).join(" ");
+            }
+
+            var persona = SC_Personas[data.Persona] || DefaultPersona;
+            var pcalc = SC_priceCalc(JSON.parse(data.Comanda));
+            var precio = pcalc[0];
+            var resumen = pcalc[1];
+
+            tr.style.pointerEvents = sc_nobtn ? "none" : "";
+            tr.style.opacity = sc_nobtn ? "0.5" : "";
+
+            // Update background and estado
+            var bgColor = "";
+            switch (data.Estado) {
+              case "Pedido": tr.style.backgroundColor = ""; break;
+              case "En preparación": bgColor = "#FFCCCB"; break;
+              case "Listo": bgColor = "gold"; break;
+              case "Entregado": bgColor = "lightgreen"; break;
+              case "Deuda": bgColor = "hotpink"; break;
+              case "Pagado": bgColor = ""; break;
+            }
+            tr.style.backgroundColor = bgColor;
+
+            // Update cells
+            tr.cells[0].innerHTML = `<p style="white-space: nowrap;">${persona.Region.toUpperCase() || "?"}<br><br>${data.Fecha}</p>`;
+            tr.cells[1].innerHTML = `<img src="${persona.Foto}" height="50"><br>${persona.Nombre}<br><span style="font-size: 25px;">${persona.Puntos} pts.</span>`;
+            tr.cells[2].innerHTML = createEstadoButtons(data.Estado, data._key);
+            tr.cells[3].innerHTML = `
+              ${setLayeredImages(JSON.parse(data.Comanda), data._key)}
+              <pre style="font-size: 17px; display: inline-block;">${SC_parse(JSON.parse(data.Comanda))}<hr>${data.Notas}</pre>`;
+            tr.cells[4].innerHTML = `<pre>${resumen}</pre>${persona.Puntos >= 10 ? "<br><span style='font-size:20px;'>Gratis! Usando puntos</span>" : `<br><span style='font-size:20px;'>Pagando ${precio}c</span>`}`;
+
+            // Reposition if necessary (in case sorting keys changed)
+            tablebody_EL.removeChild(tr);
+            insertSortedRow(tr, data);
+          }
+
+          function speakTTS(data) {
+            if (tts && document.getElementById(tts_check).checked) {
+              var persona = SC_Personas[data.Persona] || DefaultPersona;
+              var comanda = JSON.parse(data.Comanda);
+              var msg = `Comanda de ${persona.Region}. ${comanda["Selección"]}. ${persona.Nombre}. Estado: ${data.Estado}`;
+              var utterance = new SpeechSynthesisUtterance(msg);
+              utterance.rate = 0.9;
+              speechSynthesis.speak(utterance);
+            }
+          }
+
+          function add_row(data, key) {
+            if (data != null) {
+              data["_key"] = key;
+
+              if (old2[key] === undefined) old2[key] = "";
+              if (old[key] === undefined) old[key] = "";
+
+              var estadoChanged = old[key] !== data.Estado;
+              var comandaChanged = old2[key] !== data.Comanda;
+
+              rows2[key] = data;
+
+              if (!renderedRows[key]) {
+                renderRow(data);
+              } else if (estadoChanged || comandaChanged) {
+                updateRow(data);
+              }
+
+              if (estadoChanged) {
+                speakTTS(data);
+              }
+
+              old[key] = data.Estado;
+              old2[key] = data.Comanda;
+            } else {
+              // Remove row
+              if (renderedRows[key]) {
+                renderedRows[key].remove();
+                delete renderedRows[key];
+              }
+              delete rows2[key];
+              delete old[key];
+              delete old2[key];
+            }
+          }
+
+          gun.get(TABLE).get("supercafe").map().on((data, key, _msg, _ev) => {
+            if (typeof data === "string") {
+              SEA.decrypt(data, SECRET, (decData) => {
+                add_row(decData, key);
+              });
+            } else {
+              add_row(data, key);
+            }
+          });
+
+          document.getElementById(btn_new).onclick = () => {
+            SC_newCommand();
+          };
+        }
+
       },
       notificaciones: {
         navcss: "btn6",
