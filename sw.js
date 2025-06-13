@@ -1,4 +1,4 @@
-var cacheName = 'telesec_2025-06-13_1';
+var cacheName = 'telesec_2025-06-13_2';
 
 self.addEventListener('install', event => {
   event.waitUntil(
@@ -64,6 +64,30 @@ self.addEventListener('install', event => {
         "static/ico/user_generic.png",
         "static/ico/water_tap.png",
         "static/ico/wheat.png",
+        "static/ico/layered1/Azucar-Az. Blanco.png",
+        "static/ico/layered1/Azucar-Az. Moreno.png",
+        "static/ico/layered1/Azucar-Edulcorante.png",
+        "static/ico/layered1/Azucar-Sacarina.png",
+        "static/ico/layered1/Azucar-Sin.png",
+        "static/ico/layered1/Azucar-Stevia (Gotas).png",
+        "static/ico/layered1/Azucar-Stevia (Pastillas).png",
+        "static/ico/layered1/Background.png",
+        "static/ico/layered1/Cafeina-Con.png",
+        "static/ico/layered1/Cafeina-Sin.png",
+        "static/ico/layered1/Leche-Agua.png",
+        "static/ico/layered1/Leche-Sin lactosa.png",
+        "static/ico/layered1/Leche-Vegetal.png",
+        "static/ico/layered1/Leche-de Vaca.png",
+        "static/ico/layered1/Selección-CafeSolo.png",
+        "static/ico/layered1/Selección-CaféLeche.png",
+        "static/ico/layered1/Selección-ColaCao.png",
+        "static/ico/layered1/Selección-Infusion.png",
+        "static/ico/layered1/Selección-Leche.png",
+        "static/ico/layered1/Tamaño-Grande.png",
+        "static/ico/layered1/Tamaño-Pequeño.png",
+        "static/ico/layered1/Temperatura-Caliente.png",
+        "static/ico/layered1/Temperatura-Frio.png",
+        "static/ico/layered1/Temperatura-Templado.png",
       ]))
   );
 });
