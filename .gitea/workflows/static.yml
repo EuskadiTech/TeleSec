@@ -2,7 +2,7 @@ name: Build server
 
 on:
   push:
-    branches: ["main"]
+    tag: ["v*-*-*_*"]
 
 jobs:
   build-and-deploy:
