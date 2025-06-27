@@ -5,7 +5,7 @@ on:
     branches: ["main"]
 
 jobs:
-  ProjectTest:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,7 +18,7 @@ jobs:
       - name: "Build app"
         run: "python3 build.py"
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v3
         with:
           # Upload built files
           name: 'TeleSec-dist'
