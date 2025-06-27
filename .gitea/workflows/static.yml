@@ -23,6 +23,7 @@ jobs:
         with:
           # Upload built files
           name: 'TeleSec-dist'
+          path: ./dist
       - name: "mkdir"
         run: "mkdir -p _artifact"
       - name: Download artifact
