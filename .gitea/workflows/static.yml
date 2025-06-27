@@ -16,6 +16,9 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
+      - uses: actions/setup-go@v5
+        with:
+          check-latest: true
       - name: "Build app"
         run: "python3 build.py"
       - name: Upload artifact
@@ -24,18 +27,13 @@ jobs:
           # Upload built files
           name: 'TeleSec-dist'
           path: ./dist
-      - name: "mkdir"
-        run: "mkdir -p _artifact"
-      - name: Download artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: 'TeleSec-dist'
-          path: _artifact
+      - name: "zip-it-up"
+        run: "zip -r TeleSec-dist.zip ./dist"
       - name: "List _artifact"
         run: "ls -la _artifact"
       - name: Upload as release
         uses: https://gitea.com/actions/release-action@main
         with:
           files: |-
-            _artifact/**
+            TeleSec-dist.zip
           api_key: '${{secrets.TOKEN_PUSH_PLUS}}'
