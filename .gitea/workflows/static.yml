@@ -2,7 +2,7 @@ name: Build server
 
 on:
   push:
-    tag: ["v*-*-*_*"]
+    tags: ["v*-*-*_*"]
 
 jobs:
   build-and-deploy:
