@@ -19,7 +19,7 @@ jobs:
       - name: "Build app"
         run: "python3 build.py"
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           # Upload built files
           name: 'TeleSec-dist'
