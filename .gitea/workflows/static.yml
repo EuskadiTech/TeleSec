@@ -23,4 +23,18 @@ jobs:
         with:
           # Upload built files
           name: 'TeleSec-dist'
-          path: './dist'
+      - name: "mkdir"
+        run: "mkdir -p _artifact"
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: 'TeleSec-dist'
+          path: _artifact
+      - name: "Zip app"
+        run: "zip build.py"
+      - name: Upload as release
+        uses: https://gitea.com/actions/release-action@main
+        with:
+          files: |-
+            _artifact/**
+          api_key: '${{secrets.TOKEN_PUSH_PLUS}}'
