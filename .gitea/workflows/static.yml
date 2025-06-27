@@ -29,8 +29,6 @@ jobs:
           path: ./dist
       - name: "zip-it-up"
         run: "zip -r TeleSec-dist.zip ./dist"
-      - name: "List _artifact"
-        run: "ls -la _artifact"
       - name: Upload as release
         uses: https://gitea.com/actions/release-action@main
         with:
