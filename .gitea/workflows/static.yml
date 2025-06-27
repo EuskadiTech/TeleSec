@@ -31,8 +31,8 @@ jobs:
         with:
           name: 'TeleSec-dist'
           path: _artifact
-      - name: "Zip app"
-        run: "zip build.py"
+      - name: "List _artifact"
+        run: "ls -la _artifact"
       - name: Upload as release
         uses: https://gitea.com/actions/release-action@main
         with:
