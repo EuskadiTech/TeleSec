@@ -1033,7 +1033,7 @@
         return 0;
       }
 
-      function TS_IndexElement(pageco, config, ref, container) {
+      function TS_IndexElement(pageco, config, ref, container, rowCallback = undefined, canAddCallback = undefined) {
         // Every item in config should have:
         // key: string
         // type: string
@@ -1075,13 +1075,185 @@
             .sort(sorter)
             .forEach((data) => {
               var new_tr = document.createElement("tr");
-
+                
+              if (canAddCallback != undefined) {
+                if (canAddCallback(data) == true) {return;}
+              }
+              tablebody_EL.append(new_tr);
+              if (rowCallback != undefined) {
+                rowCallback(data, new_tr)
+              }
               config.forEach((key) => {
                 switch (key.type) {
                   case "raw":
                     new_tr.innerHTML += `<td>${
                       data[key.key] || key.default
                     }</td>`;
+                    break;
+                  case "comanda":
+                    var span_precio = safeuuid();
+                    var precio = SC_priceCalc(JSON.parse(data.Comanda))[0];
+                    new_tr.innerHTML += `<td>
+                          ${setLayeredImages(
+                            JSON.parse(data.Comanda),
+                            data._key
+                          )}
+                          <pre style="font-size: 15px; display: inline-block;"><span style="font-size: 20px;" id="${span_precio}"></span>\n${
+                      SC_parse_short(JSON.parse(data.Comanda)) +
+                      "<hr>" +
+                      data.Notas
+                    }</pre></td>`;
+
+                    if (SC_Personas[data.Persona].Puntos >= 10) {
+                      document.getElementById(
+                        span_precio
+                      ).innerHTML = `Total: Gratis!(${precio}c)`;
+                    } else {
+                      document.getElementById(
+                        span_precio
+                      ).innerHTML = `Total: ${precio}c`;
+                    }
+                    break;
+                  case "comanda-status":
+                    var sc_nobtn = "";
+                    if (urlParams.get("sc_nobtn") == "yes") {
+                      sc_nobtn = "pointer-events: none; opacity: 0.5";
+                    }
+                    var btn_Pedido = safeuuid();
+                    var btn_Preparacion = safeuuid();
+                    var btn_Hecho = safeuuid();
+                    var btn_Entregado = safeuuid();
+                    var btn_Deuda = safeuuid();
+                    var btn_Pagado = safeuuid();
+                    new_tr.innerHTML += `<td style="font-size: 17px; ${sc_nobtn};">
+                          <button id="${btn_Pedido}" class="">Pedido</button>
+                          <br><button id="${btn_Preparacion}" class="">En preparación</button>
+                          <br><button id="${btn_Hecho}" class="">Listo</button>
+                          <br><button id="${btn_Entregado}" class="">Entregado</button>
+                          <br><button id="${btn_Deuda}" class="">Deuda</button>
+                          <br><button id="${btn_Pagado}" class="">Pagado</button></td>`;
+                    if (data.Estado == "Pedido") {
+                      document.getElementById(btn_Pedido).classList = "rojo";
+                    }
+                    if (data.Estado == "En preparación") {
+                      document.getElementById(btn_Preparacion).classList = "rojo";
+                    }
+                    if (data.Estado == "Listo") {
+                      document.getElementById(btn_Hecho).classList = "rojo";
+                    }
+                    if (data.Estado == "Entregado") {
+                      document.getElementById(btn_Entregado).classList = "rojo";
+                    }
+                    if (data.Estado == "Deuda") {
+                      document.getElementById(btn_Deuda).classList = "rojo";
+                    }
+                    
+                  // Acciónes
+                  document.getElementById(btn_Pedido).onclick = () => {
+                    window.event.cancelBubble = true;
+                    window.event.stopPropagation();
+                    data.Estado = "Pedido";
+                    var enc = SEA.encrypt(data, SECRET, (encrypted) => {
+                      betterGunPut(
+                        ref.get(data._key),
+                        encrypted
+                      );
+                      toastr.success("Guardado!");
+                    });
+                  };
+                  document.getElementById(btn_Preparacion).onclick = () => {
+                    window.event.cancelBubble = true;
+                    window.event.stopPropagation();
+                    data.Estado = "En preparación";
+                    var enc = SEA.encrypt(data, SECRET, (encrypted) => {
+                      betterGunPut(
+                        ref.get(data._key),
+                        encrypted
+                      );
+                      toastr.success("Guardado!");
+                    });
+                  };
+                  document.getElementById(btn_Hecho).onclick = () => {
+                    window.event.cancelBubble = true;
+                    window.event.stopPropagation();
+                    data.Estado = "Listo";
+                    var enc = SEA.encrypt(data, SECRET, (encrypted) => {
+                      betterGunPut(
+                        ref.get(data._key),
+                        encrypted
+                      );
+                      toastr.success("Guardado!");
+                    });
+                  };
+                  document.getElementById(btn_Entregado).onclick = () => {
+                    window.event.cancelBubble = true;
+                    window.event.stopPropagation();
+                    data.Estado = "Entregado";
+                    var enc = SEA.encrypt(data, SECRET, (encrypted) => {
+                      betterGunPut(
+                        ref.get(data._key),
+                        encrypted
+                      );
+                      toastr.success("Guardado!");
+                    });
+                  };
+                  document.getElementById(btn_Deuda).onclick = () => {
+                    window.event.cancelBubble = true;
+                    window.event.stopPropagation();
+                    data.Estado = "Deuda";
+                    var enc = SEA.encrypt(data, SECRET, (encrypted) => {
+                      betterGunPut(
+                        ref.get(data._key),
+                        encrypted
+                      );
+                      toastr.success("Guardado!");
+                    });
+                  };
+                  document.getElementById(btn_Pagado).onclick = () => {
+                    window.event.cancelBubble = true;
+                    window.event.stopPropagation();
+                    if (
+                      !confirm(
+                        "¿Quieres marcar como pagado? - Se borrara la comanda y se actualizarán los puntos."
+                      )
+                    ) {
+                      return;
+                    }
+                    data.Estado = "Pagado";
+                    betterGunPut(
+                      ref.get(data._key),
+                      null
+                    );
+                    //setUrlHash("personas");
+                    //setUrlHash("supercafe");
+                    toastr.success("Guardado!");
+                    if (SC_Personas[data.Persona].Puntos >= 10) {
+                      SC_Personas[data.Persona].Puntos -= 10;
+                      toastr.success(
+                        "¡Comada gratis para " +
+                          SC_Personas[data.Persona].Nombre +
+                          "!"
+                      );
+                      toastr.success(
+                        "¡Comada gratis para " +
+                          SC_Personas[data.Persona].Nombre +
+                          "!"
+                      );
+                    } else {
+                      SC_Personas[data.Persona].Puntos += 1;
+                      toastr.success("¡Comada DE PAGO!");
+                    }
+                    SEA.encrypt(
+                      SC_Personas[data.Persona],
+                      SECRET,
+                      (encrypted) => {
+                        betterGunPut(
+                          gun.get(TABLE).get("personas").get(data.Persona),
+                          encrypted
+                        );
+                      }
+                    );
+                  };
                     break;
                   case "persona":
                     var persona = SC_Personas[data[key.key]];
@@ -1113,15 +1285,9 @@
                     break;
                 }
               });
-
-              new_tr.style.backgroundColor = "#FFCCCB";
-              if (data.Estado == "leido") {
-                new_tr.style.backgroundColor = "lightgreen";
-              }
               new_tr.onclick = () => {
                 setUrlHash(pageco + "," + data._key);
               };
-              tablebody_EL.append(new_tr);
             });
         }
         ref.map().on((data, key, _msg, _ev) => {
@@ -2056,6 +2222,7 @@
             const tablebody2 = safeuuid();
             var btn_new = safeuuid();
             var tts_check = safeuuid();
+            var old = {}
             container.innerHTML = `
                 <h1>SuperCafé</h1>
                 <button id="${btn_new}" style="${sc_nobtn};">Nueva comanda</button>
@@ -2067,323 +2234,153 @@
 
                 <details style="background: beige; padding: 15px; border-radius: 15px; border: 2px solid black" open>
                   <summary>Todas las comandas</summary>
-                  <div id="scrolltable">
-                    <table>
-                      <thead>
-                          <tr>
-                            <th>Persona</th>
-                            <th style="${sc_nobtn};">Estado</th>
-                            <th>Comanda</th>
-                          </tr>
-                      </thead>
-                      <tbody id="${tablebody}">
-                      </tbody>
-                    </table>
-                  </div>
+                  <div id="cont1"></div>
                 </details>
                 <br>
                 <details style="background: lightpink; padding: 15px; border-radius: 15px; border: 2px solid black" open>
                   <summary>Deudas</summary>
                   <div id="scrolltable2">
-                    <table>
-                      <thead>
-                          <tr>
-                            <th>Persona</th>
-                            <th style="${sc_nobtn};">Estado</th>
-                            <th>Comanda</th>
-                          </tr>
-                      </thead>
-                      <tbody id="${tablebody2}">
-                      </tbody>
-                    </table>
-                  </div>
+                  <div id="cont2"></div>
                 </details>
                 `;
 
-            tableScroll("#scrolltable"); // id="scrolltable"
-            tableScroll("#scrolltable2"); // id="scrolltable2"
-            var tablebody_EL = document.getElementById(tablebody);
-            var tablebody2_EL = document.getElementById(tablebody);
-            var rows2 = {};
-            function render() {
-              function sorter(a, b) {
-                if (
-                  SC_Personas[a.Persona].Region.toUpperCase() <
-                  SC_Personas[b.Persona].Region.toUpperCase()
-                ) {
-                  return -1;
+            
+            //Todas las comandas
+            TS_IndexElement(
+              "supercafe",
+              [
+                {
+                  key: "Persona",
+                  type: "persona",
+                  default: "",
+                  label: "Persona",
+                },
+                {
+                  key: "Estado",
+                  type: "comanda-status",
+                  default: "",
+                  label: "Estado",
+                },
+                {
+                  key: "Comanda",
+                  type: "comanda",
+                  default: "",
+                  label: "Comanda",
+                },
+              ],
+              gun.get(TABLE).get("supercafe"),
+              document.querySelector("#cont1"),
+              (data, new_tr) => {
+                // new_tr.style.backgroundColor = "#FFCCCB";
+                
+                if (data.Estado == "Pedido") {
+                  new_tr.style.backgroundColor = "#FFFFFF";
                 }
-                if (
-                  SC_Personas[a.Persona].Region.toUpperCase() >
-                  SC_Personas[b.Persona].Region.toUpperCase()
-                ) {
-                  return 1;
+                if (data.Estado == "En preparación") {
+                  new_tr.style.backgroundColor = "#FFCCCB";
                 }
-                return 0;
+                if (data.Estado == "Listo") {
+                  new_tr.style.backgroundColor = "gold";
+                }
+                if (data.Estado == "Entregado") {
+                  new_tr.style.backgroundColor = "lightgreen";
+                }
+                if (data.Estado == "Deuda") {
+                  new_tr.style.backgroundColor = "#f5d3ff";
+                }
+              },
+              (data) => {
+                if (data.Estado == "Deuda") {return true;}
+                var key = data._key
+                if (old[key] == undefined) {
+                  old[key] = "";
+                }
+                if (old[key] != data.Estado) {
+                  if (tts && document.getElementById(tts_check).checked) {
+                    var msg = `Comanda de ${
+                      SC_Personas[data.Persona].Region
+                    }. - ${JSON.parse(data.Comanda)["Selección"]}. - ${
+                      SC_Personas[data.Persona].Nombre
+                    }. - ${data.Estado}`;
+                    console.log("TTS: " + msg);
+                    let utterance = new SpeechSynthesisUtterance(msg);
+                    utterance.rate = 0.9;
+                    // utterance.voice = speechSynthesis.getVoices()[7]
+                    speechSynthesis.speak(utterance);
+                  }
+                }
+                old[key] = data.Estado;
               }
-              var tablebody_EL = document.getElementById(tablebody);
-              var tablebody2_EL = document.getElementById(tablebody2);
-              tablebody_EL.innerHTML = "";
-              tablebody2_EL.innerHTML = "";
-              var DefaultPersona = {
-                Foto: "static/ico/user_generic.png",
-                Nombre: "Desconocido??",
-                Puntos: "1",
-                Region: "SIN AULA",
-                Roles: "Cafe_SiCaf",
-                SC_Anilla: "#000000",
-                markdown: "Fantasma",
-                _key: "135733281028030249",
-              };
-              Object.values(rows2)
-                .sort(sorter)
-                .forEach((data) => {
-                  var btn_Pedido = safeuuid();
-                  var btn_Preparacion = safeuuid();
-                  var btn_Hecho = safeuuid();
-                  var btn_Entregado = safeuuid();
-                  var btn_Deuda = safeuuid();
-                  var btn_Pagado = safeuuid();
-                  var span_precio = safeuuid();
-                  var persona = SC_Personas[data.Persona] || DefaultPersona;
-                  var new_tr = document.createElement("tr");
-                  var pcalc = SC_priceCalc(JSON.parse(data.Comanda));
-                  var precio = pcalc[0];
-                  var resumen = pcalc[1];
-                  if (persona == DefaultPersona) {
-                    data.Persona = "135733281028030249";
-                  }
-                  if (sc_nobtn != "") {
-                    new_tr.style.pointerEvents = "none";
-                  }
-                  var regco = stringToColour(
-                    persona.Region.toLowerCase() || "?"
-                  );
-                  new_tr.innerHTML = `
-                  <td class="" style="text-align: center; font-size: 20px; background-color: ${regco}; color: ${colorIsDarkAdvanced(
-                    regco
-                  )}">
-                    <span style="font-size: 40px; text-transform: capitalize;">
-                      ${persona.Region.toLowerCase() || "?"}
-                    </span><br>
-                    <span style="background-color: white; border: 2px solid black; border-radius: 5px; display: inline-block; padding: 5px; color: black;">
-                      <img src="${
-                        persona.Foto || "static/ico/user_generic.png"
-                      }" height="70">
-                      <br>${persona.Nombre || ""}
-                      <br><span style="font-size: 17px;">${
-                        persona.Puntos || "0"
-                      } puntos.</span>
-                    </span>
-                    <br><br> ${data.Fecha}
-                  </td>
-                        <td style="font-size: 17px; ${sc_nobtn};">
-                          <button id="${btn_Pedido}" class="">Pedido</button>
-                          <br><button id="${btn_Preparacion}" class="">En preparación</button>
-                          <br><button id="${btn_Hecho}" class="">Listo</button>
-                          <br><button id="${btn_Entregado}" class="">Entregado</button>
-                          <br><button id="${btn_Deuda}" class="">Deuda</button>
-                          <br><button id="${btn_Pagado}" class="">Pagado</button></td>
-                        <td>
-                          ${setLayeredImages(
-                            JSON.parse(data.Comanda),
-                            data._key
-                          )}
-                          <pre style="font-size: 15px; display: inline-block;"><span style="font-size: 20px;" id="${span_precio}"></span>\n${
-                    SC_parse_short(JSON.parse(data.Comanda)) +
-                    "<hr>" +
-                    data.Notas
-                  }</pre></td>
-                        `;
-                  if (data.Estado == "Deuda") {
-                    tablebody2_EL.append(new_tr);
-                  } else {
-                    tablebody_EL.append(new_tr);
-                  }
-                  if (data.Estado == "Pedido") {
-                    document.getElementById(btn_Pedido).classList = "rojo";
-                    new_tr.style.backgroundColor = "#FFFFFF";
-                  }
-                  if (data.Estado == "En preparación") {
-                    document.getElementById(btn_Preparacion).classList = "rojo";
-                    new_tr.style.backgroundColor = "#FFCCCB";
-                  }
-                  if (data.Estado == "Listo") {
-                    new_tr.style.backgroundColor = "gold";
-                    document.getElementById(btn_Hecho).classList = "rojo";
-                  }
-                  if (data.Estado == "Entregado") {
-                    document.getElementById(btn_Entregado).classList = "rojo";
-                    new_tr.style.backgroundColor = "lightgreen";
-                  }
-                  if (data.Estado == "Deuda") {
-                    document.getElementById(btn_Deuda).classList = "rojo";
-                    new_tr.style.backgroundColor = "#f5d3ff";
-                  }
-                  new_tr.onclick = () => {
-                    setUrlHash("supercafe," + data._key);
-                  };
-                  if (SC_Personas[data.Persona].Puntos >= 10) {
-                    document.getElementById(
-                      span_precio
-                    ).innerHTML = `Total: Gratis!(${precio}c)`;
-                  } else {
-                    document.getElementById(
-                      span_precio
-                    ).innerHTML = `Total: ${precio}c`;
-                  }
-                  // Acciónes
-                  document.getElementById(btn_Pedido).onclick = () => {
-                    window.event.cancelBubble = true;
-                    window.event.stopPropagation();
-                    data.Estado = "Pedido";
-                    var enc = SEA.encrypt(data, SECRET, (encrypted) => {
-                      betterGunPut(
-                        gun.get(TABLE).get("supercafe").get(data._key),
-                        encrypted
-                      );
-                      toastr.success("Guardado!");
-                    });
-                  };
-                  document.getElementById(btn_Preparacion).onclick = () => {
-                    window.event.cancelBubble = true;
-                    window.event.stopPropagation();
-                    data.Estado = "En preparación";
-                    var enc = SEA.encrypt(data, SECRET, (encrypted) => {
-                      betterGunPut(
-                        gun.get(TABLE).get("supercafe").get(data._key),
-                        encrypted
-                      );
-                      toastr.success("Guardado!");
-                    });
-                  };
-                  document.getElementById(btn_Hecho).onclick = () => {
-                    window.event.cancelBubble = true;
-                    window.event.stopPropagation();
-                    data.Estado = "Listo";
-                    var enc = SEA.encrypt(data, SECRET, (encrypted) => {
-                      betterGunPut(
-                        gun.get(TABLE).get("supercafe").get(data._key),
-                        encrypted
-                      );
-                      toastr.success("Guardado!");
-                    });
-                  };
-                  document.getElementById(btn_Entregado).onclick = () => {
-                    window.event.cancelBubble = true;
-                    window.event.stopPropagation();
-                    data.Estado = "Entregado";
-                    var enc = SEA.encrypt(data, SECRET, (encrypted) => {
-                      betterGunPut(
-                        gun.get(TABLE).get("supercafe").get(data._key),
-                        encrypted
-                      );
-                      toastr.success("Guardado!");
-                    });
-                  };
-                  document.getElementById(btn_Deuda).onclick = () => {
-                    window.event.cancelBubble = true;
-                    window.event.stopPropagation();
-                    data.Estado = "Deuda";
-                    var enc = SEA.encrypt(data, SECRET, (encrypted) => {
-                      betterGunPut(
-                        gun.get(TABLE).get("supercafe").get(data._key),
-                        encrypted
-                      );
-                      toastr.success("Guardado!");
-                    });
-                  };
-                  document.getElementById(btn_Pagado).onclick = () => {
-                    window.event.cancelBubble = true;
-                    window.event.stopPropagation();
-                    if (
-                      !confirm(
-                        "¿Quieres marcar como pagado? - Se borrara la comanda y se actualizarán los puntos."
-                      )
-                    ) {
-                      return;
-                    }
-                    data.Estado = "Pagado";
-                    betterGunPut(
-                      gun.get(TABLE).get("supercafe").get(data._key),
-                      null
-                    );
-                    //setUrlHash("personas");
-                    //setUrlHash("supercafe");
-                    toastr.success("Guardado!");
-                    if (SC_Personas[data.Persona].Puntos >= 10) {
-                      SC_Personas[data.Persona].Puntos -= 10;
-                      toastr.success(
-                        "¡Comada gratis para " +
-                          SC_Personas[data.Persona].Nombre +
-                          "!"
-                      );
-                      toastr.success(
-                        "¡Comada gratis para " +
-                          SC_Personas[data.Persona].Nombre +
-                          "!"
-                      );
-                    } else {
-                      SC_Personas[data.Persona].Puntos += 1;
-                      toastr.success("¡Comada DE PAGO!");
-                    }
-                    SEA.encrypt(
-                      SC_Personas[data.Persona],
-                      SECRET,
-                      (encrypted) => {
-                        betterGunPut(
-                          gun.get(TABLE).get("personas").get(data.Persona),
-                          encrypted
-                        );
-                      }
-                    );
-                  };
-                });
-            }
-            var old = {};
-            gun
-              .get(TABLE)
-              .get("supercafe")
-              .map()
-              .on((data, key, _msg, _ev) => {
-                EVENTLISTENER = _ev;
-                //alert("sc_map_on")
-                function add_row(data, key) {
-                  if (data != null) {
-                    data["_key"] = key;
-                    if (old[key] == undefined) {
-                      old[key] = "";
-                    }
-                    if (old[key] != data.Estado) {
-                      if (tts && document.getElementById(tts_check).checked) {
-                        var msg = `Comanda de ${
-                          SC_Personas[data.Persona].Region
-                        }. - ${JSON.parse(data.Comanda)["Selección"]}. - ${
-                          SC_Personas[data.Persona].Nombre
-                        }. - ${data.Estado}`;
-                        console.log("TTS: " + msg);
-                        let utterance = new SpeechSynthesisUtterance(msg);
-                        utterance.rate = 0.9;
-                        // utterance.voice = speechSynthesis.getVoices()[7]
-                        speechSynthesis.speak(utterance);
-                      }
-                    }
-                    rows2[key] = data;
-                    old[key] = data.Estado;
-                  } else {
-                    delete rows2[key];
-                    delete old[key];
-                  }
-                  render();
+            );
+            
+            //Deudas
+            TS_IndexElement(
+              "supercafe",
+              [
+                {
+                  key: "Persona",
+                  type: "persona",
+                  default: "",
+                  label: "Persona",
+                },
+                {
+                  key: "Estado",
+                  type: "comanda-status",
+                  default: "",
+                  label: "Estado",
+                },
+                {
+                  key: "Comanda",
+                  type: "comanda",
+                  default: "",
+                  label: "Comanda",
+                },
+              ],
+              gun.get(TABLE).get("supercafe"),
+              document.querySelector("#cont2"),
+              (data, new_tr) => {
+                // new_tr.style.backgroundColor = "#FFCCCB";
+                
+                if (data.Estado == "Pedido") {
+                  new_tr.style.backgroundColor = "#FFFFFF";
                 }
-                if (typeof data == "string") {
-                  SEA.decrypt(data, SECRET, (data) => {
-                    add_row(data, key);
-                  });
-                } else {
-                  add_row(data, key);
+                if (data.Estado == "En preparación") {
+                  new_tr.style.backgroundColor = "#FFCCCB";
                 }
-              });
+                if (data.Estado == "Listo") {
+                  new_tr.style.backgroundColor = "gold";
+                }
+                if (data.Estado == "Entregado") {
+                  new_tr.style.backgroundColor = "lightgreen";
+                }
+                if (data.Estado == "Deuda") {
+                  new_tr.style.backgroundColor = "#f5d3ff";
+                }
+              },
+              (data) => {
+                if (data.Estado != "Deuda") {return true;}
+                var key = data._key
+                if (old[key] == undefined) {
+                  old[key] = "";
+                }
+                if (old[key] != data.Estado) {
+                  if (tts && document.getElementById(tts_check).checked) {
+                    var msg = `Comanda de ${
+                      SC_Personas[data.Persona].Region
+                    }. - ${JSON.parse(data.Comanda)["Selección"]}. - ${
+                      SC_Personas[data.Persona].Nombre
+                    }. - ${data.Estado}`;
+                    console.log("TTS: " + msg);
+                    let utterance = new SpeechSynthesisUtterance(msg);
+                    utterance.rate = 0.9;
+                    // utterance.voice = speechSynthesis.getVoices()[7]
+                    speechSynthesis.speak(utterance);
+                  }
+                }
+                old[key] = data.Estado;
+              }
+            );
+            
             document.getElementById(btn_new).onclick = () => {
               setUrlHash("supercafe," + safeuuid(""));
             };
@@ -2600,7 +2597,13 @@
                 },
               ],
               gun.get(TABLE).get("notificaciones"),
-              document.querySelector("#cont")
+              document.querySelector("#cont"),
+              (data, new_tr) => {
+                new_tr.style.backgroundColor = "#FFCCCB";
+                if (data.Estado == "leido") {
+                  new_tr.style.backgroundColor = "lightgreen";
+                }
+              }
             );
             document.getElementById(btn_new).onclick = () => {
               setUrlHash("notificaciones," + safeuuid(""));
