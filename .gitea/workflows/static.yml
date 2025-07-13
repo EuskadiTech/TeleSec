@@ -35,3 +35,20 @@ jobs:
           files: |-
             TeleSec-dist.zip
           api_key: '${{secrets.TOKEN_PUSH_PLUS}}'
+      - name: Copy files via SSH
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          source: "TeleSec-dist.zip"
+          target: ${{ secrets.FOLDER }}TeleSec.zip
+      - name: Execute remote SSH commands using password
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          script: |
+            cd ${{ secrets.FOLDER }}
+            unzip TeleSec.zip
