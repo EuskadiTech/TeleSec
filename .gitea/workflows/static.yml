@@ -37,8 +37,6 @@ jobs:
           port: 22                                                     # Remote server port - REQUIRED false - DEFAULT 22
           user: ${{secrets.USER}}                                      # Remote server user - REQUIRED true
           key: ${{secrets.KEY}}                                        # Remote server private key - REQUIRED at least one of "password" or "key" 
-          post_upload: "ls ${{ secrets.FOLDER }}" # Command to run via ssh after scp upload - REQUIRED false
-          scp_options: -v                                              # Flags to use during scp - REQUIRED false - DEFAULT ''
       - name: "zip-it-up"
         run: "zip -r TeleSec-dist.zip ./dist"
       - name: Upload as release
