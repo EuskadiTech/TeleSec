@@ -29,34 +29,7 @@ jobs:
           # Upload built files
           name: 'TeleSec-dist'
           path: ./dist
-      - name: "zip-it-up"
-        run: "zip -r TeleSec-dist.zip ./dist"
-      - name: Upload as release
-        uses: https://gitea.com/actions/release-action@main
-        with:
-          files: |-
-            TeleSec-dist.zip
-          api_key: '${{secrets.TOKEN_PUSH_PLUS}}'
-      - name: Copy files via SSH
-        uses: appleboy/scp-action@v1
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.KEY }}
-          source: "TeleSec-dist.zip"
-          tar_exec: "tar --no-same-owner "
-          target: ${{ secrets.FOLDER }}
-      - name: Execute remote SSH commands using password
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.KEY }}
-          script: |
-            cd ${{ secrets.FOLDER }}
-            unzip TeleSec-dist.zip
-
-      - uses: mdallasanta/ssh-scp-deploy@{version}
+      - uses: mdallasanta/ssh-scp-deploy@v1.2.0
         with:
           local: './dist/'                                                  # Local file path - REQUIRED false - DEFAULT ./
           remote: '${{ secrets.FOLDER }}'                                                 # Remote file path - REQUIRED false - DEFAULT ~/
@@ -68,3 +41,11 @@ jobs:
           post_upload: "ls ${{ secrets.FOLDER }}" # Command to run via ssh after scp upload - REQUIRED false
           ssh_options: -o StrictHostKeyChecking=no                     # A set of ssh_option separated by -o - REQUIRED false - DEFAULT -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
           scp_options: -v                                              # Flags to use during scp - REQUIRED false - DEFAULT ''
+      - name: "zip-it-up"
+        run: "zip -r TeleSec-dist.zip ./dist"
+      - name: Upload as release
+        uses: https://gitea.com/actions/release-action@main
+        with:
+          files: |-
+            TeleSec-dist.zip
+          api_key: '${{secrets.TOKEN_PUSH_PLUS}}'
