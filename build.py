@@ -1,7 +1,7 @@
 import json
 ASSETS = json.load(open("_assets.json", "r"))
 PREFETCH = ""
-VERSIONCO = "2025-06-27_1"
+VERSIONCO = "2025-07-18_1"
 HANDLEPARSE = ["index.html", "sw.js"]
 for asset in ASSETS:
     PREFETCH += f'<link rel="prefetch" href="{asset}" />\n'
