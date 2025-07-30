@@ -167,7 +167,6 @@ PAGES.supercafe = {
                 <br>
                 <details style="background: lightpink; padding: 15px; border-radius: 15px; border: 2px solid black" open>
                   <summary>Deudas</summary>
-                  <div id="scrolltable2">
                   <div id="cont2"></div>
                 </details>
                 `;
