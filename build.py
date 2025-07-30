@@ -9,7 +9,7 @@ for asset in ASSETS:
     if asset != "sw.js":
         PREFETCH += f'<link rel="prefetch" href="{asset}" />\n'
 
-
+os.system("rm -r dist ; mkdir -p dist ; cp -r assets/* dist/")
 def replace_handles(string):
     string = string.replace("%%PREFETCH%%", PREFETCH)
     string = string.replace("%%VERSIONCO%%", VERSIONCO)
