@@ -34,6 +34,10 @@ if (urlParams.get("login") != null) {
   //location.search = "";
 }
 function open_page(params) {
+  if (SUB_LOGGED_IN != true) {
+    PAGES["login"].index();
+    return;
+  }
   if (params == "") {
     params = "index";
   }

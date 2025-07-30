@@ -198,23 +198,21 @@ PAGES.personas = {
       .map()
       .on((data, key, _msg, _ev) => {
         EVENTLISTENER = _ev;
-        if (data != null) {
-          function add_row(data, key) {
-            if (data != null) {
-              data["_key"] = key;
-              rows[key] = data;
-            } else {
-              delete rows[key];
-            }
-            render();
-          }
-          if (typeof data == "string") {
-            SEA.decrypt(data, SECRET, (data) => {
-              add_row(data, key);
-            });
+        function add_row(data, key) {
+          if (data != null) {
+            data["_key"] = key;
+            rows[key] = data;
           } else {
-            add_row(data, key);
+            delete rows[key];
           }
+          render();
+        }
+        if (typeof data == "string") {
+          SEA.decrypt(data, SECRET, (data) => {
+            add_row(data, key);
+          });
+        } else {
+          add_row(data, key);
         }
       });
     document.getElementById(btn_new).onclick = () => {

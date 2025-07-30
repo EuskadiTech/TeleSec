@@ -58,23 +58,21 @@ PAGES.resumen_diario = {
       .map()
       .on((data, key, _msg, _ev) => {
         EVENTLISTENER2 = _ev;
-        if (data != null) {
-          function add_row(data, key) {
-            if (data != null) {
-              data["_key"] = key;
-              materiales_low[key] = data;
-            } else {
-              delete materiales_low[key];
-            }
-            render_materialesLow();
-          }
-          if (typeof data == "string") {
-            SEA.decrypt(data, SECRET, (data) => {
-              add_row(data, key);
-            });
+        function add_row(data, key) {
+          if (data != null) {
+            data["_key"] = key;
+            materiales_low[key] = data;
           } else {
-            add_row(data, key);
+            delete materiales_low[key];
           }
+          render_materialesLow();
+        }
+        if (typeof data == "string") {
+          SEA.decrypt(data, SECRET, (data) => {
+            add_row(data, key);
+          });
+        } else {
+          add_row(data, key);
         }
       });
     function render_personasHigh() {
@@ -123,23 +121,21 @@ PAGES.resumen_diario = {
       .map()
       .on((data, key, _msg, _ev) => {
         EVENTLISTENER = _ev;
-        if (data != null) {
-          function add_row(data, key) {
-            if (data != null) {
-              data["_key"] = key;
-              personas_high[key] = data;
-            } else {
-              delete personas_high[key];
-            }
-            render_personasHigh();
-          }
-          if (typeof data == "string") {
-            SEA.decrypt(data, SECRET, (data) => {
-              add_row(data, key);
-            });
+        function add_row(data, key) {
+          if (data != null) {
+            data["_key"] = key;
+            personas_high[key] = data;
           } else {
-            add_row(data, key);
+            delete personas_high[key];
           }
+          render_personasHigh();
+        }
+        if (typeof data == "string") {
+          SEA.decrypt(data, SECRET, (data) => {
+            add_row(data, key);
+          });
+        } else {
+          add_row(data, key);
         }
       });
   },

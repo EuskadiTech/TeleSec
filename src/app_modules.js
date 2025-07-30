@@ -215,7 +215,9 @@ function addCategory_Personas(
   options,
   defaultval,
   change_cb = () => {},
-  label = "Persona"
+  label = "Persona",
+  open_default = false,
+  default_empty_text = "- Lista Vacia -"
 ) {
   var details_0 = document.createElement("details"); // children: img_0, summary_0
   //details_0.open = true;
@@ -233,6 +235,9 @@ function addCategory_Personas(
   span_0.append(p.Nombre || "", " ", img_0);
   summary_0.append(label, span_0);
   details_0.append(summary_0, document.createElement("br"));
+  if (open_default == true) {
+    details_0.open = true;
+  }
   details_0.style.textAlign = "center";
   details_0.style.margin = "5px";
   details_0.style.padding = "5px";
@@ -302,6 +307,11 @@ function addCategory_Personas(
       //btn.style.fontSize="17.5px"
       details_0.append(btn);
     });
+  if (Object.entries(options).length == 0) {
+    var btn = document.createElement("b");
+    btn.append(default_empty_text);
+    details_0.append(btn);
+  }
 }
 const SC_actions_icons = {
   Tamaño: "static/ico/sizes.png",
@@ -493,22 +503,20 @@ gun
   .get("personas")
   .map()
   .on((data, key, _msg, _ev) => {
-    if (data != null) {
-      function add_row(data, key) {
-        if (data != null) {
-          data["_key"] = key;
-          SC_Personas[key] = data;
-        } else {
-          delete SC_Personas[key];
-        }
-      }
-      if (typeof data == "string") {
-        SEA.decrypt(data, SECRET, (data) => {
-          add_row(data, key);
-        });
+    function add_row(data, key) {
+      if (data != null) {
+        data["_key"] = key;
+        SC_Personas[key] = data;
       } else {
-        add_row(data, key);
+        delete SC_Personas[key];
       }
+    }
+    if (typeof data == "string") {
+      SEA.decrypt(data, SECRET, (data) => {
+        add_row(data, key);
+      });
+    } else {
+      add_row(data, key);
     }
   });
 
@@ -656,7 +664,6 @@ function TS_IndexElement(
       }
       return 0;
     }
-    var tablebody_EL = document.getElementById(tablebody);
     tablebody_EL.innerHTML = "";
     Object.values(rows)
       .sort(sorter)
@@ -675,34 +682,39 @@ function TS_IndexElement(
         config.forEach((key) => {
           switch (key.type) {
             case "raw":
-              const tdRaw = document.createElement('td');
-              const rawContent = (data[key.key] || key.default || "").replace(/\n/g, '<br>');
+              const tdRaw = document.createElement("td");
+              const rawContent = (data[key.key] || key.default || "").replace(
+                /\n/g,
+                "<br>"
+              );
               tdRaw.innerHTML = rawContent;
               new_tr.appendChild(tdRaw);
               break;
             case "comanda":
-              const tdComanda = document.createElement('td');
+              const tdComanda = document.createElement("td");
               const parsedComanda = JSON.parse(data.Comanda);
               const precio = SC_priceCalc(parsedComanda)[0];
 
               // Create a temporary div to parse the HTML from setLayeredImages
-              const tempDiv = document.createElement('div');
+              const tempDiv = document.createElement("div");
               tempDiv.innerHTML = setLayeredImages(parsedComanda, data._key);
               tdComanda.appendChild(tempDiv.firstChild);
 
-              const pre = document.createElement('pre');
-              pre.style.fontSize = '15px';
-              pre.style.display = 'inline-block';
+              const pre = document.createElement("pre");
+              pre.style.fontSize = "15px";
+              pre.style.display = "inline-block";
 
-              const spanPrecio = document.createElement('span');
-              spanPrecio.style.fontSize = '20px';
-              spanPrecio.innerHTML = SC_Personas[data.Persona].Puntos >= 10 ? 
-                `Total: Gratis!(${precio}c)` : 
-                `Total: ${precio}c`;
-              
+              const spanPrecio = document.createElement("span");
+              spanPrecio.style.fontSize = "20px";
+              spanPrecio.innerHTML =
+                SC_Personas[data.Persona].Puntos >= 10
+                  ? `Total: Gratis!(${precio}c)`
+                  : `Total: ${precio}c`;
+
               pre.appendChild(spanPrecio);
-              pre.appendChild(document.createTextNode('\n'));
-              pre.innerHTML += SC_parse_short(parsedComanda) + "<hr>" + data.Notas;
+              pre.appendChild(document.createTextNode("\n"));
+              pre.innerHTML +=
+                SC_parse_short(parsedComanda) + "<hr>" + data.Notas;
 
               tdComanda.appendChild(pre);
               new_tr.appendChild(tdComanda);
@@ -712,19 +724,19 @@ function TS_IndexElement(
               if (urlParams.get("sc_nobtn") == "yes") {
                 sc_nobtn = "pointer-events: none; opacity: 0.5";
               }
-              const td = document.createElement('td');
-              td.style.fontSize = '17px';
+              const td = document.createElement("td");
+              td.style.fontSize = "17px";
               if (sc_nobtn) {
-                td.style.pointerEvents = 'none';
-                td.style.opacity = '0.5';
+                td.style.pointerEvents = "none";
+                td.style.opacity = "0.5";
               }
 
               // Create buttons
               const createButton = (text, state) => {
-                const button = document.createElement('button');
+                const button = document.createElement("button");
                 button.textContent = text;
                 if (data.Estado === state) {
-                  button.className = 'rojo';
+                  button.className = "rojo";
                 }
                 button.onclick = (event) => {
                   event.preventDefault();
@@ -741,20 +753,24 @@ function TS_IndexElement(
 
               // Create all buttons
               const buttons = [
-                createButton('Pedido', 'Pedido'),
-                createButton('En preparación', 'En preparación'),
-                createButton('Listo', 'Listo'),
-                createButton('Entregado', 'Entregado'),
-                createButton('Deuda', 'Deuda')
+                createButton("Pedido", "Pedido"),
+                createButton("En preparación", "En preparación"),
+                createButton("Listo", "Listo"),
+                createButton("Entregado", "Entregado"),
+                createButton("Deuda", "Deuda"),
               ];
 
               // Create paid button separately due to different behavior
-              const paidButton = document.createElement('button');
-              paidButton.textContent = 'Pagado';
+              const paidButton = document.createElement("button");
+              paidButton.textContent = "Pagado";
               paidButton.onclick = (event) => {
                 event.preventDefault();
                 event.stopPropagation();
-                if (!confirm("¿Quieres marcar como pagado? - Se borrara la comanda y se actualizarán los puntos.")) {
+                if (
+                  !confirm(
+                    "¿Quieres marcar como pagado? - Se borrara la comanda y se actualizarán los puntos."
+                  )
+                ) {
                   return false;
                 }
                 data.Estado = "Pagado";
@@ -762,22 +778,33 @@ function TS_IndexElement(
                 toastr.success("Guardado!");
                 if (SC_Personas[data.Persona].Puntos >= 10) {
                   SC_Personas[data.Persona].Puntos -= 10;
-                  toastr.success("¡Comada gratis para " + SC_Personas[data.Persona].Nombre + "!");
-                  toastr.success("¡Comada gratis para " + SC_Personas[data.Persona].Nombre + "!");
+                  toastr.success(
+                    "¡Comada gratis para " +
+                      SC_Personas[data.Persona].Nombre +
+                      "!"
+                  );
+                  toastr.success(
+                    "¡Comada gratis para " +
+                      SC_Personas[data.Persona].Nombre +
+                      "!"
+                  );
                 } else {
                   SC_Personas[data.Persona].Puntos += 1;
                   toastr.success("¡Comada DE PAGO!");
                 }
                 SEA.encrypt(SC_Personas[data.Persona], SECRET, (encrypted) => {
-                  betterGunPut(gun.get(TABLE).get("personas").get(data.Persona), encrypted);
+                  betterGunPut(
+                    gun.get(TABLE).get("personas").get(data.Persona),
+                    encrypted
+                  );
                 });
                 return false;
               };
 
               // Add all buttons to td with line breaks between
-              buttons.forEach(button => {
+              buttons.forEach((button) => {
                 td.appendChild(button);
-                td.appendChild(document.createElement('br'));
+                td.appendChild(document.createElement("br"));
               });
               td.appendChild(paidButton);
               new_tr.appendChild(td);
@@ -786,41 +813,45 @@ function TS_IndexElement(
               break;
             case "persona":
               const persona = SC_Personas[data[key.key]];
-              const regco = stringToColour((persona.Region || "?").toLowerCase());
-              
-              const tdPersona = document.createElement('td');
-              tdPersona.style.textAlign = 'center';
-              tdPersona.style.fontSize = '20px';
+              const regco = stringToColour(
+                (persona.Region || "?").toLowerCase()
+              );
+
+              const tdPersona = document.createElement("td");
+              tdPersona.style.textAlign = "center";
+              tdPersona.style.fontSize = "20px";
               tdPersona.style.backgroundColor = regco;
               tdPersona.style.color = colorIsDarkAdvanced(regco);
 
-              const regionSpan = document.createElement('span');
-              regionSpan.style.fontSize = '40px';
-              regionSpan.style.textTransform = 'capitalize';
+              const regionSpan = document.createElement("span");
+              regionSpan.style.fontSize = "40px";
+              regionSpan.style.textTransform = "capitalize";
               regionSpan.textContent = (persona.Region || "?").toLowerCase();
               tdPersona.appendChild(regionSpan);
-              
-              tdPersona.appendChild(document.createElement('br'));
 
-              const infoSpan = document.createElement('span');
-              infoSpan.style.backgroundColor = 'white';
-              infoSpan.style.border = '2px solid black';
-              infoSpan.style.borderRadius = '5px';
-              infoSpan.style.display = 'inline-block';
-              infoSpan.style.padding = '5px';
-              infoSpan.style.color = 'black';
+              tdPersona.appendChild(document.createElement("br"));
 
-              const img = document.createElement('img');
+              const infoSpan = document.createElement("span");
+              infoSpan.style.backgroundColor = "white";
+              infoSpan.style.border = "2px solid black";
+              infoSpan.style.borderRadius = "5px";
+              infoSpan.style.display = "inline-block";
+              infoSpan.style.padding = "5px";
+              infoSpan.style.color = "black";
+
+              const img = document.createElement("img");
               img.src = persona.Foto || "static/ico/user_generic.png";
               img.height = 70;
               infoSpan.appendChild(img);
 
-              infoSpan.appendChild(document.createElement('br'));
-              infoSpan.appendChild(document.createTextNode(persona.Nombre || ""));
-              
-              infoSpan.appendChild(document.createElement('br'));
-              const pointsSpan = document.createElement('span');
-              pointsSpan.style.fontSize = '17px';
+              infoSpan.appendChild(document.createElement("br"));
+              infoSpan.appendChild(
+                document.createTextNode(persona.Nombre || "")
+              );
+
+              infoSpan.appendChild(document.createElement("br"));
+              const pointsSpan = document.createElement("span");
+              pointsSpan.style.fontSize = "17px";
               pointsSpan.textContent = (persona.Puntos || "0") + " puntos.";
               infoSpan.appendChild(pointsSpan);
 
@@ -839,23 +870,21 @@ function TS_IndexElement(
   }
   ref.map().on((data, key, _msg, _ev) => {
     EVENTLISTENER = _ev;
-    if (data != null) {
-      function add_row(data, key) {
-        if (data != null) {
-          data["_key"] = key;
-          rows[key] = data;
-        } else {
-          delete rows[key];
-        }
-        render();
-      }
-      if (typeof data == "string") {
-        SEA.decrypt(data, SECRET, (data) => {
-          add_row(data, key);
-        });
+    function add_row(data, key) {
+      if (data != null) {
+        data["_key"] = key;
+        rows[key] = data;
       } else {
-        add_row(data, key);
+        delete rows[key];
       }
+      render();
+    }
+    if (typeof data == "string") {
+      SEA.decrypt(data, SECRET, (data) => {
+        add_row(data, key);
+      });
+    } else {
+      add_row(data, key);
     }
   });
 }
@@ -863,6 +892,9 @@ function TS_IndexElement(
 const PAGES = {};
 document.addEventListener("DOMContentLoaded", () => {
   Object.keys(PAGES).forEach((key) => {
+    if (PAGES[key].Esconder == true) {
+      return;
+    }
     var a = document.createElement("a");
     a.className = "button " + PAGES[key].navcss;
     a.href = "#" + key;

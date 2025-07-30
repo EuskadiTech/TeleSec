@@ -20,3 +20,6 @@ const RELAYS = [
   "https://gun.defucc.me/gun",
 ];
 var SECRET = "";
+var SUB_LOGGED_IN = false;
+var SUB_LOGGED_IN_DETAILS = false;
+var SUB_LOGGED_IN_ID = false;
