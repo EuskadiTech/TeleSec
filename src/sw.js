@@ -1,5 +1,6 @@
 var cacheName = 'telesec_%%VERSIONCO%%';
 
+
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(cacheName)
