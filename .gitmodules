@@ -1,3 +1,3 @@
-[submodule "dist/static/euskaditech-css"]
-	path = dist/static/euskaditech-css
+[submodule "assets/static/euskaditech-css"]
+	path = assets/static/euskaditech-css
 	url = https://git.tech.eus/EuskadiTech/css.git
