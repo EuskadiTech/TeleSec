@@ -2,7 +2,7 @@ import json
 import os
 
 PREFETCH = ""
-VERSIONCO = "2025-07-30_1"
+VERSIONCO = "2025-07-30_2"
 HANDLEPARSE = os.listdir("src/")
 ASSETS = json.load(open("_assets.json", "r")) + HANDLEPARSE
 for asset in ASSETS:

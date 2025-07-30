@@ -1,2 +1,2 @@
 dist/index.html
-dist/sw.js
+dist/*.js

@@ -676,7 +676,8 @@ function TS_IndexElement(
           switch (key.type) {
             case "raw":
               const tdRaw = document.createElement('td');
-              tdRaw.textContent = data[key.key] || key.default;
+              const rawContent = (data[key.key] || key.default || "").replace(/\n/g, '<br>');
+              tdRaw.innerHTML = rawContent;
               new_tr.appendChild(tdRaw);
               break;
             case "comanda":
