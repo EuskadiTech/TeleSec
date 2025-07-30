@@ -636,8 +636,9 @@ function TS_IndexElement(
   // label: string
   var tablebody = safeuuid();
   var tablehead = safeuuid();
+  var scrolltable = safeuuid();
   container.innerHTML = `
-          <div id="scrolltable">
+          <div id="${scrolltable}">
             <table>
               <thead>
                   <tr id="${tablehead}"></tr>
@@ -647,7 +648,7 @@ function TS_IndexElement(
             </table>
           </div>
           `;
-  tableScroll("#scrolltable"); // id="scrolltable"
+  tableScroll("#" + scrolltable); // id="scrolltable"
   var tablehead_EL = document.getElementById(tablehead);
   var tablebody_EL = document.getElementById(tablebody);
   var rows = {};
