@@ -627,7 +627,8 @@ function TS_IndexElement(
   ref,
   container,
   rowCallback = undefined,
-  canAddCallback = undefined
+  canAddCallback = undefined,
+  globalSearchBar = true,
 ) {
   // Every item in config should have:
   // key: string
@@ -637,16 +638,20 @@ function TS_IndexElement(
   var tablebody = safeuuid();
   var tablehead = safeuuid();
   var scrolltable = safeuuid();
+  var searchKeyInput = safeuuid();
+  
+  // Create the container with search bar and table
   container.innerHTML = `
-          <div id="${scrolltable}">
-            <table>
-              <thead>
-                  <tr id="${tablehead}"></tr>
-              </thead>
-              <tbody id="${tablebody}">
-              </tbody>
-            </table>
-          </div>
+    <div id="${scrolltable}">
+      <input type="text" id="${searchKeyInput}" placeholder="🔍 Buscar..." style="width: 100%; max-width: 20rem; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background-color: rebeccapurple; color: white;">
+      <table>
+        <thead>
+            <tr id="${tablehead}"></tr>
+        </thead>
+        <tbody id="${tablebody}">
+        </tbody>
+      </table>
+    </div>
           `;
   tableScroll("#" + scrolltable); // id="scrolltable"
   var tablehead_EL = document.getElementById(tablehead);
@@ -655,6 +660,51 @@ function TS_IndexElement(
   config.forEach((key) => {
     tablehead_EL.innerHTML += `<th>${key.label}</th>`;
   });
+  // Add search functionality
+  const searchKeyEl = document.getElementById(searchKeyInput);
+  searchKeyEl.addEventListener('input', debounce(() => render(), 300));
+
+  function searchInData(data, searchValue, config) {
+    if (!searchValue) return true;
+    
+    // Search in ID
+    if (data._key.toLowerCase().includes(searchValue)) return true;
+    
+    // Search in configured fields
+    for (const field of config) {
+      const value = data[field.key];
+      if (!value) continue;
+
+      // Handle different field types
+      switch (field.type) {
+        case "comanda":
+          try {
+            const comandaData = JSON.parse(data.Comanda);
+            // Search in all comanda fields
+            if (Object.values(comandaData).some(v => 
+              String(v).toLowerCase().includes(searchValue)
+            )) return true;
+          } catch (e) {
+            // If JSON parse fails, search in raw string
+            if (data.Comanda.toLowerCase().includes(searchValue)) return true;
+          }
+          break;
+        case "persona":
+          const persona = SC_Personas[value];
+          if (persona) {
+            // Search in persona fields
+            if (persona.Nombre?.toLowerCase().includes(searchValue)) return true;
+            if (persona.Region?.toLowerCase().includes(searchValue)) return true;
+          }
+          break;
+        default:
+          // For raw and other types, search in the direct value
+          if (String(value).toLowerCase().includes(searchValue)) return true;
+      }
+    }
+    return false;
+  }
+
   function render() {
     function sorter(a, b) {
       if (a.Fecha < b.Fecha) {
@@ -665,8 +715,12 @@ function TS_IndexElement(
       }
       return 0;
     }
+    
+    const searchValue = searchKeyEl.value.toLowerCase().trim();
     tablebody_EL.innerHTML = "";
-    Object.values(rows)
+    Object.entries(rows)
+      .filter(([_, data]) => searchInData(data, searchValue, config))
+      .map(([_, data]) => data)
       .sort(sorter)
       .forEach((data) => {
         var new_tr = document.createElement("tr");
