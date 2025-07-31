@@ -171,7 +171,7 @@ PAGES.notificaciones = {
       container.innerHTML = `
                 <h1>Notificaciones</h1>
                 <button id="${btn_new}">Nueva notificación</button>
-                <div id="cont">
+                <div id="cont"></div>
                 `;
       TS_IndexElement(
         "notificaciones",

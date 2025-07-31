@@ -1,11 +1,14 @@
 PAGES.resumen_diario = {
   navcss: "btn3",
-  Title: "Resumen Semanal",
+  Title: "Resumen Diario",
   index: function () {
     var table_materialesLow = safeuuid();
     var table_personasHigh = safeuuid();
+    var table_comedor = safeuuid();
     container.innerHTML = `
-                <h1>Resumen Semanal</h1>
+                <h1>Resumen Diario</h1>
+                <h2>Menú del comedor de hoy</h2>
+                <span class="btn7" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black;" id="${table_comedor}"></span>
                 <h2>Personas con café gratis (para el Viernes)</h2>
                 <div id="${table_personasHigh}"></div>
                 <h2>Materiales faltantes (o por llegar)</h2>
@@ -138,5 +141,27 @@ PAGES.resumen_diario = {
           add_row(data, key);
         }
       });
+
+    // Comedor (.get("comedor").get(<current iso day>))
+    gun
+      .get(TABLE)
+      .get("comedor")
+      .get(CurrentISODate())
+      .once((data, key) => {
+        function add_row(data) {
+          // Fix newlines
+          data.Platos = data.Platos.replace(/\n/g, "<br>");
+          // Display platos
+          document.getElementById(table_comedor).innerHTML += data.Platos || "No hay platos registrados para hoy.";
+        }
+        if (typeof data == "string") {
+          SEA.decrypt(data, SECRET, (data) => {
+            add_row(data);
+          });
+        } else {
+          add_row(data);
+        }
+      });
+
   },
 };

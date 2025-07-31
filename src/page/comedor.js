@@ -80,7 +80,7 @@ PAGES.comedor = {
     container.innerHTML = `
                 <h1>Menú del comedor</h1>
                 <button id="${btn_new}">Nueva entrada</button>
-                <div id="cont">
+                <div id="cont"></div>
                 `;
     TS_IndexElement(
       "comedor",
