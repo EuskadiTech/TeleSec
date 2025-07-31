@@ -12,7 +12,7 @@ def get_all_files(directory):
     return files
 
 PREFETCH = ""
-VERSIONCO = "2025-07-30_4"
+VERSIONCO = "2025-07-31_1"
 HANDLEPARSE = get_all_files("src")
 
 # Combine assets from JSON and recursively found files

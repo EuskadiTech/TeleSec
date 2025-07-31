@@ -8,7 +8,7 @@ PAGES.comedor = {
     var btn_guardar = safeuuid();
     var btn_borrar = safeuuid();
     container.innerHTML = `
-                <h1>Menú del Comedor <code id="${nameh1}"></code></h1>
+                <h1>Entrada del menú <code id="${nameh1}"></code></h1>
                 <fieldset style="float: left;">
                     <legend>Valores</legend>
                     <label>
