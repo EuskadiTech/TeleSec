@@ -996,7 +996,7 @@ setInterval(() => {
     Booted = true;
     document.getElementById("loading").style.display = "none";
     if (!SUB_LOGGED_IN) {
-      open_page("login");
+      setUrlHash("login");
       return;
     }
     document.getElementById("appendApps").style.display = "block";

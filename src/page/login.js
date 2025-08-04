@@ -39,6 +39,8 @@ PAGES.login = {
         SUB_LOGGED_IN_DETAILS = SC_Personas[SUB_LOGGED_IN_ID]
         SUB_LOGGED_IN = true
         setUrlHash("index")
+        setUrlHash("index")
+        setUrlHash("index")
         document.getElementById("appendApps").style.display = "unset"
       };
       
