@@ -981,7 +981,6 @@ function SetPages() {
 document.addEventListener("DOMContentLoaded", () => {
   SetPages();
   document.getElementById("appendApps").style.display = "none";
-  document.getElementById("loading").style.display = "block";
 });
 var Booted = false;
 getPeers();
