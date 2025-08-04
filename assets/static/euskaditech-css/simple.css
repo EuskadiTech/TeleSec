@@ -1,306 +1,307 @@
+html {
+  color-scheme: light only;
+}
 
-      html {
-        color-scheme: light only;
-      }
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
 
-      body {
-        font-family: Arial, Helvetica, sans-serif;
-      }
-
-      main {
-        /*max-width: 45rem;
+main {
+  /*max-width: 45rem;
             margin: 0 auto;*/
-        padding: 0 15px;
-      }
+  padding: 0 15px;
+}
 
-      .supermesh-indicator {
-        border-top-left-radius: 15px;
-        background-color: greenyellow;
-        border-top: 5px solid green;
-        border-left: 5px solid green;
-        padding: 15px;
-        max-width: 30rem;
-        position: fixed;
-        right: 0;
-        bottom: 0;
-        color: black;
-        display: none;
-      }
+.supermesh-indicator {
+  border-top-left-radius: 15px;
+  background-color: greenyellow;
+  border-top: 5px solid green;
+  border-left: 5px solid green;
+  padding: 15px;
+  max-width: 30rem;
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  color: black;
+  display: none;
+}
 
-      .supermesh-indicator a {
-        color: blue;
-      }
+.supermesh-indicator a {
+  color: blue;
+}
 
-      details.supermesh-indicator summary {
-        font-size: unset;
-      }
+details.supermesh-indicator summary {
+  font-size: unset;
+}
 
-      .link,
-      a {
-        color: blue;
-        text-decoration: underline;
-        cursor: pointer;
-      }
+.link,
+a {
+  color: blue;
+  text-decoration: underline;
+  cursor: pointer;
+}
 
-      .link:hover,
-      a:hover {
-        text-decoration: underline;
-      }
+.link:hover,
+a:hover {
+  text-decoration: underline;
+}
 
-      #articleID {
-        font-family: monospace;
-      }
+#articleID {
+  font-family: monospace;
+}
 
-      @media (prefers-color-scheme: dark) {
-        .link,
-        a {
-          color: lightblue;
-        }
-      }
+@media (prefers-color-scheme: dark) {
 
-      @media print {
-        .supermesh-indicator,
-        .no_print {
-          display: none;
-        }
-      }
+  .link,
+  a {
+    color: lightblue;
+  }
+}
 
-      main {
-        margin-bottom: 25rem;
-      }
+@media print {
 
-      button,
-      .button {
-        display: inline-block;
-        padding: 5px 10px;
-        background-color: beige;
-        border: 2px solid black;
-        font-size: 20px;
-        margin: 3px;
-        text-decoration: none;
-        color: black;
-      }
+  .supermesh-indicator,
+  .no_print {
+    display: none;
+  }
+}
 
-      button:hover,
-      .button:hover {
-        text-decoration: underline;
-      }
+main {
+  margin-bottom: 25rem;
+}
 
-      /* https://coolors.co/palette/ff0000-ff8700-ffd300-deff0a-a1ff0a-0aff99-0aefff-147df5-580aff-be0aff */
-      .rojo {
-        background: #ff0000;
-        color: white;
-      }
+button,
+.button {
+  display: inline-block;
+  padding: 5px 10px;
+  background-color: beige;
+  border: 2px solid black;
+  font-size: 20px;
+  margin: 3px;
+  text-decoration: none;
+  color: black;
+}
 
-      .btn1 {
-        background: #ff0000;
-        color: white;
-      }
+button:hover,
+.button:hover {
+  text-decoration: underline;
+}
 
-      .btn2 {
-        background: #ff8700;
-        color: white;
-      }
+/* https://coolors.co/palette/ff0000-ff8700-ffd300-deff0a-a1ff0a-0aff99-0aefff-147df5-580aff-be0aff */
+.rojo {
+  background: #ff0000;
+  color: white;
+}
 
-      .btn3 {
-        background: #ffd300;
-        color: black;
-      }
+.btn1 {
+  background: #ff0000;
+  color: white;
+}
 
-      .btn4 {
-        background: #deff0a;
-        color: black;
-      }
+.btn2 {
+  background: #ff8700;
+  color: white;
+}
 
-      .btn5 {
-        background: #a1ff0a;
-        color: black;
-      }
+.btn3 {
+  background: #ffd300;
+  color: black;
+}
 
-      .btn6 {
-        background: #0aff99;
-        color: black;
-      }
+.btn4 {
+  background: #deff0a;
+  color: black;
+}
 
-      .btn7 {
-        background: #0aefff;
-        color: black;
-      }
+.btn5 {
+  background: #a1ff0a;
+  color: black;
+}
 
-      .btn8 {
-        background: #147df5;
-        color: white;
-      }
+.btn6 {
+  background: #0aff99;
+  color: black;
+}
 
-      .nav-disabled {
-        background: black !important;
-        color: grey !important;
-      }
+.btn7 {
+  background: #0aefff;
+  color: black;
+}
 
-      .nav-disabled:hover {
-        text-decoration: unset !important;
-      }
+.btn8 {
+  background: #147df5;
+  color: white;
+}
 
-      input,
-      select,
-      textarea {
-        font-size: 18px;
-        padding: 5px;
-        width: calc(100% - 11px);
-      }
+.nav-disabled {
+  background: black !important;
+  color: grey !important;
+}
 
-      select {
-        width: 100%;
-      }
+.nav-disabled:hover {
+  text-decoration: unset !important;
+}
 
-      details input,
-      details select,
-      details textarea {
-        font-size: 18px;
-        padding: 5px;
-        width: calc(100% - 15px);
-      }
+input,
+select,
+textarea {
+  font-size: 18px;
+  padding: 5px;
+  width: calc(100% - 11px);
+}
 
-      input[type="color"] {
-        width: 50px;
-        height: 50px;
-      }
+select {
+  width: 100%;
+}
 
-      textarea {
-        height: 150px;
-      }
+details input,
+details select,
+details textarea {
+  font-size: 18px;
+  padding: 5px;
+  width: calc(100% - 15px);
+}
 
-      details summary {
-        font-size: 20px;
-      }
+input[type="color"] {
+  width: 50px;
+  height: 50px;
+}
 
-      thead tr {
-        background-color: black;
-        color: white;
-      }
+textarea {
+  height: 150px;
+}
 
-      table {
-        display: block;
-        line-break: loose;
-        width: fit-content;
-        min-width: 750px;
-        border: 1px solid black;
-      }
+details summary {
+  font-size: 20px;
+}
 
-      table tr th {
-        line-break: auto;
-      }
+thead tr {
+  background-color: black;
+  color: white;
+}
 
-      table tr td {
-        border-bottom: 3px solid black !important;
-        padding: 5px;
-      }
+table {
+  display: block;
+  line-break: loose;
+  width: fit-content;
+  min-width: 750px;
+  border: 1px solid black;
+}
 
-      .scase {
-        text-transform: lowercase;
-      }
+table tr th {
+  line-break: auto;
+}
 
-      .scase:first-letter {
-        text-transform: uppercase;
-      }
+table tr td {
+  border-bottom: 3px solid black !important;
+  padding: 5px;
+}
 
-      table tr:hover td {
-        text-decoration: underline;
-        background: rgba(200, 200, 200, 0.5);
-        /* color: black; */
-      }
+.scase {
+  text-transform: lowercase;
+}
 
-      table tr:hover td.TextBorder {
-        background: inherit;
-        color: inherit;
-        text-decoration: none;
-      }
+.scase:first-letter {
+  text-transform: uppercase;
+}
 
-      fieldset {
-        max-width: 25rem;
-      }
+table tr:hover td {
+  text-decoration: underline;
+  background: rgba(200, 200, 200, 0.5);
+  /* color: black; */
+}
 
-      .TextBorder {
-        color: black;
-        text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff,
-          1px 1px 0 #fff;
-        -webkit-text-stroke: 0.25px #fff;
-      }
+table tr:hover td.TextBorder {
+  background: inherit;
+  color: inherit;
+  text-decoration: none;
+}
 
-      code {
-        font-size: x-small;
-        color: gray;
-      }
+fieldset {
+  max-width: 25rem;
+}
 
-      .activeSCButton {
-        border: 7px dashed beige;
-        color: beige;
-        background: black !important;
-      }
+.TextBorder {
+  color: black;
+  text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff,
+    1px 1px 0 #fff;
+  -webkit-text-stroke: 0.25px #fff;
+}
 
-      .btn1.activeSCButton {
-        border-color: #ff0000;
-        color: #ff0000;
-      }
+code {
+  font-size: x-small;
+  color: gray;
+}
 
-      .btn2.activeSCButton {
-        border-color: #ff8700;
-        color: #ff8700;
-      }
+.activeSCButton {
+  border: 7px dashed beige;
+  color: beige;
+  background: black !important;
+}
 
-      .btn3.activeSCButton {
-        border-color: #ffd300;
-        color: #ffd300;
-      }
+.btn1.activeSCButton {
+  border-color: #ff0000;
+  color: #ff0000;
+}
 
-      .btn4.activeSCButton {
-        border-color: #deff0a;
-        color: #deff0a;
-      }
+.btn2.activeSCButton {
+  border-color: #ff8700;
+  color: #ff8700;
+}
 
-      .btn5.activeSCButton {
-        border-color: #a1ff0a;
-        color: #a1ff0a;
-      }
+.btn3.activeSCButton {
+  border-color: #ffd300;
+  color: #ffd300;
+}
 
-      .btn6.activeSCButton {
-        border-color: #0aff99;
-        color: #0aff99;
-      }
+.btn4.activeSCButton {
+  border-color: #deff0a;
+  color: #deff0a;
+}
 
-      .btn7.activeSCButton {
-        border-color: #0aefff;
-        color: #0aefff;
-      }
+.btn5.activeSCButton {
+  border-color: #a1ff0a;
+  color: #a1ff0a;
+}
 
-      .btn8.activeSCButton {
-        border-color: #147df5;
-        color: #147df5;
-      }
+.btn6.activeSCButton {
+  border-color: #0aff99;
+  color: #0aff99;
+}
 
-      hr {
-        border-color: black;
-        border-style: solid;
-      }
+.btn7.activeSCButton {
+  border-color: #0aefff;
+  color: #0aefff;
+}
 
-      #snackbar {
-        visibility: hidden;
-        /* min-width: 250px; */
-        background-color: #333;
-        color: #fff;
-        text-align: center;
-        border-radius: 2px;
-        padding: 16px;
-        position: fixed;
-        z-index: 1;
-        right: 70px;
-        bottom: 25px;
-      }
+.btn8.activeSCButton {
+  border-color: #147df5;
+  color: #147df5;
+}
 
-      #snackbar a {
-        color: lightblue;
-      }
+hr {
+  border-color: black;
+  border-style: solid;
+}
 
-      #snackbar.show {
-        visibility: visible;
+#snackbar {
+  visibility: hidden;
+  /* min-width: 250px; */
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 2px;
+  padding: 16px;
+  position: fixed;
+  z-index: 1;
+  right: 70px;
+  bottom: 25px;
+}
+
+#snackbar a {
+  color: lightblue;
+}
+
+#snackbar.show {
+  visibility: visible;
 }

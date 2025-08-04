@@ -14,48 +14,76 @@ function removeCache() {
     location.reload(true);
   });
 }
-function getPeers() {
-  var peerCount = 0;
-  var peerCountEl = document.getElementById("peerCount");
-  var peerListEl = document.getElementById("peerList");
-  var list = document.createElement("ul");
-  document.getElementById("peerPID").innerText = "PID " + gun.back("opt.pid");
-  Object.values(gun.back("opt.peers")).forEach((peer) => {
-    if (
-      peer.wire != undefined &&
-      (peer.wire.readyState == 1 || peer.wire.readyState == "open")
-    ) {
-      peerCount += 1;
-      var wireType = peer.wire.constructor.name;
-      var wireHType = peer.wire.constructor.name;
-      var wireID = peer.id;
-      switch (wireType) {
-        case "WebSocket":
-          wireHType = "Web";
-          wireID = wireID.split("/")[2];
-          break;
-        case "RTCDataChannel":
-          wireHType = "Mesh";
-          wireID = peer.id;
-      }
-      var el = document.createElement("li");
-      el.innerText = `Nodo ${wireHType}: ${wireID}`;
-      list.append(el);
-    }
-  });
-  peerListEl.innerHTML = list.innerHTML;
-  peerCountEl.innerText = peerCount;
+var AtLeastThreePeers = false;
+var ConnectionStarted = false;
+function formatPeerInfo(peer) {
+  const wireType = peer.wire.constructor.name;
+  let wireHType = wireType;
+  let wireID = peer.id;
+
+  switch (wireType) {
+    case "WebSocket":
+      wireHType = "Web";
+      wireID = wireID.split("/")[2];
+      break;
+    case "RTCDataChannel":
+      wireHType = "Mesh";
+      break;
+  }
+
+  return { wireHType, wireID };
+}
+
+function isPeerConnected(peer) {
+  return peer.wire != undefined && 
+         (peer.wire.readyState == 1 || peer.wire.readyState == "open");
+}
+
+function createPeerListElement(wireHType, wireID) {
+  const el = document.createElement("li");
+  el.innerText = `Nodo ${wireHType}: ${wireID}`;
+  return el;
+}
+
+function updateConnectionStatus(peerCount) {
+  const statusImage = peerCount < 3 ? "connect_ko.svg" : "connect_ok.svg";
+  document.getElementById("connectStatus").src = `static/ico/${statusImage}`;
+  
   if (peerCount < 3) {
-    document.getElementById("connectStatus").src = "static/ico/connect_ko.svg";
-    gun.opt({ peers: RELAYS });
+    if (!window.peerRetryCount) window.peerRetryCount = 0;
+    window.peerRetryCount = (window.peerRetryCount + 1) % 3;
+    if (window.peerRetryCount === 0) {
+      gun.opt({ peers: RELAYS });
+    }
+    AtLeastThreePeers = false;
   } else {
-    document.getElementById("connectStatus").src = "static/ico/connect_ok.svg";
+    ConnectionStarted = true;
+    AtLeastThreePeers = true;
   }
 }
-getPeers();
-setInterval(() => {
-  getPeers();
-}, 2500);
+
+function getPeers() {
+  const peerCountEl = document.getElementById("peerCount");
+  const peerListEl = document.getElementById("peerList");
+  const list = document.createElement("ul");
+  
+  document.getElementById("peerPID").innerText = "PID " + gun.back("opt.pid");
+  
+  const connectedPeers = Object.values(gun.back("opt.peers"))
+    .filter(isPeerConnected)
+    .map(peer => {
+      const { wireHType, wireID } = formatPeerInfo(peer);
+      return createPeerListElement(wireHType, wireID);
+    });
+    
+  connectedPeers.forEach(el => list.append(el));
+  
+  peerListEl.innerHTML = list.innerHTML;
+  const peerCount = connectedPeers.length;
+  peerCountEl.innerText = peerCount;
+  
+  updateConnectionStatus(peerCount);
+}
 function safeuuid(prefix = "AXLUID_") {
   return prefix + crypto.randomUUID().split("-")[4];
 }

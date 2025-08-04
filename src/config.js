@@ -23,3 +23,22 @@ var SECRET = "";
 var SUB_LOGGED_IN = false;
 var SUB_LOGGED_IN_DETAILS = false;
 var SUB_LOGGED_IN_ID = false;
+if (urlParams.get("sublogin") != null) {
+  SUB_LOGGED_IN = true;
+  SUB_LOGGED_IN_ID = urlParams.get("sublogin");
+  SUB_LOGGED_IN_DETAILS = true;
+  setTimeout(() => {
+    SUB_LOGGED_IN_DETAILS = SC_Personas[SUB_LOGGED_IN_ID];
+  }, 1500);
+}
+function LogOutTeleSec() {
+  SUB_LOGGED_IN = false;
+  SUB_LOGGED_IN_DETAILS = false;
+  SUB_LOGGED_IN_ID = false;
+  document.getElementById("appendApps").style.display = "none";
+  document.getElementById("loading").style.display = "block";
+  //Remove sublogin from URL and reload
+  urlParams.delete("sublogin");
+  history.replaceState(null, "", "?" + urlParams.toString());
+  location.reload();
+}

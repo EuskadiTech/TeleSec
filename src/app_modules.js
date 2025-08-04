@@ -628,7 +628,7 @@ function TS_IndexElement(
   container,
   rowCallback = undefined,
   canAddCallback = undefined,
-  globalSearchBar = true,
+  globalSearchBar = true
 ) {
   // Every item in config should have:
   // key: string
@@ -639,14 +639,18 @@ function TS_IndexElement(
   var tablehead = safeuuid();
   var scrolltable = safeuuid();
   var searchKeyInput = safeuuid();
-  
+
   // Create the container with search bar and table
   container.innerHTML = `
     <div id="${scrolltable}">
-      <input type="text" id="${searchKeyInput}" placeholder="🔍 Buscar..." style="width: 100%; max-width: 20rem; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background-color: rebeccapurple; color: white;">
       <table>
         <thead>
-            <tr id="${tablehead}"></tr>
+          <tr style="background: transparent;">
+            <th colspan="100%" style="padding: 0; background: transparent;">
+              <input type="text" id="${searchKeyInput}" placeholder="🔍 Buscar..." style="width: calc(100% - 18px); padding: 8px; border: 1px solid #ccc; border-radius: 4px; background-color: rebeccapurple; color: white;">
+            </th>
+          </tr>
+          <tr id="${tablehead}"></tr>
         </thead>
         <tbody id="${tablebody}">
         </tbody>
@@ -662,14 +666,17 @@ function TS_IndexElement(
   });
   // Add search functionality
   const searchKeyEl = document.getElementById(searchKeyInput);
-  searchKeyEl.addEventListener('input', debounce(() => render(), 300));
+  searchKeyEl.addEventListener(
+    "input",
+    debounce(() => render(), 300)
+  );
 
   function searchInData(data, searchValue, config) {
     if (!searchValue) return true;
-    
+
     // Search in ID
     if (data._key.toLowerCase().includes(searchValue)) return true;
-    
+
     // Search in configured fields
     for (const field of config) {
       const value = data[field.key];
@@ -681,9 +688,12 @@ function TS_IndexElement(
           try {
             const comandaData = JSON.parse(data.Comanda);
             // Search in all comanda fields
-            if (Object.values(comandaData).some(v => 
-              String(v).toLowerCase().includes(searchValue)
-            )) return true;
+            if (
+              Object.values(comandaData).some((v) =>
+                String(v).toLowerCase().includes(searchValue)
+              )
+            )
+              return true;
           } catch (e) {
             // If JSON parse fails, search in raw string
             if (data.Comanda.toLowerCase().includes(searchValue)) return true;
@@ -693,8 +703,10 @@ function TS_IndexElement(
           const persona = SC_Personas[value];
           if (persona) {
             // Search in persona fields
-            if (persona.Nombre?.toLowerCase().includes(searchValue)) return true;
-            if (persona.Region?.toLowerCase().includes(searchValue)) return true;
+            if (persona.Nombre?.toLowerCase().includes(searchValue))
+              return true;
+            if (persona.Region?.toLowerCase().includes(searchValue))
+              return true;
           }
           break;
         default:
@@ -715,7 +727,7 @@ function TS_IndexElement(
       }
       return 0;
     }
-    
+
     const searchValue = searchKeyEl.value.toLowerCase().trim();
     tablebody_EL.innerHTML = "";
     Object.entries(rows)
@@ -747,6 +759,7 @@ function TS_IndexElement(
               break;
             case "comanda":
               const tdComanda = document.createElement("td");
+              tdComanda.style.verticalAlign = "top";
               const parsedComanda = JSON.parse(data.Comanda);
               const precio = SC_priceCalc(parsedComanda)[0];
 
@@ -758,18 +771,26 @@ function TS_IndexElement(
               const pre = document.createElement("pre");
               pre.style.fontSize = "15px";
               pre.style.display = "inline-block";
-
+              pre.style.margin = "0";
+              pre.style.verticalAlign = "top";
+              pre.style.padding = "5px";
+              //looking like a post-it
+              pre.style.background = "rgba(255, 255, 0, 0.5)";
+              pre.style.border = "1px solid rgba(0, 0, 0, 0.2)";
+              pre.style.borderRadius = "5px";
+              pre.style.boxShadow = "2px 2px 5px rgba(0, 0, 0, 0.1)";
+              pre.style.height = "100%";
               const spanPrecio = document.createElement("span");
               spanPrecio.style.fontSize = "20px";
               spanPrecio.innerHTML =
                 SC_Personas[data.Persona].Puntos >= 10
                   ? `Total: Gratis!(${precio}c)`
                   : `Total: ${precio}c`;
-
-              pre.appendChild(spanPrecio);
+              pre.innerHTML = "<b>Ticket de compra</b> ";
               pre.appendChild(document.createTextNode("\n"));
               pre.innerHTML +=
-                SC_parse_short(parsedComanda) + "<hr>" + data.Notas;
+                SC_parse_short(parsedComanda) + "<hr>" + data.Notas + "<hr>";
+              pre.appendChild(spanPrecio);
 
               tdComanda.appendChild(pre);
               new_tr.appendChild(tdComanda);
@@ -945,7 +966,7 @@ function TS_IndexElement(
 }
 
 const PAGES = {};
-document.addEventListener("DOMContentLoaded", () => {
+function SetPages() {
   Object.keys(PAGES).forEach((key) => {
     if (PAGES[key].Esconder == true) {
       return;
@@ -956,5 +977,24 @@ document.addEventListener("DOMContentLoaded", () => {
     a.innerText = PAGES[key].Title;
     document.getElementById("appendApps").append(a);
   });
-  open_page(location.hash.replace("#", ""));
+}
+document.addEventListener("DOMContentLoaded", () => {
+  SetPages();
+  document.getElementById("appendApps").style.display = "none";
+  document.getElementById("loading").style.display = "block";
 });
+var Booted = false;
+getPeers();
+setInterval(() => {
+  getPeers();
+  if (ConnectionStarted && !Booted) {
+    Booted = true;
+    document.getElementById("loading").style.display = "none";
+    if (!SUB_LOGGED_IN) {
+      open_page("login");
+      return;
+    }
+    document.getElementById("appendApps").style.display = "block";
+    open_page(location.hash.replace("#", ""));
+  }
+}, 1500);

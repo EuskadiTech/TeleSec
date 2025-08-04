@@ -15,7 +15,7 @@ PAGES.login = {
                     <button class="btn5" id="${btn_guardar}">Acceder</button>
                     <button class="btn1" id="${btn_reload}">Recargar lista</button>
                 </fieldset>
-                <a style="color: rgb(240,240,240)">Acceso sin cuenta</a>
+                <a style="color: rgb(240,240,240)">Acceso sin cuenta - No disponible</a>
                 `;
       var divact = document.getElementById(div_actions);
       addCategory_Personas(
