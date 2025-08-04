@@ -106,85 +106,42 @@ PAGES.materiales = {
     };
   },
   index: function () {
-    const tablebody = safeuuid();
     var btn_new = safeuuid();
     container.innerHTML = `
                 <h1>Materiales</h1>
                 <button id="${btn_new}">Nuevo Material</button>
-                <div id="scrolltable"><table>
-                    <thead>
-                        <tr>
-                            <th>Referencia</th>
-                            <th>Nombre</th>
-                            <th>Ubicación</th>
-                            <th>Cantidad</th>
-                            <th>Notas</th>
-                        </tr>
-                    </thead>
-                    <tbody id="${tablebody}">
-                    </tbody>
-                </table></div>
+                <div id="tableContainer"></div>
                 `;
-    tableScroll("#scrolltable");
-    var tablebody_EL = document.getElementById(tablebody);
-    var rows = {};
-    function render() {
-      function sorter(a, b) {
-        if (a.Nombre < b.Nombre) {
-          return -1;
-        }
-        if (a.Nombre > b.Nombre) {
-          return 1;
-        }
-        return 0;
-      }
-      var tablebody_EL = document.getElementById(tablebody);
-      tablebody_EL.innerHTML = "";
-      Object.values(rows)
-        .sort(sorter)
-        .forEach((data) => {
-          var new_tr = document.createElement("tr");
-          new_tr.innerHTML = `
-                    <td>${data.Referencia || "?"}</td>
-                    <td>${data.Nombre || "?"}</td>
-                    <td>${data.Ubicacion || "?"}</td>
-                    <td>${data.Cantidad || "?"} ${data.Unidad || "?"}</td>
-                    <td>${data.Notas || "?"}</td>
-                    `;
-          var min = parseFloat(data.Cantidad_Minima);
-          var act = parseFloat(data.Cantidad);
-          if (act < min) {
-            new_tr.style.backgroundColor = "lightcoral";
-          }
-          new_tr.onclick = () => {
-            setUrlHash("materiales," + data._key);
-          };
-          tablebody_EL.append(new_tr);
-        });
-    }
-    gun
-      .get(TABLE)
-      .get("materiales")
-      .map()
-      .on((data, key, _msg, _ev) => {
-        EVENTLISTENER = _ev;
-        function add_row(data, key) {
-          if (data != null) {
-            data["_key"] = key;
-            rows[key] = data;
-          } else {
-            delete rows[key];
-          }
-          render();
-        }
-        if (typeof data == "string") {
-          SEA.decrypt(data, SECRET, (data) => {
-            add_row(data, key);
-          });
-        } else {
-          add_row(data, key);
-        }
-      });
+
+    const config = [
+      { key: "Referencia", label: "Referencia", type: "text", default: "?" },
+      { key: "Nombre", label: "Nombre", type: "text", default: "?" },
+      { key: "Ubicacion", label: "Ubicación", type: "text", default: "?" },
+      { 
+        key: "Cantidad", 
+        label: "Cantidad", 
+        type: "template",
+        template: (data) => {
+          const min = parseFloat(data.Cantidad_Minima);
+          const act = parseFloat(data.Cantidad);
+          const style = act < min ? 'style="background-color: lightcoral;"' : '';
+          return `<td ${style}>${data.Cantidad || "?"} ${data.Unidad || "?"} - (min. ${data.Cantidad_Minima || "?"})</td>`;
+        },
+        default: "?" 
+      },
+      { key: "Notas", label: "Notas", type: "text", default: "?" }
+    ];
+
+    TS_IndexElement(
+      PAGES.materiales,
+      config,
+      gun.get(TABLE).get("materiales"),
+      document.getElementById("tableContainer"),
+      undefined,
+      undefined,
+      true // Enable global search bar
+    );
+
     document.getElementById(btn_new).onclick = () => {
       setUrlHash("materiales," + safeuuid(""));
     };

@@ -757,6 +757,12 @@ function TS_IndexElement(
               tdRaw.innerHTML = rawContent;
               new_tr.appendChild(tdRaw);
               break;
+            case "template":
+              const tdCustomTemplate = document.createElement("td");
+              tdCustomTemplate.style.verticalAlign = "top";
+              tdCustomTemplate.innerHTML = key.format(data);
+              new_tr.appendChild(tdCustomTemplate);
+              break;
             case "comanda":
               const tdComanda = document.createElement("td");
               tdComanda.style.verticalAlign = "top";
