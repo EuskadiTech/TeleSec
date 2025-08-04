@@ -749,8 +749,9 @@ function TS_IndexElement(
         config.forEach((key) => {
           switch (key.type) {
             case "raw":
+            case "text":
               const tdRaw = document.createElement("td");
-              const rawContent = (data[key.key] || key.default || "").replace(
+              const rawContent = (String(data[key.key]) || key.default || "").replace(
                 /\n/g,
                 "<br>"
               );
@@ -759,9 +760,8 @@ function TS_IndexElement(
               break;
             case "template":
               const tdCustomTemplate = document.createElement("td");
-              tdCustomTemplate.style.verticalAlign = "top";
-              tdCustomTemplate.innerHTML = key.format(data);
               new_tr.appendChild(tdCustomTemplate);
+              key.template(data, tdCustomTemplate);
               break;
             case "comanda":
               const tdComanda = document.createElement("td");

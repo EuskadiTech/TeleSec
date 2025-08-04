@@ -121,11 +121,12 @@ PAGES.materiales = {
         key: "Cantidad", 
         label: "Cantidad", 
         type: "template",
-        template: (data) => {
+        template: (data, element) => {
           const min = parseFloat(data.Cantidad_Minima);
           const act = parseFloat(data.Cantidad);
           const style = act < min ? 'style="background-color: lightcoral;"' : '';
-          return `<td ${style}>${data.Cantidad || "?"} ${data.Unidad || "?"} - (min. ${data.Cantidad_Minima || "?"})</td>`;
+          element.setAttribute("style", style);
+          element.innerHTML = `${data.Cantidad || "?"} ${data.Unidad || "?"} - (min. ${data.Cantidad_Minima || "?"})`;
         },
         default: "?" 
       },

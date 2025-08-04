@@ -125,96 +125,49 @@ PAGES.personas = {
     };
   },
   index: function () {
-    const tablebody = safeuuid();
     var btn_new = safeuuid();
     container.innerHTML = `
                 <h1>Personas</h1>
                 <button id="${btn_new}">Nueva Persona</button>
-                <div id="scrolltable"><table>
-                    <thead>
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Zona</th>
-                            <th>Puntos</th>
-                            <th>Permisos</th>
-                        </tr>
-                    </thead>
-                    <tbody id="${tablebody}">
-                    </tbody>
-                </table></div>
+                <div id="tableContainer"></div>
                 `;
-    tableScroll("#scrolltable"); // id="scrolltable"
-    var tablebody_EL = document.getElementById(tablebody);
-    var rows = {};
-    function render() {
-      function sorter(a, b) {
-        if (a.Region.toUpperCase() < b.Region.toUpperCase()) {
-          return -1;
-        }
-        if (a.Region.toUpperCase() > b.Region.toUpperCase()) {
-          return 1;
-        }
-        return 0;
-      }
-      var tablebody_EL = document.getElementById(tablebody);
-      tablebody_EL.innerHTML = "";
-      // SC_Personas = rows
-      Object.values(rows)
-        .sort(sorter)
-        .forEach((data) => {
-          var btn_comanda = safeuuid();
-          var new_tr = document.createElement("tr");
-          new_tr.innerHTML = `
-                    <td class="TextBorder" style="background-color: ${
-                      data.SC_Anilla
-                    }; text-align: center"><img src="${
-            data.Foto || "static/ico/user_generic.png"
-          }" height="50"> <br> ${data.Nombre || ""}</td>
-                    <td>${data.Region || "?"}</td>
-                    <td>${data.Puntos || 0}</td>
-                    <td>${data.Roles || ""}</td>
-                    `;
 
-          // <button id="${btn_comanda}" class="${PAGES.ventas.navcss}">Nueva venta</button>
-          var act = parseFloat(data.Puntos);
-          if (act >= 10) {
-            new_tr.style.backgroundColor = "gold";
-          }
-          new_tr.onclick = () => {
-            setUrlHash("personas," + data._key);
-          };
-          tablebody_EL.append(new_tr);
-          // document.getElementById(btn_comanda).onclick = (e) => {
-          //   setUrlHash("ventas," + data._key);
-          //   if (!e) var e = window.event;
-          //   e.cancelBubble = true;
-          //   if (e.stopPropagation) e.stopPropagation();
-          // };
-        });
-    }
-    gun
-      .get(TABLE)
-      .get("personas")
-      .map()
-      .on((data, key, _msg, _ev) => {
-        EVENTLISTENER = _ev;
-        function add_row(data, key) {
-          if (data != null) {
-            data["_key"] = key;
-            rows[key] = data;
-          } else {
-            delete rows[key];
-          }
-          render();
+    const config = [
+      { 
+        key: "Nombre", 
+        label: "Nombre", 
+        type: "template",
+        template: (data, element) => {
+          element.classList.add("TextBorder");
+          element.style.backgroundColor = data.SC_Anilla;
+          element.style.textAlign = "center";
+          element.innerHTML = `
+            <img src="${data.Foto || "static/ico/user_generic.png"}" height="50">
+            <br>${data.Nombre || ""}
+          `;
         }
-        if (typeof data == "string") {
-          SEA.decrypt(data, SECRET, (data) => {
-            add_row(data, key);
-          });
-        } else {
-          add_row(data, key);
+      },
+      { key: "Region", label: "Zona", type: "text", default: "?" },
+      { key: "Puntos", label: "Puntos", type: "text", default: "0" },
+      { key: "Roles", label: "Permisos", type: "text", default: "" }
+    ];
+
+    TS_IndexElement(
+      PAGES.personas,
+      config,
+      gun.get(TABLE).get("personas"),
+      document.getElementById("tableContainer"),
+      (row, data) => {
+        // Add gold background for high points
+        const points = parseFloat(data.Puntos);
+        if (points >= 10) {
+          row.style.backgroundColor = "gold";
         }
-      });
+      },
+      undefined,
+      true // Enable global search bar
+    );
+
     document.getElementById(btn_new).onclick = () => {
       setUrlHash("personas," + safeuuid(""));
     };
