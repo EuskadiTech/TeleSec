@@ -1,1 +1,3 @@
 dist/*
+radata/*
+node_modules/*
