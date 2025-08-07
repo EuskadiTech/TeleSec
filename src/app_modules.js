@@ -719,7 +719,23 @@ function TS_IndexElement(
 
   function render() {
     function sorter(a, b) {
-      // If data has Nombre field (like materials), sort alphabetically by name
+      // If both items have Fecha field, sort by date first
+      if (a.Fecha && b.Fecha) {
+        // Primary sort by date
+        if (a.Fecha < b.Fecha) return -1;
+        if (a.Fecha > b.Fecha) return 1;
+        
+        // Secondary sort by Nombre if dates are equal and both have names
+        if (a.Nombre && b.Nombre) {
+          const nameA = a.Nombre.toLowerCase();
+          const nameB = b.Nombre.toLowerCase();
+          if (nameA < nameB) return -1;
+          if (nameA > nameB) return 1;
+        }
+        return 0;
+      }
+      
+      // If no Fecha field exists, sort only by Nombre
       if (a.Nombre && b.Nombre) {
         const nameA = a.Nombre.toLowerCase();
         const nameB = b.Nombre.toLowerCase();
@@ -728,13 +744,6 @@ function TS_IndexElement(
         return 0;
       }
       
-      // Otherwise, sort by Fecha (date) for other data types
-      if (a.Fecha < b.Fecha) {
-        return -1;
-      }
-      if (a.Fecha > b.Fecha) {
-        return 1;
-      }
       return 0;
     }
 
