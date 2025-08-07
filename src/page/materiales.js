@@ -134,7 +134,7 @@ PAGES.materiales = {
     ];
 
     TS_IndexElement(
-      PAGES.materiales,
+      "materiales",
       config,
       gun.get(TABLE).get("materiales"),
       document.getElementById("tableContainer"),
