@@ -153,7 +153,7 @@ PAGES.personas = {
     ];
 
     TS_IndexElement(
-      PAGES.personas,
+      "personas",
       config,
       gun.get(TABLE).get("personas"),
       document.getElementById("tableContainer"),
