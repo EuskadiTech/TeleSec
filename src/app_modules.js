@@ -1012,7 +1012,7 @@ getPeers();
 
 setInterval(() => {
   getPeers();
-  if (window.navigator.onLine == false) {
+  if (window.navigator.onLine == false && !Booted) {
     Booted = true;
     document.getElementById("loading").style.display = "none";
     toastr.error("Sin internet! Los cambios se sincronizarán cuando te vuelvas a conectar.")
