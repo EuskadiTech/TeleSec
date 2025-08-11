@@ -1009,25 +1009,24 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 var Booted = false;
 getPeers();
-if (window.navigator.onLine == false) {
-  Booted = true;
-  document.getElementById("loading").style.display = "none";
-  toastr.error("Sin internet! Los cambios se sincronizarán cuando te vuelvas a conectar.")
-  if (!SUB_LOGGED_IN) {
-    setUrlHash("login");
-    open_page("login");
-  } else {
-    document.getElementById("appendApps").style.display = "block";
-    open_page(location.hash.replace("#", ""));
-  }
-}
+
 setInterval(() => {
   getPeers();
+  if (window.navigator.onLine == false) {
+    Booted = true;
+    document.getElementById("loading").style.display = "none";
+    toastr.error("Sin internet! Los cambios se sincronizarán cuando te vuelvas a conectar.")
+    if (!SUB_LOGGED_IN) {
+      open_page("login");
+    } else {
+      document.getElementById("appendApps").style.display = "block";
+      open_page(location.hash.replace("#", ""));
+    }
+  }
   if (ConnectionStarted && !Booted) {
     Booted = true;
     document.getElementById("loading").style.display = "none";
     if (!SUB_LOGGED_IN) {
-      setUrlHash("login");
       open_page("login");
       return;
     }

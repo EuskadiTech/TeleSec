@@ -38,14 +38,17 @@ PAGES.login = {
         SUB_LOGGED_IN_ID = document.getElementById(field_persona).value
         SUB_LOGGED_IN_DETAILS = SC_Personas[SUB_LOGGED_IN_ID]
         SUB_LOGGED_IN = true
-        setUrlHash("index")
-        setUrlHash("index")
-        setUrlHash("index")
+        if (!location.hash.replace("#", "").startsWith("login")) {
+          oppen_page("index");
+          setUrlHash("index")
+        } else{
+          open_page(location.hash.replace("#", ""));
+        }
         document.getElementById("appendApps").style.display = "unset"
       };
       
       document.getElementById(btn_reload).onclick = () => {
-        setUrlHash("login," + safeuuid(""))
+        open_page("login")
       };
       
     },
