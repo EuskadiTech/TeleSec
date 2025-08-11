@@ -58,9 +58,8 @@ PAGES.resumen_diario = {
     gun
       .get(TABLE)
       .get("materiales")
-      .map()
-      .on((data, key, _msg, _ev) => {
-        EVENTLISTENER = _ev;
+      .once().map()
+      .once((data, key, _msg, _ev) => {
         function add_row(data, key) {
           if (data != null) {
             data["_key"] = key;
@@ -121,9 +120,8 @@ PAGES.resumen_diario = {
     gun
       .get(TABLE)
       .get("personas")
-      .map()
-      .on((data, key, _msg, _ev) => {
-        EVENTLISTENER = _ev;
+      .once().map()
+      .once((data, key, _msg, _ev) => {
         function add_row(data, key) {
           if (data != null) {
             data["_key"] = key;
