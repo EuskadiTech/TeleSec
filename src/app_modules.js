@@ -1009,6 +1009,10 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 var Booted = false;
 getPeers();
+if (window.navigator.onLine == false) {
+  document.getElementById("loading").style.display = "none";
+  toastr.error("Sin internet! Los cambios se sincronizarán cuando te vuelvas a conectar.")
+}
 setInterval(() => {
   getPeers();
   if (ConnectionStarted && !Booted) {
