@@ -1010,7 +1010,13 @@ document.addEventListener("DOMContentLoaded", () => {
 var Booted = false;
 getPeers();
 if (window.navigator.onLine == false) {
+  Booted = true;
   document.getElementById("loading").style.display = "none";
+  if (!SUB_LOGGED_IN) {
+    setUrlHash("login");
+    open_page("login");
+    return;
+  }
   toastr.error("Sin internet! Los cambios se sincronizarán cuando te vuelvas a conectar.")
 }
 setInterval(() => {
