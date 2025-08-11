@@ -60,7 +60,7 @@ PAGES.resumen_diario = {
       .get("materiales")
       .map()
       .on((data, key, _msg, _ev) => {
-        EVENTLISTENER2 = _ev;
+        EVENTLISTENER = _ev;
         function add_row(data, key) {
           if (data != null) {
             data["_key"] = key;
