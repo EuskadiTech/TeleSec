@@ -1,5 +1,5 @@
 PAGES.notificaciones = {
-    navcss: "btn6",
+    navcss: "btn5",
     Title: "Notificaciones",
     edit: function (mid) {
       var nameh1 = safeuuid();

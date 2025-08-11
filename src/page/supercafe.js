@@ -1,5 +1,5 @@
 PAGES.supercafe = {
-    navcss: "btn5",
+    navcss: "btn4",
     Title: "SuperCafé",
     edit: function (mid) {
       var nameh1 = safeuuid();

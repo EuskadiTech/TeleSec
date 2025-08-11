@@ -1,5 +1,5 @@
 PAGES.personas = {
-  navcss: "btn4",
+  navcss: "btn3",
   Title: "Personas",
   edit: function (mid) {
     var nameh1 = safeuuid();

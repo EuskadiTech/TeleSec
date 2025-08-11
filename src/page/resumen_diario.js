@@ -1,4 +1,5 @@
 PAGES.resumen_diario = {
+  Esconder: true,
   navcss: "btn3",
   Title: "Resumen Diario",
   index: function () {

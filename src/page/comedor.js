@@ -1,5 +1,5 @@
 PAGES.comedor = {
-  navcss: "btn7",
+  navcss: "btn6",
   Title: "Menú comedor",
   edit: function (mid) {
     var nameh1 = safeuuid();
