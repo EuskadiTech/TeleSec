@@ -15,16 +15,18 @@ PAGES.index = {
       <h1>Buscar con Aztec</h1>
       <div id="${qrscan}"></div>
       <br><br>`;
-    const html5QrCode = new Html5Qrcode(
-      qrscan, { formatsToSupport: [Html5QrcodeSupportedFormats.AZTEC] });
-    const qrCodeSuccessCallback = (decodedText, decodedResult) => {
-      /* handle success */
-      alert(decodedText)
-      html5QrCode.stop()
-    };
-    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+    var html5QrcodeScanner = new Html5QrcodeScanner(
+      qrscan, { fps: 10, qrbox: 250 });
     
-    // If you want to prefer front camera
-    html5QrCode.start({ facingMode: "user" }, config, qrCodeSuccessCallback);
+    function onScanSuccess(decodedText, decodedResult) {
+      // Handle on success condition with the decoded text or result.
+      alert(`Scan result: ${decodedText}`, decodedResult);
+      // ...
+      html5QrcodeScanner.clear();
+      // ^ this will stop the scanner (video feed) and clear the scan area.
+      
+    }
+    
+    html5QrcodeScanner.render(onScanSuccess);
   }
-};
+}
