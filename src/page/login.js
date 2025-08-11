@@ -38,7 +38,7 @@ PAGES.login = {
         SUB_LOGGED_IN_ID = document.getElementById(field_persona).value
         SUB_LOGGED_IN_DETAILS = SC_Personas[SUB_LOGGED_IN_ID]
         SUB_LOGGED_IN = true
-        if (!location.hash.replace("#", "").startsWith("login")) {
+        if (location.hash.replace("#", "").startsWith("login")) {
           open_page("index");
           setUrlHash("index")
         } else{
