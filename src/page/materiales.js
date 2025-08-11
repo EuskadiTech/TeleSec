@@ -14,7 +14,8 @@ PAGES.materiales = {
     var btn_guardar = safeuuid();
     var btn_borrar = safeuuid();
     container.innerHTML = `
-                <h1>Material <code id="${nameh1}"></code></h1>
+                <h1>Material <code id="${nameh1}"></code></h1><br>
+                ${BuildQR(mid)}
                 <fieldset>
                     <label>
                         Referencia<br>

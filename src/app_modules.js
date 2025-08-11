@@ -989,6 +989,17 @@ function TS_IndexElement(
     }
   });
 }
+function BuildQR(mid) {
+  let svg = bwipjs.toSVG({
+    bcid:        'azteccode',       // Barcode type
+    text:        mid,    // Text to encode
+    height:      12,              // Bar height, in millimeters
+    includetext: true,            // Show human-readable text
+    textxalign:  'center',        // Always good to set this
+    textcolor:   'ff0000',        // Red text
+  });
+  return `<span style="display: inline-block; height: 300px; width: 300px;">${svg}</span>`
+}
 
 const PAGES = {};
 function SetPages() {
