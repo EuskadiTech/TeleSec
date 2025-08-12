@@ -990,7 +990,11 @@ function TS_IndexElement(
   });
 }
 function BuildQR(mid) {
-  var svg = QRCode(mid).outerHTML;
+  var svg = QRCode({
+    msg: mid,
+    pad: 2,
+    
+  }).outerHTML;
   return `<span style="display: inline-block; height: 300px; width: 300px;">${svg}</span>`
 }
 
