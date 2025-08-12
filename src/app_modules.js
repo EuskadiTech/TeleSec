@@ -1011,6 +1011,11 @@ function SetPages() {
     a.innerText = PAGES[key].Title;
     document.getElementById("appendApps").append(a);
   });
+  var a = document.createElement("a");
+  a.className = "button btn7";
+  a.href = "#index,qr";
+  a.innerText = "📷";
+  document.getElementById("appendApps").append(a);  
 }
 document.addEventListener("DOMContentLoaded", () => {
   SetPages();
