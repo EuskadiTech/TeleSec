@@ -20,7 +20,8 @@ PAGES.index = {
     
     function onScanSuccess(decodedText, decodedResult) {
       // Handle on success condition with the decoded text or result.
-      alert(`Scan result: ${decodedText}`, decodedResult);
+      // alert(`Scan result: ${decodedText}`, decodedResult);
+      setUrlHash(decodedText)
       // ...
       html5QrcodeScanner.clear();
       // ^ this will stop the scanner (video feed) and clear the scan area.
