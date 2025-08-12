@@ -995,7 +995,7 @@ function BuildQR(mid) {
     pad: 2,
     
   }).outerHTML;
-  return `<span style="display: inline-block; height: 300px; width: 300px; background-color: white;">${svg}</span>`
+  return `<span style="display: inline-block; height: 150px; width: 150px; background-color: white;">${svg}</span>`
 }
 
 const PAGES = {};
