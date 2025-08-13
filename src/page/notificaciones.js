@@ -1,5 +1,6 @@
 PAGES.notificaciones = {
     navcss: "btn5",
+    icon: "static/appico/Alert_Warning.svg",
     Title: "Avisos",
     edit: function (mid) {
       var nameh1 = safeuuid();
