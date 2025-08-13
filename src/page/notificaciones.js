@@ -1,6 +1,6 @@
 PAGES.notificaciones = {
     navcss: "btn5",
-    Title: "Notificaciones",
+    Title: "Avisos",
     edit: function (mid) {
       var nameh1 = safeuuid();
       var field_fecha = safeuuid();
