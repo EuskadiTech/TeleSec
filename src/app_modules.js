@@ -1051,9 +1051,9 @@ setInterval(() => {
     document.getElementById("loading").style.display = "none";
     toastr.error("Sin internet! Los cambios se sincronizarán cuando te vuelvas a conectar.")
     if (!SUB_LOGGED_IN) {
-      SetPages()
       open_page("login");
     } else {
+      SetPages()
       open_page(location.hash.replace("#", ""));
     }
   }
