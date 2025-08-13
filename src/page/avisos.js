@@ -1,4 +1,4 @@
-PAGES.notificaciones = {
+PAGES.avisos = {
     navcss: "btn5",
     icon: "static/appico/Alert_Warning.svg",
     Title: "Avisos",
@@ -17,7 +17,7 @@ PAGES.notificaciones = {
       var btn_borrar = safeuuid();
       var div_actions = safeuuid();
       container.innerHTML = `
-                <h1>Notificación <code id="${nameh1}"></code></h1>
+                <h1>Aviso <code id="${nameh1}"></code></h1>
                 <fieldset style="float: left;">
                     <legend>Valores</legend>
                     <label>
@@ -170,7 +170,7 @@ PAGES.notificaciones = {
       const tablebody = safeuuid();
       var btn_new = safeuuid();
       container.innerHTML = `
-                <h1>Notificaciones</h1>
+                <h1>Avisos</h1>
                 <button id="${btn_new}">Nueva notificación</button>
                 <div id="cont"></div>
                 `;
