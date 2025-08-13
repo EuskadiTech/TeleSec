@@ -171,11 +171,11 @@ PAGES.avisos = {
       var btn_new = safeuuid();
       container.innerHTML = `
                 <h1>Avisos</h1>
-                <button id="${btn_new}">Nueva notificación</button>
+                <button id="${btn_new}">Nuevo aviso</button>
                 <div id="cont"></div>
                 `;
       TS_IndexElement(
-        "notificaciones",
+        "avisos",
         [
           {
             key: "Origen",
