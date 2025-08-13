@@ -12,6 +12,40 @@
   </head>
 
   <body>
+     <div class="ribbon">
+  <div class="ribbon-orb"></div>
+
+  <div class="ribbon-content">
+    <div class="ribbon-tabs">
+      <div class="ribbon-tab active" data-tab="modulos">Modulos</div>
+      <div class="ribbon-tab" data-tab="admin">Admin</div>
+    </div>
+
+    <!-- Tab: Modulos -->
+    <details id="tab-modulos" open>
+      <summary hidden>Modulos</summary>
+      <div class="ribbon-panel" id="appendApps2">
+      </div>
+    </details>
+
+    <!-- Tab: Admin -->
+    <details id="tab-admin">
+      <summary hidden>Admin</summary>
+      <div class="ribbon-panel">
+        <div class="ribbon-button orange">
+          <img src="https://raw.githubusercontent.com/darealshinji/haiku-icons/refs/heads/master/svg/Settings.svg">
+          <div class="label">Settings</div>
+        </div>
+        <div class="ribbon-button">
+          <img src="https://raw.githubusercontent.com/darealshinji/haiku-icons/refs/heads/master/svg/Lock_Lock.svg">
+          <div class="label">Security</div>
+        </div>
+      </div>
+    </details>
+
+  </div>
+</div>
+
     <img id="loading" src="load.gif" style="display: block; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: calc(100% - 50px); max-width: 400px;" />
     <details class="supermesh-indicator">
       <summary>
@@ -57,39 +91,7 @@
           </fieldset>
         </details>
         <!-- <button onclick="displayPost('index')">Ir a la pagina de inicio</button> -->
-        <div class="ribbon">
-  <div class="ribbon-orb"></div>
-
-  <div class="ribbon-content">
-    <div class="ribbon-tabs">
-      <div class="ribbon-tab active" data-tab="modulos">Modulos</div>
-      <div class="ribbon-tab" data-tab="admin">Admin</div>
-    </div>
-
-    <!-- Tab: Modulos -->
-    <details id="tab-modulos" open>
-      <summary hidden>Modulos</summary>
-      <div class="ribbon-panel" id="appendApps2">
-      </div>
-    </details>
-
-    <!-- Tab: Admin -->
-    <details id="tab-admin">
-      <summary hidden>Admin</summary>
-      <div class="ribbon-panel">
-        <div class="ribbon-button orange">
-          <img src="https://raw.githubusercontent.com/darealshinji/haiku-icons/refs/heads/master/svg/Settings.svg">
-          <div class="label">Settings</div>
-        </div>
-        <div class="ribbon-button">
-          <img src="https://raw.githubusercontent.com/darealshinji/haiku-icons/refs/heads/master/svg/Lock_Lock.svg">
-          <div class="label">Security</div>
-        </div>
-      </div>
-    </details>
-
-  </div>
-</div>
+       
         <div id="appendApps">
           <!--<a class="button nav-supercafe nav-disabled" disabled>SuperCafé</a>
                 <a class="button nav-comedor nav-disabled" disabled>Menú Comedor</a>
