@@ -19,7 +19,7 @@
     <div class="ribbon-content">
       <div class="ribbon-tabs">
         <div class="ribbon-tab active" data-tab="modulos">Modulos</div>
-        <div class="ribbon-tab" data-tab="admin">Admin</div>
+        <div class="ribbon-tab" data-tab="credenciales">Credenciales</div>
       </div>
       
       <!-- Tab: Modulos -->
@@ -30,14 +30,14 @@
       </details>
       
       <!-- Tab: Admin -->
-      <details id="tab-admin">
-        <summary hidden>Admin</summary>
+      <details id="tab-credenciales">
+        <summary hidden>Credenciales</summary>
         <div class="ribbon-panel">
           <div>
-            <label>Codigo de grupo:
+            <label>Usuario:
               <input type="text" id="LinkAccount_group" /></label>
             <br />
-            <label>Clave secreta:
+            <label>Contraseña:
               <input type="text" id="LinkAccount_secret" /></label>
             <br />
             <button type="button" onclick='LinkAccount(document.getElementById("LinkAccount_group").value, document.getElementById("LinkAccount_secret").value, true)'>

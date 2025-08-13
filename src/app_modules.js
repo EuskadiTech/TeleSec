@@ -1067,7 +1067,7 @@ function closePopup() {
 const tabs = document.querySelectorAll('.ribbon-tab');
 const detailTabs = {
   modulos: document.getElementById('tab-modulos'),
-  admin: document.getElementById('tab-admin')
+  credenciales: document.getElementById('tab-credenciales')
 };
 
 tabs.forEach(tab => {
