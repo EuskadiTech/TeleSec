@@ -1,6 +1,7 @@
 PAGES.resumen_diario = {
   Esconder: true,
   navcss: "btn3",
+  AccessControl: true,
   Title: "Resumen Diario",
   index: function () {
     var table_materialesLow = safeuuid();

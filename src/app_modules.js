@@ -1009,8 +1009,7 @@ function SetPages() {
     if (PAGES[key].AccessControl == true) {
       var roles = SUB_LOGGED_IN_DETAILS.Roles || ""
       var rolesArr = roles.split(",")
-      var has
-      if (rolesArr.includes("ADMIN") || rolesArr.includes(key)) {
+      if (rolesArr.includes("ADMIN") || rolesArr.includes(key) || AC_BYPASS) {
         
       } else {
         return

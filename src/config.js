@@ -1,8 +1,9 @@
 var EVENTLISTENER = null;
 var EVENTLISTENER2 = null;
 var urlParams = new URLSearchParams(location.search);
-if (urlParams.get("hidenav") == "yes") {
-  document.getElementById("header_hide_query").style.display = "none";
+var AC_BYPASS = false;
+if (urlParams.get("ac_bypass") == "yes") {
+  AC_BYPASS = true;
 }
 var GROUPID = "";
 // const PUBLIC_KEY = "~cppGiuA4UFUPGTDoC-4r2izVC3F7MfpaCmF3iZdESN4.vntmjgbAVUpF_zfinYY6EKVFuuTYxh5xOrL4KmtdTmc"
