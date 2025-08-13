@@ -1,13 +1,23 @@
 PAGES.dataman = {
   navcss: "btn1",
   icon: "static/appico/Database.svg",
+  HasAccess: function () {
+    var roles = SUB_LOGGED_IN_DETAILS.Roles || ""
+    var rolesArr = roles.split(" ")
+    if (rolesArr.includes("ADMIN")) {
+      return True
+    }
+    return False
+  },
   Title: "Admin. Datos",
   edit: function(mid) {
     switch (mid) {
       case 'export':
         PAGES.dataman.__export()
         break;
-        
+      case 'import':
+        PAGES.dataman.__import()
+        break;
       default:
         // Tab to edit
     }
