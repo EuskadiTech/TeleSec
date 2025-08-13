@@ -40,7 +40,7 @@ PAGES.personas = {
                     </label>
                     <label>
                         Foto (PNG o JPG)<br>
-                        <img id="${render_foto}" height="100px" style="border: 3px inset; min-width: 7px;" src="static/camera2.png">
+                        <img id="${render_foto}" height="100px" style="border: 3px inset; min-width: 7px;" src="static/ico/user_generic.png">
                         <input type="file" accept="image/*" id="${field_foto}" style="display: none;"><br><br>
                     </label>
 
