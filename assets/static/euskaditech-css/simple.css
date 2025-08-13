@@ -318,7 +318,7 @@ hr {
   width: 50px !important;
   height: 50px;
   border-radius: 50%;
-  background: url(assets/icon512_maskable.png);
+  background: url(icon512_maskable.png);
   background-size: 50px 50px;
   background-position: center middle;
   border: 1px solid #a2a9b9;
