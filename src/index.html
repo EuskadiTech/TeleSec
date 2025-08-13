@@ -1,106 +1,86 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="manifest" href="manifest.json" />
-    <title>TeleSec</title>
-    <link rel="icon" type="image/png" href="static/TeleSec.jpg" />
-    <link href="static/euskaditech-css/simple.css" rel="stylesheet" />
-    <link href="static/toastr.min.css" rel="stylesheet" />
-    %%PREFETCH%%
-  </head>
 
-  <body>
-     <div class="ribbon">
-  <div class="ribbon-orb"></div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="manifest" href="manifest.json" />
+  <title>TeleSec</title>
+  <link rel="icon" type="image/png" href="static/TeleSec.jpg" />
+  <link href="static/euskaditech-css/simple.css" rel="stylesheet" />
+  <link href="static/toastr.min.css" rel="stylesheet" />
+  %%PREFETCH%%
+</head>
 
-  <div class="ribbon-content">
-    <div class="ribbon-tabs">
-      <div class="ribbon-tab active" data-tab="modulos">Modulos</div>
-      <div class="ribbon-tab" data-tab="admin">Admin</div>
+<body>
+  <div class="ribbon no_print" id="header_hide_query">
+    <div class="ribbon-orb"></div>
+    
+    <div class="ribbon-content">
+      <div class="ribbon-tabs">
+        <div class="ribbon-tab active" data-tab="modulos">Modulos</div>
+        <div class="ribbon-tab" data-tab="admin">Admin</div>
+      </div>
+      
+      <!-- Tab: Modulos -->
+      <details id="tab-modulos" open>
+        <summary hidden>Modulos</summary>
+        <div class="ribbon-panel" id="appendApps2">
+        </div>
+      </details>
+      
+      <!-- Tab: Admin -->
+      <details id="tab-admin">
+        <summary hidden>Admin</summary>
+        <div class="ribbon-panel">
+          <label>Codigo de grupo:
+            <input type="text" id="LinkAccount_group" /></label>
+          <br />
+          <label>Clave secreta:
+            <input type="text" id="LinkAccount_secret" /></label>
+          <br />
+          <button type="button" onclick='LinkAccount(document.getElementById("LinkAccount_group").value, document.getElementById("LinkAccount_secret").value, true)'>
+            Iniciar sesión
+          </button>
+        </div>
+      </details>
+      
     </div>
-
-    <!-- Tab: Modulos -->
-    <details id="tab-modulos" open>
-      <summary hidden>Modulos</summary>
-      <div class="ribbon-panel" id="appendApps2">
-      </div>
-    </details>
-
-    <!-- Tab: Admin -->
-    <details id="tab-admin">
-      <summary hidden>Admin</summary>
-      <div class="ribbon-panel">
-        <div class="ribbon-button orange">
-          <img src="https://raw.githubusercontent.com/darealshinji/haiku-icons/refs/heads/master/svg/Settings.svg">
-          <div class="label">Settings</div>
-        </div>
-        <div class="ribbon-button">
-          <img src="https://raw.githubusercontent.com/darealshinji/haiku-icons/refs/heads/master/svg/Lock_Lock.svg">
-          <div class="label">Security</div>
-        </div>
-      </div>
-    </details>
-
   </div>
-</div>
-
-    <img id="loading" src="load.gif" style="display: block; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: calc(100% - 50px); max-width: 400px;" />
-    <details class="supermesh-indicator">
-      <summary>
-        <b>SuperMesh</b><br />
-        <br /><small id="peerPID" style="font-family: monospace"
-          >PID ??????????</small
-        >
-      </summary>
-      <ul id="peerList"></ul>
-      <i>Todos los datos están encriptados.</i>
-    </details>
-    <main>
-      <header class="no_print" id="header_hide_query">
-        <details id="LinkAccount_details" open>
-          <summary>
-            <b
-              >TeleSec - <span id="groupId">???</span> - (<span id="peerCount"
-                >?</span
-              >
-              nodos)</b
-            >
-          </summary>
-          <fieldset id="auth_fieldSet">
-            <legend>Credenciales</legend>
-            <br />
-            <label
-              >Codigo de grupo:<br />
-              <input type="text" id="LinkAccount_group"
-            /></label>
-            <br />
-            <br />
-            <label
-              >Clave secreta:<br />
-              <input type="text" id="LinkAccount_secret"
-            /></label>
-            <br /><br />
-            <button
-              type="button"
-              onclick='LinkAccount(document.getElementById("LinkAccount_group").value, document.getElementById("LinkAccount_secret").value, true)'
-            >
-              Iniciar sesión
-            </button>
-          </fieldset>
-        </details>
-        <!-- <button onclick="displayPost('index')">Ir a la pagina de inicio</button> -->
-       
-        <div id="appendApps">
-          <!--<a class="button nav-supercafe nav-disabled" disabled>SuperCafé</a>
+  
+  <img id="loading" src="load.gif" style="display: block; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: calc(100% - 50px); max-width: 400px;" />
+  <details class="supermesh-indicator">
+    <summary>
+      <b>SuperMesh</b><br />
+      <br /><small id="peerPID" style="font-family: monospace">PID ??????????</small>
+    </summary>
+    <ul id="peerList"></ul>
+    <i>Todos los datos están encriptados.</i>
+  </details>
+  <main>
+    <header class="no_print" id="header_hide_query">
+      <details id="LinkAccount_details" open>
+        <summary>
+          <b>TeleSec - <span id="groupId">???</span> - (<span id="peerCount">?</span>
+            nodos)</b>
+        </summary>
+        <fieldset id="auth_fieldSet">
+          <legend>Credenciales</legend>
+          <br />
+          
+        </fieldset>
+      </details>
+      <!-- <button onclick="displayPost('index')">Ir a la pagina de inicio</button> -->
+      
+      <div id="appendApps">
+        <!--<a class="button nav-supercafe nav-disabled" disabled>SuperCafé</a>
                 <a class="button nav-comedor nav-disabled" disabled>Menú Comedor</a>
                 <a class="button nav-recetas nav-disabled" disabled>Recetas</a>-->
-        </div>
-        <hr />
-      </header>
-      <div id="container"></div>
-      <!-- <br><br><br>
+      </div>
+      <hr />
+    </header>
+    <div id="container"></div>
+    <!-- <br><br><br>
     <footer>
       <hr>
       <details>
@@ -111,15 +91,9 @@
         </button>
       </details>
     </footer> -->
-      <img
-        id="connectStatus"
-        style="bottom: 15px; right: 15px; position: fixed; width: 50px"
-      />
-    </main>
-    <img
-      id="actionStatus"
-      src="static/ico/statusok.png"
-      style="
+    <img id="connectStatus" style="bottom: 15px; right: 15px; position: fixed; width: 50px" />
+  </main>
+  <img id="actionStatus" src="static/ico/statusok.png" style="
         z-index: 2048;
         margin: 0px;
         position: fixed;
@@ -129,64 +103,62 @@
         width: 100px;
         height: 100px;
         display: none;
-      "
-    />
-    <div id="snackbar">
-      Hay una nueva versión de TeleSec.<br /><a id="reload"
-        >Pulsa aqui para actualizar.</a
-      >
-    </div>
-    <script src="static/showdown.min.js"></script>
-    <script src="static/qrcode/qrcode.min.js"></script>
-    <script src="static/qrcode/html5-qrcode.min.js"></script>
-    <script src="static/jquery.js"></script>
-    <script src="static/gun.js"></script>
-    <script src="static/webrtc.js"></script>
-    <script src="static/sea.js"></script>
-    <script src="static/yson.js"></script>
-    <script src="static/radix.js"></script>
-    <!-- <script src="static/radisk.js"></script> -->
-    <!-- <script src="static/store.js"></script> -->
-    <script src="static/rindexed.js"></script>
-    <script src="static/path.js"></script>
-    <script src="static/open.js"></script>
-    <script src="static/load.js"></script>
-    <!--<script src="static/synchronous.js"></script>-->
-    <!--<script src="static/axe.js"></script>-->
-    <script src="static/toastr.min.js"></script>
-    <script src="static/doublescroll.js"></script>
-    <!--<script src="static/simplemde.min.js"></script>-->
-    <script async>
-      async function getQuota(cb = () => {}) {
-        if (navigator.storage && navigator.storage.estimate) {
-          const quota = await navigator.storage.estimate();
-          // quota.usage -> Number of bytes used.
-          // quota.quota -> Maximum number of bytes available.
-          const percentageUsed = (quota.usage / quota.quota) * 100;
-          console.log(
-            `You've used ${percentageUsed}% of the available storage.`
-          );
-          const remaining = quota.quota - quota.usage;
-          cb(percentageUsed, remaining);
-          console.log(`You can write up to ${remaining} more bytes.`);
-        }
+      " />
+  <div id="snackbar">
+    Hay una nueva versión de TeleSec.<br /><a id="reload">Pulsa aqui para actualizar.</a>
+  </div>
+  <script src="static/showdown.min.js"></script>
+  <script src="static/qrcode/qrcode.min.js"></script>
+  <script src="static/qrcode/html5-qrcode.min.js"></script>
+  <script src="static/jquery.js"></script>
+  <script src="static/gun.js"></script>
+  <script src="static/webrtc.js"></script>
+  <script src="static/sea.js"></script>
+  <script src="static/yson.js"></script>
+  <script src="static/radix.js"></script>
+  <!-- <script src="static/radisk.js"></script> -->
+  <!-- <script src="static/store.js"></script> -->
+  <script src="static/rindexed.js"></script>
+  <script src="static/path.js"></script>
+  <script src="static/open.js"></script>
+  <script src="static/load.js"></script>
+  <!--<script src="static/synchronous.js"></script>-->
+  <!--<script src="static/axe.js"></script>-->
+  <script src="static/toastr.min.js"></script>
+  <script src="static/doublescroll.js"></script>
+  <!--<script src="static/simplemde.min.js"></script>-->
+  <script async>
+    async function getQuota(cb = () => {}) {
+      if (navigator.storage && navigator.storage.estimate) {
+        const quota = await navigator.storage.estimate();
+        // quota.usage -> Number of bytes used.
+        // quota.quota -> Maximum number of bytes available.
+        const percentageUsed = (quota.usage / quota.quota) * 100;
+        console.log(
+          `You've used ${percentageUsed}% of the available storage.`
+        );
+        const remaining = quota.quota - quota.usage;
+        cb(percentageUsed, remaining);
+        console.log(`You can write up to ${remaining} more bytes.`);
       }
-      getQuota();
-    </script>
-    <script src="pwa.js"></script>
-    <script src="config.js"></script>
-    <script src="gun_init.js"></script>
-    <script src="app_logic.js"></script>
-    <script src="app_modules.js"></script>
-    <script src="page/login.js"></script>
-    <script src="page/index.js"></script>
-    <script src="page/importar.js"></script>
-    <script src="page/exportar.js"></script>
-    <script src="page/materiales.js"></script>
-    <script src="page/resumen_diario.js"></script>
-    <script src="page/personas.js"></script>
-    <script src="page/supercafe.js"></script>
-    <script src="page/notificaciones.js"></script>
-    <script src="page/comedor.js"></script>
-  </body>
+    }
+    getQuota();
+  </script>
+  <script src="pwa.js"></script>
+  <script src="config.js"></script>
+  <script src="gun_init.js"></script>
+  <script src="app_logic.js"></script>
+  <script src="app_modules.js"></script>
+  <script src="page/login.js"></script>
+  <script src="page/index.js"></script>
+  <script src="page/importar.js"></script>
+  <script src="page/exportar.js"></script>
+  <script src="page/materiales.js"></script>
+  <script src="page/resumen_diario.js"></script>
+  <script src="page/personas.js"></script>
+  <script src="page/supercafe.js"></script>
+  <script src="page/notificaciones.js"></script>
+  <script src="page/comedor.js"></script>
+</body>
+
 </html>
