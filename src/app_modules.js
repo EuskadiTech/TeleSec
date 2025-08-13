@@ -1017,10 +1017,15 @@ function SetPages() {
     document.getElementById("appendApps2").append(a);
   });
   var a = document.createElement("a");
-  a.className = "button btn7";
+  var img = document.createElement("img")
+  var label = document.createElement("div")
+  a.className = "ribbon-button";
   a.href = "#index,qr";
-  a.innerText = "📷";
-  document.getElementById("appendApps").append(a);
+  label.innerText = "Escanear QR";
+  label.className = "label"
+  img.src = "static/appico/File_Plugin.svg"
+  a.append(img, label)
+  document.getElementById("appendApps2").append(a);
 }
 document.addEventListener("DOMContentLoaded", () => {
   SetPages();
@@ -1038,7 +1043,6 @@ setInterval(() => {
     if (!SUB_LOGGED_IN) {
       open_page("login");
     } else {
-      document.getElementById("appendApps").style.display = "block";
       open_page(location.hash.replace("#", ""));
     }
   }
@@ -1049,20 +1053,10 @@ setInterval(() => {
       open_page("login");
       return;
     }
-    document.getElementById("appendApps").style.display = "block";
     open_page(location.hash.replace("#", ""));
   }
 }, 1500);
 
-
-
-function showMessage() {
-  document.getElementById("popup").style.display = "block";
-}
-
-function closePopup() {
-  document.getElementById("popup").style.display = "none";
-}
 
 const tabs = document.querySelectorAll('.ribbon-tab');
 const detailTabs = {

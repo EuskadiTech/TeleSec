@@ -27,9 +27,8 @@ PAGES.login = {
         },
         "¿Quién eres?",
         true,
-        "- Pulsa recargar -"
+        "- Pulsa recargar o rellena los credenciales arriba. -"
       );
-      document.getElementById("appendApps").style.display = "none"
       document.getElementById(btn_guardar).onclick = () => {
         if (document.getElementById(field_persona).value == "") {
           alert("Tienes que elegir tu cuenta!");
@@ -44,7 +43,6 @@ PAGES.login = {
         } else{
           open_page(location.hash.replace("#", ""));
         }
-        document.getElementById("appendApps").style.display = "unset"
       };
       
       document.getElementById(btn_reload).onclick = () => {
