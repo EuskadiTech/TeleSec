@@ -1,5 +1,6 @@
 PAGES.supercafe = {
     navcss: "btn4",
+    icon: "static/appico/Coffee.svg",
     Title: "SuperCafé",
     edit: function (mid) {
       var nameh1 = safeuuid();
