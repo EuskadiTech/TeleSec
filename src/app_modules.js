@@ -1006,8 +1006,10 @@ function SetPages() {
     if (PAGES[key].Esconder == true) {
       return;
     }
-    if (typeof PAGES[key].HasAccess == "function" & PAGES[key].HasAccess() == False) {
-      return;
+    if (typeof PAGES[key].HasAccess == "function") {
+      if (PAGES[key].HasAccess() == False) {
+        return;
+      }
     }
     var a = document.createElement("a");
     var img = document.createElement("img")
