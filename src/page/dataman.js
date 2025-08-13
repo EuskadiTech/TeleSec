@@ -149,6 +149,7 @@ PAGES.dataman = {
   },
   index: function () {
     container.innerHTML = `
+    <h1>Administración de datos</h1>
     <a class="button" href="#dataman,import">Importar datos</a>
     <a class="button" href="#dataman,export">Exportar datos</a>
     `
