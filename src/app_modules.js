@@ -1001,8 +1001,12 @@ function BuildQR(mid) {
 const PAGES = {};
 
 function SetPages() {
+  document.getElementById("appendApps2").innerHTML = ""
   Object.keys(PAGES).forEach((key) => {
     if (PAGES[key].Esconder == true) {
+      return;
+    }
+    if (typeof PAGES[key].HasAccess == "function" & PAGES[key].HasAccess() == False) {
       return;
     }
     var a = document.createElement("a");
