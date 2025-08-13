@@ -33,15 +33,17 @@
       <details id="tab-admin">
         <summary hidden>Admin</summary>
         <div class="ribbon-panel">
-          <label>Codigo de grupo:
-            <input type="text" id="LinkAccount_group" /></label>
-          <br />
-          <label>Clave secreta:
-            <input type="text" id="LinkAccount_secret" /></label>
-          <br />
-          <button type="button" onclick='LinkAccount(document.getElementById("LinkAccount_group").value, document.getElementById("LinkAccount_secret").value, true)'>
-            Iniciar sesión
-          </button>
+          <div>
+            <label>Codigo de grupo:
+              <input type="text" id="LinkAccount_group" /></label>
+            <br />
+            <label>Clave secreta:
+              <input type="text" id="LinkAccount_secret" /></label>
+            <br />
+            <button type="button" onclick='LinkAccount(document.getElementById("LinkAccount_group").value, document.getElementById("LinkAccount_secret").value, true)'>
+              Iniciar sesión
+            </button>
+          </div>
         </div>
       </details>
       
