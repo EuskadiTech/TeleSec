@@ -1023,7 +1023,7 @@ function SetPages() {
   a.href = "#index,qr";
   label.innerText = "Escanear QR";
   label.className = "label"
-  img.src = "static/appico/File_Plugin.svg"
+  img.src = "static/appico/App_CodyCam.svg"
   a.append(img, label)
   document.getElementById("appendApps2").append(a);
 }
