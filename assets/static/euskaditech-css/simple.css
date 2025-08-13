@@ -370,7 +370,7 @@ hr {
 }
 
 .ribbon-button {
-  width: 64px;
+  min-width: 64px;
   text-align: center;
   cursor: pointer;
   background: none;
