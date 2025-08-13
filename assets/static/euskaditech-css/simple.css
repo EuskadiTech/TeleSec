@@ -370,6 +370,7 @@ hr {
   cursor: pointer;
   background: none;
   border: none;
+  color: black;
 }
 
 .ribbon-button img {
@@ -391,27 +392,6 @@ hr {
   box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.2);
 }
 
-.popup {
-  display: none;
-  position: fixed;
-  top: 40%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: #fff;
-  border: 2px solid #ccc;
-  padding: 20px;
-  z-index: 9999;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-}
-
-.popup-content {
-  text-align: center;
-}
-
-.popup button {
-  margin-top: 10px;
-  padding: 5px 15px;
-}
 
 details {
   margin: 0;

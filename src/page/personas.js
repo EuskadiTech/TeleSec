@@ -1,5 +1,6 @@
 PAGES.personas = {
   navcss: "btn3",
+  icon: "static/appico/File_Person.svg",
   Title: "Personas",
   edit: function (mid) {
     var nameh1 = safeuuid();

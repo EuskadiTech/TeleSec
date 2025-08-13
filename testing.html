@@ -131,7 +131,47 @@
 </head>
 <body>
 
+<div class="ribbon">
+  <div class="ribbon-orb"></div>
 
+  <div class="ribbon-content">
+    <div class="ribbon-tabs">
+      <div class="ribbon-tab active" data-tab="modulos">Modulos</div>
+      <div class="ribbon-tab" data-tab="admin">Admin</div>
+    </div>
+
+    <!-- Tab: Modulos -->
+    <details id="tab-modulos" open>
+      <summary hidden>Modulos</summary>
+      <div class="ribbon-panel">
+        <div class="ribbon-button">
+          <img src="">
+          <div class="label">Materiales</div>
+        </div>
+        <button class="ribbon-button" onclick="showMessage()">
+          <img src="https://raw.githubusercontent.com/darealshinji/haiku-icons/refs/heads/master/svg/File_Person.svg">
+          <div class="label">Personas</div>
+        </button>
+      </div>
+    </details>
+
+    <!-- Tab: Admin -->
+    <details id="tab-admin">
+      <summary hidden>Admin</summary>
+      <div class="ribbon-panel">
+        <div class="ribbon-button orange">
+          <img src="https://raw.githubusercontent.com/darealshinji/haiku-icons/refs/heads/master/svg/Settings.svg">
+          <div class="label">Settings</div>
+        </div>
+        <div class="ribbon-button">
+          <img src="https://raw.githubusercontent.com/darealshinji/haiku-icons/refs/heads/master/svg/Lock_Lock.svg">
+          <div class="label">Security</div>
+        </div>
+      </div>
+    </details>
+
+  </div>
+</div>
 
 <!-- Popup Message Box -->
 <div class="popup" id="popup">

@@ -1012,7 +1012,7 @@ function SetPages() {
     a.href = "#" + key;
     label.innerText = PAGES[key].Title;
     label.className = "label"
-    img.src = PAGES[key].icon
+    img.src = PAGES[key].icon || "static/appico/File_Plugin.svg"
     a.append(img, label)
     document.getElementById("appendApps2").append(a);
   });
