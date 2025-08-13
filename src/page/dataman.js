@@ -3,7 +3,7 @@ PAGES.dataman = {
   icon: "static/appico/Database.svg",
   HasAccess: function () {
     var roles = SUB_LOGGED_IN_DETAILS.Roles || ""
-    var rolesArr = roles.split(" ")
+    var rolesArr = roles.split(",")
     if (rolesArr.includes("ADMIN")) {
       return true
     }
