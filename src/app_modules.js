@@ -1006,12 +1006,16 @@ function SetPages() {
     if (PAGES[key].Esconder == true) {
       return;
     }
-    if (PAGES[key].HasAccess != undefined) {
+    if (PAGES[key].AccessControl == true) {
       var roles = SUB_LOGGED_IN_DETAILS.Roles || ""
       var rolesArr = roles.split(",")
-      if (!rolesArr.includes(PAGES[key].HasAccess)) {
+      var has
+      if (rolesArr.includes("ADMIN") || rolesArr.includes(key)) {
+        
+      } else {
         return
       }
+      
     }
     var a = document.createElement("a");
     var img = document.createElement("img")
