@@ -1,5 +1,6 @@
 PAGES.comedor = {
   navcss: "btn6",
+  icon: "static/appico/Meal.svg",
   Title: "Menú comedor",
   edit: function (mid) {
     var nameh1 = safeuuid();
