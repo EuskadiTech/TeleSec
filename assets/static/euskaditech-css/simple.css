@@ -379,7 +379,7 @@ hr {
   white-space: nowrap;
   margin: 0;
   padding: 0;
-  display: block;
+  display: inline,block;
 }
 
 .ribbon-button img {
