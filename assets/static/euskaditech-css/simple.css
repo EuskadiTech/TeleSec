@@ -376,6 +376,7 @@ hr {
   background: none;
   border: none;
   color: black;
+  white-space: nowrap;
 }
 
 .ribbon-button img {
