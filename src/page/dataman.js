@@ -5,9 +5,9 @@ PAGES.dataman = {
     var roles = SUB_LOGGED_IN_DETAILS.Roles || ""
     var rolesArr = roles.split(" ")
     if (rolesArr.includes("ADMIN")) {
-      return True
+      return true
     }
-    return False
+    return false
   },
   Title: "Admin. Datos",
   edit: function(mid) {
