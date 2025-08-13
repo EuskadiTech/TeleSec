@@ -1007,7 +1007,7 @@ function SetPages() {
       return;
     }
     if (typeof PAGES[key].HasAccess == "function") {
-      if (PAGES[key].HasAccess() == False) {
+      if (PAGES[key].HasAccess() == false) {
         return;
       }
     }
