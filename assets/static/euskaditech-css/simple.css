@@ -370,7 +370,7 @@ hr {
 }
 
 .ribbon-button {
-  width: 75px;
+  width: auto;
   text-align: center;
   cursor: pointer;
   background: none;
@@ -379,7 +379,6 @@ hr {
   white-space: nowrap;
   margin: 0;
   padding: 0;
-  overflow: hidden;
 }
 
 .ribbon-button img {
