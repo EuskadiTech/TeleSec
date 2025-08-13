@@ -1006,10 +1006,15 @@ function SetPages() {
       return;
     }
     var a = document.createElement("a");
-    a.className = "button " + PAGES[key].navcss;
+    var img = document.createElement("img")
+    var label = document.createElement("div")
+    a.className = "ribbon-button";
     a.href = "#" + key;
-    a.innerText = PAGES[key].Title;
-    document.getElementById("appendApps").append(a);
+    label.innerText = PAGES[key].Title;
+    label.className = "label"
+    img.src = PAGES[key].icon
+    a.append(img, label)
+    document.getElementById("appendApps2").append(a);
   });
   var a = document.createElement("a");
   a.className = "button btn7";
