@@ -7,13 +7,13 @@ const debounce = (callback, wait) => {
   let isLocked = false;
   let lastArgs = null;
   let timeoutId = null;
-
+  
   return (...args) => {
     if (!isLocked) {
       // First call: run immediately
       callback(...args);
       isLocked = true;
-
+      
       // Start lock period
       timeoutId = setTimeout(() => {
         isLocked = false;
@@ -29,7 +29,7 @@ const debounce = (callback, wait) => {
   };
 };
 
-String.prototype.toHex = function () {
+String.prototype.toHex = function() {
   var s = this + "0123456789";
   var colors = [
     "#ff0000",
@@ -41,17 +41,19 @@ String.prototype.toHex = function () {
   ];
   var color =
     (((((s.charCodeAt(1) * s.charCodeAt(2)) / s.charCodeAt(s.length - 1)) *
-      s.charCodeAt(s.length - 2)) /
-      s.charCodeAt(s.length - 2)) *
+          s.charCodeAt(s.length - 2)) /
+        s.charCodeAt(s.length - 2)) *
       s.charCodeAt(s.length - 3)) /
     s.charCodeAt(s.length - 3);
   var cid = colors[Math.round(color) % colors.length];
   console.log(color, cid, colors);
   return cid;
 };
+
 function stringToColour(str) {
   return str.toHex();
 }
+
 function colorIsDarkAdvanced(bgColor) {
   let color = bgColor.charAt(0) === "#" ? bgColor.substring(1, 7) : bgColor;
   let r = parseInt(color.substring(0, 2), 16); // hexToR
@@ -67,6 +69,7 @@ function colorIsDarkAdvanced(bgColor) {
   let L = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
   return L <= 0.179 ? "#FFFFFF" : "#000000";
 }
+
 function setLayeredImages(comanda, key) {
   // Base paths for each layer type (adjust paths as needed)
   const basePaths = {
@@ -76,7 +79,7 @@ function setLayeredImages(comanda, key) {
     Cafeina: "static/ico/layered1/",
     Leche: "static/ico/layered1/",
   };
-
+  
   // Map for Selección to filenames
   const selectionMap = {
     "ColaCao con leche": "Selección-ColaCao.png",
@@ -85,10 +88,10 @@ function setLayeredImages(comanda, key) {
     "Solo Leche": "Selección-Leche.png",
     "Solo café (sin leche)": "Selección-CaféSolo.png",
   };
-
+  
   // Start div with relative positioning for layering
   let html = `<div style="position: relative; width: 200px; height: 200px; background: white; display: inline-block; border: 1px dotted black;">`;
-
+  
   // Layer 1: Selección image
   const selection = comanda["Selección"];
   if (selectionMap[selection]) {
@@ -96,17 +99,17 @@ function setLayeredImages(comanda, key) {
       basePaths.Selección + selectionMap[selection]
     }" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">`;
   }
-
+  
   // Layer 2: Café
   if (comanda.Café) {
     html += `<img id="img2-${key}" src="${basePaths.Café}Café-${comanda.Café}.png" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">`;
   }
-
+  
   // Layer 3: Endulzante
   if (comanda.Endulzante) {
     html += `<img id="img3-${key}" src="${basePaths.Endulzante}Azucar-${comanda.Endulzante}.png" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">`;
   }
-
+  
   // Layer 4: Cafeina
   if (comanda.Cafeina) {
     html += `<img id="img4-${key}" src="${basePaths.Cafeina}Cafeina-${comanda.Cafeina}.png" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">`;
@@ -123,12 +126,13 @@ function setLayeredImages(comanda, key) {
   if (comanda.Tamaño) {
     html += `<img id="img7-${key}" src="${basePaths.Leche}Tamaño-${comanda.Tamaño}.png" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">`;
   }
-
+  
   // Close div
   html += "</div>";
-
+  
   return html;
 }
+
 function addCategory(
   parent,
   name,
@@ -170,14 +174,14 @@ function addCategory(
   summary_0.style.textAlign = "left";
   summary_0.style.paddingLeft = "55px";
   parent.append(details_0);
-
+  
   options.forEach((option) => {
     var btn = document.createElement("button");
     var br1 = document.createElement("br");
     //btn.innerText = option.key + ": " + option.value
     btn.append(option.value);
     // for each image in option.img:
-
+    
     if (option.img) {
       var br2 = document.createElement("br");
       btn.append(br2);
@@ -210,6 +214,7 @@ function addCategory(
     details_0.append(btn);
   });
 }
+
 function addCategory_Personas(
   parent,
   options,
@@ -275,7 +280,7 @@ function addCategory_Personas(
       var br1 = document.createElement("br");
       //btn.innerText = option.key + ": " + option.value
       btn.append(option);
-
+      
       var br2 = document.createElement("br");
       btn.append(br2);
       var img = document.createElement("img");
@@ -284,7 +289,7 @@ function addCategory_Personas(
       img.style.padding = "5px";
       img.style.backgroundColor = "white";
       btn.append(img, " ");
-
+      
       if (defaultval == key) {
         btn.classList.add("activeSCButton");
       }
@@ -324,177 +329,170 @@ const SC_actions_icons = {
 };
 const SC_actions = {
   Selección: [
-    {
-      value: "Solo Leche",
-      key: "Selección",
-      className: "btn4",
-      img: ["static/ico/milk.png"],
-    },
-    {
-      value: "Solo café (sin leche)",
-      key: "Selección",
-      className: "btn4",
-      img: ["static/ico/coffee_bean.png"],
-    },
-    {
-      value: "Café con leche",
-      key: "Selección",
-      className: "btn4",
-      img: ["static/ico/coffee_bean.png", "static/ico/milk.png"],
-    },
-    {
-      value: "ColaCao con leche",
-      key: "Selección",
-      className: "btn4",
-      img: ["static/ico/colacao.jpg", "static/ico/milk.png"],
-    },
-    {
-      value: "Leche con cereales",
-      key: "Selección",
-      className: "btn4",
-      img: ["static/ico/cereales.png", "static/ico/milk.png"],
-    },
-    {
-      value: "Infusión",
-      key: "Selección",
-      className: "btn4",
-      img: ["static/ico/tea_bag.png"],
-    },
-  ],
+  {
+    value: "Solo Leche",
+    key: "Selección",
+    className: "btn4",
+    img: ["static/ico/milk.png"],
+  },
+  {
+    value: "Solo café (sin leche)",
+    key: "Selección",
+    className: "btn4",
+    img: ["static/ico/coffee_bean.png"],
+  },
+  {
+    value: "Café con leche",
+    key: "Selección",
+    className: "btn4",
+    img: ["static/ico/coffee_bean.png", "static/ico/milk.png"],
+  },
+  {
+    value: "ColaCao con leche",
+    key: "Selección",
+    className: "btn4",
+    img: ["static/ico/colacao.jpg", "static/ico/milk.png"],
+  },
+  {
+    value: "Leche con cereales",
+    key: "Selección",
+    className: "btn4",
+    img: ["static/ico/cereales.png", "static/ico/milk.png"],
+  },
+  {
+    value: "Infusión",
+    key: "Selección",
+    className: "btn4",
+    img: ["static/ico/tea_bag.png"],
+  }, ],
   Tamaño: [
-    {
-      value: "Grande",
-      key: "Tamaño",
-      className: "btn1",
-      img: ["static/ico/keyboard_key_g.png"],
-    },
-    {
-      value: "Pequeño",
-      key: "Tamaño",
-      className: "btn1",
-      img: ["static/ico/keyboard_key_p.png"],
-    },
-  ],
+  {
+    value: "Grande",
+    key: "Tamaño",
+    className: "btn1",
+    img: ["static/ico/keyboard_key_g.png"],
+  },
+  {
+    value: "Pequeño",
+    key: "Tamaño",
+    className: "btn1",
+    img: ["static/ico/keyboard_key_p.png"],
+  }, ],
   Temperatura: [
-    {
-      value: "Caliente",
-      key: "Temperatura",
-      className: "btn2",
-      img: [
-        "static/ico/thermometer2.png",
-        "static/ico/arrow_up_red.png",
-        "static/ico/fire.png",
-      ],
-    },
-    {
-      value: "Templado",
-      key: "Temperatura",
-      className: "btn2",
-      img: ["static/ico/thermometer2.png", "static/ico/arrow_left_green.png"],
-    },
-    {
-      value: "Frio",
-      key: "Temperatura",
-      className: "btn2",
-      img: [
-        "static/ico/thermometer2.png",
-        "static/ico/arrow_down_blue.png",
-        "static/ico/snowflake.png",
-      ],
-    },
-  ],
+  {
+    value: "Caliente",
+    key: "Temperatura",
+    className: "btn2",
+    img: [
+      "static/ico/thermometer2.png",
+      "static/ico/arrow_up_red.png",
+      "static/ico/fire.png",
+    ],
+  },
+  {
+    value: "Templado",
+    key: "Temperatura",
+    className: "btn2",
+    img: ["static/ico/thermometer2.png", "static/ico/arrow_left_green.png"],
+  },
+  {
+    value: "Frio",
+    key: "Temperatura",
+    className: "btn2",
+    img: [
+      "static/ico/thermometer2.png",
+      "static/ico/arrow_down_blue.png",
+      "static/ico/snowflake.png",
+    ],
+  }, ],
   Leche: [
-    {
-      value: "de Vaca",
-      key: "Leche",
-      className: "btn3",
-      img: ["static/ico/cow.png", "static/ico/add.png"],
-    },
-    {
-      value: "Sin lactosa",
-      key: "Leche",
-      className: "btn3",
-      img: ["static/ico/cow.png", "static/ico/delete.png"],
-    },
-    {
-      value: "Vegetal",
-      key: "Leche",
-      className: "btn3",
-      img: ["static/ico/milk.png", "static/ico/wheat.png"],
-    },
-    {
-      value: "Agua",
-      key: "Leche",
-      className: "btn3",
-      img: ["static/ico/water_tap.png"],
-    },
-  ],
+  {
+    value: "de Vaca",
+    key: "Leche",
+    className: "btn3",
+    img: ["static/ico/cow.png", "static/ico/add.png"],
+  },
+  {
+    value: "Sin lactosa",
+    key: "Leche",
+    className: "btn3",
+    img: ["static/ico/cow.png", "static/ico/delete.png"],
+  },
+  {
+    value: "Vegetal",
+    key: "Leche",
+    className: "btn3",
+    img: ["static/ico/milk.png", "static/ico/wheat.png"],
+  },
+  {
+    value: "Agua",
+    key: "Leche",
+    className: "btn3",
+    img: ["static/ico/water_tap.png"],
+  }, ],
   Cafeina: [
-    {
-      value: "Con",
-      key: "Cafeina",
-      className: "btn5",
-      img: ["static/ico/coffee_bean.png", "static/ico/add.png"],
-    },
-    {
-      value: "Sin",
-      key: "Cafeina",
-      className: "btn5",
-      img: ["static/ico/coffee_bean.png", "static/ico/delete.png"],
-    },
-  ],
+  {
+    value: "Con",
+    key: "Cafeina",
+    className: "btn5",
+    img: ["static/ico/coffee_bean.png", "static/ico/add.png"],
+  },
+  {
+    value: "Sin",
+    key: "Cafeina",
+    className: "btn5",
+    img: ["static/ico/coffee_bean.png", "static/ico/delete.png"],
+  }, ],
   Endulzante: [
-    {
-      value: "Az. Blanco",
-      key: "Endulzante",
-      className: "btn6",
-      img: ["static/ico/azucar-blanco.jpg"],
-    },
-    {
-      value: "Az. Moreno",
-      key: "Endulzante",
-      className: "btn6",
-      img: ["static/ico/azucar-moreno.png"],
-    },
-    {
-      value: "Sacarina",
-      key: "Endulzante",
-      className: "btn6",
-      img: ["static/ico/sacarina.jpg"],
-    },
-    {
-      value: "Stevia (Pastillas)",
-      key: "Endulzante",
-      className: "btn6",
-      img: ["static/ico/stevia.jpg"],
-    },
-    {
-      value: "Stevia (Gotas)",
-      key: "Endulzante",
-      className: "btn6",
-      img: ["static/ico/stevia-gotas.webp"],
-    },
-    {
-      value: "Sin",
-      key: "Endulzante",
-      className: "btn6",
-      img: ["static/ico/delete.png"],
-    },
-  ],
+  {
+    value: "Az. Blanco",
+    key: "Endulzante",
+    className: "btn6",
+    img: ["static/ico/azucar-blanco.jpg"],
+  },
+  {
+    value: "Az. Moreno",
+    key: "Endulzante",
+    className: "btn6",
+    img: ["static/ico/azucar-moreno.png"],
+  },
+  {
+    value: "Sacarina",
+    key: "Endulzante",
+    className: "btn6",
+    img: ["static/ico/sacarina.jpg"],
+  },
+  {
+    value: "Stevia (Pastillas)",
+    key: "Endulzante",
+    className: "btn6",
+    img: ["static/ico/stevia.jpg"],
+  },
+  {
+    value: "Stevia (Gotas)",
+    key: "Endulzante",
+    className: "btn6",
+    img: ["static/ico/stevia-gotas.webp"],
+  },
+  {
+    value: "Sin",
+    key: "Endulzante",
+    className: "btn6",
+    img: ["static/ico/delete.png"],
+  }, ],
   Receta: [
-    {
-      value: "Si",
-      key: "Receta",
-      className: "btn7",
-      img: ["static/ico/add.png"],
-    },
-    {
-      value: "No",
-      key: "Receta",
-      className: "btn7",
-      img: ["static/ico/delete.png"],
-    },
-  ],
+  {
+    value: "Si",
+    key: "Receta",
+    className: "btn7",
+    img: ["static/ico/add.png"],
+  },
+  {
+    value: "No",
+    key: "Receta",
+    className: "btn7",
+    img: ["static/ico/delete.png"],
+  }, ],
 };
 var SC_Personas = {};
 // Listado precargado de personas:
@@ -527,9 +525,10 @@ function SC_parse(json) {
   });
   return out;
 }
+
 function SC_parse_short(json) {
   var valores = "<small style='font-size: 60%;'>Servicio base (10c)</small>\n";
-
+  
   Object.entries(json).forEach((entry) => {
     valores +=
       "<small style='font-size: 60%;'>" +
@@ -542,15 +541,13 @@ function SC_parse_short(json) {
       case "Leche":
         // Leche pequeña = 10c
         if (
-          json["Tamaño"] == "Pequeño" &&
-          ["de Vaca", "Sin lactosa", "Vegetal"].includes(json["Leche"])
+          json["Tamaño"] == "Pequeño" && ["de Vaca", "Sin lactosa", "Vegetal"].includes(json["Leche"])
         ) {
           valores += "<small>(P = 10c)</small>";
         }
         // Leche grande = 20c
         if (
-          json["Tamaño"] == "Grande" &&
-          ["de Vaca", "Sin lactosa", "Vegetal"].includes(json["Leche"])
+          json["Tamaño"] == "Grande" && ["de Vaca", "Sin lactosa", "Vegetal"].includes(json["Leche"])
         ) {
           valores += "<small>(G = 20c)</small>";
         }
@@ -571,11 +568,12 @@ function SC_parse_short(json) {
       default:
         break;
     }
-
+    
     valores += "\n";
   });
   return valores;
 }
+
 function SC_priceCalc(json) {
   var precio = 0;
   var valores = "";
@@ -584,16 +582,14 @@ function SC_priceCalc(json) {
   valores += "Servicio base = 10c\n";
   // Leche pequeña = 10c
   if (
-    json["Tamaño"] == "Pequeño" &&
-    ["de Vaca", "Sin lactosa", "Vegetal"].includes(json["Leche"])
+    json["Tamaño"] == "Pequeño" && ["de Vaca", "Sin lactosa", "Vegetal"].includes(json["Leche"])
   ) {
     precio += 10;
     valores += "Leche pequeña = 10c\n";
   }
   // Leche grande = 20c
   if (
-    json["Tamaño"] == "Grande" &&
-    ["de Vaca", "Sin lactosa", "Vegetal"].includes(json["Leche"])
+    json["Tamaño"] == "Grande" && ["de Vaca", "Sin lactosa", "Vegetal"].includes(json["Leche"])
   ) {
     precio += 20;
     valores += "Leche grande = 20c\n";
@@ -611,6 +607,7 @@ function SC_priceCalc(json) {
   valores += "<hr>Total: " + precio + "c\n";
   return [precio, valores];
 }
+
 function PERSONAS_Sorter(a, b) {
   if (a[1].Region < b[1].Region) {
     return -1;
@@ -639,7 +636,7 @@ function TS_IndexElement(
   var tablehead = safeuuid();
   var scrolltable = safeuuid();
   var searchKeyInput = safeuuid();
-
+  
   // Create the container with search bar and table
   container.innerHTML = `
     <div id="${scrolltable}">
@@ -670,18 +667,18 @@ function TS_IndexElement(
     "input",
     debounce(() => render(), 300)
   );
-
+  
   function searchInData(data, searchValue, config) {
     if (!searchValue) return true;
-
+    
     // Search in ID
     if (data._key.toLowerCase().includes(searchValue)) return true;
-
+    
     // Search in configured fields
     for (const field of config) {
       const value = data[field.key];
       if (!value) continue;
-
+      
       // Handle different field types
       switch (field.type) {
         case "comanda":
@@ -716,7 +713,7 @@ function TS_IndexElement(
     }
     return false;
   }
-
+  
   function render() {
     function sorter(a, b) {
       // If both items have Fecha field, sort by date first
@@ -746,7 +743,7 @@ function TS_IndexElement(
       
       return 0;
     }
-
+    
     const searchValue = searchKeyEl.value.toLowerCase().trim();
     tablebody_EL.innerHTML = "";
     Object.entries(rows)
@@ -755,7 +752,7 @@ function TS_IndexElement(
       .sort(sorter)
       .forEach((data) => {
         var new_tr = document.createElement("tr");
-
+        
         if (canAddCallback != undefined) {
           if (canAddCallback(data) == true) {
             return;
@@ -787,12 +784,12 @@ function TS_IndexElement(
               tdComanda.style.verticalAlign = "top";
               const parsedComanda = JSON.parse(data.Comanda);
               const precio = SC_priceCalc(parsedComanda)[0];
-
+              
               // Create a temporary div to parse the HTML from setLayeredImages
               const tempDiv = document.createElement("div");
               tempDiv.innerHTML = setLayeredImages(parsedComanda, data._key);
               tdComanda.appendChild(tempDiv.firstChild);
-
+              
               const pre = document.createElement("pre");
               pre.style.fontSize = "15px";
               pre.style.display = "inline-block";
@@ -808,15 +805,15 @@ function TS_IndexElement(
               const spanPrecio = document.createElement("span");
               spanPrecio.style.fontSize = "20px";
               spanPrecio.innerHTML =
-                SC_Personas[data.Persona].Puntos >= 10
-                  ? `Total: Gratis!(${precio}c)`
-                  : `Total: ${precio}c`;
+                SC_Personas[data.Persona].Puntos >= 10 ?
+                `Total: Gratis!(${precio}c)` :
+                `Total: ${precio}c`;
               pre.innerHTML = "<b>Ticket de compra</b> ";
               pre.appendChild(document.createTextNode("\n"));
               pre.innerHTML +=
                 SC_parse_short(parsedComanda) + "<hr>" + data.Notas + "<hr>";
               pre.appendChild(spanPrecio);
-
+              
               tdComanda.appendChild(pre);
               new_tr.appendChild(tdComanda);
               break;
@@ -831,7 +828,7 @@ function TS_IndexElement(
                 td.style.pointerEvents = "none";
                 td.style.opacity = "0.5";
               }
-
+              
               // Create buttons
               const createButton = (text, state) => {
                 const button = document.createElement("button");
@@ -851,7 +848,7 @@ function TS_IndexElement(
                 };
                 return button;
               };
-
+              
               // Create all buttons
               const buttons = [
                 createButton("Pedido", "Pedido"),
@@ -860,7 +857,7 @@ function TS_IndexElement(
                 createButton("Entregado", "Entregado"),
                 createButton("Deuda", "Deuda"),
               ];
-
+              
               // Create paid button separately due to different behavior
               const paidButton = document.createElement("button");
               paidButton.textContent = "Pagado";
@@ -881,13 +878,13 @@ function TS_IndexElement(
                   SC_Personas[data.Persona].Puntos -= 10;
                   toastr.success(
                     "¡Comada gratis para " +
-                      SC_Personas[data.Persona].Nombre +
-                      "!"
+                    SC_Personas[data.Persona].Nombre +
+                    "!"
                   );
                   toastr.success(
                     "¡Comada gratis para " +
-                      SC_Personas[data.Persona].Nombre +
-                      "!"
+                    SC_Personas[data.Persona].Nombre +
+                    "!"
                   );
                 } else {
                   SC_Personas[data.Persona].Puntos += 1;
@@ -901,7 +898,7 @@ function TS_IndexElement(
                 });
                 return false;
               };
-
+              
               // Add all buttons to td with line breaks between
               buttons.forEach((button) => {
                 td.appendChild(button);
@@ -909,7 +906,7 @@ function TS_IndexElement(
               });
               td.appendChild(paidButton);
               new_tr.appendChild(td);
-
+              
               // Event handlers are now attached during button creation
               break;
             case "persona":
@@ -917,21 +914,21 @@ function TS_IndexElement(
               const regco = stringToColour(
                 (persona.Region || "?").toLowerCase()
               );
-
+              
               const tdPersona = document.createElement("td");
               tdPersona.style.textAlign = "center";
               tdPersona.style.fontSize = "20px";
               tdPersona.style.backgroundColor = regco;
               tdPersona.style.color = colorIsDarkAdvanced(regco);
-
+              
               const regionSpan = document.createElement("span");
               regionSpan.style.fontSize = "40px";
               regionSpan.style.textTransform = "capitalize";
               regionSpan.textContent = (persona.Region || "?").toLowerCase();
               tdPersona.appendChild(regionSpan);
-
+              
               tdPersona.appendChild(document.createElement("br"));
-
+              
               const infoSpan = document.createElement("span");
               infoSpan.style.backgroundColor = "white";
               infoSpan.style.border = "2px solid black";
@@ -939,27 +936,27 @@ function TS_IndexElement(
               infoSpan.style.display = "inline-block";
               infoSpan.style.padding = "5px";
               infoSpan.style.color = "black";
-
+              
               const img = document.createElement("img");
               img.src = persona.Foto || "static/ico/user_generic.png";
               img.height = 70;
               infoSpan.appendChild(img);
-
+              
               infoSpan.appendChild(document.createElement("br"));
               infoSpan.appendChild(
                 document.createTextNode(persona.Nombre || "")
               );
-
+              
               infoSpan.appendChild(document.createElement("br"));
               const pointsSpan = document.createElement("span");
               pointsSpan.style.fontSize = "17px";
               pointsSpan.textContent = (persona.Puntos || "0") + " puntos.";
               infoSpan.appendChild(pointsSpan);
-
+              
               tdPersona.appendChild(infoSpan);
               new_tr.appendChild(tdPersona);
               break;
-
+              
             default:
               break;
           }
@@ -971,6 +968,7 @@ function TS_IndexElement(
   }
   ref.map().on((data, key, _msg, _ev) => {
     EVENTLISTENER = _ev;
+    
     function add_row(data, key) {
       if (data != null) {
         data["_key"] = key;
@@ -989,6 +987,7 @@ function TS_IndexElement(
     }
   });
 }
+
 function BuildQR(mid) {
   var svg = QRCode({
     msg: mid,
@@ -1000,6 +999,7 @@ function BuildQR(mid) {
 }
 
 const PAGES = {};
+
 function SetPages() {
   Object.keys(PAGES).forEach((key) => {
     if (PAGES[key].Esconder == true) {
@@ -1020,7 +1020,7 @@ function SetPages() {
   a.className = "button btn7";
   a.href = "#index,qr";
   a.innerText = "📷";
-  document.getElementById("appendApps").append(a);  
+  document.getElementById("appendApps").append(a);
 }
 document.addEventListener("DOMContentLoaded", () => {
   SetPages();
@@ -1053,3 +1053,38 @@ setInterval(() => {
     open_page(location.hash.replace("#", ""));
   }
 }, 1500);
+
+
+
+function showMessage() {
+  document.getElementById("popup").style.display = "block";
+}
+
+function closePopup() {
+  document.getElementById("popup").style.display = "none";
+}
+
+const tabs = document.querySelectorAll('.ribbon-tab');
+const detailTabs = {
+  modulos: document.getElementById('tab-modulos'),
+  admin: document.getElementById('tab-admin')
+};
+
+tabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    const selected = tab.getAttribute('data-tab');
+    
+    // Toggle details
+    for (const [key, detailsEl] of Object.entries(detailTabs)) {
+      if (key === selected) {
+        detailsEl.setAttribute('open', '');
+      } else {
+        detailsEl.removeAttribute('open');
+      }
+    }
+    
+    // Toggle tab active class
+    tabs.forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+  });
+});
