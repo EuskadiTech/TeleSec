@@ -1,14 +1,7 @@
 PAGES.dataman = {
   navcss: "btn1",
   icon: "static/appico/Database.svg",
-  HasAccess: function () {
-    var roles = SUB_LOGGED_IN_DETAILS.Roles || ""
-    var rolesArr = roles.split(",")
-    if (rolesArr.includes("ADMIN")) {
-      return true
-    }
-    return false
-  },
+  HasAccess: "ADMIN",
   Title: "Admin. Datos",
   edit: function(mid) {
     switch (mid) {
