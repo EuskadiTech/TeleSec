@@ -284,7 +284,7 @@ function addCategory_Personas(
       var br2 = document.createElement("br");
       btn.append(br2);
       var img = document.createElement("img");
-      img.src = value.Foto;
+      img.src = value.Foto || "static/ico/user_generic.png";
       img.style.height = "60px";
       img.style.padding = "5px";
       img.style.backgroundColor = "white";
