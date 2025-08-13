@@ -2,7 +2,7 @@ function tableScroll(query) {
   $(query).doubleScroll();
 }
 //var secretTokenEl = document.getElementById("secretToken");
-var groupIdEl = document.getElementById("groupId");
+var groupIdEl = document.getElementById("LinkAccount_group");
 var container = document.getElementById("container");
 
 function LinkAccount(LinkAccount_group, LinkAccount_secret, refresh = false) {
@@ -15,7 +15,7 @@ function LinkAccount(LinkAccount_group, LinkAccount_secret, refresh = false) {
   
   TABLE = GROUPID + ":telesec.tech.eus";
   //secretTokenEl.innerText = SECRET;
-  groupIdEl.innerText = GROUPID;
+  groupIdEl.value = GROUPID;
   document.getElementById("LinkAccount_details").open = false;
   if (refresh == true) {
     location.reload();

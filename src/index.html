@@ -34,15 +34,16 @@
         <summary hidden>Credenciales</summary>
         <div class="ribbon-panel">
           <div>
-            <label>Usuario:
-              <input type="text" id="LinkAccount_group" /></label>
+            
+            <input type="text" id="LinkAccount_group" placeholder="Usuario..." />
             <br />
-            <label>Contraseña:
-              <input type="text" id="LinkAccount_secret" /></label>
+            < <input type="text" id="LinkAccount_secret" placeholder="Contraseña..." />
             <br />
             <button type="button" onclick='LinkAccount(document.getElementById("LinkAccount_group").value, document.getElementById("LinkAccount_secret").value, true)'>
               Iniciar sesión
             </button>
+            <b><span id="peerCount">?</span>
+              nodos</b>
           </div>
         </div>
       </details>
@@ -59,42 +60,7 @@
     <ul id="peerList"></ul>
     <i>Todos los datos están encriptados.</i>
   </details>
-  <main>
-    <header class="no_print" id="header_hide_query">
-      <details id="LinkAccount_details" open>
-        <summary>
-          <b>TeleSec - <span id="groupId">???</span> - (<span id="peerCount">?</span>
-            nodos)</b>
-        </summary>
-        <fieldset id="auth_fieldSet">
-          <legend>Credenciales</legend>
-          <br />
-          
-        </fieldset>
-      </details>
-      <!-- <button onclick="displayPost('index')">Ir a la pagina de inicio</button> -->
-      
-      <div id="appendApps">
-        <!--<a class="button nav-supercafe nav-disabled" disabled>SuperCafé</a>
-                <a class="button nav-comedor nav-disabled" disabled>Menú Comedor</a>
-                <a class="button nav-recetas nav-disabled" disabled>Recetas</a>-->
-      </div>
-      <hr />
-    </header>
-    <div id="container"></div>
-    <!-- <br><br><br>
-    <footer>
-      <hr>
-      <details>
-        <summary><b>Apps SuperMesh</b></summary>
-        <button type="button">
-          <img src="static/TeleSec.jpg" alt="" width="100px">
-          <br>TeleSec
-        </button>
-      </details>
-    </footer> -->
-    <!-- <img id="connectStatus" style="bottom: 15px; right: 15px; position: fixed; width: 50px" /> -->
-  </main>
+  <main id="container"></main>
   <img id="actionStatus" src="static/ico/statusok.png" style="
         z-index: 2048;
         margin: 0px;
