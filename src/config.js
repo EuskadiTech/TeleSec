@@ -35,7 +35,6 @@ function LogOutTeleSec() {
   SUB_LOGGED_IN = false;
   SUB_LOGGED_IN_DETAILS = false;
   SUB_LOGGED_IN_ID = false;
-  document.getElementById("appendApps").style.display = "none";
   document.getElementById("loading").style.display = "block";
   //Remove sublogin from URL and reload
   urlParams.delete("sublogin");
