@@ -1009,10 +1009,9 @@ function SetPages() {
     if (PAGES[key].HasAccess != undefined) {
       var roles = SUB_LOGGED_IN_DETAILS.Roles || ""
       var rolesArr = roles.split(",")
-      if (rolesArr.includes(PAGES[key].HasAccess)) {
-        return true
+      if (!rolesArr.includes(PAGES[key].HasAccess)) {
+        return
       }
-      return false
     }
     var a = document.createElement("a");
     var img = document.createElement("img")
