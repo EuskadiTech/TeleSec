@@ -32,7 +32,6 @@ if (urlParams.get("login") != null) {
     urlParams.get("login").split(":")[1]
   );
   //location.search = "";
-  SetPages()
 }
 
 function open_page(params) {

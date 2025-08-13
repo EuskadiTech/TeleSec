@@ -1034,7 +1034,6 @@ function SetPages() {
   document.getElementById("appendApps2").append(a);
 }
 document.addEventListener("DOMContentLoaded", () => {
-  SetPages();
   document.getElementById("appendApps").style.display = "none";
 });
 var Booted = false;
@@ -1047,6 +1046,7 @@ setInterval(() => {
     document.getElementById("loading").style.display = "none";
     toastr.error("Sin internet! Los cambios se sincronizarán cuando te vuelvas a conectar.")
     if (!SUB_LOGGED_IN) {
+      SetPages()
       open_page("login");
     } else {
       open_page(location.hash.replace("#", ""));
@@ -1059,6 +1059,7 @@ setInterval(() => {
       open_page("login");
       return;
     }
+    SetPages()
     open_page(location.hash.replace("#", ""));
   }
 }, 1500);
