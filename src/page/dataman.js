@@ -1,5 +1,6 @@
 PAGES.dataman = {
   navcss: "btn1",
+  icon: "static/appico/Database.svg",
   Title: "Admin. Datos",
   edit: function(mid) {
     switch (mid) {
