@@ -1,8 +1,8 @@
 PAGES.dataman = {
   navcss: "btn1",
-  icon: "static/appico/Database.svg",
+  icon: "static/appico/Cogs.svg",
   AccessControl: true,
-  Title: "Admin. Datos",
+  Title: "Ajustes",
   edit: function(mid) {
     switch (mid) {
       case 'export':
