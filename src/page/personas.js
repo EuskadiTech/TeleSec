@@ -170,7 +170,7 @@ PAGES.personas = {
       },
       { key: "Region", label: "Zona", type: "text", default: "?" },
       { key: "Puntos", label: "Puntos", type: "text", default: "0" },
-      { key: "Roles", label: "Permisos", type: "text", default: "" }
+      //{ key: "Roles", label: "Permisos", type: "text", default: "" }
     ];
 
     TS_IndexElement(
