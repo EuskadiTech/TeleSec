@@ -2,12 +2,13 @@ window.rtcRoom = "telesec.tech.eus";
 var opt = {
   axe: false,
   localStorage: false,
+  peers: RELAYS
   // radisk: true,
 };
 
 opt.store = RindexedDB(opt);
 
-var gun = Gun(RELAYS, opt);
+var gun = Gun(opt);
 var SEA = Gun.SEA;
 var user = gun.user();
 function removeCache() {
