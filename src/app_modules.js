@@ -967,7 +967,7 @@ function TS_IndexElement(
       });
   }
   ref.map().on((data, key, _msg, _ev) => {
-    EventListeners.GunJS.append(_ev);
+    EventListeners.GunJS.push(_ev);
     function add_row(data, key) {
       if (data != null) {
         data["_key"] = key;
