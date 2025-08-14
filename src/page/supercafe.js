@@ -148,7 +148,7 @@ PAGES.supercafe = {
         console.log("TTS Enabled");
         toastr.info("Texto a voz disponible");
       }, 6500);
-      EventListeners.Timeout.append(ev)
+      EventListeners.Timeout.push(ev)
       const tablebody = safeuuid();
       const tablebody2 = safeuuid();
       var btn_new = safeuuid();
