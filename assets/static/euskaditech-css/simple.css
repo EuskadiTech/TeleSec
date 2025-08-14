@@ -367,7 +367,7 @@ hr {
   gap: 10px;
   background-color: #c8d4eb;
   border: 1px solid #a2a9b9;
-  overflow-x: auto;
+  overflow-x: scroll;
   padding: 5px;
 }
 
