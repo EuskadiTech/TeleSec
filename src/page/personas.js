@@ -8,7 +8,7 @@ PAGES.personas = {
     var permisosdet = safeuuid();
     var field_nombre = safeuuid();
     var field_zona = safeuuid();
-    var field_roles = safeuuid();
+    //var field_roles = safeuuid();
     var field_puntos = safeuuid();
     var field_notas = safeuuid();
     var field_anilla = safeuuid();
@@ -27,9 +27,6 @@ PAGES.personas = {
                         Zona<br>
                         <input type="text" id="${field_zona}"><br><br>
                     </label>
-                    <label>
-                        Permisos<br>
-                        <input type="text" id="${field_roles}"><br><br>
                     </label>
                     <details>
                       <summary>Permisos</summary>
