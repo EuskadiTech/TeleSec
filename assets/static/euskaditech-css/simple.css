@@ -13,6 +13,7 @@ main {
             margin: 0 auto;*/
   padding: 15px;
   margin: 0;
+  margin-bottom: 20px;
 }
 
 .supermesh-indicator {
@@ -67,10 +68,6 @@ a:hover {
   .no_print {
     display: none;
   }
-}
-
-main {
-  margin-bottom: 25rem;
 }
 
 button,
