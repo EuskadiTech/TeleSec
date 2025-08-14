@@ -150,6 +150,12 @@ textarea {
   width: calc(100% - 11px);
 }
 
+input[type="checkbox"]{
+  padding: 0;
+  width: 24px;
+  height: 24px;
+}
+
 select {
   width: 100%;
 }
