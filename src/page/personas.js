@@ -68,20 +68,20 @@ PAGES.personas = {
       .once((data, key) => {
         function load_data(data, ENC = "") {
           document.getElementById(nameh1).innerText = key;
-          var pot = ""
+          var pot = "<ul>"
           Object.entries(PERMS).forEach((page) => {
             var c = ""
             if ((data["Roles"] || ",").split(",").includes(page[0])) {
               c = "checked"
             }
             pot += `
-              <label>
-                ${page[1]}:
+              <li><label>
                 <input name="perm" value="${page[0]}" type="checkbox" ${c}>
-              </label>
+                ${page[1]}
+              </label></li>
             `
           })
-          pdel.innerHTML = pot
+          pdel.innerHTML = pot + "</ul>"
           document.getElementById(field_nombre).value = data["Nombre"] || "";
           document.getElementById(field_zona).value = data["Region"] || "";
           //document.getElementById(field_roles).value = data["Roles"] || "";
