@@ -1044,9 +1044,6 @@ function SetPages() {
   a.append(img, label)
   document.getElementById("appendApps2").append(a);
 }
-document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("appendApps").style.display = "none";
-});
 var Booted = false;
 getPeers();
 
