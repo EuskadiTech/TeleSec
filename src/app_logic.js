@@ -35,9 +35,9 @@ if (urlParams.get("login") != null) {
 }
 
 function open_page(params) {
-  EventListenrea.GunJS.forEach(ev => ev.off());
-  EventListenrea.Timeout.forEach(ev => clearTimeout(ev));
-  EventListenrea.Interval.forEach(ev => clearInterval(ev));
+  EventListeners.GunJS.forEach(ev => ev.off());
+  EventListeners.Timeout.forEach(ev => clearTimeout(ev));
+  EventListeners.Interval.forEach(ev => clearInterval(ev));
   if (SUB_LOGGED_IN != true) {
     PAGES["login"].index();
     return;
