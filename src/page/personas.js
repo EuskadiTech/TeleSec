@@ -69,9 +69,9 @@ PAGES.personas = {
         function load_data(data, ENC = "") {
           document.getElementById(nameh1).innerText = key;
           var pot = ""
-          Object.entries(PERMS).forEach((perm) => {
+          Object.entries(PERMS).forEach((page) => {
             var c = ""
-            if (data["Roles"].split(",").includes(page[0])) {
+            if ((data["Roles"] || ",").split(",").includes(page[0])) {
               c = "checked"
             }
             pot += `
