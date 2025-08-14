@@ -35,23 +35,9 @@ if (urlParams.get("login") != null) {
 }
 
 function open_page(params) {
-  try {
-    if (EVENTLISTENER != null) {
-      try {
-        EVENTLISTENER.off();
-        EVENTLISTENER = null;
-        EVENTLISTENER2.off();
-        EVENTLISTENER2 = null;
-        // TypeError: Cannot read properties of null (reading 'off')
-      } catch (error) {
-        if (!error.name == "TypeError") {
-          console.debug("EVENTLISTENER error", error);
-        }
-      }
-    }
-  } catch (e) {
-    console.debug("EVENTLISTENER onhashchange", e);
-  }
+  EventListenrea.GunJS.forEach(ev => ev.off());
+  EventListenrea.Timeout.forEach(ev => clearTimeout(ev));
+  EventListenrea.Interval.forEach(ev => clearInterval(ev));
   if (SUB_LOGGED_IN != true) {
     PAGES["login"].index();
     return;

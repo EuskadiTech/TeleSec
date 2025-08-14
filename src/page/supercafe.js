@@ -143,11 +143,12 @@ PAGES.supercafe = {
       if (urlParams.get("sc_nobtn") == "yes") {
         sc_nobtn = "pointer-events: none; opacity: 0.5";
       }
-      setTimeout(() => {
+      var ev = setTimeout(() => {
         tts = true;
         console.log("TTS Enabled");
         toastr.info("Texto a voz disponible");
       }, 6500);
+      EventListeners.Timeout.append(ev)
       const tablebody = safeuuid();
       const tablebody2 = safeuuid();
       var btn_new = safeuuid();

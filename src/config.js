@@ -1,5 +1,8 @@
-var EVENTLISTENER = null;
-var EVENTLISTENER2 = null;
+var EventListeners = {
+  GunJS: [],
+  Timeout: [],
+  Interval: [],
+}
 var urlParams = new URLSearchParams(location.search);
 var AC_BYPASS = false;
 if (urlParams.get("ac_bypass") == "yes") {
@@ -28,7 +31,7 @@ if (urlParams.get("sublogin") != null) {
   SUB_LOGGED_IN = true;
   SUB_LOGGED_IN_ID = urlParams.get("sublogin");
   SUB_LOGGED_IN_DETAILS = true;
-  setTimeout(() => {
+  setInterval(() => {
     SUB_LOGGED_IN_DETAILS = SC_Personas[SUB_LOGGED_IN_ID];
   }, 1500);
 }
