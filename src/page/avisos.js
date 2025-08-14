@@ -153,7 +153,7 @@ PAGES.avisos = {
           toastr.success("Guardado!");
           setTimeout(() => {
             document.getElementById("actionStatus").style.display = "none";
-            setUrlHash("notificaciones");
+            setUrlHash("avisos");
           }, 1500);
         });
       };
@@ -162,7 +162,7 @@ PAGES.avisos = {
           betterGunPut(gun.get(TABLE).get("notificaciones").get(mid), null);
           toastr.error("Borrado!");
           setTimeout(() => {
-            setUrlHash("notificaciones");
+            setUrlHash("avisos");
           }, 1500);
         }
       };
@@ -213,7 +213,7 @@ PAGES.avisos = {
         }
       );
       document.getElementById(btn_new).onclick = () => {
-        setUrlHash("notificaciones," + safeuuid(""));
+        setUrlHash("avisos," + safeuuid(""));
       };
     },
   }
