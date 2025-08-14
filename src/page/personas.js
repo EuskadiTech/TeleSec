@@ -5,6 +5,7 @@ PAGES.personas = {
   Title: "Personas",
   edit: function (mid) {
     var nameh1 = safeuuid();
+    var permisosdet = safeuuid();
     var field_nombre = safeuuid();
     var field_zona = safeuuid();
     var field_roles = safeuuid();
@@ -30,6 +31,11 @@ PAGES.personas = {
                         Permisos<br>
                         <input type="text" id="${field_roles}"><br><br>
                     </label>
+                    <details>
+                      <summary>Permisos</summary>
+                      <form id="${permisosdet}">
+                      </form>
+                    </details>
                     <label>
                         Puntos<br>
                         <input type="number" id="${field_puntos}"><br><br>
@@ -54,6 +60,7 @@ PAGES.personas = {
                 </fieldset>
                 `;
     var resized = "";
+    var pdel = document.getElementById(permisosdet)
     gun
       .get(TABLE)
       .get("personas")
@@ -61,9 +68,23 @@ PAGES.personas = {
       .once((data, key) => {
         function load_data(data, ENC = "") {
           document.getElementById(nameh1).innerText = key;
+          var pot = ""
+          Object.entries(PERMS).forEach((perm) => {
+            var c = ""
+            if (data["Roles"].split(",").includes(page[0])) {
+              c = "checked"
+            }
+            pot += `
+              <label>
+                ${page[1]}:
+                <input name="perm" value="${page[0]}" type="checkbox" ${c}>
+              </label>
+            `
+          })
+          pdel.innerHTML = pot
           document.getElementById(field_nombre).value = data["Nombre"] || "";
           document.getElementById(field_zona).value = data["Region"] || "";
-          document.getElementById(field_roles).value = data["Roles"] || "";
+          //document.getElementById(field_roles).value = data["Roles"] || "";
           document.getElementById(field_puntos).value = data["Puntos"] || 0;
           document.getElementById(field_anilla).value = data["SC_Anilla"] || "";
           // document.getElementById(field_foto).value = "";
@@ -97,10 +118,11 @@ PAGES.personas = {
         );
       });
     document.getElementById(btn_guardar).onclick = () => {
+      var dt = new FormData(pdel)
       var data = {
         Nombre: document.getElementById(field_nombre).value,
         Region: document.getElementById(field_zona).value,
-        Roles: document.getElementById(field_roles).value,
+        Roles: dt.getAll("perm").join(",") + ",",
         Puntos: document.getElementById(field_puntos).value,
         SC_Anilla: document.getElementById(field_anilla).value,
         Foto: resized,

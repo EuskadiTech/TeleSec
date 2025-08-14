@@ -998,8 +998,15 @@ function BuildQR(mid) {
   return `<span style="display: inline-block; height: 150px; width: 150px; background-color: white;">${svg}</span>`
 }
 
-const PAGES = {};
-
+var PAGES = {};
+var PERMS = {
+  "ADMIN": "Administrador",
+  "materiales": "Materiales",
+  "personas": "Personas",
+  "supercafe": "SuperCafé",
+  "avisos": "Avisos",
+  "comedor": "Menú comedor",
+};
 function SetPages() {
   document.getElementById("appendApps2").innerHTML = ""
   Object.keys(PAGES).forEach((key) => {
