@@ -36,7 +36,7 @@ def replace_handles(string):
 
 for file in HANDLEPARSE:
     print(file)
-    with open("src/" + file, "r") as f1:
+    with open("src/" + file, "r", encoding="utf-8") as f1:
         out = replace_handles(f1.read())
-    with open("dist/" + file, "w") as f2:
+    with open("dist/" + file, "w", encoding="utf-8") as f2:
         f2.write(out)
