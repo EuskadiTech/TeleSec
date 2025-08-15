@@ -41,7 +41,7 @@ jobs:
           name: TeleSec_Windows
       - uses: ncipollo/release-action@v1
         with:
-          artifacts: "G-Serv.exe"
+          artifacts: "TeleSec para Windows.exe"
           prerelease: true
           allowUpdates: true
           omitBodyDuringUpdate: true
