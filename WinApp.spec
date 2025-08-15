@@ -5,7 +5,7 @@ a = Analysis(
     ["main.py"],
     pathex=[],
     binaries=[],
-    datas=[("dist", "dist")],
+    datas=[],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
