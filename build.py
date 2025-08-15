@@ -31,6 +31,7 @@ shutil.copytree("assets","dist", dirs_exist_ok=True)
 def replace_handles(string):
     string = string.replace("%%PREFETCH%%", PREFETCH)
     string = string.replace("%%VERSIONCO%%", VERSIONCO)
+    string = string.replace("%%TITLE%%", sys.argv[1])
     string = string.replace("%%ASSETSJSON%%", json.dumps(ASSETS, ensure_ascii=False))
     return string
 

@@ -18,7 +18,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: "Build Files"
-        run: "python3 build.py ${{github.ref_name}}"
+        run: "python3 build.py 'TeleSec para Windows'"
       - name: Create Executable
         uses: sayyid5416/pyinstaller@v1
         with:
