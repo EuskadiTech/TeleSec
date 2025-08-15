@@ -23,7 +23,8 @@ for asset in ASSETS:
     if asset != "sw.js":
         PREFETCH += f'<link rel="prefetch" href="{asset}" />\n'
 
-shutil.rmtree("dist")
+if os.path.exists("dist"):
+    shutil.rmtree("dist")
 shutil.copytree("assets","dist", dirs_exist_ok=True)
 
 def replace_handles(string):
