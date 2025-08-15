@@ -1,6 +1,8 @@
-PAGES.notificaciones = {
+PAGES.avisos = {
     navcss: "btn5",
-    Title: "Notificaciones",
+    icon: "static/appico/Chat.svg",
+    AccessControl: true,
+    Title: "Avisos",
     edit: function (mid) {
       var nameh1 = safeuuid();
       var field_fecha = safeuuid();
@@ -16,7 +18,7 @@ PAGES.notificaciones = {
       var btn_borrar = safeuuid();
       var div_actions = safeuuid();
       container.innerHTML = `
-                <h1>Notificación <code id="${nameh1}"></code></h1>
+                <h1>Aviso <code id="${nameh1}"></code></h1>
                 <fieldset style="float: left;">
                     <legend>Valores</legend>
                     <label>
@@ -151,7 +153,7 @@ PAGES.notificaciones = {
           toastr.success("Guardado!");
           setTimeout(() => {
             document.getElementById("actionStatus").style.display = "none";
-            setUrlHash("notificaciones");
+            setUrlHash("avisos");
           }, 1500);
         });
       };
@@ -160,7 +162,7 @@ PAGES.notificaciones = {
           betterGunPut(gun.get(TABLE).get("notificaciones").get(mid), null);
           toastr.error("Borrado!");
           setTimeout(() => {
-            setUrlHash("notificaciones");
+            setUrlHash("avisos");
           }, 1500);
         }
       };
@@ -169,12 +171,12 @@ PAGES.notificaciones = {
       const tablebody = safeuuid();
       var btn_new = safeuuid();
       container.innerHTML = `
-                <h1>Notificaciones</h1>
-                <button id="${btn_new}">Nueva notificación</button>
+                <h1>Avisos</h1>
+                <button id="${btn_new}">Nuevo aviso</button>
                 <div id="cont"></div>
                 `;
       TS_IndexElement(
-        "notificaciones",
+        "avisos",
         [
           {
             key: "Origen",
@@ -211,7 +213,7 @@ PAGES.notificaciones = {
         }
       );
       document.getElementById(btn_new).onclick = () => {
-        setUrlHash("notificaciones," + safeuuid(""));
+        setUrlHash("avisos," + safeuuid(""));
       };
     },
   }

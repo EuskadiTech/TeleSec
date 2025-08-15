@@ -2,7 +2,7 @@ function tableScroll(query) {
   $(query).doubleScroll();
 }
 //var secretTokenEl = document.getElementById("secretToken");
-var groupIdEl = document.getElementById("groupId");
+var groupIdEl = document.getElementById("LinkAccount_group");
 var container = document.getElementById("container");
 
 function LinkAccount(LinkAccount_group, LinkAccount_secret, refresh = false) {
@@ -15,8 +15,7 @@ function LinkAccount(LinkAccount_group, LinkAccount_secret, refresh = false) {
   
   TABLE = GROUPID + ":telesec.tech.eus";
   //secretTokenEl.innerText = SECRET;
-  groupIdEl.innerText = GROUPID;
-  document.getElementById("LinkAccount_details").open = false;
+  groupIdEl.value = GROUPID;
   if (refresh == true) {
     location.reload();
   }
@@ -36,23 +35,9 @@ if (urlParams.get("login") != null) {
 }
 
 function open_page(params) {
-  try {
-    if (EVENTLISTENER != null) {
-      try {
-        EVENTLISTENER.off();
-        EVENTLISTENER = null;
-        EVENTLISTENER2.off();
-        EVENTLISTENER2 = null;
-        // TypeError: Cannot read properties of null (reading 'off')
-      } catch (error) {
-        if (!error.name == "TypeError") {
-          console.debug("EVENTLISTENER error", error);
-        }
-      }
-    }
-  } catch (e) {
-    console.debug("EVENTLISTENER onhashchange", e);
-  }
+  EventListeners.GunJS.forEach(ev => ev.off());
+  EventListeners.Timeout.forEach(ev => clearTimeout(ev));
+  EventListeners.Interval.forEach(ev => clearInterval(ev));
   if (SUB_LOGGED_IN != true) {
     PAGES["login"].index();
     return;

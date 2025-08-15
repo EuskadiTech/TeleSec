@@ -1,11 +1,14 @@
 PAGES.personas = {
   navcss: "btn3",
+  icon: "static/appico/File_Person.svg",
+  AccessControl: true,
   Title: "Personas",
   edit: function (mid) {
     var nameh1 = safeuuid();
+    var permisosdet = safeuuid();
     var field_nombre = safeuuid();
     var field_zona = safeuuid();
-    var field_roles = safeuuid();
+    //var field_roles = safeuuid();
     var field_puntos = safeuuid();
     var field_notas = safeuuid();
     var field_anilla = safeuuid();
@@ -24,10 +27,12 @@ PAGES.personas = {
                         Zona<br>
                         <input type="text" id="${field_zona}"><br><br>
                     </label>
-                    <label>
-                        Permisos<br>
-                        <input type="text" id="${field_roles}"><br><br>
                     </label>
+                    <details>
+                      <summary>Permisos</summary>
+                      <form id="${permisosdet}">
+                      </form>
+                    </details>
                     <label>
                         Puntos<br>
                         <input type="number" id="${field_puntos}"><br><br>
@@ -38,7 +43,7 @@ PAGES.personas = {
                     </label>
                     <label>
                         Foto (PNG o JPG)<br>
-                        <img id="${render_foto}" height="100px" style="border: 3px inset; min-width: 7px;" src="static/camera2.png">
+                        <img id="${render_foto}" height="100px" style="border: 3px inset; min-width: 7px;" src="static/ico/user_generic.png">
                         <input type="file" accept="image/*" id="${field_foto}" style="display: none;"><br><br>
                     </label>
 
@@ -52,6 +57,7 @@ PAGES.personas = {
                 </fieldset>
                 `;
     var resized = "";
+    var pdel = document.getElementById(permisosdet)
     gun
       .get(TABLE)
       .get("personas")
@@ -59,9 +65,23 @@ PAGES.personas = {
       .once((data, key) => {
         function load_data(data, ENC = "") {
           document.getElementById(nameh1).innerText = key;
+          var pot = "<ul>"
+          Object.entries(PERMS).forEach((page) => {
+            var c = ""
+            if ((data["Roles"] || ",").split(",").includes(page[0])) {
+              c = "checked"
+            }
+            pot += `
+              <li><label>
+                <input name="perm" value="${page[0]}" type="checkbox" ${c}>
+                ${page[1]}
+              </label></li>
+            `
+          })
+          pdel.innerHTML = pot + "</ul>"
           document.getElementById(field_nombre).value = data["Nombre"] || "";
           document.getElementById(field_zona).value = data["Region"] || "";
-          document.getElementById(field_roles).value = data["Roles"] || "";
+          //document.getElementById(field_roles).value = data["Roles"] || "";
           document.getElementById(field_puntos).value = data["Puntos"] || 0;
           document.getElementById(field_anilla).value = data["SC_Anilla"] || "";
           // document.getElementById(field_foto).value = "";
@@ -95,10 +115,11 @@ PAGES.personas = {
         );
       });
     document.getElementById(btn_guardar).onclick = () => {
+      var dt = new FormData(pdel)
       var data = {
         Nombre: document.getElementById(field_nombre).value,
         Region: document.getElementById(field_zona).value,
-        Roles: document.getElementById(field_roles).value,
+        Roles: dt.getAll("perm").join(",") + ",",
         Puntos: document.getElementById(field_puntos).value,
         SC_Anilla: document.getElementById(field_anilla).value,
         Foto: resized,
@@ -149,7 +170,7 @@ PAGES.personas = {
       },
       { key: "Region", label: "Zona", type: "text", default: "?" },
       { key: "Puntos", label: "Puntos", type: "text", default: "0" },
-      { key: "Roles", label: "Permisos", type: "text", default: "" }
+      //{ key: "Roles", label: "Permisos", type: "text", default: "" }
     ];
 
     TS_IndexElement(

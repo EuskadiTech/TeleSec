@@ -1,15 +1,19 @@
 html {
   color-scheme: light only;
+  margin: 0;
 }
 
 body {
   font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
 }
 
 main {
   /*max-width: 45rem;
             margin: 0 auto;*/
-  padding: 0 15px;
+  padding: 15px;
+  margin: 0;
+  margin-bottom: 20px;
 }
 
 .supermesh-indicator {
@@ -51,7 +55,7 @@ a:hover {
 }
 
 @media (prefers-color-scheme: dark) {
-
+  
   .link,
   a {
     color: lightblue;
@@ -59,15 +63,11 @@ a:hover {
 }
 
 @media print {
-
+  
   .supermesh-indicator,
   .no_print {
     display: none;
   }
-}
-
-main {
-  margin-bottom: 25rem;
 }
 
 button,
@@ -148,6 +148,12 @@ textarea {
   font-size: 18px;
   padding: 5px;
   width: calc(100% - 11px);
+}
+
+input[type="checkbox"]{
+  padding: 0;
+  width: 24px;
+  height: 24px;
 }
 
 select {
@@ -304,4 +310,107 @@ hr {
 
 #snackbar.show {
   visibility: visible;
+}
+
+.ribbon {
+  display: flex;
+  background: linear-gradient(to bottom, #d0d8ec, #eef2fa);
+  border-bottom: 1px solid #a2a9b9;
+  padding: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.ribbon-orb {
+  width: 50px !important;
+  height: 50px;
+  border-radius: 50%;
+/*   background: url(/icon512_maskable.png); */
+  background-size: 50px 50px;
+  background-position: center middle;
+  border: 1px solid #a2a9b9;
+  margin-right: 10px;
+  margin-top: 0;
+}
+
+.ribbon-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  margin-top: 1px;
+  width: calc(100% - 60px);
+}
+
+.ribbon-tabs {
+  display: flex;
+  background: #c8d4eb;
+  border: 1px solid #a2a9b9;
+  height: 26px;
+  align-items: center;
+  padding: 0 5px;
+  border-radius: 3px 3px 0 0;
+}
+
+.ribbon-tab {
+  padding: 4px 15px;
+  cursor: pointer;
+  border-right: 1px solid #a2a9b9;
+  font-size: 13px;
+}
+
+.ribbon-tab.active {
+  background-color: #eaf0fb;
+  font-weight: bold;
+}
+
+.ribbon-panel {
+  display: flex;
+  gap: 10px;
+  background-color: #c8d4eb;
+  border: 1px solid #a2a9b9;
+  overflow-x: scroll;
+  padding: 5px;
+}
+
+.ribbon-button {
+  width: auto;
+  text-align: center;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: black;
+  white-space: nowrap;
+  margin: 0;
+  padding: 0;
+}
+
+.ribbon-button img {
+  height: 48px;
+  display: block;
+  margin: auto;
+}
+
+.ribbon-button .label {
+  font-size: 12px;
+  margin-top: 5px;
+  display: inline-block;
+}
+
+.ribbon-button.orange {
+  background-color: orange;
+  border-radius: 3px;
+  padding: 2px;
+  box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.2);
+}
+
+
+details {
+  margin: 0;
+}
+
+details[open] .ribbon-panel {
+  display: flex;
+}
+
+details:not([open]) .ribbon-panel {
+  display: none;
 }

@@ -1,8 +1,12 @@
-var EVENTLISTENER = null;
-var EVENTLISTENER2 = null;
+var EventListeners = {
+  GunJS: [],
+  Timeout: [],
+  Interval: [],
+}
 var urlParams = new URLSearchParams(location.search);
-if (urlParams.get("hidenav") == "yes") {
-  document.getElementById("header_hide_query").style.display = "none";
+var AC_BYPASS = false;
+if (urlParams.get("ac_bypass") == "yes") {
+  AC_BYPASS = true;
 }
 var GROUPID = "";
 // const PUBLIC_KEY = "~cppGiuA4UFUPGTDoC-4r2izVC3F7MfpaCmF3iZdESN4.vntmjgbAVUpF_zfinYY6EKVFuuTYxh5xOrL4KmtdTmc"
@@ -27,7 +31,7 @@ if (urlParams.get("sublogin") != null) {
   SUB_LOGGED_IN = true;
   SUB_LOGGED_IN_ID = urlParams.get("sublogin");
   SUB_LOGGED_IN_DETAILS = true;
-  setTimeout(() => {
+  setInterval(() => {
     SUB_LOGGED_IN_DETAILS = SC_Personas[SUB_LOGGED_IN_ID];
   }, 1500);
 }
@@ -35,7 +39,6 @@ function LogOutTeleSec() {
   SUB_LOGGED_IN = false;
   SUB_LOGGED_IN_DETAILS = false;
   SUB_LOGGED_IN_ID = false;
-  document.getElementById("appendApps").style.display = "none";
   document.getElementById("loading").style.display = "block";
   //Remove sublogin from URL and reload
   urlParams.delete("sublogin");

@@ -1,5 +1,7 @@
 PAGES.materiales = {
   navcss: "btn2",
+  icon: "static/appico/App_Dropbox.svg",
+  AccessControl: true,
   Title: "Materiales",
   edit: function (mid) {
     var nameh1 = safeuuid();
