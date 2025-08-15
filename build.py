@@ -1,6 +1,7 @@
 import json
 import os
 import shutil
+import sys
 
 def get_all_files(directory):
     files = []
