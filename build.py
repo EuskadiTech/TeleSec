@@ -23,6 +23,9 @@ ASSETS = get_all_files("assets")
 for asset in ASSETS:
     if asset != "sw.js":
         PREFETCH += f'<link rel="prefetch" href="{asset}" />\n'
+for src in HANDLEPARSE:
+    if src:  != "sw.js":
+        PREFETCH += f'<link rel="prefetch" href="{src}" />\n'
 
 if os.path.exists("dist"):
     shutil.rmtree("dist")
