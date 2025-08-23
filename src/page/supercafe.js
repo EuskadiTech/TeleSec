@@ -204,12 +204,6 @@ PAGES.supercafe = {
             label: "Persona",
           },
           {
-            key: "Estado",
-            type: "comanda-status",
-            default: "",
-            label: "Estado",
-          },
-          {
             key: "Comanda",
             type: "comanda",
             default: "",
