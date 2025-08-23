@@ -11,8 +11,32 @@ PAGES.dataman = {
       case 'import':
         PAGES.dataman.__import()
         break;
+      case 'config':
+        PAGES.dataman.__config()
+        break;
       default:
         // Tab to edit
+    }
+  },
+  __config: function() {
+    var form = safeuuid();
+    container.innerHTML = `
+    <h1>Ajustes</h1>
+    <h2>No disponible</h2>
+    <form id="${form}">
+      <label>
+        <input type="checkbox" name="block_add_account" value="yes">
+        <b>Bloquear crear cuenta de administrador?</b>
+      </label>
+      <button type="submit">Aplicar ajustes</button>
+    </form>
+    `
+    document.getElementById(form).onsubmit = (ev) => {
+      ev.preventDefault()
+      var ford = new FormData(document.getElementById(form))
+      if (ford.get("block_add_account") == "yes") {
+        config["block_add_account"] = true
+      }
     }
   },
   __export: function() {
@@ -155,6 +179,7 @@ PAGES.dataman = {
     <h1>Administración de datos</h1>
     <a class="button" href="#dataman,import">Importar datos</a>
     <a class="button" href="#dataman,export">Exportar datos</a>
+    <a class="button" href="#dataman,config">Ajustes</a>
     `
   }
 };

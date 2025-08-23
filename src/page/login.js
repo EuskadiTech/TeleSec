@@ -1,6 +1,14 @@
 PAGES.login = {
     Esconder: true,
     Title: "Login",
+    edit: function (mid) {
+      container.innerHTML = `
+        <h1>Empezar desde cero - No disponible</h1>
+        <h2>Paso 1: Rellena los credenciales</h2>
+        <h2>Paso 2: Crea una cuenta administrativa</h2>
+        <h2>Y ya está!</h2>
+      `
+    },
     index: function (mid) {
       var field_persona = safeuuid();
       var btn_guardar = safeuuid();
@@ -15,7 +23,7 @@ PAGES.login = {
                     <button class="btn5" id="${btn_guardar}">Acceder</button>
                     <button class="btn1" id="${btn_reload}">Recargar lista</button>
                 </fieldset>
-                <a style="color: rgb(240,240,240)">Acceso sin cuenta - No disponible</a>
+                <a href="#login,setup">Empezar desde cero</a>
                 `;
       var divact = document.getElementById(div_actions);
       addCategory_Personas(
@@ -27,7 +35,7 @@ PAGES.login = {
         },
         "¿Quién eres?",
         true,
-        "- Pulsa recargar o rellena los credenciales arriba. -"
+        "- Pulsa recargar o rellena los credenciales arriba, si quieres crear un nuevo grupo, pulsa el boton 'Desde cero' -"
       );
       document.getElementById(btn_guardar).onclick = () => {
         if (document.getElementById(field_persona).value == "") {
