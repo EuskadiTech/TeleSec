@@ -4,7 +4,7 @@ PAGES.supercafe = {
     AccessControl: true,
     Title: "SuperCafé",
     edit: function (mid) {
-      if (!checkRole("supercafe:edit")) {setUrlHash("index");return}
+      if (!checkRole("supercafe:edit")) {setUrlHash("supercafe");return}
       var nameh1 = safeuuid();
       var field_fecha = safeuuid();
       var field_persona = safeuuid();

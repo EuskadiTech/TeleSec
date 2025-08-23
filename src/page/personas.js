@@ -4,7 +4,7 @@ PAGES.personas = {
   AccessControl: true,
   Title: "Personas",
   edit: function (mid) {
-    if (!checkRole("personas:edit")) {setUrlHash("index");return}
+    if (!checkRole("personas:edit")) {setUrlHash("personas");return}
     var nameh1 = safeuuid();
     var permisosdet = safeuuid();
     var field_nombre = safeuuid();

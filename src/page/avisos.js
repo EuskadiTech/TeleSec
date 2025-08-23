@@ -4,7 +4,7 @@ PAGES.avisos = {
     AccessControl: true,
     Title: "Avisos",
     edit: function (mid) {
-      if (!checkRole("avisos:edit")) {setUrlHash("index");return}
+      if (!checkRole("avisos:edit")) {setUrlHash("avisos");return}
       var nameh1 = safeuuid();
       var field_fecha = safeuuid();
       var field_asunto = safeuuid();

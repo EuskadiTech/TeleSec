@@ -4,7 +4,7 @@ PAGES.comedor = {
   AccessControl: true,
   Title: "Menú comedor",
   edit: function (mid) {
-    if (!checkRole("comedor:edit")) {setUrlHash("index");return}
+    if (!checkRole("comedor:edit")) {setUrlHash("comedor");return}
     var nameh1 = safeuuid();
     var field_fecha = safeuuid();
     var field_platos = safeuuid();

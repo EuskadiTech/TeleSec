@@ -4,7 +4,7 @@ PAGES.materiales = {
   AccessControl: true,
   Title: "Materiales",
   edit: function (mid) {
-    if (!checkRole("materiales:edit")) {setUrlHash("index");return}
+    if (!checkRole("materiales:edit")) {setUrlHash("materiales");return}
     var nameh1 = safeuuid();
     var field_nombre = safeuuid();
     var field_cantidad = safeuuid();
