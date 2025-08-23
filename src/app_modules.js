@@ -1001,9 +1001,13 @@ var PAGES = {};
 var PERMS = {
   "ADMIN": "Administrador",
   "materiales": "Materiales",
+  "materiales:edit": "&gt; Editar",
   "personas": "Personas",
+  "personas:edit": "&gt; Editar",
   "supercafe": "SuperCafé",
+  "supercafe:edit": "&gt; Editar",
   "avisos": "Avisos",
+  "avisos:edit": "&gt; Editar",
   "comedor": "Menú comedor",
   "comedor:edit": "&gt; Editar"
 };
