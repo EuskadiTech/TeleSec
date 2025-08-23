@@ -4,6 +4,7 @@ PAGES.materiales = {
   AccessControl: true,
   Title: "Materiales",
   edit: function (mid) {
+    if (!checkRole("materiales:edit")) {setUrlHash("index");return}
     var nameh1 = safeuuid();
     var field_nombre = safeuuid();
     var field_cantidad = safeuuid();
@@ -109,6 +110,7 @@ PAGES.materiales = {
     };
   },
   index: function () {
+    if (!checkRole("materiales")) {setUrlHash("index");return}
     var btn_new = safeuuid();
     container.innerHTML = `
                 <h1>Materiales</h1>
@@ -145,9 +147,12 @@ PAGES.materiales = {
       undefined,
       true // Enable global search bar
     );
-
-    document.getElementById(btn_new).onclick = () => {
-      setUrlHash("materiales," + safeuuid(""));
-    };
+      if (!checkRole("materiales:edit")) {
+        document.getElementById(btn_new).style.display = "none"
+      } else {
+        document.getElementById(btn_new).onclick = () => {
+          setUrlHash("materiales," + safeuuid(""));
+        };
+      }
   },
 };

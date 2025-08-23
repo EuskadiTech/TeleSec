@@ -1005,7 +1005,17 @@ var PERMS = {
   "supercafe": "SuperCafé",
   "avisos": "Avisos",
   "comedor": "Menú comedor",
+  "comedor:edit": "&gt; Editar"
 };
+function checkRole(role) {
+  var roles = SUB_LOGGED_IN_DETAILS.Roles || ""
+  var rolesArr = roles.split(",")
+  if (rolesArr.includes("ADMIN") || rolesArr.includes(role) || AC_BYPASS) {
+    return true
+  } else {
+  return false
+  }
+}
 function SetPages() {
   document.getElementById("appendApps2").innerHTML = ""
   Object.keys(PAGES).forEach((key) => {

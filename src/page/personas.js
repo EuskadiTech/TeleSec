@@ -4,6 +4,7 @@ PAGES.personas = {
   AccessControl: true,
   Title: "Personas",
   edit: function (mid) {
+    if (!checkRole("personas:edit")) {setUrlHash("index");return}
     var nameh1 = safeuuid();
     var permisosdet = safeuuid();
     var field_nombre = safeuuid();
@@ -146,6 +147,7 @@ PAGES.personas = {
     };
   },
   index: function () {
+    if (!checkRole("personas")) {setUrlHash("index");return}
     var btn_new = safeuuid();
     container.innerHTML = `
                 <h1>Personas</h1>
@@ -188,9 +190,12 @@ PAGES.personas = {
       undefined,
       true // Enable global search bar
     );
-
-    document.getElementById(btn_new).onclick = () => {
-      setUrlHash("personas," + safeuuid(""));
-    };
+      if (!checkRole("personas:edit")) {
+        document.getElementById(btn_new).style.display = "none"
+      } else {
+        document.getElementById(btn_new).onclick = () => {
+          setUrlHash("personas," + safeuuid(""));
+        };
+      }
   },
 };

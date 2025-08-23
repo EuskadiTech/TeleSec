@@ -4,6 +4,7 @@ PAGES.avisos = {
     AccessControl: true,
     Title: "Avisos",
     edit: function (mid) {
+      if (!checkRole("avisos:edit")) {setUrlHash("index");return}
       var nameh1 = safeuuid();
       var field_fecha = safeuuid();
       var field_asunto = safeuuid();
@@ -168,6 +169,7 @@ PAGES.avisos = {
       };
     },
     index: function () {
+      if (!checkRole("avisos")) {setUrlHash("index");return}
       const tablebody = safeuuid();
       var btn_new = safeuuid();
       container.innerHTML = `
@@ -212,8 +214,12 @@ PAGES.avisos = {
           }
         }
       );
-      document.getElementById(btn_new).onclick = () => {
-        setUrlHash("avisos," + safeuuid(""));
-      };
+      if (!checkRole("avisos:edit")) {
+        document.getElementById(btn_new).style.display = "none"
+      } else {
+        document.getElementById(btn_new).onclick = () => {
+          setUrlHash("avisos," + safeuuid(""));
+        };
+      }
     },
   }

@@ -4,6 +4,7 @@ PAGES.comedor = {
   AccessControl: true,
   Title: "Menú comedor",
   edit: function (mid) {
+    if (!checkRole("comedor:edit")) {setUrlHash("index");return}
     var nameh1 = safeuuid();
     var field_fecha = safeuuid();
     var field_platos = safeuuid();
@@ -77,6 +78,7 @@ PAGES.comedor = {
     };
   },
   index: function () {
+    if (!checkRole("comedor")) {setUrlHash("index");return}
     const tablebody = safeuuid();
     var btn_new = safeuuid();
     container.innerHTML = `
@@ -109,8 +111,13 @@ PAGES.comedor = {
         }
       }
     );
-    document.getElementById(btn_new).onclick = () => {
-      setUrlHash("comedor," + safeuuid(""));
-    };
+    
+      if (!checkRole("comedor:edit")) {
+        document.getElementById(btn_new).style.display = "none"
+      } else {
+        document.getElementById(btn_new).onclick = () => {
+          setUrlHash("comedor," + safeuuid(""));
+        };
+      }
   },
 };

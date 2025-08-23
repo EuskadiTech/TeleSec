@@ -4,6 +4,7 @@ PAGES.supercafe = {
     AccessControl: true,
     Title: "SuperCafé",
     edit: function (mid) {
+      if (!checkRole("supercafe:edit")) {setUrlHash("index");return}
       var nameh1 = safeuuid();
       var field_fecha = safeuuid();
       var field_persona = safeuuid();
@@ -138,6 +139,7 @@ PAGES.supercafe = {
       };
     },
     index: function () {
+      if (!checkRole("supercafe")) {setUrlHash("index");return}
       var tts = false;
       var sc_nobtn = "";
       if (urlParams.get("sc_nobtn") == "yes") {
@@ -173,11 +175,7 @@ PAGES.supercafe = {
                   <div id="cont2"></div>
                 </details>
                 `;
-
-      //Todas las comandas
-      TS_IndexElement(
-        "supercafe",
-        [
+      var config = [
           {
             key: "Persona",
             type: "persona",
@@ -196,7 +194,33 @@ PAGES.supercafe = {
             default: "",
             label: "Comanda",
           },
-        ],
+        ]
+        if (!checkRole("supercafe:edit")) {
+          config = [
+          {
+            key: "Persona",
+            type: "persona",
+            default: "",
+            label: "Persona",
+          },
+          {
+            key: "Estado",
+            type: "comanda-status",
+            default: "",
+            label: "Estado",
+          },
+          {
+            key: "Comanda",
+            type: "comanda",
+            default: "",
+            label: "Comanda",
+          },
+        ]
+        }
+      //Todas las comandas
+      TS_IndexElement(
+        "supercafe",
+        config,
         gun.get(TABLE).get("supercafe"),
         document.querySelector("#cont1"),
         (data, new_tr) => {
@@ -245,26 +269,7 @@ PAGES.supercafe = {
       //Deudas
       TS_IndexElement(
         "supercafe",
-        [
-          {
-            key: "Persona",
-            type: "persona",
-            default: "",
-            label: "Persona",
-          },
-          {
-            key: "Estado",
-            type: "comanda-status",
-            default: "",
-            label: "Estado",
-          },
-          {
-            key: "Comanda",
-            type: "comanda",
-            default: "",
-            label: "Comanda",
-          },
-        ],
+        config,
         gun.get(TABLE).get("supercafe"),
         document.querySelector("#cont2"),
         (data, new_tr) => {
@@ -309,9 +314,12 @@ PAGES.supercafe = {
           old[key] = data.Estado;
         }
       );
-
-      document.getElementById(btn_new).onclick = () => {
-        setUrlHash("supercafe," + safeuuid(""));
-      };
+      if (!checkRole("supercafe:edit")) {
+        document.getElementById(btn_new).style.display = "none"
+      } else {
+        document.getElementById(btn_new).onclick = () => {
+          setUrlHash("supercafe," + safeuuid(""));
+        };
+      }
     },
   }
