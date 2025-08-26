@@ -38,7 +38,7 @@ function open_page(params) {
   EventListeners.GunJS.forEach(ev => ev.off());
   EventListeners.Timeout.forEach(ev => clearTimeout(ev));
   EventListeners.Interval.forEach(ev => clearInterval(ev));
-  if (SUB_LOGGED_IN != true) {
+  if (SUB_LOGGED_IN != true && params != "login,setup") {
     PAGES["login"].index();
     return;
   }
