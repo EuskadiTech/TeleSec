@@ -1059,14 +1059,17 @@ function SetPages() {
   document.getElementById("appendApps2").append(a);
 }
 var Booted = false;
+var TimeoutBoot = 4;
+var BootLoops = 0;
 getPeers();
 
 setInterval(() => {
   getPeers();
-  if (window.navigator.onLine == false && !Booted) {
+  BootLoops =+ 1;
+  if ((BootLoops >= TimeoutBoot || window.navigator.onLine == false) && !Booted) {
     Booted = true;
     document.getElementById("loading").style.display = "none";
-    toastr.error("Sin internet! Los cambios se sincronizarán cuando te vuelvas a conectar.")
+    toastr.error("Sin conexion! Los cambios se sincronizarán cuando te vuelvas a conectar.")
     if (!SUB_LOGGED_IN) {
       open_page("login");
     } else {
