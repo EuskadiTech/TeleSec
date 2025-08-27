@@ -186,10 +186,10 @@ PAGES.dataman = {
       <div id="${div_materiales}"></div>
       <br><br>`;
     div_materiales = document.getElementById(div_materiales)
-    gun.get(TABLE).get("materiales").once().map().once((data, mid) => {
+    gun.get(TABLE).get("materiales").once().map().once((data, key) => {
       function add_row(data, key) {
         if (data != null) {
-          div_materiales.innerHTML += BuildQR("materiales," + mid, data["Nombre"] || mid)
+          div_materiales.innerHTML += BuildQR("materiales," + key, data["Nombre"] || key)
         }
       }
       if (typeof data == "string") {
