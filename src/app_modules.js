@@ -987,11 +987,12 @@ function TS_IndexElement(
   });
 }
 
-function BuildQR(mid) {
+function BuildQR(mid, label) {
   return `
   <span style="border: 2px dashed black; padding: 10px; display: inline-block; background: white; border-radius: 7px; text-align: center;">
       <b>TeleSec AztecQR</b>
-      <br>${toHtml(aztec(mid),[6,6])}
+      <br>${toHtml(aztec(mid),[6,6])}<br>
+      <small>${label}</small>
   </span>
   `
 }
