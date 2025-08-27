@@ -18,39 +18,39 @@ PAGES.supercafe = {
       var btn_guardar2 = safeuuid();
       var btn_borrar = safeuuid();
       container.innerHTML = `
-                <h1>Comanda <code id="${nameh1}"></code></h1>
-                <button onclick="setUrlHash('supercafe');">Salir</button>
-                <fieldset style="text-align: center;">
-                    <legend>Rellenar comanda</legend>
-                    <label style="display: none;">
-                        Fecha<br>
-                        <input readonly disabled type="text" id="${field_fecha}" value="${CurrentISODate()}"><br><br>
-                    </label>
-                    <label style="display: none;">
-                        Persona<br>
-                        <input type="hidden" id="${field_persona}">
-                        <br><br>
-                    </label>
-                    <label style="display: none;">
-                        Comanda (utiliza el panel de relleno)<br>
-                        <textarea readonly disabled id="${field_comanda}"></textarea><br><br>
-                    </label>
-                    <div id="${div_actions}" open>
-                      <!--<summary>Mostrar botones de relleno</summary>-->
-                    </div>
-                    <label>
-                        Notas<br>
-                        <textarea id="${field_notas}"></textarea><br><br>
-                    </label>
-                    <label style="display: none;">
-                        Estado<br>
-                        <input readonly disabled type="text" id="${field_estado}" value="%%">
-                        <br>Modificar en el listado de comandas<br>
-                    </label>
-                    <button id=${btn_guardar} class="btn5">Guardar</button>
-                    <button id=${btn_borrar} class="rojo">Borrar</button>
-                </fieldset>
-                `;
+        <h1>Comanda <code id="${nameh1}"></code></h1>
+        <button onclick="setUrlHash('supercafe');">Salir</button>
+        <fieldset style="text-align: center;">
+            <legend>Rellenar comanda</legend>
+            <label style="display: none;">
+                Fecha<br>
+                <input readonly disabled type="text" id="${field_fecha}" value="${CurrentISODate()}"><br><br>
+            </label>
+            <label style="display: none;">
+                Persona<br>
+                <input type="hidden" id="${field_persona}">
+                <br><br>
+            </label>
+            <label style="display: none;">
+                Comanda (utiliza el panel de relleno)<br>
+                <textarea readonly disabled id="${field_comanda}"></textarea><br><br>
+            </label>
+            <div id="${div_actions}" open>
+              <!--<summary>Mostrar botones de relleno</summary>-->
+            </div>
+            <label>
+                Notas<br>
+                <textarea id="${field_notas}"></textarea><br><br>
+            </label>
+            <label style="display: none;">
+                Estado<br>
+                <input readonly disabled type="text" id="${field_estado}" value="%%">
+                <br>Modificar en el listado de comandas<br>
+            </label>
+            <button id=${btn_guardar} class="btn5">Guardar</button>
+            <button id=${btn_borrar} class="rojo">Borrar</button>
+        </fieldset>
+        `;
       var currentData = {};
       var currentPersonaID = "";
       var divact = document.getElementById(div_actions);
@@ -157,24 +157,24 @@ PAGES.supercafe = {
       var tts_check = safeuuid();
       var old = {};
       container.innerHTML = `
-                <h1>SuperCafé</h1>
-                <button id="${btn_new}" style="${sc_nobtn};">Nueva comanda</button>
-                <br>
-                <label>
-                  <b>Habilitar avisos:</b>
-                  <input type="checkbox" id="${tts_check}" style="height: 25px;width: 25px;">
-                </label>
+        <h1>SuperCafé</h1>
+        <button id="${btn_new}" style="${sc_nobtn};">Nueva comanda</button>
+        <br>
+        <label>
+          <b>Habilitar avisos:</b>
+          <input type="checkbox" id="${tts_check}" style="height: 25px;width: 25px;">
+        </label>
 
-                <details style="background: beige; padding: 15px; border-radius: 15px; border: 2px solid black" open>
-                  <summary>Todas las comandas</summary>
-                  <div id="cont1"></div>
-                </details>
-                <br>
-                <details style="background: lightpink; padding: 15px; border-radius: 15px; border: 2px solid black" open>
-                  <summary>Deudas</summary>
-                  <div id="cont2"></div>
-                </details>
-                `;
+        <details style="background: beige; padding: 15px; border-radius: 15px; border: 2px solid black" open>
+          <summary>Todas las comandas</summary>
+          <div id="cont1"></div>
+        </details>
+        <br>
+        <details style="background: lightpink; padding: 15px; border-radius: 15px; border: 2px solid black" open>
+          <summary>Deudas</summary>
+          <div id="cont2"></div>
+        </details>
+        `;
       var config = [
           {
             key: "Persona",
@@ -247,7 +247,7 @@ PAGES.supercafe = {
           if (old[key] != data.Estado) {
             if (tts && document.getElementById(tts_check).checked) {
               var msg = `Comanda de ${SC_Personas[data.Persona].Region}. - ${
-                JSON.parse(data.Comanda)["Selección"]
+        JSON.parse(data.Comanda)["Selección"]
               }. - ${SC_Personas[data.Persona].Nombre}. - ${data.Estado}`;
               console.log("TTS: " + msg);
               let utterance = new SpeechSynthesisUtterance(msg);
@@ -296,7 +296,7 @@ PAGES.supercafe = {
           if (old[key] != data.Estado) {
             if (tts && document.getElementById(tts_check).checked) {
               var msg = `Comanda de ${SC_Personas[data.Persona].Region}. - ${
-                JSON.parse(data.Comanda)["Selección"]
+        JSON.parse(data.Comanda)["Selección"]
               }. - ${SC_Personas[data.Persona].Nombre}. - ${data.Estado}`;
               console.log("TTS: " + msg);
               let utterance = new SpeechSynthesisUtterance(msg);
