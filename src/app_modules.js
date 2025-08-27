@@ -988,6 +988,7 @@ function TS_IndexElement(
 }
 
 function BuildQR(mid, label) {
+  console.warn("BARCODE " + mid + " LABEL " + label)
   return `
   <span style="border: 2px dashed black; padding: 10px; display: inline-block; background: white; border-radius: 7px; text-align: center; margin: 10px;">
       <b>TeleSec AztecQR</b>
