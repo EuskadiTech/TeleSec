@@ -14,6 +14,9 @@ PAGES.dataman = {
       case 'config':
         PAGES.dataman.__config()
         break;
+      case 'labels':
+        PAGES.dataman.__labels()
+        break;
       default:
         // Tab to edit
     }
@@ -174,11 +177,36 @@ PAGES.dataman = {
       }, 5000);
     };
   },
+  __labels: function(mid) {
+    var div_materiales = safeuuid()
+    container.innerHTML = `
+      <h1>Imprimir Etiquetas AztecQR</h1>
+      <button onclick="print()">Imprimir</button>
+      <h2>Materiales</h2>
+      <div id="${div_co}"></div>
+      <br><br>`;
+    div_materiales = document.getElementById(div_materiales)
+    gun.get(TABLE).get("materiales").once().map().once((data, mid) => {
+      function add_row(data, key) {
+        if (data != null) {
+          div_materiales.innerHTML += BuildQR("materiales," + mid, data["Nombre"] || mid)
+        }
+      }
+      if (typeof data == "string") {
+        SEA.decrypt(data, SECRET, (data) => {
+          add_row(data, key);
+        });
+      } else {
+        add_row(data, key);
+      }
+    })
+  },
   index: function () {
     container.innerHTML = `
     <h1>Administración de datos</h1>
     <a class="button" href="#dataman,import">Importar datos</a>
     <a class="button" href="#dataman,export">Exportar datos</a>
+    <a class="button" href="#dataman,labels">Imprimir etiquetas</a>
     <a class="button" href="#dataman,config">Ajustes</a>
     `
   }

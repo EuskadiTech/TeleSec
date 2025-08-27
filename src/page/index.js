@@ -14,8 +14,6 @@ PAGES.index = {
       case 'qr':
         PAGES.index.__scan()
         break;
-      case "labels":
-        PAGES.index.__labels()
     }
   },
   __scan: function(mid) {
@@ -38,29 +36,5 @@ PAGES.index = {
     }
     
     html5QrcodeScanner.render(onScanSuccess);
-  },
-  __labels: function(mid) {
-    var div_materiales = safeuuid()
-    container.innerHTML = `
-      <h1>Imprimir Etiquetas AztecQR</h1>
-      <button onclick="print()">Imprimir</button>
-      <h2>Materiales</h2>
-      <div id="${div_co}"></div>
-      <br><br>`;
-    div_materiales = document.getElementById(div_materiales)
-    gun.get(TABLE).get("materiales").once().map().once((data, mid) => {
-      function add_row(data, key) {
-        if (data != null) {
-          div_materiales.innerHTML += BuildQR("materiales," + mid, data["Nombre"] || mid)
-        }
-      }
-      if (typeof data == "string") {
-        SEA.decrypt(data, SECRET, (data) => {
-          add_row(data, key);
-        });
-      } else {
-        add_row(data, key);
-      }
-    })
   }
 }
