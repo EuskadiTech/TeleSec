@@ -183,7 +183,7 @@ PAGES.dataman = {
       <h1>Imprimir Etiquetas AztecQR</h1>
       <button onclick="print()">Imprimir</button>
       <h2>Materiales</h2>
-      <div id="${div_co}"></div>
+      <div id="${div_materiales}"></div>
       <br><br>`;
     div_materiales = document.getElementById(div_materiales)
     gun.get(TABLE).get("materiales").once().map().once((data, mid) => {
