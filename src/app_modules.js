@@ -988,13 +988,7 @@ function TS_IndexElement(
 }
 
 function BuildQR(mid) {
-  var svg = QRCode({
-    msg: mid,
-    pad: 2,
-    dim: 150
-    
-  }).outerHTML;
-  return `<span style="display: inline-block; height: 150px; width: 150px; background-color: white;">${svg}</span>`
+  return toHtml(aztec(mid),[2,2]);
 }
 
 var PAGES = {};
