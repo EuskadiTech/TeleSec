@@ -988,7 +988,7 @@ function TS_IndexElement(
 }
 
 function BuildQR(mid) {
-  return toHtml(aztec(mid),[2,2]);
+  return toHtml(aztec(mid),[6,6]);
 }
 
 var PAGES = {};
