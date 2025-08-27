@@ -988,7 +988,12 @@ function TS_IndexElement(
 }
 
 function BuildQR(mid) {
-  return toHtml(aztec(mid),[6,6]);
+  return `
+  <span style="border: 2px dashed black; padding: 7px; display: inline-block; background: white; border-radius: 7px">
+      ${toHtml(aztec(mid),[6,6])}
+      <br><br><b>Codigo Aztec</b>
+  </span>
+  `
 }
 
 var PAGES = {};
