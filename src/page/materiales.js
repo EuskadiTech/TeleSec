@@ -1,3 +1,5 @@
+PERMS["materiales"] = "Materiales"
+PERMS["materiales:edit"] = "&gt; Editar"
 PAGES.materiales = {
   navcss: "btn2",
   icon: "static/appico/App_Dropbox.svg",

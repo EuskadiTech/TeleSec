@@ -1,3 +1,5 @@
+PERMS["avisos"] = "Avisos"
+PERMS["avisos:edit"] = "&gt; Editar"
 PAGES.avisos = {
     navcss: "btn5",
     icon: "static/appico/Chat.svg",

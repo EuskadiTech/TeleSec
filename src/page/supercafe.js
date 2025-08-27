@@ -1,3 +1,5 @@
+PERMS["supercafe"] = "SuperCafé"
+PERMS["supercafe:edit"] = "&gt; Editar"
 PAGES.supercafe = {
     navcss: "btn4",
     icon: "static/appico/Coffee.svg",

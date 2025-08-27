@@ -1,3 +1,5 @@
+PERMS["comedor"] = "Menú comedor"
+PERMS["comedor:edit"] = "&gt; Editar"
 PAGES.comedor = {
   navcss: "btn6",
   icon: "static/appico/Meal.svg",
