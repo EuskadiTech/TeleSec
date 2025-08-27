@@ -1,3 +1,5 @@
+PERMS["notas"] = "Notas"
+PERMS["notas:edit"] = "&gt; Editar"
 PAGES.notas = {
     navcss: "btn5",
     icon: "static/appico/Notepad.svg",
