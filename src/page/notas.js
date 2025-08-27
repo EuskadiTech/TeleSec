@@ -37,7 +37,7 @@ PAGES.notas = {
       addCategory_Personas(
         divact,
         SC_Personas,
-        "",
+        SUB_LOGGED_IN_ID,
         (value) => {
           document.getElementById(field_autor).value = value;
         },
