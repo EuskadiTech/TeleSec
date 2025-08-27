@@ -18,9 +18,10 @@ PAGES.supercafe = {
       var btn_guardar2 = safeuuid();
       var btn_borrar = safeuuid();
       container.innerHTML = `
-                <button onclick="setUrlHash('supercafe');">Cancelar</button>
+                <h1>Comanda <code id="${nameh1}"></code></h1>
+                <button onclick="setUrlHash('supercafe');">Salir</button>
                 <fieldset style="text-align: center;">
-                    <legend>Comanda <code id="${nameh1}"></code></legend>
+                    <legend>Rellenar comanda</legend>
                     <label style="display: none;">
                         Fecha<br>
                         <input readonly disabled type="text" id="${field_fecha}" value="${CurrentISODate()}"><br><br>
