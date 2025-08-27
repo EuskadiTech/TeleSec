@@ -990,9 +990,9 @@ function TS_IndexElement(
 function BuildQR(mid) {
   return `
   <span style="border: 2px dashed black; padding: 10px; display: inline-block; background: white; border-radius: 7px; text-align: center;">
-      <b>Codigo Aztec</b><br>
+      <b>${PAGES[mid.split(",")[0]].Title}</b>
       <br>${toHtml(aztec(mid),[6,6])}<br>
-      <br><small>${mid.replace(",", "<br>")}</small>
+      <small>${mid.split(",")[1]}</small>
   </span>
   `
 }
