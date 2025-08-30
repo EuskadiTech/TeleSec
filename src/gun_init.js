@@ -52,6 +52,9 @@ function createPeerListElement(wireHType, wireID) {
 
 function updateConnectionStatus(peerCount) {
   const statusImage = peerCount < 3 ? "connect_ko.svg" : "connect_ok.svg";
+  if (window.navigator.onLine == false) {
+    statusImage = "offline.svg"
+  }
   document.getElementById("connectStatus").src = `static/ico/${statusImage}`;
   
   if (peerCount < 3) {
