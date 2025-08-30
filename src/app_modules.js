@@ -874,7 +874,7 @@ function TS_IndexElement(
                 data.Estado = "Pagado";
                 betterGunPut(ref.get(data._key), null);
                 toastr.success("Guardado!");
-                if (SC_Personas[data.Persona].Puntos >= 10) {
+                if (SC_Personas[data.Persona].Puntos >= 10 && confirm("¿Pagar con Puntos? - Cancela para pagar con Efectivo.")) {
                   SC_Personas[data.Persona].Puntos -= 10;
                   toastr.success(
                     "¡Comada gratis para " +
