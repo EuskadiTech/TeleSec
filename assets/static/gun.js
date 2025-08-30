@@ -1775,7 +1775,7 @@
 			var wait = 2 * 999;
 			function reconnect(peer){
 				clearTimeout(peer.defer);
-				if(!opt.peers[peer.url]){ return }
+				//if(!opt.peers[peer.url]){ return }
 				if(doc && peer.retry <= 0){ return }
 				peer.retry = (peer.retry || opt.retry+1 || 60) - ((-peer.tried + (peer.tried = +new Date) < wait*4)?1:0);
 				peer.defer = setTimeout(function to(){
