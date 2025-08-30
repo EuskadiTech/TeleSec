@@ -63,9 +63,9 @@ a:hover {
 }
 
 @media print {
-  
   .supermesh-indicator,
-  .no_print {
+  .no_print,
+  .no_print * {
     display: none !important;
   }
 }
