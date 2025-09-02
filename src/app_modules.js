@@ -30,25 +30,45 @@ const debounce = (callback, wait) => {
 };
 
 String.prototype.toHex = function() {
-  var s = this + "0123456789" + this;
-  var colors = [
-    "#ff0000",
-    "#ff00ff",
-    "#00ff00",
-    "#0000ff",
-    "#00ffff",
-    "#000000",
-  ];
-  var color =
-    (((((s.charCodeAt(1) * s.charCodeAt(2)) / s.charCodeAt(s.length - 1)) *
-          s.charCodeAt(s.length - 2)) /
-        s.charCodeAt(s.length - 2)) *
-      s.charCodeAt(s.length - 3)) /
-    s.charCodeAt(s.length - 3);
-  var cid = colors[Math.round(color) % colors.length];
-  console.log(color, cid, colors);
-  return cid;
+  const hueStep = 15; // step in degrees
+  const saturation = 70; // %
+  const lightness = 50; // %
+
+  // Simple hash function
+  let hash = 0;
+  for (let i = 0; i < this.length; i++) {
+    hash = (hash * 31 + this.charCodeAt(i)) >>> 0;
+  }
+
+  // Calculate hue in steps
+  const hue = (hash * hueStep) % 360;
+
+  // Convert HSL to hex
+  function hslToHex(h, s, l) {
+    s /= 100;
+    l /= 100;
+    const c = (1 - Math.abs(2 * l - 1)) * s;
+    const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+    const m = l - c / 2;
+    let r = 0, g = 0, b = 0;
+
+    if (h >= 0 && h < 60) [r, g, b] = [c, x, 0];
+    else if (h >= 60 && h < 120) [r, g, b] = [x, c, 0];
+    else if (h >= 120 && h < 180) [r, g, b] = [0, c, x];
+    else if (h >= 180 && h < 240) [r, g, b] = [0, x, c];
+    else if (h >= 240 && h < 300) [r, g, b] = [x, 0, c];
+    else [r, g, b] = [c, 0, x];
+
+    r = Math.round((r + m) * 255);
+    g = Math.round((g + m) * 255);
+    b = Math.round((b + m) * 255);
+
+    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+  }
+
+  return hslToHex(hue, saturation, lightness);
 };
+
 
 function stringToColour(str) {
   return str.toHex();
