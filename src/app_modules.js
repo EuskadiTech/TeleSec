@@ -787,6 +787,7 @@ function TS_IndexElement(
         if (rowCallback != undefined) {
           rowCallback(data, new_tr);
         }
+        console.debug(data._key)
         config.forEach((key) => {
           switch (key.type) {
             case "raw":
