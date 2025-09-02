@@ -43,21 +43,36 @@ const wheelcolors = [
   "#FF1D15",
   "#FF8600",
 
-  // Precomputed 24-step hue colors (15° increments, 70% saturation, 50% lightness)
-  "#bf3f3f", "#bf5f3f", "#bf7f3f", "#bf9f3f", "#bfaf3f", "#bfdf3f",
-  "#bfff3f", "#9fff3f", "#7fff3f", "#5fff3f", "#3fff3f", "#3fff5f",
-  "#3fff7f", "#3fff9f", "#3fffbf", "#3fdfff", "#3fafff", "#3f7fff",
-  "#3f5fff", "#3f3fff", "#5f3fff", "#7f3fff", "#9f3fff", "#bf3fff"
+  // Precomputed 30° hue-step colors (12 steps, 70% saturation, 50% lightness)
+  "#bf3f3f", // 0°
+  "#bf9f3f", // 30°
+  "#bfff3f", // 60°
+  "#7fff3f", // 90°
+  "#3fff5f", // 120°
+  "#3fffbf", // 150°
+  "#3fafff", // 180°
+  "#3f3fff", // 210°
+  "#9f3fff", // 240°
+  "#ff3fff", // 270°
+  "#ff3f7f", // 300°
+  "#ff3f3f"  // 330°
 ];
 
-
+// String prototype using the precomputed array
 String.prototype.toHex = function() {
   let hash = 0;
   for (let i = 0; i < this.length; i++) {
     hash = (hash * 31 + this.charCodeAt(i)) >>> 0;
   }
-  return wheelcolors[hash % colors.length];
+  return wheelcolors[hash % wheelcolors.length];
 };
+
+// Test
+console.log("hello".toHex());
+console.log("world".toHex());
+console.log("foo".toHex());
+console.log("bar".toHex());
+
 
 
 function stringToColour(str) {
