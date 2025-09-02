@@ -936,7 +936,7 @@ function TS_IndexElement(
               // Event handlers are now attached during button creation
               break;
             case "persona":
-              const persona = SC_Personas[data[key.key]];
+              const persona = SC_Personas[data[key.key]] || {};
               const regco = stringToColour(
                 (persona.Region || "?").toLowerCase()
               );
