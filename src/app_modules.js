@@ -30,7 +30,7 @@ const debounce = (callback, wait) => {
 };
 
 String.prototype.toHex = function() {
-  var s = this + "0123456789";
+  var s = this + "0123456789" + this;
   var colors = [
     "#ff0000",
     "#ff00ff",
