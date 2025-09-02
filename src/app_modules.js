@@ -29,44 +29,34 @@ const debounce = (callback, wait) => {
   };
 };
 
-String.prototype.toHex = function() {
-  const hueStep = 15; // step in degrees
-  const saturation = 70; // %
-  const lightness = 50; // %
+const wheelcolors = [
+  // Your original custom colors
+  "#ff0000",
+  "#ff00ff",
+  "#00ff00",
+  "#0000ff",
+  "#00ffff",
+  "#000000",
+  "#69DDFF",
+  "#7FB800",
+  "#963484",
+  "#FF1D15",
+  "#FF8600",
 
-  // Simple hash function
+  // Precomputed 24-step hue colors (15° increments, 70% saturation, 50% lightness)
+  "#bf3f3f", "#bf5f3f", "#bf7f3f", "#bf9f3f", "#bfaf3f", "#bfdf3f",
+  "#bfff3f", "#9fff3f", "#7fff3f", "#5fff3f", "#3fff3f", "#3fff5f",
+  "#3fff7f", "#3fff9f", "#3fffbf", "#3fdfff", "#3fafff", "#3f7fff",
+  "#3f5fff", "#3f3fff", "#5f3fff", "#7f3fff", "#9f3fff", "#bf3fff"
+];
+
+
+String.prototype.toHex = function() {
   let hash = 0;
   for (let i = 0; i < this.length; i++) {
     hash = (hash * 31 + this.charCodeAt(i)) >>> 0;
   }
-
-  // Calculate hue in steps
-  const hue = (hash * hueStep) % 360;
-
-  // Convert HSL to hex
-  function hslToHex(h, s, l) {
-    s /= 100;
-    l /= 100;
-    const c = (1 - Math.abs(2 * l - 1)) * s;
-    const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
-    const m = l - c / 2;
-    let r = 0, g = 0, b = 0;
-
-    if (h >= 0 && h < 60) [r, g, b] = [c, x, 0];
-    else if (h >= 60 && h < 120) [r, g, b] = [x, c, 0];
-    else if (h >= 120 && h < 180) [r, g, b] = [0, c, x];
-    else if (h >= 180 && h < 240) [r, g, b] = [0, x, c];
-    else if (h >= 240 && h < 300) [r, g, b] = [x, 0, c];
-    else [r, g, b] = [c, 0, x];
-
-    r = Math.round((r + m) * 255);
-    g = Math.round((g + m) * 255);
-    b = Math.round((b + m) * 255);
-
-    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
-  }
-
-  return hslToHex(hue, saturation, lightness);
+  return wheelcolors[hash % colors.length];
 };
 
 
