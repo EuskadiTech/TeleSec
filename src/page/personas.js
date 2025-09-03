@@ -159,9 +159,8 @@ PAGES.personas = {
 
     const config = [
       { 
-        key: "P", 
         label: "Persona", 
-        type: "template",
+        type: "persona",
         self: true,
       },
       //{ key: "Roles", label: "Permisos", type: "text", default: "" }
