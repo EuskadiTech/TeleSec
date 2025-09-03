@@ -900,7 +900,7 @@ function TS_IndexElement(
                 betterGunPut(ref.get(data._key), null);
                 toastr.success("Guardado!");
                 if (SC_Personas[data.Persona].Puntos >= 10 && confirm("¿Pagar con Puntos? - Cancela para pagar con Efectivo.")) {
-                  SC_Personas[data.Persona].Puntos -= 10;
+                  SC_Personas[data.Persona].Puntos = parseInt(SC_Personas[data.Persona].Puntos) - 10;
                   toastr.success(
                     "¡Comada gratis para " +
                     SC_Personas[data.Persona].Nombre +
@@ -912,7 +912,7 @@ function TS_IndexElement(
                     "!"
                   );
                 } else {
-                  SC_Personas[data.Persona].Puntos += 1;
+                  SC_Personas[data.Persona].Puntos = parseInt(SC_Personas[data.Persona].Puntos) + 1;
                   toastr.success("¡Comada DE PAGO!");
                 }
                 SEA.encrypt(SC_Personas[data.Persona], SECRET, (encrypted) => {

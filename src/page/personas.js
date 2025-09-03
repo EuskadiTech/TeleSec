@@ -123,7 +123,7 @@ PAGES.personas = {
         Nombre: document.getElementById(field_nombre).value,
         Region: document.getElementById(field_zona).value,
         Roles: dt.getAll("perm").join(",") + ",",
-        Puntos: document.getElementById(field_puntos).value,
+        Puntos: parseInt(document.getElementById(field_puntos).value),
         SC_Anilla: document.getElementById(field_anilla).value,
         Foto: resized,
         markdown: document.getElementById(field_notas).value,
