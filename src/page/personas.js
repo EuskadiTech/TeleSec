@@ -159,21 +159,11 @@ PAGES.personas = {
 
     const config = [
       { 
-        key: "Nombre", 
-        label: "Nombre", 
+        key: "P", 
+        label: "Persona", 
         type: "template",
-        template: (data, element) => {
-          element.classList.add("TextBorder");
-          element.style.backgroundColor = data.SC_Anilla;
-          element.style.textAlign = "center";
-          element.innerHTML = `
-            <img src="${data.Foto || "static/ico/user_generic.png"}" height="50">
-            <br>${data.Nombre || ""}
-          `;
-        }
+        self: true,
       },
-      { key: "Region", label: "Zona", type: "text", default: "?" },
-      { key: "Puntos", label: "Puntos", type: "text", default: "0" },
       //{ key: "Roles", label: "Permisos", type: "text", default: "" }
     ];
 
