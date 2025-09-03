@@ -37,5 +37,6 @@ PAGES.index = {
     }
     
     html5QrcodeScanner.render(onScanSuccess);
+    EventListeners.QRScanner.push(html5QrcodeScanner)
   }
 }
