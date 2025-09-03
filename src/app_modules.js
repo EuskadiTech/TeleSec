@@ -938,6 +938,7 @@ function TS_IndexElement(
             case "persona":
               if (key.self == true) {
                 var persona = data
+                console.warn(data)
               } else {
                 var persona = SC_Personas[data[key.key]] || {};
               }
