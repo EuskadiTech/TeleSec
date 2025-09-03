@@ -36,8 +36,13 @@ if (urlParams.get("login") != null) {
 
 function open_page(params) {
   EventListeners.GunJS.forEach(ev => ev.off());
+  EventListeners.GunJS = []
   EventListeners.Timeout.forEach(ev => clearTimeout(ev));
+  EventListeners.Timeout = []
   EventListeners.Interval.forEach(ev => clearInterval(ev));
+  EventListeners.Interval = []
+  EventListeners.QRScanner.forEach(ev => ev.clear());
+  EventListeners.QRScanner = []
   if (SUB_LOGGED_IN != true && params != "login,setup") {
     PAGES["login"].index();
     return;

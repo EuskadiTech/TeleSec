@@ -2,6 +2,7 @@ var EventListeners = {
   GunJS: [],
   Timeout: [],
   Interval: [],
+  QRScanner: [],
 }
 var urlParams = new URLSearchParams(location.search);
 var AC_BYPASS = false;
