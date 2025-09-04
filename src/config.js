@@ -23,9 +23,9 @@ const RELAYS = [
   "https://gun-es05.tech.eus/gun",
   "https://gun-es06.tech.eus/gun",
   // "https://gun-es07.tech.eus/gun", // No he podido instalar el nodo.
-  "https://gun-manhattan.herokuapp.com/gun",
-  "https://peer.wallie.io/gun",
-  "https://gun.defucc.me/gun",
+  // "https://gun-manhattan.herokuapp.com/gun",
+  // "https://peer.wallie.io/gun",
+  // "https://gun.defucc.me/gun",
 ];
 var SECRET = "";
 var SUB_LOGGED_IN = false;

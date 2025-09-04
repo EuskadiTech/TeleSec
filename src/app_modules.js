@@ -1083,9 +1083,11 @@ var Booted = false;
 var TimeoutBoot = 4;
 var BootLoops = 0;
 getPeers();
-
 setInterval(() => {
   getPeers();
+}, 750);
+
+setInterval(() => {
   BootLoops =+ 1;
   if ((BootLoops >= TimeoutBoot || window.navigator.onLine == false) && !Booted) {
     Booted = true;

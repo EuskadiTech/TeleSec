@@ -15,24 +15,26 @@ PAGES.notas = {
       var btn_borrar = safeuuid();
       var div_actions = safeuuid();
       container.innerHTML = `
-                <h1>Nota <code id="${nameh1}"></code></h1>
-                <fieldset style="float: left;">
-                    <legend>Valores</legend>
-                    <label>
-                        Asunto<br>
-                        <input type="text" id="${field_asunto}" value=""><br><br>
-                    </label>
-                    <input type="hidden" id="${field_autor}">
-                    <div id="${div_actions}"></div>
-                    <label>
-                        Contenido<br>
-                        <textarea id="${field_contenido}"></textarea><br><br>
-                    </label>
-                    <hr>
-                    <button class="btn5" id="${btn_guardar}">Guardar</button>
-                    <button class="rojo" id="${btn_borrar}">Borrar</button>
-                </fieldset>
-                `;
+        <h1>Nota <code id="${nameh1}"></code></h1>
+        <fieldset style="float: none; width: calc(100% - 40px);max-width: none;">
+            <legend>Valores</legend>
+            <div style="max-width: 400px;">
+              <label>
+                  Asunto<br>
+                  <input type="text" id="${field_asunto}" value=""><br><br>
+              </label>
+              <input type="hidden" id="${field_autor}" value="${SUB_LOGGED_IN_ID || ""}">
+              <div id="${div_actions}"></div>
+            </div>
+            <label>
+                Contenido<br>
+                <textarea id="${field_contenido}" style="width: 100%; height: 400px;"></textarea><br><br>
+            </label>
+            <hr>
+            <button class="btn5" id="${btn_guardar}">Guardar</button>
+            <button class="rojo" id="${btn_borrar}">Borrar</button>
+        </fieldset>
+        `;
       var divact = document.getElementById(div_actions);
       addCategory_Personas(
         divact,
