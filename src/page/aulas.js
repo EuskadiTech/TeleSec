@@ -1,39 +1,33 @@
-PERMS["aulas"] = "Aulas";
-PERMS["aulas:edit"] = "&gt; Editar";
+PERMS["aulas"] = "Aulas (Solo docentes!)";
 PAGES.aulas = {
   //navcss: "btn1",
-  Title: "Aulas",
+  Title: "Gest-Aula",
   // Make a clone of notas.js and modify it to be aulas.js
   icon: "static/appico/Classroom.svg",
   AccessControl: true,
-  edit: function (mid) {
-    if (!checkRole("aulas:edit")) {
-      setUrlHash("aulas");
+  index: function () {
+    if (!checkRole("aulas")) {
+      setUrlHash("index");
       return;
     }
-    var nameh1 = safeuuid();
-    var field_nombre = safeuuid();
-    var btn_guardar = safeuuid();
-    var btn_borrar = safeuuid();
     var data_Comedor = safeuuid();
     container.innerHTML = `
-      <h1>Aula <code id="${nameh1}"></code></h1>
+      <h1>Gestión del Aula - en desarrollo</h1>
       <div>
         <fieldset style="float: left;">
-            <legend>Datos</legend>
-            <label for="${field_nombre}">Nombre:</label>
-            <input type="text" id="${field_nombre}" />
-            <br><br>
-              <button class="btn5" id="${btn_guardar}">Guardar</button>
-              <button class="rojo" id="${btn_borrar}">Borrar</button>
+            <legend><img src="${PAGES.notas.icon}" height="20"> Notas esenciales</legend>
+            <a class="button" style="font-size: 25px;" href="#notas,inicio_dia">Como iniciar el dia</a>
+            <a class="button" style="font-size: 25px;" href="#notas,realizacion_cafe">Como realizar del café</a>
+            <a class="button" style="font-size: 25px;" href="#notas,fin_dia">Como acabar el dia</a>
+            <a class="button" style="font-size: 25px;" href="#notas,horario">Horario</a>
         </fieldset>
         <fieldset style="float: left;">
-            <legend>Notas</legend>
-            <a class="button btn5" style="font-size: 25px;" href="#notas,inicio_dia">Iniciar el dia</a>
-            <a class="button" style="font-size: 25px;" href="#notas,horario">Horario</a>
-            <a class="button" style="font-size: 25px;" href="#notas,realizacion_cafe">Realización del café</a>
-            <a class="button" style="font-size: 25px;" href="#notas,fin_dia">Acabar el dia</a>
-            <a class="button rojo" style="font-size: 25px;" href="#notas,alertas">Alertas para hoy</a>
+            <legend>Acciones</legend>
+            <a class="button" style="font-size: 25px;" href="#aulas,solicitudes"><img src="${PAGES.materiales.icon}" height="20"> Solicitudes de material</a>
+            <a class="button rojo" style="font-size: 25px;" href="#notas,alertas"><img src="${PAGES.notas.icon}" height="20"> Ver Alertas / Incidencias</a>
+            <a class="button" style="font-size: 25px;" href="#aulas,informes"><img src="${PAGES.aulas.icon}" height="20"> Informes</a>
+            <a class="button btn4" style="font-size: 25px;" href="#supercafe"><img src="${PAGES.supercafe.icon}" height="20"> Ver comandas</a>
+
         </fieldset>
         <fieldset style="float: left;">
             <legend>Datos de hoy</legend>
@@ -42,46 +36,6 @@ PAGES.aulas = {
         </fieldset>
       </div>
       `;
-    gun
-      .get(TABLE)
-      .get("aulas")
-      .get(mid)
-      .once((data, key) => {
-        function load_data(data, ENC = "") {
-          document.getElementById(nameh1).innerText = key;
-          document.getElementById(field_nombre).value = data["Nombre"] || "";
-        }
-        if (typeof data == "string") {
-          SEA.decrypt(data, SECRET, (data) => {
-            load_data(data, "%E");
-          });
-        } else {
-          load_data(data);
-        }
-      });
-    document.getElementById(btn_guardar).onclick = () => {
-      var data = {
-        Nombre: document.getElementById(field_nombre).value,
-      };
-      var enc = SEA.encrypt(data, SECRET, (encrypted) => {
-        document.getElementById("actionStatus").style.display = "block";
-        betterGunPut(gun.get(TABLE).get("aulas").get(mid), encrypted);
-        toastr.success("Guardado!");
-        setTimeout(() => {
-          document.getElementById("actionStatus").style.display = "none";
-          setUrlHash("aulas");
-        }, 1500);
-      });
-    };
-    document.getElementById(btn_borrar).onclick = () => {
-      if (confirm("¿Quieres borrar este aula?") == true) {
-        betterGunPut(gun.get(TABLE).get("aulas").get(mid), null);
-        toastr.error("Borrado!");
-        setTimeout(() => {
-          setUrlHash("aulas");
-        }, 1500);
-      }
-    };
 
     //#region Cargar Comedor
     gun
@@ -93,8 +47,10 @@ PAGES.aulas = {
           // Fix newlines
           data.Platos = data.Platos || "No hay platos registrados para hoy.";
           // Display platos
-          document.getElementById(data_Comedor).innerHTML =
-            data.Platos.replace(/\n/g, "<br>");
+          document.getElementById(data_Comedor).innerHTML = data.Platos.replace(
+            /\n/g,
+            "<br>"
+          );
         }
         if (typeof data == "string") {
           SEA.decrypt(data, SECRET, (data) => {
@@ -106,37 +62,148 @@ PAGES.aulas = {
       });
     //#endregion Cargar Comedor
   },
-  index: function () {
+  _solicitudes: function () {
+    const tablebody = safeuuid();
+    var btn_new = safeuuid();
+    container.innerHTML = `
+      <a class="button" href="#aulas">← Volver a Gestión de Aulas</a>
+      <h1>Solicitudes de Material</h1>
+      <button id="${btn_new}">Nueva solicitud</button>
+      <div id="cont"></div>
+      `;
+    TS_IndexElement(
+      "aulas,solicitudes",
+      [
+        {
+          key: "Solicitante",
+          type: "persona",
+          default: "",
+          label: "Solicitante",
+        },
+        {
+          key: "Asunto",
+          type: "raw",
+          default: "",
+          label: "Asunto",
+        },
+      ],
+      gun.get(TABLE).get("aulas_solicitudes"),
+      document.querySelector("#cont")
+    );
+    document.getElementById(btn_new).onclick = () => {
+      setUrlHash("aulas,solicitudes," + safeuuid(""));
+    };
+  },
+  _solicitudes__edit: function (mid) {
+    var nameh1 = safeuuid();
+    var field_asunto = safeuuid();
+    var field_contenido = safeuuid();
+    var field_autor = safeuuid();
+    var btn_guardar = safeuuid();
+    var btn_borrar = safeuuid();
+    container.innerHTML = `
+        <a class="button" href="#aulas,solicitudes">← Volver a solicitudes</a>
+        <h1>Solicitud <code id="${nameh1}"></code></h1>
+        <fieldset style="float: none; width: calc(100% - 40px);max-width: none;">
+            <legend>Valores</legend>
+            <div style="max-width: 400px;">
+              <label>
+                  Asunto<br>
+                  <input type="text" id="${field_asunto}" value=""><br><br>
+              </label>
+              <input type="hidden" id="${field_autor}" readonly value="${SUB_LOGGED_IN_ID || ""}">
+            </div>
+            <label>
+                Contenido - ¡Incluye el material a solicitar!<br>
+                <textarea id="${field_contenido}" style="width: 100%; height: 400px;"></textarea><br><br>
+            </label>
+            <hr>
+            <button class="btn5" id="${btn_guardar}">Guardar</button>
+            <button class="rojo" id="${btn_borrar}">Borrar</button>
+        </fieldset>
+        `;
+    gun
+      .get(TABLE)
+      .get("aulas_solicitudes")
+      .get(mid)
+      .once((data, key) => {
+        function load_data(data, ENC = "") {
+          document.getElementById(nameh1).innerText = key;
+          document.getElementById(field_asunto).value = data["Asunto"] || "";
+          document.getElementById(field_contenido).value =
+            data["Contenido"] || "";
+          document.getElementById(field_autor).value = data["Solicitante"] || "";
+        }
+        if (typeof data == "string") {
+          SEA.decrypt(data, SECRET, (data) => {
+            load_data(data, "%E");
+          });
+        } else {
+          load_data(data);
+        }
+      });
+    document.getElementById(btn_guardar).onclick = () => {
+      var data = {
+        Solicitante: document.getElementById(field_autor).value,
+        Contenido: document.getElementById(field_contenido).value,
+        Asunto: document.getElementById(field_asunto).value,
+      };
+      var enc = SEA.encrypt(data, SECRET, (encrypted) => {
+        document.getElementById("actionStatus").style.display = "block";
+        betterGunPut(gun.get(TABLE).get("aulas_solicitudes").get(mid), encrypted);
+        toastr.success("Guardado!");
+        setTimeout(() => {
+          document.getElementById("actionStatus").style.display = "none";
+          setUrlHash("aulas,solicitudes");
+        }, 1500);
+      });
+    };
+    document.getElementById(btn_borrar).onclick = () => {
+      if (confirm("¿Quieres borrar esta solicitud?") == true) {
+        betterGunPut(gun.get(TABLE).get("aulas_solicitudes").get(mid), null);
+        toastr.error("Borrado!");
+        setTimeout(() => {
+          setUrlHash("aulas,solicitudes");
+        }, 1500);
+      }
+    };
+  },
+  _informes: function () {
+    container.innerHTML = `
+      <h1>Informes</h1>
+      <h2>En desarrollo...</h2>
+      <p>Próximamente podrás generar informes desde esta sección.</p>
+    `;
+  },
+  edit: function (section) {
     if (!checkRole("aulas")) {
       setUrlHash("index");
       return;
     }
-    const tablebody = safeuuid();
-    var btn_new = safeuuid();
-    container.innerHTML = `
-      <h1>Aulas - en desarrollo</h1>
-      <button id="${btn_new}">Nuevo aula</button>
-      <div id="cont"></div>
-      `;
-    TS_IndexElement(
-      "aulas",
-      [
-        {
-          key: "Nombre",
-          type: "raw",
-          default: "",
-          label: "Nombre",
-        },
-      ],
-      gun.get(TABLE).get("aulas"),
-      document.querySelector("#cont")
-    );
-    if (!checkRole("aulas:edit")) {
-      document.getElementById(btn_new).style.display = "none";
+    var item = location.hash.replace("#", "").split(",")[2];
+    if (!item) {
+      // No item, show section
+      switch (section) {
+        case "solicitudes":
+          this._solicitudes();
+          break;
+        case "informes":
+          this._informes();
+          break;
+        default:
+          this.index();
+          break;
+      }
     } else {
-      document.getElementById(btn_new).onclick = () => {
-        setUrlHash("aulas," + safeuuid(""));
-      };
+      // Show section__edit
+      switch (section) {
+        case "solicitudes":
+          this._solicitudes__edit(item);
+          break;
+        case "informes":
+          this._informes__edit(item);
+          break;
+      }
     }
   },
 };

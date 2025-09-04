@@ -700,9 +700,8 @@ function TS_IndexElement(
     if (data._key.toLowerCase().includes(searchValue)) return true;
     
     // Search in configured fields
-    for (const field of config) {
-      const value = data[field.key];
-      if (!value) continue;
+    for (var field of config) {
+      const value = data[field.key] || field.default || "";
       
       // Handle different field types
       switch (field.type) {
@@ -722,12 +721,15 @@ function TS_IndexElement(
           }
           break;
         case "persona":
-          const persona = SC_Personas[value];
+          var persona = SC_Personas[value] || { Nombre: "", Region: "" };
+          if (field.self == true) {
+            persona = data || { Nombre: "", Region: "" };
+          }
           if (persona) {
             // Search in persona fields
-            if (persona.Nombre?.toLowerCase().includes(searchValue))
+            if (persona.Nombre.toLowerCase().includes(searchValue))
               return true;
-            if (persona.Region?.toLowerCase().includes(searchValue))
+            if (persona.Region.toLowerCase().includes(searchValue))
               return true;
           }
           break;
