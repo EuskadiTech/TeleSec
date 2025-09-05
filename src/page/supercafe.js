@@ -156,10 +156,11 @@ PAGES.supercafe = {
       const tablebody = safeuuid();
       const tablebody2 = safeuuid();
       var btn_new = safeuuid();
+      var totalprecio = safeuuid();
       var tts_check = safeuuid();
       var old = {};
       container.innerHTML = `
-        <h1>SuperCafé</h1>
+        <h1>SuperCafé - Total: <span id="${totalprecio}">?</span>c</h1>
         <button id="${btn_new}" style="${sc_nobtn};">Nueva comanda</button>
         <br>
         <label>
@@ -214,6 +215,15 @@ PAGES.supercafe = {
         ]
         }
       //Todas las comandas
+      var comandasTot = {}
+      function calcPrecio() {
+        var tot = 0
+        comandasTot.forEach(precio => {
+          tot += precio
+        });
+        document.getElementById(totalprecio).innerText = tot
+        return tot
+      }
       TS_IndexElement(
         "supercafe",
         config,
@@ -221,7 +231,8 @@ PAGES.supercafe = {
         document.querySelector("#cont1"),
         (data, new_tr) => {
           // new_tr.style.backgroundColor = "#FFCCCB";
-
+          comandasTot[data._key] = SC_priceCalc(JSON.parse(data.Comanda))[0]
+          calcPrecio()
           if (data.Estado == "Pedido") {
             new_tr.style.backgroundColor = "#FFFFFF";
           }
@@ -270,6 +281,8 @@ PAGES.supercafe = {
         document.querySelector("#cont2"),
         (data, new_tr) => {
           // new_tr.style.backgroundColor = "#FFCCCB";
+          comandasTot[data._key] = SC_priceCalc(JSON.parse(data.Comanda))[0]
+          calcPrecio()
 
           if (data.Estado == "Pedido") {
             new_tr.style.backgroundColor = "#FFFFFF";
