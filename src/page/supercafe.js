@@ -281,7 +281,7 @@ PAGES.supercafe = {
         document.querySelector("#cont2"),
         (data, new_tr) => {
           // new_tr.style.backgroundColor = "#FFCCCB";
-          comandasTot[data._key] = SC_priceCalc(JSON.parse(data.Comanda))[0]
+          comandasTot[data._key] = 0 // No mostrar comandas en deuda.
           calcPrecio()
 
           if (data.Estado == "Pedido") {
