@@ -218,7 +218,7 @@ PAGES.supercafe = {
       var comandasTot = {}
       function calcPrecio() {
         var tot = 0
-        comandasTot.forEach(precio => {
+        Object.values(comandasTot).forEach(precio => {
           tot += precio
         });
         document.getElementById(totalprecio).innerText = tot
