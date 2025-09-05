@@ -160,7 +160,7 @@ PAGES.supercafe = {
       var tts_check = safeuuid();
       var old = {};
       container.innerHTML = `
-        <h1>SuperCafé - Total: <span id="${totalprecio}">?</span>c</h1>
+        <h1>SuperCafé - Total: <span id="${totalprecio}">0</span>c</h1>
         <button id="${btn_new}" style="${sc_nobtn};">Nueva comanda</button>
         <br>
         <label>
