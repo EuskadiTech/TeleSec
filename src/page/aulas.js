@@ -32,7 +32,7 @@ PAGES.aulas = {
         <fieldset style="float: left;">
             <legend>Datos de hoy</legend>
 
-            <span class="btn7" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black;"><b>Comedor</b>: <span id="${data_Comedor}">Cargando...</span></span>
+            <span class="btn7" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black;"><b>Menú Comedor:</b> <br><span id="${data_Comedor}">Cargando...</span></span>
         </fieldset>
       </div>
       `;
