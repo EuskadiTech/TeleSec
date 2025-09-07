@@ -16,9 +16,9 @@ PAGES.aulas = {
       <div>
         <fieldset style="float: left;">
             <legend><img src="${PAGES.notas.icon}" height="20"> Notas esenciales</legend>
-            <a class="button" style="font-size: 25px;" href="#notas,inicio_dia">Como iniciar el dia</a>
-            <a class="button" style="font-size: 25px;" href="#notas,realizacion_cafe">Como realizar del café</a>
-            <a class="button" style="font-size: 25px;" href="#notas,fin_dia">Como acabar el dia</a>
+            <a class="button" style="font-size: 25px;" href="#notas,inicio_dia">Como iniciar el día</a>
+            <a class="button" style="font-size: 25px;" href="#notas,realizacion_cafe">Como realizar el café</a>
+            <a class="button" style="font-size: 25px;" href="#notas,fin_dia">Como acabar el día</a>
             <a class="button" style="font-size: 25px;" href="#notas,horario">Horario</a>
             <a class="button" style="font-size: 25px;" href="#notas,tareas">Tareas</a>
         </fieldset>
