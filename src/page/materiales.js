@@ -114,11 +114,17 @@ PAGES.materiales = {
   index: function () {
     if (!checkRole("materiales")) {setUrlHash("index");return}
     var btn_new = safeuuid();
+    var select_ubicacion = safeuuid();
     container.innerHTML = `
-                <h1>Materiales</h1>
-                <button id="${btn_new}">Nuevo Material</button>
-                <div id="tableContainer"></div>
-                `;
+      <h1>Materiales</h1>
+      <label>Filtrar por ubicación:
+        <select id="${select_ubicacion}">
+          <option value="">(Todas)</option>
+        </select>
+      </label>
+      <button id="${btn_new}">Nuevo Material</button>
+      <div id="tableContainer"></div>
+    `;
 
     const config = [
       { key: "Referencia", label: "Referencia", type: "text", default: "?" },
@@ -140,21 +146,58 @@ PAGES.materiales = {
       { key: "Notas", label: "Notas", type: "text", default: "?" }
     ];
 
-    TS_IndexElement(
-      "materiales",
-      config,
-      gun.get(TABLE).get("materiales"),
-      document.getElementById("tableContainer"),
-      undefined,
-      undefined,
-      true // Enable global search bar
-    );
-      if (!checkRole("materiales:edit")) {
-        document.getElementById(btn_new).style.display = "none"
-      } else {
-        document.getElementById(btn_new).onclick = () => {
-          setUrlHash("materiales," + safeuuid(""));
-        };
+    // Obtener todas las ubicaciones únicas y poblar el <select>, desencriptando si es necesario
+    gun.get(TABLE).get("materiales").map().once((data, key) => {
+      if (!data) return;
+      function addUbicacion(d) {
+        let ubicacion = d.Ubicacion || "-";
+        let select = document.getElementById(select_ubicacion);
+        if ([...select.options].some(opt => opt.value === ubicacion)) return;
+        let option = document.createElement("option");
+        option.value = ubicacion;
+        option.textContent = ubicacion;
+        select.appendChild(option);
       }
+      if (typeof data === "string") {
+        SEA.decrypt(data, SECRET, (dec) => {
+          if (dec) addUbicacion(dec);
+        });
+      } else {
+        addUbicacion(data);
+      }
+    });
+
+    // Función para renderizar la tabla filtrada
+    function renderTable(filtroUbicacion) {
+      TS_IndexElement(
+        "materiales",
+        config,
+        gun.get(TABLE).get("materiales"),
+        document.getElementById("tableContainer"),
+        undefined,
+        function(data) {
+          console.log(data.Ubicacion, filtroUbicacion);
+          if (data.Ubicacion == filtroUbicacion) {return false}
+          if (filtroUbicacion == "") {return false}
+          return true
+        }
+      );
+    }
+
+    // Inicializar tabla sin filtro
+    renderTable("");
+
+    // Evento para filtrar por ubicación
+    document.getElementById(select_ubicacion).onchange = function () {
+      renderTable(this.value);
+    };
+
+    if (!checkRole("materiales:edit")) {
+      document.getElementById(btn_new).style.display = "none"
+    } else {
+      document.getElementById(btn_new).onclick = () => {
+        setUrlHash("materiales," + safeuuid(""));
+      };
+    }
   },
 };
