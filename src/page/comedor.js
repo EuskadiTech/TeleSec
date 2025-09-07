@@ -44,7 +44,7 @@ PAGES.comedor = {
             load_data(data, "%E");
           });
         } else {
-          load_data(data);
+          load_data(data || {});
         }
       });
     document.getElementById(btn_guardar).onclick = () => {

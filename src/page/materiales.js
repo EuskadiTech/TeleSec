@@ -78,7 +78,7 @@ PAGES.materiales = {
             load_data(data, "%E");
           });
         } else {
-          load_data(data);
+          load_data(data || {});
         }
       });
     document.getElementById(btn_guardar).onclick = () => {
@@ -176,7 +176,6 @@ PAGES.materiales = {
         document.getElementById("tableContainer"),
         undefined,
         function(data) {
-          console.log(data.Ubicacion, filtroUbicacion);
           if (data.Ubicacion == filtroUbicacion) {return false}
           if (filtroUbicacion == "") {return false}
           return true

@@ -3,25 +3,25 @@ PAGES.dataman = {
   icon: "static/appico/Cogs.svg",
   AccessControl: true,
   Title: "Ajustes",
-  edit: function(mid) {
+  edit: function (mid) {
     switch (mid) {
-      case 'export':
-        PAGES.dataman.__export()
+      case "export":
+        PAGES.dataman.__export();
         break;
-      case 'import':
-        PAGES.dataman.__import()
+      case "import":
+        PAGES.dataman.__import();
         break;
-      case 'config':
-        PAGES.dataman.__config()
+      case "config":
+        PAGES.dataman.__config();
         break;
-      case 'labels':
-        PAGES.dataman.__labels()
+      case "labels":
+        PAGES.dataman.__labels();
         break;
       default:
-        // Tab to edit
+      // Tab to edit
     }
   },
-  __config: function() {
+  __config: function () {
     var form = safeuuid();
     container.innerHTML = `
     <h1>Ajustes</h1>
@@ -33,16 +33,16 @@ PAGES.dataman = {
       </label>
       <button type="submit">Aplicar ajustes</button>
     </form>
-    `
+    `;
     document.getElementById(form).onsubmit = (ev) => {
-      ev.preventDefault()
-      var ford = new FormData(document.getElementById(form))
+      ev.preventDefault();
+      var ford = new FormData(document.getElementById(form));
       if (ford.get("block_add_account") == "yes") {
-        config["block_add_account"] = true
+        config["block_add_account"] = true;
       }
-    }
+    };
   },
-  __export: function() {
+  __export: function () {
     var select_type = safeuuid();
     var textarea_content = safeuuid();
     var button_export_local = safeuuid();
@@ -75,16 +75,15 @@ PAGES.dataman = {
             var value = entry[1];
             if (value != null) {
               if (typeof value == "string") {
-      SEA.decrypt(value, SECRET, (data) => {
-        output[modul][key] = data;
-      });
+                SEA.decrypt(value, SECRET, (data) => {
+                  output[modul][key] = data;
+                });
               } else {
-      output[modul][key] = value;
+                output[modul][key] = value;
               }
             }
           });
           toastr.success("Exportado todo, descargando!");
-          console.error(output);
           download(
             `Export TeleSec ${GROUPID}.json.txt`,
             JSON.stringify(output)
@@ -97,7 +96,6 @@ PAGES.dataman = {
     document.getElementById(button_export_safe).onclick = () => {
       var download_data = (DATA) => {
         toastr.success("Exportado todo, descargado!");
-        console.error(DATA);
         download(
           `Export TeleSec Encriptado ${GROUPID}.json.txt`,
           JSON.stringify(DATA)
@@ -109,14 +107,13 @@ PAGES.dataman = {
     document.getElementById(button_export_safe_cloud).onclick = () => {
       var download_data = (DATA) => {
         toastr.info("Exportado todo, subiendo!");
-        console.error(DATA);
         fetch(
-            "https://telesec-sync.tech.eus/upload_backup.php?table=" + GROUPID,
-            {
-              method: "POST",
-              body: JSON.stringify(DATA),
-            }
-          )
+          "https://telesec-sync.tech.eus/upload_backup.php?table=" + GROUPID,
+          {
+            method: "POST",
+            body: JSON.stringify(DATA),
+          }
+        )
           .then(() => {
             toastr.success("Subido correctamente!");
           })
@@ -127,7 +124,7 @@ PAGES.dataman = {
       gun.get(TABLE).load(download_data);
     };
   },
-  __import: function() {
+  __import: function () {
     var select_type = safeuuid();
     var textarea_content = safeuuid();
     var button_import = safeuuid();
@@ -168,7 +165,7 @@ PAGES.dataman = {
       }
       setTimeout(() => {
         toastr.info("Importado todo!");
-        
+
         if (sel == "%telesec") {
           setUrlHash("inicio");
         } else {
@@ -177,29 +174,36 @@ PAGES.dataman = {
       }, 5000);
     };
   },
-  __labels: function(mid) {
-    var div_materiales = safeuuid()
+  __labels: function (mid) {
+    var div_materiales = safeuuid();
     container.innerHTML = `
       <h1>Imprimir Etiquetas AztecQR</h1>
       <button onclick="print()">Imprimir</button>
       <h2>Materiales</h2>
       <div id="${div_materiales}"></div>
       <br><br>`;
-    div_materiales = document.getElementById(div_materiales)
-    gun.get(TABLE).get("materiales").map().once((data, key) => {
-      function add_row(data, key) {
-        if (data != null) {
-          div_materiales.innerHTML += BuildQR("materiales," + key, data["Nombre"] || key)
+    div_materiales = document.getElementById(div_materiales);
+    gun
+      .get(TABLE)
+      .get("materiales")
+      .map()
+      .once((data, key) => {
+        function add_row(data, key) {
+          if (data != null) {
+            div_materiales.innerHTML += BuildQR(
+              "materiales," + key,
+              data["Nombre"] || key
+            );
+          }
         }
-      }
-      if (typeof data == "string") {
-        SEA.decrypt(data, SECRET, (data) => {
+        if (typeof data == "string") {
+          SEA.decrypt(data, SECRET, (data) => {
+            add_row(data, key);
+          });
+        } else {
           add_row(data, key);
-        });
-      } else {
-        add_row(data, key);
-      }
-    })
+        }
+      });
   },
   index: function () {
     container.innerHTML = `
@@ -208,6 +212,6 @@ PAGES.dataman = {
     <a class="button" href="#dataman,export">Exportar datos</a>
     <a class="button" href="#dataman,labels">Imprimir etiquetas</a>
     <a class="button" href="#dataman,config">Ajustes</a>
-    `
-  }
+    `;
+  },
 };

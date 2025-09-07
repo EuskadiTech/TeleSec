@@ -1,25 +1,28 @@
-PERMS["supercafe"] = "SuperCafé"
-PERMS["supercafe:edit"] = "&gt; Editar"
+PERMS["supercafe"] = "SuperCafé";
+PERMS["supercafe:edit"] = "&gt; Editar";
 PAGES.supercafe = {
-    navcss: "btn4",
-    icon: "static/appico/Coffee.svg",
-    AccessControl: true,
-    Title: "SuperCafé",
-    edit: function (mid) {
-      if (!checkRole("supercafe:edit")) {setUrlHash("supercafe");return}
-      var nameh1 = safeuuid();
-      var field_fecha = safeuuid();
-      var field_persona = safeuuid();
-      var field_comanda = safeuuid();
-      var field_notas = safeuuid();
-      var field_estado = safeuuid();
-      var div_actions = safeuuid();
-      var btn_pagos = safeuuid();
-      var btn_cocina = safeuuid();
-      var btn_guardar = safeuuid();
-      var btn_guardar2 = safeuuid();
-      var btn_borrar = safeuuid();
-      container.innerHTML = `
+  navcss: "btn4",
+  icon: "static/appico/Coffee.svg",
+  AccessControl: true,
+  Title: "SuperCafé",
+  edit: function (mid) {
+    if (!checkRole("supercafe:edit")) {
+      setUrlHash("supercafe");
+      return;
+    }
+    var nameh1 = safeuuid();
+    var field_fecha = safeuuid();
+    var field_persona = safeuuid();
+    var field_comanda = safeuuid();
+    var field_notas = safeuuid();
+    var field_estado = safeuuid();
+    var div_actions = safeuuid();
+    var btn_pagos = safeuuid();
+    var btn_cocina = safeuuid();
+    var btn_guardar = safeuuid();
+    var btn_guardar2 = safeuuid();
+    var btn_borrar = safeuuid();
+    container.innerHTML = `
         <h1>Comanda <code id="${nameh1}"></code></h1>
         <button onclick="setUrlHash('supercafe');">Salir</button>
         <fieldset style="text-align: center;">
@@ -53,113 +56,115 @@ PAGES.supercafe = {
             <button id=${btn_borrar} class="rojo">Borrar</button>
         </fieldset>
         `;
-      var currentData = {};
-      var currentPersonaID = "";
-      var divact = document.getElementById(div_actions);
+    var currentData = {};
+    var currentPersonaID = "";
+    var divact = document.getElementById(div_actions);
 
-      function loadActions() {
-        divact.innerHTML = "";
-        addCategory_Personas(divact, SC_Personas, currentPersonaID, (value) => {
-          document.getElementById(field_persona).value = value;
-        });
-        Object.entries(SC_actions).forEach((category) => {
-          addCategory(
-            divact,
-            category[0],
-            SC_actions_icons[category[0]],
-            category[1],
-            currentData,
-            (values) => {
-              document.getElementById(field_comanda).value = SC_parse(values);
-            }
-          );
-        });
-      }
-      loadActions();
-      gun
-        .get(TABLE)
-        .get("supercafe")
-        .get(mid)
-        .once((data, key) => {
-          function load_data(data, ENC = "") {
-            document.getElementById(nameh1).innerText = key;
-            document.getElementById(field_fecha).value = data["Fecha"];
-            document.getElementById(field_persona).value =
-              data["Persona"] || "";
-            currentPersonaID = data["Persona"] || "";
-            document.getElementById(field_comanda).value =
-              SC_parse(JSON.parse(data["Comanda"] || "{}")) || "";
-            document.getElementById(field_notas).value = data["Notas"] || "";
-            document.getElementById(field_estado).value = data["Estado"] || "";
-            currentData = JSON.parse(data["Comanda"] || "{}");
+    function loadActions() {
+      divact.innerHTML = "";
+      addCategory_Personas(divact, SC_Personas, currentPersonaID, (value) => {
+        document.getElementById(field_persona).value = value;
+      });
+      Object.entries(SC_actions).forEach((category) => {
+        addCategory(
+          divact,
+          category[0],
+          SC_actions_icons[category[0]],
+          category[1],
+          currentData,
+          (values) => {
+            document.getElementById(field_comanda).value = SC_parse(values);
+          }
+        );
+      });
+    }
+    loadActions();
+    gun
+      .get(TABLE)
+      .get("supercafe")
+      .get(mid)
+      .once((data, key) => {
+        function load_data(data, ENC = "") {
+          document.getElementById(nameh1).innerText = key;
+          document.getElementById(field_fecha).value = data["Fecha"];
+          document.getElementById(field_persona).value = data["Persona"] || "";
+          currentPersonaID = data["Persona"] || "";
+          document.getElementById(field_comanda).value =
+            SC_parse(JSON.parse(data["Comanda"] || "{}")) || "";
+          document.getElementById(field_notas).value = data["Notas"] || "";
+          document.getElementById(field_estado).value = data["Estado"] || "";
+          currentData = JSON.parse(data["Comanda"] || "{}");
 
-            loadActions();
-          }
-          if (typeof data == "string") {
-            SEA.decrypt(data, SECRET, (data) => {
-              load_data(data, "%E");
-            });
-          } else {
-            load_data(data);
-          }
-        });
-      document.getElementById(btn_guardar).onclick = () => {
-        if (document.getElementById(field_persona).value == "") {
-          alert("¡Hay que elegir una persona!");
-          return;
+          loadActions();
         }
-        var data = {
-          Fecha: document.getElementById(field_fecha).value,
-          Persona: document.getElementById(field_persona).value,
-          Comanda: JSON.stringify(currentData),
-          Notas: document.getElementById(field_notas).value,
-          Estado: document
-            .getElementById(field_estado)
-            .value.replace("%%", "Pedido"),
-        };
-        var enc = SEA.encrypt(data, SECRET, (encrypted) => {
-          document.getElementById("actionStatus").style.display = "block";
-          betterGunPut(gun.get(TABLE).get("supercafe").get(mid), encrypted);
-          toastr.success("Guardado!");
-          setTimeout(() => {
-            document.getElementById("actionStatus").style.display = "none";
-            setUrlHash("supercafe");
-          }, 1500);
-        });
-      };
-      document.getElementById(btn_borrar).onclick = () => {
-        if (
-          confirm(
-            "¿Quieres borrar esta comanda? - NO se actualizaran los puntos de la persona asignada."
-          ) == true
-        ) {
-          betterGunPut(gun.get(TABLE).get("supercafe").get(mid), null);
-          setTimeout(() => {
-            setUrlHash("supercafe");
-          }, 1500);
+        if (typeof data == "string") {
+          SEA.decrypt(data, SECRET, (data) => {
+            load_data(data, "%E");
+          });
+        } else {
+          load_data(data || {});
         }
-      };
-    },
-    index: function () {
-      if (!checkRole("supercafe")) {setUrlHash("index");return}
-      var tts = false;
-      var sc_nobtn = "";
-      if (urlParams.get("sc_nobtn") == "yes") {
-        sc_nobtn = "pointer-events: none; opacity: 0.5";
+      });
+    document.getElementById(btn_guardar).onclick = () => {
+      if (document.getElementById(field_persona).value == "") {
+        alert("¡Hay que elegir una persona!");
+        return;
       }
-      var ev = setTimeout(() => {
-        tts = true;
-        console.log("TTS Enabled");
-        toastr.info("Texto a voz disponible");
-      }, 6500);
-      EventListeners.Timeout.push(ev)
-      const tablebody = safeuuid();
-      const tablebody2 = safeuuid();
-      var btn_new = safeuuid();
-      var totalprecio = safeuuid();
-      var tts_check = safeuuid();
-      var old = {};
-      container.innerHTML = `
+      var data = {
+        Fecha: document.getElementById(field_fecha).value,
+        Persona: document.getElementById(field_persona).value,
+        Comanda: JSON.stringify(currentData),
+        Notas: document.getElementById(field_notas).value,
+        Estado: document
+          .getElementById(field_estado)
+          .value.replace("%%", "Pedido"),
+      };
+      var enc = SEA.encrypt(data, SECRET, (encrypted) => {
+        document.getElementById("actionStatus").style.display = "block";
+        betterGunPut(gun.get(TABLE).get("supercafe").get(mid), encrypted);
+        toastr.success("Guardado!");
+        setTimeout(() => {
+          document.getElementById("actionStatus").style.display = "none";
+          setUrlHash("supercafe");
+        }, 1500);
+      });
+    };
+    document.getElementById(btn_borrar).onclick = () => {
+      if (
+        confirm(
+          "¿Quieres borrar esta comanda? - NO se actualizaran los puntos de la persona asignada."
+        ) == true
+      ) {
+        betterGunPut(gun.get(TABLE).get("supercafe").get(mid), null);
+        setTimeout(() => {
+          setUrlHash("supercafe");
+        }, 1500);
+      }
+    };
+  },
+  index: function () {
+    if (!checkRole("supercafe")) {
+      setUrlHash("index");
+      return;
+    }
+    var tts = false;
+    var sc_nobtn = "";
+    if (urlParams.get("sc_nobtn") == "yes") {
+      sc_nobtn = "pointer-events: none; opacity: 0.5";
+    }
+    var ev = setTimeout(() => {
+      tts = true;
+      console.log("TTS Enabled");
+      toastr.info("Texto a voz disponible");
+    }, 6500);
+    EventListeners.Timeout.push(ev);
+    const tablebody = safeuuid();
+    const tablebody2 = safeuuid();
+    var btn_new = safeuuid();
+    var totalprecio = safeuuid();
+    var tts_check = safeuuid();
+    var old = {};
+    container.innerHTML = `
         <h1>SuperCafé - Total: <span id="${totalprecio}">0</span>c</h1>
         <button id="${btn_new}" style="${sc_nobtn};">Nueva comanda</button>
         <br>
@@ -178,157 +183,155 @@ PAGES.supercafe = {
           <div id="cont2"></div>
         </details>
         `;
-      var config = [
-          {
-            key: "Persona",
-            type: "persona",
-            default: "",
-            label: "Persona",
-          },
-          {
-            key: "Estado",
-            type: "comanda-status",
-            default: "",
-            label: "Estado",
-          },
-          {
-            key: "Comanda",
-            type: "comanda",
-            default: "",
-            label: "Comanda",
-          },
-        ]
-        if (!checkRole("supercafe:edit")) {
-          config = [
-          {
-            key: "Persona",
-            type: "persona",
-            default: "",
-            label: "Persona",
-          },
-          {
-            key: "Comanda",
-            type: "comanda",
-            default: "",
-            label: "Comanda",
-          },
-        ]
-        }
-      //Todas las comandas
-      var comandasTot = {}
-      function calcPrecio() {
-        var tot = 0
-        Object.values(comandasTot).forEach(precio => {
-          tot += precio
-        });
-        document.getElementById(totalprecio).innerText = tot
-        return tot
-      }
-      TS_IndexElement(
-        "supercafe",
-        config,
-        gun.get(TABLE).get("supercafe"),
-        document.querySelector("#cont1"),
-        (data, new_tr) => {
-          // new_tr.style.backgroundColor = "#FFCCCB";
-          comandasTot[data._key] = SC_priceCalc(JSON.parse(data.Comanda))[0]
-          calcPrecio()
-          if (data.Estado == "Pedido") {
-            new_tr.style.backgroundColor = "#FFFFFF";
-          }
-          if (data.Estado == "En preparación") {
-            new_tr.style.backgroundColor = "#FFCCCB";
-          }
-          if (data.Estado == "Listo") {
-            new_tr.style.backgroundColor = "gold";
-          }
-          if (data.Estado == "Entregado") {
-            new_tr.style.backgroundColor = "lightgreen";
-          }
-          if (data.Estado == "Deuda") {
-            new_tr.style.backgroundColor = "#f5d3ff";
-          }
+    var config = [
+      {
+        key: "Persona",
+        type: "persona",
+        default: "",
+        label: "Persona",
+      },
+      {
+        key: "Estado",
+        type: "comanda-status",
+        default: "",
+        label: "Estado",
+      },
+      {
+        key: "Comanda",
+        type: "comanda",
+        default: "",
+        label: "Comanda",
+      },
+    ];
+    if (!checkRole("supercafe:edit")) {
+      config = [
+        {
+          key: "Persona",
+          type: "persona",
+          default: "",
+          label: "Persona",
         },
-        (data) => {
-          if (data.Estado == "Deuda") {
-            return true;
-          }
-          var key = data._key;
-          if (old[key] == undefined) {
-            old[key] = "";
-          }
-          if (old[key] != data.Estado) {
-            if (tts && document.getElementById(tts_check).checked) {
-              var msg = `Comanda de ${SC_Personas[data.Persona].Region}. - ${
-        JSON.parse(data.Comanda)["Selección"]
-              }. - ${SC_Personas[data.Persona].Nombre}. - ${data.Estado}`;
-              console.log("TTS: " + msg);
-              let utterance = new SpeechSynthesisUtterance(msg);
-              utterance.rate = 0.9;
-              // utterance.voice = speechSynthesis.getVoices()[7]
-              speechSynthesis.speak(utterance);
-            }
-          }
-          old[key] = data.Estado;
-        }
-      );
-
-      //Deudas
-      TS_IndexElement(
-        "supercafe",
-        config,
-        gun.get(TABLE).get("supercafe"),
-        document.querySelector("#cont2"),
-        (data, new_tr) => {
-          // new_tr.style.backgroundColor = "#FFCCCB";
-          comandasTot[data._key] = 0 // No mostrar comandas en deuda.
-          calcPrecio()
-
-          if (data.Estado == "Pedido") {
-            new_tr.style.backgroundColor = "#FFFFFF";
-          }
-          if (data.Estado == "En preparación") {
-            new_tr.style.backgroundColor = "#FFCCCB";
-          }
-          if (data.Estado == "Listo") {
-            new_tr.style.backgroundColor = "gold";
-          }
-          if (data.Estado == "Entregado") {
-            new_tr.style.backgroundColor = "lightgreen";
-          }
-          if (data.Estado == "Deuda") {
-            new_tr.style.backgroundColor = "#f5d3ff";
-          }
+        {
+          key: "Comanda",
+          type: "comanda",
+          default: "",
+          label: "Comanda",
         },
-        (data) => {
-          if (data.Estado != "Deuda") {
-            return true;
-          }
-          var key = data._key;
-          if (old[key] == undefined) {
-            old[key] = "";
-          }
-          if (old[key] != data.Estado) {
-            if (tts && document.getElementById(tts_check).checked) {
-              var msg = `Comanda de ${SC_Personas[data.Persona].Region}. - ${
-        JSON.parse(data.Comanda)["Selección"]
-              }. - ${SC_Personas[data.Persona].Nombre}. - ${data.Estado}`;
-              console.log("TTS: " + msg);
-              let utterance = new SpeechSynthesisUtterance(msg);
-              utterance.rate = 0.9;
-              // utterance.voice = speechSynthesis.getVoices()[7]
-              speechSynthesis.speak(utterance);
-            }
-          }
-          old[key] = data.Estado;
+      ];
+    }
+    //Todas las comandas
+    var comandasTot = {};
+    function calcPrecio() {
+      var tot = 0;
+      Object.values(comandasTot).forEach((precio) => {
+        tot += precio;
+      });
+      document.getElementById(totalprecio).innerText = tot;
+      return tot;
+    }
+    TS_IndexElement(
+      "supercafe",
+      config,
+      gun.get(TABLE).get("supercafe"),
+      document.querySelector("#cont1"),
+      (data, new_tr) => {
+        // new_tr.style.backgroundColor = "#FFCCCB";
+        comandasTot[data._key] = SC_priceCalc(JSON.parse(data.Comanda))[0];
+        calcPrecio();
+        if (data.Estado == "Pedido") {
+          new_tr.style.backgroundColor = "#FFFFFF";
         }
-      );
-      if (!checkRole("supercafe:edit")) {
-        document.getElementById(btn_new).style.display = "none"
-      } else {
-        document.getElementById(btn_new).onclick = () => {
-          setUrlHash("supercafe," + safeuuid(""));
-        };
+        if (data.Estado == "En preparación") {
+          new_tr.style.backgroundColor = "#FFCCCB";
+        }
+        if (data.Estado == "Listo") {
+          new_tr.style.backgroundColor = "gold";
+        }
+        if (data.Estado == "Entregado") {
+          new_tr.style.backgroundColor = "lightgreen";
+        }
+        if (data.Estado == "Deuda") {
+          new_tr.style.backgroundColor = "#f5d3ff";
+        }
+      },
+      (data) => {
+        if (data.Estado == "Deuda") {
+          return true;
+        }
+        var key = data._key;
+        if (old[key] == undefined) {
+          old[key] = "";
+        }
+        if (old[key] != data.Estado) {
+          if (tts && document.getElementById(tts_check).checked) {
+            var msg = `Comanda de ${SC_Personas[data.Persona].Region}. - ${
+              JSON.parse(data.Comanda)["Selección"]
+            }. - ${SC_Personas[data.Persona].Nombre}. - ${data.Estado}`;
+            let utterance = new SpeechSynthesisUtterance(msg);
+            utterance.rate = 0.9;
+            // utterance.voice = speechSynthesis.getVoices()[7]
+            speechSynthesis.speak(utterance);
+          }
+        }
+        old[key] = data.Estado;
       }
-    },
-  }
+    );
+
+    //Deudas
+    TS_IndexElement(
+      "supercafe",
+      config,
+      gun.get(TABLE).get("supercafe"),
+      document.querySelector("#cont2"),
+      (data, new_tr) => {
+        // new_tr.style.backgroundColor = "#FFCCCB";
+        comandasTot[data._key] = 0; // No mostrar comandas en deuda.
+        calcPrecio();
+
+        if (data.Estado == "Pedido") {
+          new_tr.style.backgroundColor = "#FFFFFF";
+        }
+        if (data.Estado == "En preparación") {
+          new_tr.style.backgroundColor = "#FFCCCB";
+        }
+        if (data.Estado == "Listo") {
+          new_tr.style.backgroundColor = "gold";
+        }
+        if (data.Estado == "Entregado") {
+          new_tr.style.backgroundColor = "lightgreen";
+        }
+        if (data.Estado == "Deuda") {
+          new_tr.style.backgroundColor = "#f5d3ff";
+        }
+      },
+      (data) => {
+        if (data.Estado != "Deuda") {
+          return true;
+        }
+        var key = data._key;
+        if (old[key] == undefined) {
+          old[key] = "";
+        }
+        if (old[key] != data.Estado) {
+          if (tts && document.getElementById(tts_check).checked) {
+            var msg = `Comanda de ${SC_Personas[data.Persona].Region}. - ${
+              JSON.parse(data.Comanda)["Selección"]
+            }. - ${SC_Personas[data.Persona].Nombre}. - ${data.Estado}`;
+            let utterance = new SpeechSynthesisUtterance(msg);
+            utterance.rate = 0.9;
+            // utterance.voice = speechSynthesis.getVoices()[7]
+            speechSynthesis.speak(utterance);
+          }
+        }
+        old[key] = data.Estado;
+      }
+    );
+    if (!checkRole("supercafe:edit")) {
+      document.getElementById(btn_new).style.display = "none";
+    } else {
+      document.getElementById(btn_new).onclick = () => {
+        setUrlHash("supercafe," + safeuuid(""));
+      };
+    }
+  },
+};

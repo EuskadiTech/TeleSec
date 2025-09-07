@@ -67,14 +67,6 @@ String.prototype.toHex = function() {
   return wheelcolors[hash % wheelcolors.length];
 };
 
-// Test
-console.log("hello".toHex());
-console.log("world".toHex());
-console.log("foo".toHex());
-console.log("bar".toHex());
-
-
-
 function stringToColour(str) {
   return str.toHex();
 }
@@ -1038,7 +1030,6 @@ function TS_IndexElement(
 }
 
 function BuildQR(mid, label) {
-  console.warn("BARCODE " + mid + " LABEL " + label)
   return `
   <span style="border: 2px dashed black; padding: 10px; display: inline-block; background: white; border-radius: 7px; text-align: center; margin: 10px;">
       <b>TeleSec AztecQR</b>

@@ -95,21 +95,6 @@
   <script src="static/toastr.min.js"></script>
   <script src="static/doublescroll.js"></script>
   <!--<script src="static/simplemde.min.js"></script>-->
-  <script>
-    let totalSize = 0;
-
-    for (let key in localStorage) {
-      if (localStorage.hasOwnProperty(key)) {
-        let keySize = new Blob([key]).size; // Size of the key
-        let valueSize = new Blob([localStorage[key]]).size; // Size of the value
-        totalSize += keySize + valueSize;
-      }
-    }
-    
-    console.log(`Total localStorage size: ${totalSize} bytes`);
-    console.log(`Total size in KB: ${(totalSize / 1024).toFixed(2)} KB`);
-    console.log(`Total size in MB: ${(totalSize / (1024 * 1024)).toFixed(2)} MB`);
-  </script>
   <script src="pwa.js"></script>
   <script src="config.js"></script>
   <script src="gun_init.js"></script>

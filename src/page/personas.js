@@ -98,7 +98,7 @@ PAGES.personas = {
             load_data(data, "%E");
           });
         } else {
-          load_data(data);
+          load_data(data || {});
         }
       });
     document
