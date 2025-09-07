@@ -20,12 +20,14 @@ PAGES.aulas = {
             <a class="button" style="font-size: 25px;" href="#notas,realizacion_cafe">Como realizar del café</a>
             <a class="button" style="font-size: 25px;" href="#notas,fin_dia">Como acabar el dia</a>
             <a class="button" style="font-size: 25px;" href="#notas,horario">Horario</a>
+            <a class="button" style="font-size: 25px;" href="#notas,tareas">Tareas</a>
         </fieldset>
         <fieldset style="float: left;">
             <legend>Acciones</legend>
             <a class="button" style="font-size: 25px;" href="#aulas,solicitudes"><img src="${PAGES.materiales.icon}" height="20"> Solicitudes de material</a>
-            <a class="button rojo" style="font-size: 25px;" href="#notas,alertas"><img src="${PAGES.notas.icon}" height="20"> Ver Alertas / Incidencias</a>
-            <a class="button" style="font-size: 25px;" href="#aulas,informes"><img src="${PAGES.aulas.icon}" height="20"> Informes</a>
+            <a class="button" style="font-size: 25px;" href="#aulas,informes,diario-${CurrentISODate()}">Diario de hoy</a>
+            <a class="button rojo" style="font-size: 25px;" href="#notas,alertas"><img src="${PAGES.notas.icon}" height="20"> Ver Alertas</a>
+            <a class="button" style="font-size: 25px;" href="#aulas,informes"><img src="${PAGES.aulas.icon}" height="20"> Informes y diarios</a>
             <a class="button btn4" style="font-size: 25px;" href="#supercafe"><img src="${PAGES.supercafe.icon}" height="20"> Ver comandas</a>
 
         </fieldset>
@@ -169,11 +171,140 @@ PAGES.aulas = {
     };
   },
   _informes: function () {
+    const tablebody = safeuuid();
+    var btn_new = safeuuid();
+    var field_new_byday = safeuuid();
+    var btn_new_byday = safeuuid();
     container.innerHTML = `
+      <a class="button" href="#aulas">← Volver a Gestión de Aulas</a>
       <h1>Informes</h1>
-      <h2>En desarrollo...</h2>
-      <p>Próximamente podrás generar informes desde esta sección.</p>
-    `;
+      <div style="display: inline-block; border: 2px solid black; padding: 5px; border-radius: 5px;">
+      <b>Diario:</b><br>
+      <input type="date" id="${field_new_byday}" value="${CurrentISODate()}">
+      <button id="${btn_new_byday}">Abrir / Nuevo</button>
+      </div><br>
+      <button id="${btn_new}">Nuevo informe</button>
+      <div id="cont"></div>
+      `;
+    TS_IndexElement(
+      "aulas,informes",
+      [
+        {
+          key: "Autor",
+          type: "persona",
+          default: "",
+          label: "Autor",
+        },
+        {
+          key: "Fecha",
+          type: "fecha",
+          default: "",
+          label: "Fecha",
+        },
+        {
+          key: "Asunto",
+          type: "raw",
+          default: "",
+          label: "Asunto",
+        },
+      ],
+      gun.get(TABLE).get("aulas_informes"),
+      document.querySelector("#cont")
+    );
+    document.getElementById(btn_new).onclick = () => {
+      setUrlHash("aulas,informes," + safeuuid(""));
+    };
+    document.getElementById(btn_new_byday).onclick = () => {
+      const day = document.getElementById(field_new_byday).value;
+      if (day) {
+        setUrlHash("aulas,informes,diario-" + day);
+      } else {
+        toastr.error("Selecciona un día válido");
+      }
+    }
+  },
+  _informes__edit: function (mid) {
+    var nameh1 = safeuuid();
+    var field_asunto = safeuuid();
+    var field_contenido = safeuuid();
+    var field_autor = safeuuid();
+    var field_fecha = safeuuid();
+    var btn_guardar = safeuuid();
+    var btn_borrar = safeuuid();
+    var title = "";
+    if (mid.startsWith("diario-")) {
+      var date = mid.replace("diario-", "").split("-");
+      title = "Diario " + date[2] + "/" + date[1] + "/" + date[0];
+    }
+    container.innerHTML = `
+        <a class="button" href="#aulas,informes">← Volver a informes</a>
+        <h1>Informe <code id="${nameh1}"></code></h1>
+        <fieldset style="float: none; width: calc(100% - 40px);max-width: none;">
+            <legend>Valores</legend>
+            <div style="max-width: 400px;">
+              <label>
+                  Asunto<br>
+                  <input type="text" id="${field_asunto}" value="${title}"><br><br>
+              </label>
+              <input type="hidden" id="${field_autor}" readonly value="${SUB_LOGGED_IN_ID || ""}">
+              <input type="hidden" id="${field_fecha}" value="${mid.startsWith("diario-") ? mid.replace("diario-", "") : CurrentISODate()}">
+            </div>
+            <label>
+                Contenido<br>
+                <textarea id="${field_contenido}" style="width: 100%; height: 400px;"></textarea><br><br>
+            </label>
+            <hr>
+            <button class="btn5" id="${btn_guardar}">Guardar</button>
+            <button class="rojo" id="${btn_borrar}">Borrar</button>
+        </fieldset>
+        `;
+    gun
+      .get(TABLE)
+      .get("aulas_informes")
+      .get(mid)
+      .once((data, key) => {
+        function load_data(data, ENC = "") {
+          document.getElementById(nameh1).innerText = key;
+          document.getElementById(field_asunto).value = data["Asunto"] || "";
+          document.getElementById(field_contenido).value =
+            data["Contenido"] || "";
+          document.getElementById(field_autor).value = data["Autor"] || "";
+          document.getElementById(field_fecha).value = data["Fecha"] || CurrentISODate();
+        }
+        if (typeof data == "string") {
+          SEA.decrypt(data, SECRET, (data) => {
+            load_data(data, "%E");
+          });
+        } else {
+          load_data(data);
+        }
+      });
+    document.getElementById(btn_guardar).onclick = () => {
+      var data = {
+        Autor: document.getElementById(field_autor).value,
+        Contenido: document.getElementById(field_contenido).value,
+        Asunto: document.getElementById(field_asunto).value,
+        Fecha: document.getElementById(field_fecha).value || CurrentISODate(),
+      };
+      var enc = SEA.encrypt(data, SECRET, (encrypted) => {
+        document.getElementById("actionStatus").style.display = "block";
+        betterGunPut(gun.get(TABLE).get("aulas_informes").get(mid), encrypted);
+        toastr.success("Guardado!");
+        setTimeout(() => {
+          document.getElementById("actionStatus").style.display = "none";
+          setUrlHash("aulas,informes");
+        }, 1500);
+      });
+    };
+    document.getElementById(btn_borrar).onclick = () => {
+      if (confirm("¿Quieres borrar este informe?") == true) {
+        betterGunPut(gun.get(TABLE).get("aulas_informes").get(mid), null);
+        toastr.error("Borrado!");
+        setTimeout(() => {
+          setUrlHash("aulas,informes");
+        }, 1500);
+      }
+    };
   },
   edit: function (section) {
     if (!checkRole("aulas")) {

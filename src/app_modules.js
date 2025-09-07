@@ -733,6 +733,15 @@ function TS_IndexElement(
               return true;
           }
           break;
+        case "fecha":
+        case "fecha-iso":
+          // Format date as DD/MM/YYYY for searching
+          if (value) {
+            const fechaArray = value.split("-");
+            const formattedDate = `${fechaArray[2]}/${fechaArray[1]}/${fechaArray[0]}`;
+            if (formattedDate.includes(searchValue)) return true;
+          }
+          break;
         default:
           // For raw and other types, search in the direct value
           if (String(value).toLowerCase().includes(searchValue)) return true;
@@ -800,6 +809,15 @@ function TS_IndexElement(
               );
               tdRaw.innerHTML = rawContent;
               new_tr.appendChild(tdRaw);
+              break;
+            case "fecha":
+            case "fecha-iso":
+              const tdFechaISO = document.createElement("td");
+              if (data[key.key]) {
+                const fechaArray = data[key.key].split("-");
+                tdFechaISO.innerText = fechaArray[2] + "/" + fechaArray[1] + "/" + fechaArray[0];
+              }
+              new_tr.appendChild(tdFechaISO);
               break;
             case "template":
               const tdCustomTemplate = document.createElement("td");
