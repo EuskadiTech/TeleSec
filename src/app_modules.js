@@ -759,7 +759,16 @@ function TS_IndexElement(
         }
         return 0;
       }
-      
+      // If persona field exists, sort by Region, then by Nombre
+      if (a.Persona && b.Persona) {
+        const personaA = SC_Personas[a.Persona] || { Nombre: "", Region: "" };
+        const personaB = SC_Personas[b.Persona] || { Nombre: "", Region: "" };
+        if (personaA.Region < personaB.Region) return -1;
+        if (personaA.Region > personaB.Region) return 1;
+        if (personaA.Nombre < personaB.Nombre) return -1;
+        if (personaA.Nombre > personaB.Nombre) return 1;
+        return 0;
+      }
       // If no Fecha field exists, sort only by Nombre
       if (a.Nombre && b.Nombre) {
         const nameA = a.Nombre.toLowerCase();
