@@ -526,7 +526,7 @@ function TS_decrypt(input, secret, callback) {
     // ignore RSA{}
     var data = input.slice(4, -1);
     var decrypted = CryptoJS.AES.decrypt(data, secret).toString(CryptoJS.enc.Utf8);
-    callback(decrypted);
+    callback(JSON.parse(decrypted));
   }
 }
 function TS_encrypt(input, secret, callback, mode = "RSA") {
@@ -535,7 +535,7 @@ function TS_encrypt(input, secret, callback, mode = "RSA") {
       callback(encrypted);
     });
   } else if (mode == "RSA") {
-    var encrypted = CryptoJS.AES.encrypt(input, secret).toString();
+    var encrypted = CryptoJS.AES.encrypt(JSON.stringify(input), secret).toString();
     callback("RSA{" + encrypted + "}");
   }
 }
