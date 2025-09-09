@@ -26,7 +26,7 @@ PAGES.avisos = {
                     <legend>Valores</legend>
                     <label>
                         Fecha<br>
-                        <input readonly disabled type="text" id="${field_fecha}" value="${CurrentISODate()}"><br><br>
+                        <input readonly disabled type="text" id="${field_fecha}" value=""><br><br>
                     </label>
                     <label>
                         Asunto<br>
@@ -45,7 +45,7 @@ PAGES.avisos = {
                     </label>
                     <label>
                         Estado<br>
-                        <input readonly disabled type="text" id="${field_estado}" value="%%">
+                        <input readonly disabled type="text" id="${field_estado}" value="">
                         <br>
                         <button id="${btn_leer}">Leido</button>
                         <button id="${btn_desleer}">No leido</button>
@@ -87,14 +87,14 @@ PAGES.avisos = {
         .once((data, key) => {
           function load_data(data, ENC = "") {
             document.getElementById(nameh1).innerText = key;
-            document.getElementById(field_fecha).value = data["Fecha"];
+            document.getElementById(field_fecha).value = data["Fecha"] || CurrentISODate() || "";
             document.getElementById(field_asunto).value = data["Asunto"] || "";
             document.getElementById(field_mensaje).value =
               data["Mensaje"] || "";
             document.getElementById(field_origen).value = data["Origen"] || "";
             document.getElementById(field_destino).value =
               data["Destino"] || "";
-            document.getElementById(field_estado).value = data["Estado"] || "";
+            document.getElementById(field_estado).value = data["Estado"] || "%%" || "";
             document.getElementById(field_respuesta).value =
               data["Respuesta"] || "";
 

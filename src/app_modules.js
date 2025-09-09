@@ -778,32 +778,25 @@ function TS_IndexElement(
   var lastSearchValue = "";
   var lastFilteredSorted = [];
   function sorter(a, b) {
-    if (a.Fecha && b.Fecha) {
-      if (a.Fecha < b.Fecha) return -1;
-      if (a.Fecha > b.Fecha) return 1;
-      if (a.Nombre && b.Nombre) {
-        const nameA = a.Nombre.toLowerCase();
-        const nameB = b.Nombre.toLowerCase();
-        if (nameA < nameB) return -1;
-        if (nameA > nameB) return 1;
-      }
-      return 0;
+    // 1. Fecha (ascending)
+    if (a.Fecha && b.Fecha && a.Fecha !== b.Fecha) {
+      return a.Fecha < b.Fecha ? -1 : 1;
     }
-    if (a.Persona && b.Persona) {
-      const personaA = SC_Personas[a.Persona] || { Nombre: "", Region: "" };
-      const personaB = SC_Personas[b.Persona] || { Nombre: "", Region: "" };
-      if (personaA.Region < personaB.Region) return -1;
-      if (personaA.Region > personaB.Region) return 1;
-      if (personaA.Nombre < personaB.Nombre) return -1;
-      if (personaA.Nombre > personaB.Nombre) return 1;
-      return 0;
+    // 2. Region (ascending, from SC_Personas if Persona exists)
+    const regionA = a.Persona && SC_Personas[a.Persona] ? SC_Personas[a.Persona].Region || "" : "";
+    const regionB = b.Persona && SC_Personas[b.Persona] ? SC_Personas[b.Persona].Region || "" : "";
+    if (regionA !== regionB) {
+      return regionA < regionB ? -1 : 1;
     }
-    if (a.Nombre && b.Nombre) {
-      const nameA = a.Nombre.toLowerCase();
-      const nameB = b.Nombre.toLowerCase();
-      if (nameA < nameB) return -1;
-      if (nameA > nameB) return 1;
-      return 0;
+    // 3. Persona (Nombre, ascending, from SC_Personas if Persona exists)
+    const nombrePersonaA = a.Persona && SC_Personas[a.Persona] ? SC_Personas[a.Persona].Nombre || "" : "";
+    const nombrePersonaB = b.Persona && SC_Personas[b.Persona] ? SC_Personas[b.Persona].Nombre || "" : "";
+    if (nombrePersonaA !== nombrePersonaB) {
+      return nombrePersonaA.toLowerCase() < nombrePersonaB.toLowerCase() ? -1 : 1;
+    }
+    // 4. Nombre (ascending, from a.Nombre/b.Nombre)
+    if (a.Nombre && b.Nombre && a.Nombre !== b.Nombre) {
+      return a.Nombre.toLowerCase() < b.Nombre.toLowerCase() ? -1 : 1;
     }
     return 0;
   }

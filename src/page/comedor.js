@@ -13,21 +13,21 @@ PAGES.comedor = {
     var btn_guardar = safeuuid();
     var btn_borrar = safeuuid();
     container.innerHTML = `
-                <h1>Entrada del menú <code id="${nameh1}"></code></h1>
-                <fieldset style="float: left;">
-                    <legend>Valores</legend>
-                    <label>
-                        Fecha<br>
-                        <input type="date" id="${field_fecha}" value="${CurrentISODate()}"><br><br>
-                    </label>
-                    <label>
-                        Platos<br>
-                        <textarea id="${field_platos}"></textarea><br><br>
-                    </label>
-                    <button class="btn5" id="${btn_guardar}">Guardar</button>
-                    <button class="rojo" id="${btn_borrar}">Borrar</button>
-                </fieldset>
-                `;
+      <h1>Entrada del menú <code id="${nameh1}"></code></h1>
+      <fieldset style="float: left;">
+          <legend>Valores</legend>
+          <label>
+              Fecha<br>
+              <input type="date" id="${field_fecha}" value=""><br><br>
+          </label>
+          <label>
+              Platos<br>
+              <textarea id="${field_platos}"></textarea><br><br>
+          </label>
+          <button class="btn5" id="${btn_guardar}">Guardar</button>
+          <button class="rojo" id="${btn_borrar}">Borrar</button>
+      </fieldset>
+      `;
     gun
       .get(TABLE)
       .get("comedor")
@@ -35,7 +35,7 @@ PAGES.comedor = {
       .once((data, key) => {
         function load_data(data, ENC = "") {
           document.getElementById(nameh1).innerText = key;
-          document.getElementById(field_fecha).value = data["Fecha"];
+          document.getElementById(field_fecha).value = data["Fecha"] || mid || CurrentISODate();
           document.getElementById(field_platos).value =
             data["Platos"] || "";
         }
