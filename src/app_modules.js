@@ -783,8 +783,8 @@ function TS_IndexElement(
       return a.Fecha < b.Fecha ? -1 : 1;
     }
     // 2. Region (ascending, from SC_Personas if Persona exists)
-    const regionA = a.Persona && SC_Personas[a.Persona] ? SC_Personas[a.Persona].Region || "" : "";
-    const regionB = b.Persona && SC_Personas[b.Persona] ? SC_Personas[b.Persona].Region || "" : "";
+    const regionA = a.Persona && SC_Personas[a.Persona] ? SC_Personas[a.Persona].Region || "" : a.Region || "";
+    const regionB = b.Persona && SC_Personas[b.Persona] ? SC_Personas[b.Persona].Region || "" : a.Region || "";
     if (regionA !== regionB) {
       return regionA < regionB ? -1 : 1;
     }
