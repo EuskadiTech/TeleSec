@@ -448,6 +448,12 @@ const SC_actions = {
     img: ["static/ico/milk.png", "static/ico/wheat.png"],
   },
   {
+    value: "Almendras",
+    key: "Leche",
+    className: "btn3",
+    img: ["static/ico/milk.png", "static/ico/almond.svg"],
+  },
+  {
     value: "Agua",
     key: "Leche",
     className: "btn3",
@@ -590,13 +596,13 @@ function SC_parse_short(json) {
       case "Leche":
         // Leche pequeña = 10c
         if (
-          json["Tamaño"] == "Pequeño" && ["de Vaca", "Sin lactosa", "Vegetal"].includes(json["Leche"])
+          json["Tamaño"] == "Pequeño" && ["de Vaca", "Sin lactosa", "Vegetal", "Almendras"].includes(json["Leche"])
         ) {
           valores += "<small>(P = 10c)</small>";
         }
         // Leche grande = 20c
         if (
-          json["Tamaño"] == "Grande" && ["de Vaca", "Sin lactosa", "Vegetal"].includes(json["Leche"])
+          json["Tamaño"] == "Grande" && ["de Vaca", "Sin lactosa", "Vegetal", "Almendras"].includes(json["Leche"])
         ) {
           valores += "<small>(G = 20c)</small>";
         }
@@ -631,14 +637,14 @@ function SC_priceCalc(json) {
   valores += "Servicio base = 10c\n";
   // Leche pequeña = 10c
   if (
-    json["Tamaño"] == "Pequeño" && ["de Vaca", "Sin lactosa", "Vegetal"].includes(json["Leche"])
+    json["Tamaño"] == "Pequeño" && ["de Vaca", "Sin lactosa", "Vegetal", "Almendras"].includes(json["Leche"])
   ) {
     precio += 10;
     valores += "Leche pequeña = 10c\n";
   }
   // Leche grande = 20c
   if (
-    json["Tamaño"] == "Grande" && ["de Vaca", "Sin lactosa", "Vegetal"].includes(json["Leche"])
+    json["Tamaño"] == "Grande" && ["de Vaca", "Sin lactosa", "Vegetal", "Almendras"].includes(json["Leche"])
   ) {
     precio += 20;
     valores += "Leche grande = 20c\n";
