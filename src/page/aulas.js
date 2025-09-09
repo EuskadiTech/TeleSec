@@ -14,7 +14,7 @@ PAGES.aulas = {
     var data_Diario = safeuuid();
     var data_Weather = safeuuid();
     container.innerHTML = `
-      <h1>Gestión del Aula - en desarrollo</h1>
+      <h1>Gestión del Aula</h1>
       <div>
         <fieldset style="float: left;">
             <legend><img src="${PAGES.notas.icon}" height="20"> Notas esenciales</legend>
