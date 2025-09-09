@@ -86,13 +86,13 @@ PAGES.supercafe = {
       .once((data, key) => {
         function load_data(data, ENC = "") {
           document.getElementById(nameh1).innerText = key;
-          document.getElementById(field_fecha).value = data["Fecha"];
+          document.getElementById(field_fecha).value = data["Fecha"] || CurrentISODate();
           document.getElementById(field_persona).value = data["Persona"] || "";
           currentPersonaID = data["Persona"] || "";
           document.getElementById(field_comanda).value =
             SC_parse(JSON.parse(data["Comanda"] || "{}")) || "";
           document.getElementById(field_notas).value = data["Notas"] || "";
-          document.getElementById(field_estado).value = data["Estado"] || "";
+          document.getElementById(field_estado).value = data["Estado"] || "%%";
           currentData = JSON.parse(data["Comanda"] || "{}");
 
           loadActions();
