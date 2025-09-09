@@ -19,7 +19,7 @@ PAGES.index = {
   __scan: function(mid) {
     var qrscan = safeuuid()
     container.innerHTML = `
-      <h1>Escanear Codigo Aztec/QR</h1>
+      <h1>Escanear Codigo QR</h1>
       <div id="${qrscan}"></div>
       <br><br>`;
     var html5QrcodeScanner = new Html5QrcodeScanner(

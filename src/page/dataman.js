@@ -177,7 +177,7 @@ PAGES.dataman = {
   __labels: function (mid) {
     var div_materiales = safeuuid();
     container.innerHTML = `
-      <h1>Imprimir Etiquetas AztecQR</h1>
+      <h1>Imprimir Etiquetas QR</h1>
       <button onclick="print()">Imprimir</button>
       <h2>Materiales</h2>
       <div id="${div_materiales}"></div>
