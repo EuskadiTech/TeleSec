@@ -29,7 +29,7 @@ PAGES.supercafe = {
             <legend>Rellenar comanda</legend>
             <label style="display: none;">
                 Fecha<br>
-                <input readonly disabled type="text" id="${field_fecha}" value="${CurrentISODate()}"><br><br>
+                <input readonly disabled type="text" id="${field_fecha}" value=""><br><br>
             </label>
             <label style="display: none;">
                 Persona<br>

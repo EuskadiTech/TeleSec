@@ -113,7 +113,7 @@ PAGES.aulas = {
                   Asunto<br>
                   <input type="text" id="${field_asunto}" value=""><br><br>
               </label>
-              <input type="hidden" id="${field_autor}" readonly value="${SUB_LOGGED_IN_ID || ""}">
+              <input type="hidden" id="${field_autor}" readonly value="">
             </div>
             <label>
                 Contenido - ¡Incluye el material a solicitar!<br>
@@ -134,7 +134,7 @@ PAGES.aulas = {
           document.getElementById(field_asunto).value = data["Asunto"] || "";
           document.getElementById(field_contenido).value =
             data["Contenido"] || "";
-          document.getElementById(field_autor).value = data["Solicitante"] || "";
+          document.getElementById(field_autor).value = data["Solicitante"] || SUB_LOGGED_IN_ID || "";
         }
         if (typeof data == "string") {
           TS_decrypt(data, SECRET, (data) => {
@@ -244,10 +244,10 @@ PAGES.aulas = {
             <div style="max-width: 400px;">
               <label>
                   Asunto<br>
-                  <input type="text" id="${field_asunto}" value="${title}"><br><br>
+                  <input type="text" id="${field_asunto}" value=""><br><br>
               </label>
-              <input type="hidden" id="${field_autor}" readonly value="${SUB_LOGGED_IN_ID || ""}">
-              <input type="hidden" id="${field_fecha}" value="${mid.startsWith("diario-") ? mid.replace("diario-", "") : CurrentISODate()}">
+              <input type="hidden" id="${field_autor}" readonly value="">
+              <input type="hidden" id="${field_fecha}" value="">
             </div>
             <label>
                 Contenido<br>
@@ -265,11 +265,11 @@ PAGES.aulas = {
       .once((data, key) => {
         function load_data(data, ENC = "") {
           document.getElementById(nameh1).innerText = key;
-          document.getElementById(field_asunto).value = data["Asunto"] || "";
+          document.getElementById(field_asunto).value = data["Asunto"] || title || "";
           document.getElementById(field_contenido).value =
             data["Contenido"] || "";
-          document.getElementById(field_autor).value = data["Autor"] || "";
-          document.getElementById(field_fecha).value = data["Fecha"] || CurrentISODate();
+          document.getElementById(field_autor).value = data["Autor"] || SUB_LOGGED_IN_ID || "";
+          document.getElementById(field_fecha).value = data["Fecha"] || mid.startsWith("diario-") ? mid.replace("diario-", "") : CurrentISODate();
         }
         if (typeof data == "string") {
           TS_decrypt(data, SECRET, (data) => {

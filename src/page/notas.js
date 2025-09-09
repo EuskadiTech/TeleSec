@@ -23,7 +23,7 @@ PAGES.notas = {
                   Asunto<br>
                   <input type="text" id="${field_asunto}" value=""><br><br>
               </label>
-              <input type="hidden" id="${field_autor}" value="${SUB_LOGGED_IN_ID || ""}">
+              <input type="hidden" id="${field_autor}" value="">
               <div id="${div_actions}"></div>
             </div>
             <label>
@@ -55,7 +55,7 @@ PAGES.notas = {
             document.getElementById(field_asunto).value = data["Asunto"] || "";
             document.getElementById(field_contenido).value =
               data["Contenido"] || "";
-            document.getElementById(field_autor).value = data["Autor"] || "";
+            document.getElementById(field_autor).value = data["Autor"] || SUB_LOGGED_IN_ID || "";
 
             // Persona select
             divact.innerHTML = "";
