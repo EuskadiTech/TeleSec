@@ -2,7 +2,6 @@ PERMS["aulas"] = "Aulas (Solo docentes!)";
 PAGES.aulas = {
   //navcss: "btn1",
   Title: "Gest-Aula",
-  // Make a clone of notas.js and modify it to be aulas.js
   icon: "static/appico/Classroom.svg",
   AccessControl: true,
   index: function () {
@@ -39,7 +38,7 @@ PAGES.aulas = {
             <span class="btn7" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black; max-width: 25rem;"><b>Menú Comedor:</b> <br><span id="${data_Comedor}">Cargando...</span></span>
             <span class="btn6" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black; max-width: 25rem;"><b>Tareas:</b> <br><pre style="overflow-wrap: break-word;white-space:pre-wrap;" id="${data_Tareas}">Cargando...</pre></span>
             <span class="btn5" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black; max-width: 25rem;"><b>Diario:</b> <br><pre style="overflow-wrap: break-word;white-space:pre-wrap;" id="${data_Diario}">Cargando...</pre></span>
-            <span class="btn4" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black; max-width: 25rem;"><b>Clima:</b> <br><img loading="lazy" style="padding: 5px; background-color: white;" id="${data_Weather}"></span>
+            <span class="btn4" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black; max-width: 25rem;"><b>Clima:</b> <br><img loading="lazy" style="padding: 15px; background-color: white;" id="${data_Weather}"></span>
         </fieldset>
       </div>
       `;

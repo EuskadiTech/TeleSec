@@ -1,6 +1,6 @@
 PERMS["resumen_diario"] = "Resumen diario (Solo docentes!)";
 PAGES.resumen_diario = {
-  Esconder: true,
+  icon: "static/appico/Newspaper.svg",
   navcss: "btn3",
   AccessControl: true,
   Title: "Resumen Diario",
@@ -15,10 +15,11 @@ PAGES.resumen_diario = {
     }
     container.innerHTML = `
       <h1>Resumen Diario</h1>
-      <span class="btn7" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black; max-width: 25rem;"><b>Menú Comedor:</b> <br><span id="${data_Comedor}">Cargando...</span></span>
-      <span class="btn6" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black; max-width: 25rem;"><b>Tareas:</b> <br><pre style="overflow-wrap: break-word;white-space:pre-wrap;" id="${data_Tareas}">Cargando...</pre></span>
-      <span class="btn5" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black; max-width: 25rem;"><b>Diario:</b> <br><pre style="overflow-wrap: break-word;white-space:pre-wrap;" id="${data_Diario}">Cargando...</pre></span>
-      <span class="btn4" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black; max-width: 25rem;"><b>Clima:</b> <br><img loading="lazy" style="padding: 5px; background-color: white;" id="${data_Weather}"></span>
+      <button onclick="print()">Imprimir</button>
+      <br><span class="btn7" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black;"><b>Menú Comedor:</b> <br><span id="${data_Comedor}">Cargando...</span></span>
+      <br><span class="btn6" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black;"><b>Tareas:</b> <br><pre style="overflow-wrap: break-word;white-space:pre-wrap;" id="${data_Tareas}">Cargando...</pre></span>
+      <br><span class="btn5" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black;"><b>Diario:</b> <br><pre style="overflow-wrap: break-word;white-space:pre-wrap;" id="${data_Diario}">Cargando...</pre></span>
+      <br><span class="btn4" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black;"><b>Clima:</b> <br><img loading="lazy" style="padding: 15px; background-color: white;" id="${data_Weather}"></span>
     `;
 
     //#region Cargar Clima
