@@ -175,11 +175,12 @@ PAGES.materiales = {
         gun.get(TABLE).get("materiales"),
         document.getElementById("tableContainer"),
         undefined,
-        function(data) {
-          if (data.Ubicacion == filtroUbicacion) {return false}
-          if (filtroUbicacion == "") {return false}
-          return true
-        }
+        undefined,
+        //function(data) {
+        //  if (data.Ubicacion == filtroUbicacion) {return false}
+        //  if (filtroUbicacion == "") {return false}
+        //  return true
+        //}
       );
     }
 
