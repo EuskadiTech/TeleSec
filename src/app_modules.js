@@ -3,30 +3,36 @@ try {
 } catch {
   console.log("ScreenLock Failed");
 }
-const debounce = (callback, wait) => {
-  let isLocked = false;
-  let lastArgs = null;
-  let timeoutId = null;
-  
-  return (...args) => {
-    if (!isLocked) {
-      // First call: run immediately
-      callback(...args);
-      isLocked = true;
-      
-      // Start lock period
-      timeoutId = setTimeout(() => {
-        isLocked = false;
-        if (lastArgs) {
-          callback(...lastArgs);
-          lastArgs = null;
-        }
-      }, wait);
-    } else {
-      // During lock: save latest args
-      lastArgs = args;
-    }
-  };
+const debounce = (id, callback, wait, args) => {
+  // debounce with trailing callback
+  // First call runs immediately, then locks for 'wait' ms
+  // If called during lock, saves the latest args and runs once after lock
+  // If not called during lock, does nothing
+  if (!debounce.timers) {
+    debounce.timers = {};
+    debounce.args = {};
+  }
+  if (!debounce.timers[id]) {
+    // No lock, run immediately
+    debounce.args[id] = Array.isArray(args) ? args : [args];
+    // Spread syntax requires ...iterable[Symbol.iterator] to be a function
+    callback(...debounce.args[id]);
+    debounce.timers[id] = setTimeout(() => {
+      if (debounce.args[id]) {
+        callback(...debounce.args[id]);
+        debounce.args[id] = null;
+        debounce.timers[id] = setTimeout(() => {
+          debounce.timers[id] = null;
+        }, wait);
+      } else {
+        debounce.timers[id] = null;
+      }
+    }, wait);
+  } else {
+    // Lock active, save latest args
+    debounce.args[id] = Array.isArray(args) ? args : [args];
+  }
+  return id;
 };
 
 const wheelcolors = [
@@ -708,7 +714,7 @@ function TS_IndexElement(
   const searchKeyEl = document.getElementById(searchKeyInput);
   searchKeyEl.addEventListener(
     "input",
-    debounce(() => render(), 300)
+    () => debounce("search", render, 300, [rows])
   );
   
   function searchInData(data, searchValue, config) {
@@ -769,8 +775,8 @@ function TS_IndexElement(
   }
   
   // --- Optimized render function ---
-  let lastSearchValue = "";
-  let lastFilteredSorted = [];
+  var lastSearchValue = "";
+  var lastFilteredSorted = [];
   function sorter(a, b) {
     if (a.Fecha && b.Fecha) {
       if (a.Fecha < b.Fecha) return -1;
@@ -816,7 +822,7 @@ function TS_IndexElement(
     return filtered;
   }
 
-  function render() {
+  function render(rows) {
     const searchValue = searchKeyEl.value.toLowerCase().trim();
     // Use document fragment for batch DOM update
     const fragment = document.createDocumentFragment();
@@ -1012,7 +1018,7 @@ function TS_IndexElement(
       } else {
         delete rows[key];
       }
-      render();
+      debounce("loadrow", render, 300, [rows])
     }
     if (typeof data == "string") {
       TS_decrypt(data, SECRET, (data) => {
