@@ -11,6 +11,8 @@ PAGES.aulas = {
       return;
     }
     var data_Comedor = safeuuid();
+    var data_Tareas = safeuuid();
+    var data_Diario = safeuuid();
     container.innerHTML = `
       <h1>Gestión del Aula - en desarrollo</h1>
       <div>
@@ -34,7 +36,9 @@ PAGES.aulas = {
         <fieldset style="float: left;">
             <legend>Datos de hoy</legend>
 
-            <span class="btn7" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black;"><b>Menú Comedor:</b> <br><span id="${data_Comedor}">Cargando...</span></span>
+            <span class="btn7" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black; max-width: 25rem;"><b>Menú Comedor:</b> <br><span id="${data_Comedor}">Cargando...</span></span>
+            <span class="btn6" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black; max-width: 25rem;"><b>Tareas:</b> <br><pre style="overflow-wrap: break-word;white-space:pre-wrap;" id="${data_Tareas}">Cargando...</pre></span>
+            <span class="btn5" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black; max-width: 25rem;"><b>Diario:</b> <br><pre style="overflow-wrap: break-word;white-space:pre-wrap;" id="${data_Diario}">Cargando...</pre></span>
         </fieldset>
       </div>
       `;
@@ -63,6 +67,54 @@ PAGES.aulas = {
         }
       });
     //#endregion Cargar Comedor
+    //#region Cargar Tareas
+    gun
+      .get(TABLE)
+      .get("notas")
+      .get("tareas")
+      .once((data, key) => {
+        function add_row(data) {
+          // Fix newlines
+          data.Contenido = data.Contenido || "No hay tareas.";
+          // Display platos
+          document.getElementById(data_Tareas).innerHTML = data.Contenido.replace(
+            /\n/g,
+            "<br>"
+          );
+        }
+        if (typeof data == "string") {
+          TS_decrypt(data, SECRET, (data) => {
+            add_row(data || {});
+          });
+        } else {
+          add_row(data || {});
+        }
+      });
+    //#endregion Cargar Tareas
+    //#region Cargar Diario
+    gun
+      .get(TABLE)
+      .get("aulas_informes")
+      .get("diario-" + CurrentISODate())
+      .once((data, key) => {
+        function add_row(data) {
+          // Fix newlines
+          data.Contenido = data.Contenido || "No hay un diario.";
+          // Display platos
+          document.getElementById(data_Diario).innerHTML = data.Contenido.replace(
+            /\n/g,
+            "<br>"
+          );
+        }
+        if (typeof data == "string") {
+          TS_decrypt(data, SECRET, (data) => {
+            add_row(data || {});
+          });
+        } else {
+          add_row(data || {});
+        }
+      });
+    //#endregion Cargar Diario
   },
   _solicitudes: function () {
     const tablebody = safeuuid();
