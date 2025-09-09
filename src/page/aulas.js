@@ -35,10 +35,11 @@ PAGES.aulas = {
         </fieldset>
         <fieldset style="float: left;">
             <legend>Datos de hoy</legend>
-            <iframe id="${data_Weather}" style="border: none; width: 100%; height: 200px; background: black;"></iframe>
+            
             <span class="btn7" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black; max-width: 25rem;"><b>Menú Comedor:</b> <br><span id="${data_Comedor}">Cargando...</span></span>
             <span class="btn6" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black; max-width: 25rem;"><b>Tareas:</b> <br><pre style="overflow-wrap: break-word;white-space:pre-wrap;" id="${data_Tareas}">Cargando...</pre></span>
             <span class="btn5" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black; max-width: 25rem;"><b>Diario:</b> <br><pre style="overflow-wrap: break-word;white-space:pre-wrap;" id="${data_Diario}">Cargando...</pre></span>
+            <span class="btn4" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black; max-width: 25rem;"><b>Clima:</b> <br><img loading="lazy" style="padding: 5px; background-color: white;" id="${data_Weather}"></span>
         </fieldset>
       </div>
       `;
@@ -58,9 +59,9 @@ PAGES.aulas = {
           }
         }
         if (loc) {
-          document.getElementById(data_Weather).src = "https://wttr.in/" + encodeURIComponent(loc) + "?F0m";
+          document.getElementById(data_Weather).src = "https://wttr.in/" + encodeURIComponent(loc) + "_IF0m_background=FFFFFF.png";
         } else {
-          document.getElementById(data_Weather).src = "https://wttr.in/?F0m";
+          document.getElementById(data_Weather).src = "https://wttr.in/_IF0m_background=FFFFFF.png";
         }
       });
     //#endregion Cargar Clima

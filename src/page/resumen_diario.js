@@ -1,148 +1,47 @@
+PERMS["resumen_diario"] = "Resumen diario (Solo docentes!)";
 PAGES.resumen_diario = {
   Esconder: true,
   navcss: "btn3",
   AccessControl: true,
   Title: "Resumen Diario",
   index: function () {
-    var table_materialesLow = safeuuid();
-    var table_personasHigh = safeuuid();
-    var table_comedor = safeuuid();
+    var data_Comedor = safeuuid();
+    var data_Tareas = safeuuid();
+    var data_Diario = safeuuid();
+    var data_Weather = safeuuid();
+    if (!checkRole("resumen_diario")) {
+      setUrlHash("index");
+      return;
+    }
     container.innerHTML = `
-                <h1>Resumen Diario</h1>
-                <h2>Menú del comedor de hoy</h2>
-                <span class="btn7" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black;" id="${table_comedor}"></span>
-                <h2>Personas con café gratis (para el Viernes)</h2>
-                <div id="${table_personasHigh}"></div>
-                <h2>Materiales faltantes (o por llegar)</h2>
-                <div id="${table_materialesLow}"></div>
-            `;
-    var materiales_low = {};
-    var personas_high = {};
-    function render_materialesLow() {
-      function sorter(a, b) {
-        if (a.Nombre < b.Nombre) {
-          return -1;
-        }
-        if (a.Nombre > b.Nombre) {
-          return 1;
-        }
-        return 0;
-      }
-      var tablebody_EL = document.getElementById(table_materialesLow);
-      tablebody_EL.innerHTML = "";
-      Object.values(materiales_low)
-        .sort(sorter)
-        .forEach((data) => {
-          var min = parseFloat(data.Cantidad_Minima);
-          var act = parseFloat(data.Cantidad);
-          var falta = min - act;
-          if (act < min) {
-            var new_tr = document.createElement("span");
-            new_tr.innerHTML = `<b>${data.Nombre || "?"}</b><br>Faltan ${
-              falta || "?"
-            } ${data.Unidad || "?"} <br><i style="font-size: 75%">${
-              data.Ubicacion || "?"
-            }</i>`;
-            new_tr.className = PAGES["materiales"].navcss;
-            new_tr.style.display = "inline-block";
-            new_tr.style.margin = "5px";
-            new_tr.style.padding = "5px";
-            new_tr.style.borderRadius = "5px";
-            new_tr.style.border = "2px solid black";
-            new_tr.style.cursor = "pointer";
-            new_tr.onclick = () => {
-              setUrlHash("materiales," + data._key);
-            };
-            tablebody_EL.append(new_tr);
-          }
-        });
-    }
+      <h1>Resumen Diario</h1>
+      <span class="btn7" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black; max-width: 25rem;"><b>Menú Comedor:</b> <br><span id="${data_Comedor}">Cargando...</span></span>
+      <span class="btn6" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black; max-width: 25rem;"><b>Tareas:</b> <br><pre style="overflow-wrap: break-word;white-space:pre-wrap;" id="${data_Tareas}">Cargando...</pre></span>
+      <span class="btn5" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black; max-width: 25rem;"><b>Diario:</b> <br><pre style="overflow-wrap: break-word;white-space:pre-wrap;" id="${data_Diario}">Cargando...</pre></span>
+      <span class="btn4" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black; max-width: 25rem;"><b>Clima:</b> <br><img loading="lazy" style="padding: 5px; background-color: white;" id="${data_Weather}"></span>
+    `;
+
+    //#region Cargar Clima
+    // Get location from gun.get("settings").get("weather_location"), if missing ask user and save it
+    // url format: https://wttr.in/<loc>?F0m
     gun
-      .get(TABLE)
-      .get("materiales")
-      .once().map()
-      .once((data, key, _msg, _ev) => {
-        function add_row(data, key) {
-          if (data != null) {
-            data["_key"] = key;
-            materiales_low[key] = data;
-          } else {
-            delete materiales_low[key];
+      .get("settings")
+      .get("weather_location")
+      .once((loc) => {
+        if (!loc) {
+          loc = prompt("Introduce tu ubicación para el clima (ciudad, país):", "Madrid, Spain");
+          if (loc) {
+            betterGunPut(gun.get("settings").get("weather_location"), loc);
           }
-          render_materialesLow();
         }
-        if (typeof data == "string") {
-          TS_decrypt(data, SECRET, (data) => {
-            add_row(data, key);
-          });
+        if (loc) {
+          document.getElementById(data_Weather).src = "https://wttr.in/" + encodeURIComponent(loc) + "_IF0m_background=FFFFFF.png";
         } else {
-          add_row(data, key);
+          document.getElementById(data_Weather).src = "https://wttr.in/_IF0m_background=FFFFFF.png";
         }
       });
-    function render_personasHigh() {
-      function sorter(a, b) {
-        if (a.Nombre < b.Nombre) {
-          return -1;
-        }
-        if (a.Nombre > b.Nombre) {
-          return 1;
-        }
-        return 0;
-      }
-      var tablebody_EL = document.getElementById(table_personasHigh);
-      tablebody_EL.innerHTML = "";
-      Object.values(personas_high)
-        .sort(sorter)
-        .forEach((data) => {
-          if (data.Puntos >= 10) {
-            var new_tr = document.createElement("span");
-            new_tr.innerHTML = `<img src="${
-              data.Foto || ""
-            }" alt="" height="55" style="float: left; margin-right: 5px;"><b>${
-              data.Nombre || "?"
-            }</b><br>Tiene ${
-              data.Puntos || "?"
-            } puntos <br><i style="font-size: 75%">${data.Region || "?"}</i>`;
-            new_tr.className = PAGES["personas"].navcss;
-            new_tr.style.display = "inline-block";
-            new_tr.style.margin = "5px";
-            new_tr.style.padding = "5px";
-            new_tr.style.borderRadius = "5px";
-            new_tr.style.border = "2px solid black";
-            new_tr.style.cursor = "pointer";
-            new_tr.style.width = "200px";
-
-            new_tr.onclick = () => {
-              setUrlHash("personas," + data._key);
-            };
-            tablebody_EL.append(new_tr);
-          }
-        });
-    }
-    gun
-      .get(TABLE)
-      .get("personas")
-      .once().map()
-      .once((data, key, _msg, _ev) => {
-        function add_row(data, key) {
-          if (data != null) {
-            data["_key"] = key;
-            personas_high[key] = data;
-          } else {
-            delete personas_high[key];
-          }
-          render_personasHigh();
-        }
-        if (typeof data == "string") {
-          TS_decrypt(data, SECRET, (data) => {
-            add_row(data, key);
-          });
-        } else {
-          add_row(data, key);
-        }
-      });
-
-    // Comedor (.get("comedor").get(<current iso day>))
+    //#endregion Cargar Clima
+    //#region Cargar Comedor
     gun
       .get(TABLE)
       .get("comedor")
@@ -150,18 +49,69 @@ PAGES.resumen_diario = {
       .once((data, key) => {
         function add_row(data) {
           // Fix newlines
-          data.Platos = data.Platos.replace(/\n/g, "<br>");
+          data.Platos = data.Platos || "No hay platos registrados para hoy.";
           // Display platos
-          document.getElementById(table_comedor).innerHTML += data.Platos || "No hay platos registrados para hoy.";
+          document.getElementById(data_Comedor).innerHTML = data.Platos.replace(
+            /\n/g,
+            "<br>"
+          );
         }
         if (typeof data == "string") {
           TS_decrypt(data, SECRET, (data) => {
-            add_row(data);
+            add_row(data || {});
           });
         } else {
-          add_row(data);
+          add_row(data || {});
         }
       });
-
+    //#endregion Cargar Comedor
+    //#region Cargar Tareas
+    gun
+      .get(TABLE)
+      .get("notas")
+      .get("tareas")
+      .once((data, key) => {
+        function add_row(data) {
+          // Fix newlines
+          data.Contenido = data.Contenido || "No hay tareas.";
+          // Display platos
+          document.getElementById(data_Tareas).innerHTML = data.Contenido.replace(
+            /\n/g,
+            "<br>"
+          );
+        }
+        if (typeof data == "string") {
+          TS_decrypt(data, SECRET, (data) => {
+            add_row(data || {});
+          });
+        } else {
+          add_row(data || {});
+        }
+      });
+    //#endregion Cargar Tareas
+    //#region Cargar Diario
+    gun
+      .get(TABLE)
+      .get("aulas_informes")
+      .get("diario-" + CurrentISODate())
+      .once((data, key) => {
+        function add_row(data) {
+          // Fix newlines
+          data.Contenido = data.Contenido || "No hay un diario.";
+          // Display platos
+          document.getElementById(data_Diario).innerHTML = data.Contenido.replace(
+            /\n/g,
+            "<br>"
+          );
+        }
+        if (typeof data == "string") {
+          TS_decrypt(data, SECRET, (data) => {
+            add_row(data || {});
+          });
+        } else {
+          add_row(data || {});
+        }
+      });
+    //#endregion Cargar Diario
   },
 };
