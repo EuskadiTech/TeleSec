@@ -1,6 +1,6 @@
 window.rtcRoom = "telesec.tech.eus";
 var opt = {
-  axe: true,
+  axe: false,
   localStorage: false,
   peers: RELAYS
   // radisk: true,
