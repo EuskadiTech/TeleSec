@@ -13,6 +13,7 @@ PAGES.aulas = {
     var data_Comedor = safeuuid();
     var data_Tareas = safeuuid();
     var data_Diario = safeuuid();
+    var data_Weather = safeuuid();
     container.innerHTML = `
       <h1>Gestión del Aula - en desarrollo</h1>
       <div>
@@ -31,11 +32,10 @@ PAGES.aulas = {
             <a class="button rojo" style="font-size: 25px;" href="#notas,alertas"><img src="${PAGES.notas.icon}" height="20"> Ver Alertas</a>
             <a class="button" style="font-size: 25px;" href="#aulas,informes"><img src="${PAGES.aulas.icon}" height="20"> Informes y diarios</a>
             <a class="button btn4" style="font-size: 25px;" href="#supercafe"><img src="${PAGES.supercafe.icon}" height="20"> Ver comandas</a>
-
         </fieldset>
         <fieldset style="float: left;">
             <legend>Datos de hoy</legend>
-
+            <iframe id="${data_Weather}" style="border: none; width: 100%; height: 200px; background: black;"></iframe>
             <span class="btn7" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black; max-width: 25rem;"><b>Menú Comedor:</b> <br><span id="${data_Comedor}">Cargando...</span></span>
             <span class="btn6" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black; max-width: 25rem;"><b>Tareas:</b> <br><pre style="overflow-wrap: break-word;white-space:pre-wrap;" id="${data_Tareas}">Cargando...</pre></span>
             <span class="btn5" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black; max-width: 25rem;"><b>Diario:</b> <br><pre style="overflow-wrap: break-word;white-space:pre-wrap;" id="${data_Diario}">Cargando...</pre></span>
@@ -43,6 +43,27 @@ PAGES.aulas = {
       </div>
       `;
 
+
+    //#region Cargar Clima
+    // Get location from gun.get("settings").get("weather_location"), if missing ask user and save it
+    // url format: https://wttr.in/<loc>?F0m
+    gun
+      .get("settings")
+      .get("weather_location")
+      .once((loc) => {
+        if (!loc) {
+          loc = prompt("Introduce tu ubicación para el clima (ciudad, país):", "Madrid, Spain");
+          if (loc) {
+            betterGunPut(gun.get("settings").get("weather_location"), loc);
+          }
+        }
+        if (loc) {
+          document.getElementById(data_Weather).src = "https://wttr.in/" + encodeURIComponent(loc) + "?F0m";
+        } else {
+          document.getElementById(data_Weather).src = "https://wttr.in/?F0m";
+        }
+      });
+    //#endregion Cargar Clima
     //#region Cargar Comedor
     gun
       .get(TABLE)
