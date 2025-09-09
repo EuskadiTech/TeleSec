@@ -3,30 +3,36 @@ try {
 } catch {
   console.log("ScreenLock Failed");
 }
-const debounce = (callback, wait) => {
-  let isLocked = false;
-  let lastArgs = null;
-  let timeoutId = null;
-  
-  return (...args) => {
-    if (!isLocked) {
-      // First call: run immediately
-      callback(...args);
-      isLocked = true;
-      
-      // Start lock period
-      timeoutId = setTimeout(() => {
-        isLocked = false;
-        if (lastArgs) {
-          callback(...lastArgs);
-          lastArgs = null;
-        }
-      }, wait);
-    } else {
-      // During lock: save latest args
-      lastArgs = args;
-    }
-  };
+const debounce = (id, callback, wait, args) => {
+  // debounce with trailing callback
+  // First call runs immediately, then locks for 'wait' ms
+  // If called during lock, saves the latest args and runs once after lock
+  // If not called during lock, does nothing
+  if (!debounce.timers) {
+    debounce.timers = {};
+    debounce.args = {};
+  }
+  if (!debounce.timers[id]) {
+    // No lock, run immediately
+    debounce.args[id] = Array.isArray(args) ? args : [args];
+    // Spread syntax requires ...iterable[Symbol.iterator] to be a function
+    callback(...debounce.args[id]);
+    debounce.timers[id] = setTimeout(() => {
+      if (debounce.args[id]) {
+        callback(...debounce.args[id]);
+        debounce.args[id] = null;
+        debounce.timers[id] = setTimeout(() => {
+          debounce.timers[id] = null;
+        }, wait);
+      } else {
+        debounce.timers[id] = null;
+      }
+    }, wait);
+  } else {
+    // Lock active, save latest args
+    debounce.args[id] = Array.isArray(args) ? args : [args];
+  }
+  return id;
 };
 
 const wheelcolors = [
@@ -708,7 +714,7 @@ function TS_IndexElement(
   const searchKeyEl = document.getElementById(searchKeyInput);
   searchKeyEl.addEventListener(
     "input",
-    debounce(() => render(), 300)
+    () => debounce("search", render, 300, [rows])
   );
   
   function searchInData(data, searchValue, config) {
@@ -768,281 +774,240 @@ function TS_IndexElement(
     return false;
   }
   
-  function render() {
-    function sorter(a, b) {
-      // If both items have Fecha field, sort by date first
-      if (a.Fecha && b.Fecha) {
-        // Primary sort by date
-        if (a.Fecha < b.Fecha) return -1;
-        if (a.Fecha > b.Fecha) return 1;
-        
-        // Secondary sort by Nombre if dates are equal and both have names
-        if (a.Nombre && b.Nombre) {
-          const nameA = a.Nombre.toLowerCase();
-          const nameB = b.Nombre.toLowerCase();
-          if (nameA < nameB) return -1;
-          if (nameA > nameB) return 1;
-        }
-        return 0;
-      }
-      // If persona field exists, sort by Region, then by Nombre
-      if (a.Persona && b.Persona) {
-        console.log(a.Persona, SC_Personas[a.Persona])
-        const personaA = SC_Personas[a.Persona] || { Nombre: "", Region: "" };
-        const personaB = SC_Personas[b.Persona] || { Nombre: "", Region: "" };
-        if (personaA.Region < personaB.Region) return -1;
-        if (personaA.Region > personaB.Region) return 1;
-        if (personaA.Nombre < personaB.Nombre) return -1;
-        if (personaA.Nombre > personaB.Nombre) return 1;
-        return 0;
-      }
-      // If no Fecha field exists, sort only by Nombre
+  // --- Optimized render function ---
+  var lastSearchValue = "";
+  var lastFilteredSorted = [];
+  function sorter(a, b) {
+    if (a.Fecha && b.Fecha) {
+      if (a.Fecha < b.Fecha) return -1;
+      if (a.Fecha > b.Fecha) return 1;
       if (a.Nombre && b.Nombre) {
         const nameA = a.Nombre.toLowerCase();
         const nameB = b.Nombre.toLowerCase();
         if (nameA < nameB) return -1;
         if (nameA > nameB) return 1;
-        return 0;
       }
-      
       return 0;
     }
-    
-    const searchValue = searchKeyEl.value.toLowerCase().trim();
-    tablebody_EL.innerHTML = "";
-    Object.entries(rows)
+    if (a.Persona && b.Persona) {
+      const personaA = SC_Personas[a.Persona] || { Nombre: "", Region: "" };
+      const personaB = SC_Personas[b.Persona] || { Nombre: "", Region: "" };
+      if (personaA.Region < personaB.Region) return -1;
+      if (personaA.Region > personaB.Region) return 1;
+      if (personaA.Nombre < personaB.Nombre) return -1;
+      if (personaA.Nombre > personaB.Nombre) return 1;
+      return 0;
+    }
+    if (a.Nombre && b.Nombre) {
+      const nameA = a.Nombre.toLowerCase();
+      const nameB = b.Nombre.toLowerCase();
+      if (nameA < nameB) return -1;
+      if (nameA > nameB) return 1;
+      return 0;
+    }
+    return 0;
+  }
+
+  function getFilteredSortedRows(searchValue) {
+    // Only use cache if searchValue is not empty and cache is valid
+    if (searchValue && searchValue === lastSearchValue && lastFilteredSorted.length > 0) {
+      return lastFilteredSorted;
+    }
+    const filtered = Object.entries(rows)
       .filter(([_, data]) => searchInData(data, searchValue, config))
       .map(([_, data]) => data)
-      .sort(sorter)
-      .forEach((data) => {
-        var new_tr = document.createElement("tr");
-        
-        if (canAddCallback != undefined) {
-          if (canAddCallback(data) == true) {
-            return;
+      .sort(sorter);
+    lastSearchValue = searchValue;
+    lastFilteredSorted = filtered;
+    return filtered;
+  }
+
+  function render(rows) {
+    const searchValue = searchKeyEl.value.toLowerCase().trim();
+    // Use document fragment for batch DOM update
+    const fragment = document.createDocumentFragment();
+    const filteredSorted = getFilteredSortedRows(searchValue);
+    for (let i = 0; i < filteredSorted.length; i++) {
+      const data = filteredSorted[i];
+      if (canAddCallback != undefined && canAddCallback(data) === true) {
+        continue;
+      }
+      const new_tr = document.createElement("tr");
+      if (rowCallback != undefined) {
+        rowCallback(data, new_tr);
+      }
+      config.forEach((key) => {
+        switch (key.type) {
+          case "raw":
+          case "text": {
+            const tdRaw = document.createElement("td");
+            const rawContent = (String(data[key.key]) || key.default || "").replace(/\n/g, "<br>");
+            tdRaw.innerHTML = rawContent;
+            new_tr.appendChild(tdRaw);
+            break;
           }
-        }
-        tablebody_EL.append(new_tr);
-        if (rowCallback != undefined) {
-          rowCallback(data, new_tr);
-        }
-        config.forEach((key) => {
-          switch (key.type) {
-            case "raw":
-            case "text":
-              const tdRaw = document.createElement("td");
-              const rawContent = (String(data[key.key]) || key.default || "").replace(
-                /\n/g,
-                "<br>"
-              );
-              tdRaw.innerHTML = rawContent;
-              new_tr.appendChild(tdRaw);
-              break;
-            case "fecha":
-            case "fecha-iso":
-              const tdFechaISO = document.createElement("td");
-              if (data[key.key]) {
-                const fechaArray = data[key.key].split("-");
-                tdFechaISO.innerText = fechaArray[2] + "/" + fechaArray[1] + "/" + fechaArray[0];
+          case "fecha":
+          case "fecha-iso": {
+            const tdFechaISO = document.createElement("td");
+            if (data[key.key]) {
+              const fechaArray = data[key.key].split("-");
+              tdFechaISO.innerText = fechaArray[2] + "/" + fechaArray[1] + "/" + fechaArray[0];
+            }
+            new_tr.appendChild(tdFechaISO);
+            break;
+          }
+          case "template": {
+            const tdCustomTemplate = document.createElement("td");
+            new_tr.appendChild(tdCustomTemplate);
+            key.template(data, tdCustomTemplate);
+            break;
+          }
+          case "comanda": {
+            const tdComanda = document.createElement("td");
+            tdComanda.style.verticalAlign = "top";
+            const parsedComanda = JSON.parse(data.Comanda);
+            const precio = SC_priceCalc(parsedComanda)[0];
+            const tempDiv = document.createElement("div");
+            tempDiv.innerHTML = setLayeredImages(parsedComanda, data._key);
+            tdComanda.appendChild(tempDiv.firstChild);
+            const pre = document.createElement("pre");
+            pre.style.fontSize = "15px";
+            pre.style.display = "inline-block";
+            pre.style.margin = "0";
+            pre.style.verticalAlign = "top";
+            pre.style.padding = "5px";
+            pre.style.background = "rgba(255, 255, 0, 0.5)";
+            pre.style.border = "1px solid rgba(0, 0, 0, 0.2)";
+            pre.style.borderRadius = "5px";
+            pre.style.boxShadow = "2px 2px 5px rgba(0, 0, 0, 0.1)";
+            pre.style.height = "100%";
+            const spanPrecio = document.createElement("span");
+            spanPrecio.style.fontSize = "20px";
+            spanPrecio.innerHTML = SC_Personas[data.Persona].Puntos >= 10 ? `Total: Gratis!(${precio}c)` : `Total: ${precio}c`;
+            pre.innerHTML = "<b>Ticket de compra</b> ";
+            pre.appendChild(document.createTextNode("\n"));
+            pre.innerHTML += SC_parse_short(parsedComanda) + "<hr>" + data.Notas + "<hr>";
+            pre.appendChild(spanPrecio);
+            tdComanda.appendChild(pre);
+            new_tr.appendChild(tdComanda);
+            break;
+          }
+          case "comanda-status": {
+            var sc_nobtn = "";
+            if (urlParams.get("sc_nobtn") == "yes") {
+              sc_nobtn = "pointer-events: none; opacity: 0.5";
+            }
+            const td = document.createElement("td");
+            td.style.fontSize = "17px";
+            if (sc_nobtn) {
+              td.style.pointerEvents = "none";
+              td.style.opacity = "0.5";
+            }
+            const createButton = (text, state) => {
+              const button = document.createElement("button");
+              button.textContent = text;
+              if (data.Estado === state) {
+                button.className = "rojo";
               }
-              new_tr.appendChild(tdFechaISO);
-              break;
-            case "template":
-              const tdCustomTemplate = document.createElement("td");
-              new_tr.appendChild(tdCustomTemplate);
-              key.template(data, tdCustomTemplate);
-              break;
-            case "comanda":
-              const tdComanda = document.createElement("td");
-              tdComanda.style.verticalAlign = "top";
-              const parsedComanda = JSON.parse(data.Comanda);
-              const precio = SC_priceCalc(parsedComanda)[0];
-              
-              // Create a temporary div to parse the HTML from setLayeredImages
-              const tempDiv = document.createElement("div");
-              tempDiv.innerHTML = setLayeredImages(parsedComanda, data._key);
-              tdComanda.appendChild(tempDiv.firstChild);
-              
-              const pre = document.createElement("pre");
-              pre.style.fontSize = "15px";
-              pre.style.display = "inline-block";
-              pre.style.margin = "0";
-              pre.style.verticalAlign = "top";
-              pre.style.padding = "5px";
-              //looking like a post-it
-              pre.style.background = "rgba(255, 255, 0, 0.5)";
-              pre.style.border = "1px solid rgba(0, 0, 0, 0.2)";
-              pre.style.borderRadius = "5px";
-              pre.style.boxShadow = "2px 2px 5px rgba(0, 0, 0, 0.1)";
-              pre.style.height = "100%";
-              const spanPrecio = document.createElement("span");
-              spanPrecio.style.fontSize = "20px";
-              spanPrecio.innerHTML =
-                SC_Personas[data.Persona].Puntos >= 10 ?
-                `Total: Gratis!(${precio}c)` :
-                `Total: ${precio}c`;
-              pre.innerHTML = "<b>Ticket de compra</b> ";
-              pre.appendChild(document.createTextNode("\n"));
-              pre.innerHTML +=
-                SC_parse_short(parsedComanda) + "<hr>" + data.Notas + "<hr>";
-              pre.appendChild(spanPrecio);
-              
-              tdComanda.appendChild(pre);
-              new_tr.appendChild(tdComanda);
-              break;
-            case "comanda-status":
-              var sc_nobtn = "";
-              if (urlParams.get("sc_nobtn") == "yes") {
-                sc_nobtn = "pointer-events: none; opacity: 0.5";
-              }
-              const td = document.createElement("td");
-              td.style.fontSize = "17px";
-              if (sc_nobtn) {
-                td.style.pointerEvents = "none";
-                td.style.opacity = "0.5";
-              }
-              
-              // Create buttons
-              const createButton = (text, state) => {
-                const button = document.createElement("button");
-                button.textContent = text;
-                if (data.Estado === state) {
-                  button.className = "rojo";
-                }
-                button.onclick = (event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  data.Estado = state;
-                  var enc = TS_encrypt(data, SECRET, (encrypted) => {
-                    betterGunPut(ref.get(data._key), encrypted);
-                    toastr.success("Guardado!");
-                  });
-                  return false;
-                };
-                return button;
-              };
-              
-              // Create all buttons
-              const buttons = [
-                createButton("Pedido", "Pedido"),
-                createButton("En preparación", "En preparación"),
-                createButton("Listo", "Listo"),
-                createButton("Entregado", "Entregado"),
-                createButton("Deuda", "Deuda"),
-              ];
-              
-              // Create paid button separately due to different behavior
-              const paidButton = document.createElement("button");
-              paidButton.textContent = "Pagado";
-              paidButton.onclick = (event) => {
+              button.onclick = (event) => {
                 event.preventDefault();
                 event.stopPropagation();
-                if (
-                  !confirm(
-                    "¿Quieres marcar como pagado? - Se borrara la comanda y se actualizarán los puntos."
-                  )
-                ) {
-                  return false;
-                }
-                data.Estado = "Pagado";
-                betterGunPut(ref.get(data._key), null);
-                toastr.success("Guardado!");
-                if (SC_Personas[data.Persona].Puntos >= 10 && confirm("¿Pagar con Puntos? - Cancela para pagar con Efectivo.")) {
-                  SC_Personas[data.Persona].Puntos = parseInt(SC_Personas[data.Persona].Puntos) - 10;
-                  toastr.success(
-                    "¡Comada gratis para " +
-                    SC_Personas[data.Persona].Nombre +
-                    "!"
-                  );
-                  toastr.success(
-                    "¡Comada gratis para " +
-                    SC_Personas[data.Persona].Nombre +
-                    "!"
-                  );
-                } else {
-                  SC_Personas[data.Persona].Puntos = parseInt(SC_Personas[data.Persona].Puntos) + 1;
-                  toastr.success("¡Comada DE PAGO!");
-                }
-                TS_encrypt(SC_Personas[data.Persona], SECRET, (encrypted) => {
-                  betterGunPut(
-                    gun.get(TABLE).get("personas").get(data.Persona),
-                    encrypted
-                  );
+                data.Estado = state;
+                TS_encrypt(data, SECRET, (encrypted) => {
+                  betterGunPut(ref.get(data._key), encrypted);
+                  toastr.success("Guardado!");
                 });
                 return false;
               };
-              
-              // Add all buttons to td with line breaks between
-              buttons.forEach((button) => {
-                td.appendChild(button);
-                td.appendChild(document.createElement("br"));
-              });
-              td.appendChild(paidButton);
-              new_tr.appendChild(td);
-              
-              // Event handlers are now attached during button creation
-              break;
-            case "persona":
-              if (key.self == true) {
-                var persona = data
-              } else {
-                var persona = SC_Personas[data[key.key]] || {};
+              return button;
+            };
+            const buttons = [
+              createButton("Pedido", "Pedido"),
+              createButton("En preparación", "En preparación"),
+              createButton("Listo", "Listo"),
+              createButton("Entregado", "Entregado"),
+              createButton("Deuda", "Deuda"),
+            ];
+            const paidButton = document.createElement("button");
+            paidButton.textContent = "Pagado";
+            paidButton.onclick = (event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              if (!confirm("¿Quieres marcar como pagado? - Se borrara la comanda y se actualizarán los puntos.")) {
+                return false;
               }
-              
-              const regco = stringToColour(
-                (persona.Region || "?").toLowerCase()
-              );
-              
-              const tdPersona = document.createElement("td");
-              tdPersona.style.textAlign = "center";
-              tdPersona.style.fontSize = "20px";
-              tdPersona.style.backgroundColor = regco;
-              tdPersona.style.color = colorIsDarkAdvanced(regco);
-              
-              const regionSpan = document.createElement("span");
-              regionSpan.style.fontSize = "40px";
-              regionSpan.style.textTransform = "capitalize";
-              regionSpan.textContent = (persona.Region || "?").toLowerCase();
-              tdPersona.appendChild(regionSpan);
-              
-              tdPersona.appendChild(document.createElement("br"));
-              
-              const infoSpan = document.createElement("span");
-              infoSpan.style.backgroundColor = "white";
-              infoSpan.style.border = "2px solid black";
-              infoSpan.style.borderRadius = "5px";
-              infoSpan.style.display = "inline-block";
-              infoSpan.style.padding = "5px";
-              infoSpan.style.color = "black";
-              
-              const img = document.createElement("img");
-              img.src = persona.Foto || "static/ico/user_generic.png";
-              img.height = 70;
-              infoSpan.appendChild(img);
-              
-              infoSpan.appendChild(document.createElement("br"));
-              infoSpan.appendChild(
-                document.createTextNode(persona.Nombre || "")
-              );
-              
-              infoSpan.appendChild(document.createElement("br"));
-              const pointsSpan = document.createElement("span");
-              pointsSpan.style.fontSize = "17px";
-              pointsSpan.textContent = (persona.Puntos || "0") + " puntos.";
-              infoSpan.appendChild(pointsSpan);
-              
-              tdPersona.appendChild(infoSpan);
-              new_tr.appendChild(tdPersona);
-              break;
-              
-            default:
-              break;
+              data.Estado = "Pagado";
+              betterGunPut(ref.get(data._key), null);
+              toastr.success("Guardado!");
+              if (SC_Personas[data.Persona].Puntos >= 10 && confirm("¿Pagar con Puntos? - Cancela para pagar con Efectivo.")) {
+                SC_Personas[data.Persona].Puntos = parseInt(SC_Personas[data.Persona].Puntos) - 10;
+                toastr.success("¡Comada gratis para " + SC_Personas[data.Persona].Nombre + "!");
+                toastr.success("¡Comada gratis para " + SC_Personas[data.Persona].Nombre + "!");
+              } else {
+                SC_Personas[data.Persona].Puntos = parseInt(SC_Personas[data.Persona].Puntos) + 1;
+                toastr.success("¡Comada DE PAGO!");
+              }
+              TS_encrypt(SC_Personas[data.Persona], SECRET, (encrypted) => {
+                betterGunPut(gun.get(TABLE).get("personas").get(data.Persona), encrypted);
+              });
+              return false;
+            };
+            buttons.forEach((button) => {
+              td.appendChild(button);
+              td.appendChild(document.createElement("br"));
+            });
+            td.appendChild(paidButton);
+            new_tr.appendChild(td);
+            break;
           }
-        });
-        new_tr.onclick = (event) => {
-          setUrlHash(pageco + "," + data._key);
-        };
+          case "persona": {
+            let persona = key.self === true ? data : SC_Personas[data[key.key]] || {};
+            const regco = stringToColour((persona.Region || "?").toLowerCase());
+            const tdPersona = document.createElement("td");
+            tdPersona.style.textAlign = "center";
+            tdPersona.style.fontSize = "20px";
+            tdPersona.style.backgroundColor = regco;
+            tdPersona.style.color = colorIsDarkAdvanced(regco);
+            const regionSpan = document.createElement("span");
+            regionSpan.style.fontSize = "40px";
+            regionSpan.style.textTransform = "capitalize";
+            regionSpan.textContent = (persona.Region || "?").toLowerCase();
+            tdPersona.appendChild(regionSpan);
+            tdPersona.appendChild(document.createElement("br"));
+            const infoSpan = document.createElement("span");
+            infoSpan.style.backgroundColor = "white";
+            infoSpan.style.border = "2px solid black";
+            infoSpan.style.borderRadius = "5px";
+            infoSpan.style.display = "inline-block";
+            infoSpan.style.padding = "5px";
+            infoSpan.style.color = "black";
+            const img = document.createElement("img");
+            img.src = persona.Foto || "static/ico/user_generic.png";
+            img.height = 70;
+            infoSpan.appendChild(img);
+            infoSpan.appendChild(document.createElement("br"));
+            infoSpan.appendChild(document.createTextNode(persona.Nombre || ""));
+            infoSpan.appendChild(document.createElement("br"));
+            const pointsSpan = document.createElement("span");
+            pointsSpan.style.fontSize = "17px";
+            pointsSpan.textContent = (persona.Puntos || "0") + " puntos.";
+            infoSpan.appendChild(pointsSpan);
+            tdPersona.appendChild(infoSpan);
+            new_tr.appendChild(tdPersona);
+            break;
+          }
+          default:
+            break;
+        }
       });
+      new_tr.onclick = (event) => {
+        setUrlHash(pageco + "," + data._key);
+      };
+      fragment.appendChild(new_tr);
+    }
+    // Replace tbody in one operation
+    tablebody_EL.innerHTML = "";
+    tablebody_EL.appendChild(fragment);
   }
   ref.map().on((data, key, _msg, _ev) => {
     EventListeners.GunJS.push(_ev);
@@ -1053,7 +1018,7 @@ function TS_IndexElement(
       } else {
         delete rows[key];
       }
-      render();
+      debounce("loadrow", render, 300, [rows])
     }
     if (typeof data == "string") {
       TS_decrypt(data, SECRET, (data) => {
