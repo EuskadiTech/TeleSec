@@ -20,7 +20,7 @@ PAGES.index = {
     var qrscan = safeuuid()
     container.innerHTML = `
       <h1>Escanear Codigo QR</h1>
-      <div id="${qrscan}"></div>
+      <div style="max-width: 400px;" id="${qrscan}"></div>
       <br><br>`;
     var html5QrcodeScanner = new Html5QrcodeScanner(
       qrscan, { fps: 10, qrbox: 250 });
