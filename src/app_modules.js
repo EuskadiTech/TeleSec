@@ -513,6 +513,32 @@ const SC_actions = {
 };
 var SC_Personas = {};
 // Listado precargado de personas:
+function TS_decrypt(input, secret, callback) {
+  // if input starts with "SEA{" and ends with "}", then it's encrypted with SEA
+  // if not, it is encrypted with RSA
+  if (typeof input != "string") {
+    callback(input);
+  } else if (input.startsWith("SEA{") && input.endsWith("}")) {
+    Gun.SEA.decrypt(input, secret).then((decrypted) => {
+      callback(decrypted);
+    });
+  } else if (input.startsWith("RSA{") && input.endsWith("}")) {
+    // ignore RSA{}
+    var data = input.slice(4, -1);
+    var decrypted = CryptoJS.AES.decrypt(data, secret).toString(CryptoJS.enc.Utf8);
+    callback(decrypted);
+  }
+}
+function TS_encrypt(input, secret, callback, mode = "RSA") {
+  if (mode == "SEA") {
+    Gun.TS_encrypt(input, secret).then((encrypted) => {
+      callback(encrypted);
+    });
+  } else if (mode == "RSA") {
+    var encrypted = CryptoJS.AES.encrypt(input, secret).toString();
+    callback("RSA{" + encrypted + "}");
+  }
+}
 gun
   .get(TABLE)
   .get("personas")
@@ -527,7 +553,7 @@ gun
       }
     }
     if (typeof data == "string") {
-      SEA.decrypt(data, SECRET, (data) => {
+      TS_decrypt(data, SECRET, (data) => {
         add_row(data, key);
       });
     } else {
@@ -887,7 +913,7 @@ function TS_IndexElement(
                   event.preventDefault();
                   event.stopPropagation();
                   data.Estado = state;
-                  var enc = SEA.encrypt(data, SECRET, (encrypted) => {
+                  var enc = TS_encrypt(data, SECRET, (encrypted) => {
                     betterGunPut(ref.get(data._key), encrypted);
                     toastr.success("Guardado!");
                   });
@@ -937,7 +963,7 @@ function TS_IndexElement(
                   SC_Personas[data.Persona].Puntos = parseInt(SC_Personas[data.Persona].Puntos) + 1;
                   toastr.success("¡Comada DE PAGO!");
                 }
-                SEA.encrypt(SC_Personas[data.Persona], SECRET, (encrypted) => {
+                TS_encrypt(SC_Personas[data.Persona], SECRET, (encrypted) => {
                   betterGunPut(
                     gun.get(TABLE).get("personas").get(data.Persona),
                     encrypted
@@ -1030,7 +1056,7 @@ function TS_IndexElement(
       render();
     }
     if (typeof data == "string") {
-      SEA.decrypt(data, SECRET, (data) => {
+      TS_decrypt(data, SECRET, (data) => {
         add_row(data, key);
       });
     } else {

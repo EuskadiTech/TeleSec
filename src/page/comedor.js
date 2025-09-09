@@ -40,7 +40,7 @@ PAGES.comedor = {
             data["Platos"] || "";
         }
         if (typeof data == "string") {
-          SEA.decrypt(data, SECRET, (data) => {
+          TS_decrypt(data, SECRET, (data) => {
             load_data(data, "%E");
           });
         } else {
@@ -59,7 +59,7 @@ PAGES.comedor = {
         betterGunPut(gun.get(TABLE).get("comedor").get(mid), null);
       }
       
-      var enc = SEA.encrypt(data, SECRET, (encrypted) => {
+      var enc = TS_encrypt(data, SECRET, (encrypted) => {
         document.getElementById("actionStatus").style.display = "block";
         betterGunPut(gun.get(TABLE).get("comedor").get(newDate), encrypted);
         toastr.success("Guardado!");

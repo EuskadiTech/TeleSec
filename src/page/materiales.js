@@ -74,7 +74,7 @@ PAGES.materiales = {
           document.getElementById(field_notas).value = data["Notas"] || "";
         }
         if (typeof data == "string") {
-          SEA.decrypt(data, SECRET, (data) => {
+          TS_decrypt(data, SECRET, (data) => {
             load_data(data, "%E");
           });
         } else {
@@ -91,7 +91,7 @@ PAGES.materiales = {
         Referencia: document.getElementById(field_referencia).value,
         Notas: document.getElementById(field_notas).value,
       };
-      var enc = SEA.encrypt(data, SECRET, (encrypted) => {
+      var enc = TS_encrypt(data, SECRET, (encrypted) => {
         document.getElementById("actionStatus").style.display = "block";
         betterGunPut(gun.get(TABLE).get("materiales").get(mid), encrypted);
         toastr.success("Guardado!");
@@ -159,7 +159,7 @@ PAGES.materiales = {
         select.appendChild(option);
       }
       if (typeof data === "string") {
-        SEA.decrypt(data, SECRET, (dec) => {
+        TS_decrypt(data, SECRET, (dec) => {
           if (dec) addUbicacion(dec);
         });
       } else {

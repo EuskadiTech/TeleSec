@@ -70,7 +70,7 @@ PAGES.notas = {
             );
           }
           if (typeof data == "string") {
-            SEA.decrypt(data, SECRET, (data) => {
+            TS_decrypt(data, SECRET, (data) => {
               load_data(data, "%E");
             });
           } else {
@@ -83,7 +83,7 @@ PAGES.notas = {
           Contenido: document.getElementById(field_contenido).value,
           Asunto: document.getElementById(field_asunto).value,
         };
-        var enc = SEA.encrypt(data, SECRET, (encrypted) => {
+        var enc = TS_encrypt(data, SECRET, (encrypted) => {
           document.getElementById("actionStatus").style.display = "block";
           betterGunPut(
             gun.get(TABLE).get("notas").get(mid),

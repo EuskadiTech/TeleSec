@@ -75,7 +75,7 @@ PAGES.dataman = {
             var value = entry[1];
             if (value != null) {
               if (typeof value == "string") {
-                SEA.decrypt(value, SECRET, (data) => {
+                TS_decrypt(value, SECRET, (data) => {
                   output[modul][key] = data;
                 });
               } else {
@@ -158,7 +158,7 @@ PAGES.dataman = {
         });
       } else {
         Object.entries(JSON.parse(val)["data"]).forEach((entry) => {
-          var enc = SEA.encrypt(entry[1], SECRET, (encrypted) => {
+          var enc = TS_encrypt(entry[1], SECRET, (encrypted) => {
             betterGunPut(gun.get(TABLE).get(sel).get(entry[0]), encrypted);
           });
         });
@@ -197,7 +197,7 @@ PAGES.dataman = {
           }
         }
         if (typeof data == "string") {
-          SEA.decrypt(data, SECRET, (data) => {
+          TS_decrypt(data, SECRET, (data) => {
             add_row(data, key);
           });
         } else {

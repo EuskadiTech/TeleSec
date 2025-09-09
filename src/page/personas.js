@@ -94,7 +94,7 @@ PAGES.personas = {
           document.getElementById(field_notas).value = data["markdown"] || "";
         }
         if (typeof data == "string") {
-          SEA.decrypt(data, SECRET, (data) => {
+          TS_decrypt(data, SECRET, (data) => {
             load_data(data, "%E");
           });
         } else {
@@ -128,7 +128,7 @@ PAGES.personas = {
         Foto: resized,
         markdown: document.getElementById(field_notas).value,
       };
-      var enc = SEA.encrypt(data, SECRET, (encrypted) => {
+      var enc = TS_encrypt(data, SECRET, (encrypted) => {
         document.getElementById("actionStatus").style.display = "block";
         betterGunPut(gun.get(TABLE).get("personas").get(mid), encrypted);
         toastr.success("Guardado!");

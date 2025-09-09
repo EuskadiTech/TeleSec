@@ -120,7 +120,7 @@ PAGES.avisos = {
             );
           }
           if (typeof data == "string") {
-            SEA.decrypt(data, SECRET, (data) => {
+            TS_decrypt(data, SECRET, (data) => {
               load_data(data, "%E");
             });
           } else {
@@ -147,7 +147,7 @@ PAGES.avisos = {
             .getElementById(field_estado)
             .value.replace("%%", "por_leer"),
         };
-        var enc = SEA.encrypt(data, SECRET, (encrypted) => {
+        var enc = TS_encrypt(data, SECRET, (encrypted) => {
           document.getElementById("actionStatus").style.display = "block";
           betterGunPut(
             gun.get(TABLE).get("notificaciones").get(mid),

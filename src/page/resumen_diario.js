@@ -72,7 +72,7 @@ PAGES.resumen_diario = {
           render_materialesLow();
         }
         if (typeof data == "string") {
-          SEA.decrypt(data, SECRET, (data) => {
+          TS_decrypt(data, SECRET, (data) => {
             add_row(data, key);
           });
         } else {
@@ -134,7 +134,7 @@ PAGES.resumen_diario = {
           render_personasHigh();
         }
         if (typeof data == "string") {
-          SEA.decrypt(data, SECRET, (data) => {
+          TS_decrypt(data, SECRET, (data) => {
             add_row(data, key);
           });
         } else {
@@ -155,7 +155,7 @@ PAGES.resumen_diario = {
           document.getElementById(table_comedor).innerHTML += data.Platos || "No hay platos registrados para hoy.";
         }
         if (typeof data == "string") {
-          SEA.decrypt(data, SECRET, (data) => {
+          TS_decrypt(data, SECRET, (data) => {
             add_row(data);
           });
         } else {

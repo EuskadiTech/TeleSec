@@ -55,7 +55,7 @@ PAGES.aulas = {
           );
         }
         if (typeof data == "string") {
-          SEA.decrypt(data, SECRET, (data) => {
+          TS_decrypt(data, SECRET, (data) => {
             add_row(data || {});
           });
         } else {
@@ -137,7 +137,7 @@ PAGES.aulas = {
           document.getElementById(field_autor).value = data["Solicitante"] || "";
         }
         if (typeof data == "string") {
-          SEA.decrypt(data, SECRET, (data) => {
+          TS_decrypt(data, SECRET, (data) => {
             load_data(data, "%E");
           });
         } else {
@@ -150,7 +150,7 @@ PAGES.aulas = {
         Contenido: document.getElementById(field_contenido).value,
         Asunto: document.getElementById(field_asunto).value,
       };
-      var enc = SEA.encrypt(data, SECRET, (encrypted) => {
+      var enc = TS_encrypt(data, SECRET, (encrypted) => {
         document.getElementById("actionStatus").style.display = "block";
         betterGunPut(gun.get(TABLE).get("aulas_solicitudes").get(mid), encrypted);
         toastr.success("Guardado!");
@@ -272,7 +272,7 @@ PAGES.aulas = {
           document.getElementById(field_fecha).value = data["Fecha"] || CurrentISODate();
         }
         if (typeof data == "string") {
-          SEA.decrypt(data, SECRET, (data) => {
+          TS_decrypt(data, SECRET, (data) => {
             load_data(data, "%E");
           });
         } else {
@@ -286,7 +286,7 @@ PAGES.aulas = {
         Asunto: document.getElementById(field_asunto).value,
         Fecha: document.getElementById(field_fecha).value || CurrentISODate(),
       };
-      var enc = SEA.encrypt(data, SECRET, (encrypted) => {
+      var enc = TS_encrypt(data, SECRET, (encrypted) => {
         document.getElementById("actionStatus").style.display = "block";
         betterGunPut(gun.get(TABLE).get("aulas_informes").get(mid), encrypted);
         toastr.success("Guardado!");
