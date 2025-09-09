@@ -761,6 +761,7 @@ function TS_IndexElement(
       }
       // If persona field exists, sort by Region, then by Nombre
       if (a.Persona && b.Persona) {
+        console.log(a.Persona, SC_Personas[a.Persona])
         const personaA = SC_Personas[a.Persona] || { Nombre: "", Region: "" };
         const personaB = SC_Personas[b.Persona] || { Nombre: "", Region: "" };
         if (personaA.Region < personaB.Region) return -1;
