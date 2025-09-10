@@ -691,6 +691,8 @@ function TS_IndexElement(
   var tablehead = safeuuid();
   var scrolltable = safeuuid();
   var searchKeyInput = safeuuid();
+  var debounce_search = safeuuid();
+  var debounce_load = safeuuid();
   
   // Create the container with search bar and table
   container.innerHTML = `
@@ -720,7 +722,7 @@ function TS_IndexElement(
   const searchKeyEl = document.getElementById(searchKeyInput);
   searchKeyEl.addEventListener(
     "input",
-    () => debounce("search", render, 300, [rows])
+    () => debounce(debounce_search, render, 300, [rows])
   );
   
   function searchInData(data, searchValue, config) {
@@ -1017,7 +1019,7 @@ function TS_IndexElement(
       } else {
         delete rows[key];
       }
-      debounce("loadrow", render, 300, [rows])
+      debounce(debounce_load, render, 300, [rows])
     }
     if (typeof data == "string") {
       TS_decrypt(data, SECRET, (data) => {
