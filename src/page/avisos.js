@@ -91,7 +91,7 @@ PAGES.avisos = {
             document.getElementById(field_asunto).value = data["Asunto"] || "";
             document.getElementById(field_mensaje).value =
               data["Mensaje"] || "";
-            document.getElementById(field_origen).value = data["Origen"] || "";
+            document.getElementById(field_origen).value = data["Origen"] || SUB_LOGGED_IN_ID || "";
             document.getElementById(field_destino).value =
               data["Destino"] || "";
             document.getElementById(field_estado).value = data["Estado"] || "%%" || "";
