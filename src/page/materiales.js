@@ -191,7 +191,11 @@ PAGES.materiales = {
         config,
         gun.get(TABLE).get("materiales"),
         document.getElementById("tableContainer"),
-        undefined,
+        function(data, new_tr) {
+          if (data.Cantidad <= data.Cantidad_Minima) {
+            new_tr.style.background = "lightcoral"
+          }
+        },
         function(data) {
           if (data.Ubicacion == filtroUbicacion) {return false}
           if (filtroUbicacion == "") {return false}
