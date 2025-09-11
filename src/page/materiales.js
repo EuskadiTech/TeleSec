@@ -58,7 +58,8 @@ PAGES.materiales = {
       .get(TABLE)
       .get("materiales")
       .get(mid)
-      .once((data, key) => {
+      .once((data, key, _msg, _ev) => {
+        EventListeners.GunJS.push(_ev)
         function load_data(data, ENC = "") {
           document.getElementById(nameh1).innerText = key;
           document.getElementById(field_nombre).value = data["Nombre"] || "";
