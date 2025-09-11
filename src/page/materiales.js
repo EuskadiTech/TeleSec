@@ -192,7 +192,7 @@ PAGES.materiales = {
         gun.get(TABLE).get("materiales"),
         document.getElementById("tableContainer"),
         function(data, new_tr) {
-          if (data.Cantidad <= data.Cantidad_Minima) {
+          if (parseFloat(data.Cantidad) <= parseFloat(data.Cantidad_Minima)) {
             new_tr.style.background = "lightcoral"
           }
         },
