@@ -1123,7 +1123,7 @@ setInterval(() => {
     SetPages()
     open_page(location.hash.replace("#", ""));
   }
-}, 1500);
+}, 1000);
 
 
 const tabs = document.querySelectorAll('.ribbon-tab');
