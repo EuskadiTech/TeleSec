@@ -152,6 +152,7 @@ PAGES.materiales = {
         if (!data) return;
 
         function addUbicacion(d) {
+          console.warn(d)
           const ubicacion = d.Ubicacion || "-";
           const select = document.getElementById(select_ubicacion);
 
