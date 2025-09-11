@@ -161,17 +161,19 @@ PAGES.materiales = {
           }
 
           const optionExists = Array.from(select.options).some(opt => opt.value === ubicacion);
-          if (optionExists) return;
-
-          const option = document.createElement("option");
-          option.value = ubicacion;
-          option.textContent = ubicacion;
-          select.appendChild(option);
+          if (!optionExists) {
+            const option = document.createElement("option");
+            option.value = ubicacion;
+            option.textContent = ubicacion;
+            select.appendChild(option);
+          }
         }
 
         if (typeof data === "string") {
           TS_decrypt(data, SECRET, (dec) => {
-            if (dec) addUbicacion(dec);
+            if (dec && typeof dec === "object") {
+              addUbicacion(dec);
+            }
           });
         } else {
           addUbicacion(data);
@@ -180,6 +182,7 @@ PAGES.materiales = {
         console.warn("Error processing ubicacion:", error);
       }
     });
+
 
     // Función para renderizar la tabla filtrada
     function renderTable(filtroUbicacion) {
