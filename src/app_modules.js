@@ -1102,6 +1102,7 @@ setInterval(() => {
 
 setInterval(() => {
   BootLoops =+ 1;
+  console.log("BootLoops", BootLoops)
   if ((BootLoops >= TimeoutBoot || window.navigator.onLine == false) && !Booted) {
     Booted = true;
     document.getElementById("loading").style.display = "none";
