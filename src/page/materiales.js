@@ -150,15 +150,25 @@ PAGES.materiales = {
     gun.get(TABLE).get("materiales").once().map().once((data, key) => {
       try {
         if (!data) return;
+
         function addUbicacion(d) {
-          let ubicacion = d.Ubicacion || "-";
-          let select = document.getElementById(select_ubicacion);
-          if ([...select.options].some(opt => opt.value === ubicacion)) return;
-          let option = document.createElement("option");
+          const ubicacion = d.Ubicacion || "-";
+          const select = document.getElementById(select_ubicacion);
+
+          if (!select) {
+            console.warn(`Element with ID "${select_ubicacion}" not found.`);
+            return;
+          }
+
+          const optionExists = Array.from(select.options).some(opt => opt.value === ubicacion);
+          if (optionExists) return;
+
+          const option = document.createElement("option");
           option.value = ubicacion;
           option.textContent = ubicacion;
           select.appendChild(option);
         }
+
         if (typeof data === "string") {
           TS_decrypt(data, SECRET, (dec) => {
             if (dec) addUbicacion(dec);
@@ -167,7 +177,7 @@ PAGES.materiales = {
           addUbicacion(data);
         }
       } catch (error) {
-        console.warn(error)
+        console.warn("Error processing ubicacion:", error);
       }
     });
 
