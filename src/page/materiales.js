@@ -58,8 +58,7 @@ PAGES.materiales = {
       .get(TABLE)
       .get("materiales")
       .get(mid)
-      .once((data, key, _msg, _ev) => {
-        EventListeners.GunJS.push(_ev)
+      .once((data, key) => {
         function load_data(data, ENC = "") {
           document.getElementById(nameh1).innerText = key;
           document.getElementById(field_nombre).value = data["Nombre"] || "";
@@ -148,23 +147,27 @@ PAGES.materiales = {
     ];
 
     // Obtener todas las ubicaciones únicas y poblar el <select>, desencriptando si es necesario
-    gun.get(TABLE).get("materiales").map().once((data, key) => {
-      if (!data) return;
-      function addUbicacion(d) {
-        let ubicacion = d.Ubicacion || "-";
-        let select = document.getElementById(select_ubicacion);
-        if ([...select.options].some(opt => opt.value === ubicacion)) return;
-        let option = document.createElement("option");
-        option.value = ubicacion;
-        option.textContent = ubicacion;
-        select.appendChild(option);
-      }
-      if (typeof data === "string") {
-        TS_decrypt(data, SECRET, (dec) => {
-          if (dec) addUbicacion(dec);
-        });
-      } else {
-        addUbicacion(data);
+    gun.get(TABLE).get("materiales").once().map().once((data, key) => {
+      try {
+        if (!data) return;
+        function addUbicacion(d) {
+          let ubicacion = d.Ubicacion || "-";
+          let select = document.getElementById(select_ubicacion);
+          if ([...select.options].some(opt => opt.value === ubicacion)) return;
+          let option = document.createElement("option");
+          option.value = ubicacion;
+          option.textContent = ubicacion;
+          select.appendChild(option);
+        }
+        if (typeof data === "string") {
+          TS_decrypt(data, SECRET, (dec) => {
+            if (dec) addUbicacion(dec);
+          });
+        } else {
+          addUbicacion(data);
+        }
+      } catch (error) {
+        console.warn(error)
       }
     });
 
