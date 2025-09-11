@@ -14,7 +14,7 @@ PAGES.resumen_diario = {
       return;
     }
     container.innerHTML = `
-      <h1>Resumen Diario</h1>
+      <h1>Resumen Diario ${CurrentISODate()}</h1>
       <button onclick="print()">Imprimir</button>
       <br><span class="btn7" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black;"><b>Menú Comedor:</b> <br><span id="${data_Comedor}">Cargando...</span></span>
       <br><span class="btn6" style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black;"><b>Tareas:</b> <br><pre style="overflow-wrap: break-word;white-space:pre-wrap;" id="${data_Tareas}">Cargando...</pre></span>
