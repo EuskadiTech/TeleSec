@@ -147,12 +147,11 @@ PAGES.materiales = {
     ];
 
     // Obtener todas las ubicaciones únicas y poblar el <select>, desencriptando si es necesario
-    gun.get(TABLE).get("materiales").once().map().once((data, key) => {
+    gun.get(TABLE).get("materiales").map().once((data, key) => {
       try {
         if (!data) return;
 
         function addUbicacion(d) {
-          console.warn(d)
           const ubicacion = d.Ubicacion || "-";
           const select = document.getElementById(select_ubicacion);
 
