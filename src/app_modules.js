@@ -1093,7 +1093,7 @@ function SetPages() {
   document.getElementById("appendApps2").append(a);
 }
 var Booted = false;
-var TimeoutBoot = 4;
+var TimeoutBoot = 6;
 var BootLoops = 0;
 getPeers();
 setInterval(() => {
