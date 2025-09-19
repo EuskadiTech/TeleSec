@@ -788,7 +788,7 @@ function TS_IndexElement(
   function sorter(a, b) {
     // 1. Fecha (ascending)
     if (a.Fecha && b.Fecha && a.Fecha !== b.Fecha) {
-      return a.Fecha < b.Fecha ? -1 : 1;
+      return a.Fecha > b.Fecha ? -1 : 1;
     }
     // 2. Region (ascending, from SC_Personas if Persona exists)
     const regionA = a.Persona && SC_Personas[a.Persona] ? SC_Personas[a.Persona].Region || "" : a.Region || "";
