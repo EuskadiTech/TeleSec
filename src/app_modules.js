@@ -953,8 +953,8 @@ function TS_IndexElement(
               });
               return false;
             };
-            tr.append(data.Fecha)
-            tr.append(document.createElement("br")
+            td.append(data.Fecha)
+            td.append(document.createElement("br"))
             buttons.forEach((button) => {
               td.appendChild(button);
               td.appendChild(document.createElement("br"));
