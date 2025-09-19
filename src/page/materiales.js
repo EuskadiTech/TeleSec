@@ -19,41 +19,41 @@ PAGES.materiales = {
     var btn_guardar = safeuuid();
     var btn_borrar = safeuuid();
     container.innerHTML = `
-                <h1>Material <code id="${nameh1}"></code></h1>
-                ${BuildQR("materiales," + mid, "Este Material")}
-                <fieldset>
-                    <label>
-                        Referencia<br>
-                        <input type="text" id="${field_referencia}" value="?"><br><br>
-                    </label>
-                    <label>
-                        Nombre<br>
-                        <input type="text" id="${field_nombre}"><br><br>
-                    </label>
-                    <label>
-                        Unidad<br>
-                        <input type="text" id="${field_unidad}"><br><br>
-                    </label>
-                    <label>
-                        Cantidad Actual<br>
-                        <input type="number" step="0.5" id="${field_cantidad}"><br><br>
-                    </label>
-                    <label>
-                        Cantidad Minima<br>
-                        <input type="number" step="0.5" id="${field_cantidad_min}"><br><br>
-                    </label>
-                    <label>
-                        Ubicación<br>
-                        <input type="text" id="${field_ubicacion}" value="-"><br><br>
-                    </label>
-                    <label>
-                        Notas<br>
-                        <textarea id="${field_notas}"></textarea><br><br>
-                    </label><hr>
-                    <button class="btn5" id="${btn_guardar}">Guardar</button>
-                    <button class="rojo" id="${btn_borrar}">Borrar</button>
-                </fieldset>
-                `;
+      <h1>Material <code id="${nameh1}"></code></h1>
+      ${BuildQR("materiales," + mid, "Este Material")}
+      <fieldset>
+        <label>
+          Referencia<br>
+          <input type="text" id="${field_referencia}" value="?"><br><br>
+        </label>
+        <label>
+          Nombre<br>
+          <input type="text" id="${field_nombre}"><br><br>
+        </label>
+        <label>
+          Unidad<br>
+          <input type="text" id="${field_unidad}"><br><br>
+        </label>
+        <label>
+          Cantidad Actual<br>
+          <input type="number" step="0.5" id="${field_cantidad}"><br><br>
+        </label>
+        <label>
+          Cantidad Minima<br>
+          <input type="number" step="0.5" id="${field_cantidad_min}"><br><br>
+        </label>
+        <label>
+          Ubicación<br>
+          <input type="text" id="${field_ubicacion}" value="-"><br><br>
+        </label>
+        <label>
+          Notas<br>
+          <textarea id="${field_notas}"></textarea><br><br>
+        </label><hr>
+        <button class="btn5" id="${btn_guardar}">Guardar</button>
+        <button class="rojo" id="${btn_borrar}">Borrar</button>
+      </fieldset>
+    `;
     gun
       .get(TABLE)
       .get("materiales")
@@ -62,7 +62,7 @@ PAGES.materiales = {
         function load_data(data, ENC = "") {
           document.getElementById(nameh1).innerText = key;
           document.getElementById(field_nombre).value = data["Nombre"] || "";
-          document.getElementById(field_unidad).value = data["Unidad"] || "";
+          document.getElementById(field_unidad).value = data["Unidad"] || "unidad(es)";
           document.getElementById(field_cantidad).value =
             data["Cantidad"] || "";
           document.getElementById(field_cantidad_min).value =
