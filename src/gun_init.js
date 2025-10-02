@@ -62,11 +62,25 @@ function updateConnectionStatus(peerCount) {
     window.peerRetryCount = (window.peerRetryCount + 1) % 3;
     if (window.peerRetryCount === 0) {
       gun.opt({ peers: RELAYS });
+      
+      // Enhanced peer connection retry
+      setTimeout(() => {
+        gun.opt({ peers: RELAYS });
+      }, 1000);
+      
+      setTimeout(() => {
+        gun.opt({ peers: RELAYS });
+      }, 3000);
     }
     AtLeastThreePeers = false;
   } else {
     ConnectionStarted = true;
     AtLeastThreePeers = true;
+    
+    // When we have good connectivity, force a data refresh
+    if (typeof refreshAllData === 'function') {
+      setTimeout(refreshAllData, 1000);
+    }
   }
 }
 

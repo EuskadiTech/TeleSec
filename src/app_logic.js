@@ -62,7 +62,15 @@ function open_page(params) {
 function setUrlHash(hash) {
   location.hash = "#" + hash;
   
-  
+  // Handle quick search transfer
+  if (hash === 'buscar') {
+    const quickSearchInput = document.getElementById('quickSearchInput');
+    if (quickSearchInput && quickSearchInput.value.trim()) {
+      // Store the search term temporarily
+      sessionStorage.setItem('telesec_quick_search', quickSearchInput.value.trim());
+      quickSearchInput.value = ''; // Clear the input
+    }
+  }
 }
 window.onhashchange = () => {
   open_page(location.hash.replace("#", ""));

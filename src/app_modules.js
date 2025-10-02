@@ -1102,7 +1102,7 @@ setInterval(() => {
   getPeers();
 }, 750);
 
-setInterval(() => {
+var BootIntervalID = setInterval(() => {
   BootLoops += 1;
   console.log("BootLoops", BootLoops)
   if ((BootLoops >= TimeoutBoot || window.navigator.onLine == false) && !Booted) {
@@ -1115,6 +1115,7 @@ setInterval(() => {
       SetPages()
       open_page(location.hash.replace("#", ""));
     }
+    clearInterval(BootIntervalID);
   }
   if (ConnectionStarted && !Booted) {
     Booted = true;
@@ -1125,6 +1126,7 @@ setInterval(() => {
     }
     SetPages()
     open_page(location.hash.replace("#", ""));
+    clearInterval(BootIntervalID);
   }
 }, 1000);
 
@@ -1132,6 +1134,7 @@ setInterval(() => {
 const tabs = document.querySelectorAll('.ribbon-tab');
 const detailTabs = {
   modulos: document.getElementById('tab-modulos'),
+  buscar: document.getElementById('tab-buscar'),
   credenciales: document.getElementById('tab-credenciales')
 };
 
@@ -1153,3 +1156,224 @@ tabs.forEach(tab => {
     tab.classList.add('active');
   });
 });
+
+// Global Search Functionality
+function GlobalSearch() {
+  const searchData = {};
+  const allSearchableModules = [
+    { role: 'personas', key: 'personas', title: 'Personas', icon: 'static/appico/File_Person.svg', fields: ['Nombre', 'Region', 'Notas', 'email'] },
+    { role: 'materiales', key: 'materiales', title: 'Materiales', icon: 'static/appico/Database.svg', fields: ['Nombre', 'Referencia', 'Ubicacion', 'Notas'] },
+    { role: 'supercafe', key: 'supercafe', title: 'SuperCafé', icon: 'static/appico/Coffee.svg', fields: ['Persona', 'Comanda', 'Estado'] },
+    { role: 'comedor', key: 'comedor', title: 'Comedor', icon: 'static/appico/Meal.svg', fields: ['Fecha', 'Platos'] },
+    { role: 'notas', key: 'notas', title: 'Notas', icon: 'static/appico/Notepad.svg', fields: ['Asunto', 'Contenido', 'Autor'] },
+    { role: 'notificaciones', key: 'notificaciones', title: 'Avisos', icon: 'static/appico/Alert_Warning.svg', fields: ['Asunto', 'Mensaje', 'Origen', 'Destino'] },
+    { role: 'aulas', key: 'aulas_solicitudes', title: 'Solicitudes de Aulas', icon: 'static/appico/Classroom.svg', fields: ['Asunto', 'Contenido', 'Solicitante'] },
+    { role: 'aulas', key: 'aulas_informes', title: 'Informes de Aulas', icon: 'static/appico/Newspaper.svg', fields: ['Asunto', 'Contenido', 'Autor', 'Fecha'] }
+  ];
+  
+  // Filter modules based on user permissions
+  const searchableModules = allSearchableModules.filter(module => {
+    return checkRole(module.role);
+  });
+
+  // Load all data from modules
+  function loadAllData() {
+    searchableModules.forEach(module => {
+      searchData[module.key] = {};
+      gun.get(TABLE).get(module.key).map().on((data, key) => {
+        if (!data) return;
+        
+        function processData(processedData) {
+          if (processedData && typeof processedData === 'object') {
+            searchData[module.key][key] = {
+              _key: key,
+              _module: module.key,
+              _title: module.title,
+              _icon: module.icon,
+              ...processedData
+            };
+          }
+        }
+
+        if (typeof data === "string") {
+          TS_decrypt(data, SECRET, processData);
+        } else {
+          processData(data);
+        }
+      });
+    });
+  }
+
+  // Perform search across all modules
+  function performSearch(searchTerm) {
+    if (!searchTerm || searchTerm.length < 2) return [];
+    
+    const results = [];
+    const searchLower = searchTerm.toLowerCase();
+
+    searchableModules.forEach(module => {
+      const moduleData = searchData[module.key] || {};
+      
+      Object.values(moduleData).forEach(item => {
+        if (!item) return;
+        
+        let relevanceScore = 0;
+        let matchedFields = [];
+        
+        // Search in key/ID
+        if (item._key && item._key.toLowerCase().includes(searchLower)) {
+          relevanceScore += 10;
+          matchedFields.push('ID');
+        }
+        
+        // Search in configured fields
+        module.fields.forEach(field => {
+          const value = item[field];
+          if (!value) return;
+          
+          let searchValue = '';
+          
+          // Handle special field types
+          if (field === 'Persona' && SC_Personas[value]) {
+            searchValue = SC_Personas[value].Nombre || '';
+          } else if (field === 'Comanda' && typeof value === 'string') {
+            try {
+              const comandaData = JSON.parse(value);
+              searchValue = Object.values(comandaData).join(' ');
+            } catch (e) {
+              searchValue = value;
+            }
+          } else {
+            searchValue = String(value);
+          }
+          
+          if (searchValue.toLowerCase().includes(searchLower)) {
+            relevanceScore += field === 'Nombre' || field === 'Asunto' ? 5 : 2;
+            matchedFields.push(field);
+          }
+        });
+        
+        if (relevanceScore > 0) {
+          results.push({
+            ...item,
+            _relevance: relevanceScore,
+            _matchedFields: matchedFields
+          });
+        }
+      });
+    });
+    
+    return results.sort((a, b) => b._relevance - a._relevance);
+  }
+
+  // Render search results
+  function renderResults(results, container) {
+    if (results.length === 0) {
+      container.innerHTML = `
+        <fieldset>
+          <legend>Sin resultados</legend>
+          <div>🚫 No se encontraron resultados</div>
+          <p>Prueba con otros términos de búsqueda o usa filtros diferentes</p>
+        </fieldset>
+      `;
+      return;
+    }
+    
+    let html = '';
+    
+    // Group by module
+    const groupedResults = {};
+    results.forEach(result => {
+      if (!groupedResults[result._module]) {
+        groupedResults[result._module] = [];
+      }
+      groupedResults[result._module].push(result);
+    });
+    
+    Object.entries(groupedResults).forEach(([moduleKey, moduleResults]) => {
+      const module = searchableModules.find(m => m.key === moduleKey);
+      if (!module) return;
+      
+      html += `
+        <fieldset>
+          <legend>
+            <img src="${module.icon}" height="20"> ${module.title} (${moduleResults.length})
+          </legend>
+      `;
+      
+      moduleResults.slice(0, 5).forEach(result => {
+        let title = result.Nombre || result.Asunto || result._key;
+        let subtitle = '';
+        
+        // Handle comedor specific display
+        if (result._module === 'comedor') {
+          title = result.Fecha ? `Menú del ${result.Fecha.split('-').reverse().join('/')}` : result._key;
+          if (result.Platos) {
+            subtitle = `🍽️ ${result.Platos.substring(0, 50)}${result.Platos.length > 50 ? '...' : ''}`;
+          }
+        } else {
+          // Default display for other modules
+          if (result.Persona && SC_Personas[result.Persona]) {
+            subtitle = `👤 ${SC_Personas[result.Persona].Nombre}`;
+          }
+          if (result.Fecha) {
+            const fecha = result.Fecha.split('-').reverse().join('/');
+            subtitle += subtitle ? ` • 📅 ${fecha}` : `📅 ${fecha}`;
+          }
+          if (result.Region) {
+            subtitle += subtitle ? ` • 🌍 ${result.Region}` : `🌍 ${result.Region}`;
+          }
+        }
+        
+        html += `
+          <button onclick="navigateToResult('${moduleKey}', '${result._key}')" class="button">
+            <strong>${title}</strong>
+            ${subtitle ? `<br><small>${subtitle}</small>` : ''}
+            <br><code>📍 ${result._matchedFields.join(', ')}</code>
+          </button>
+        `;
+      });
+      
+      if (moduleResults.length > 5) {
+        let moreLink = moduleKey;
+        if (moduleKey === 'aulas_solicitudes') {
+          moreLink = 'aulas,solicitudes';
+        } else if (moduleKey === 'aulas_informes') {
+          moreLink = 'aulas,informes';
+        }
+        
+        html += `
+          <hr>
+          <button onclick="setUrlHash('${moreLink}')" class="btn8">
+            Ver ${moduleResults.length - 5} resultados más en ${module.title}
+          </button>
+        `;
+      }
+      
+      html += '</fieldset>';
+    });
+    
+    container.innerHTML = html;
+  }
+
+  return {
+    loadAllData,
+    performSearch,
+    renderResults,
+    getAccessibleModules: () => searchableModules
+  };
+}
+
+// Helper function to navigate to search results
+function navigateToResult(moduleKey, resultKey) {
+  switch (moduleKey) {
+    case 'aulas_solicitudes':
+      setUrlHash('aulas,solicitudes,' + resultKey);
+      break;
+    case 'aulas_informes':
+      setUrlHash('aulas,informes,' + resultKey);
+      break;
+    default:
+      setUrlHash(moduleKey + ',' + resultKey);
+  }
+}

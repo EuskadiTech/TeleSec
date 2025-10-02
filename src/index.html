@@ -19,6 +19,7 @@
     <div class="ribbon-content">
       <div class="ribbon-tabs">
         <div class="ribbon-tab active" data-tab="modulos">Modulos</div>
+        <div class="ribbon-tab" data-tab="buscar">🔍 Buscar</div>
         <div class="ribbon-tab" data-tab="credenciales">Credenciales</div>
       </div>
       
@@ -26,6 +27,18 @@
       <details id="tab-modulos" open>
         <summary hidden>Modulos</summary>
         <div class="ribbon-panel" id="appendApps2">
+        </div>
+      </details>
+      
+      <!-- Tab: Buscar -->
+      <details id="tab-buscar">
+        <summary hidden>Buscar</summary>
+        <div class="ribbon-panel">
+          <input type="text" id="quickSearchInput" placeholder="Búsqueda rápida..." 
+                 onkeypress="if(event.key==='Enter') document.getElementById('quickSearchBtn').click()">
+          <button id="quickSearchBtn" onclick="setUrlHash('buscar')" class="btn5">
+            Buscar
+          </button>
         </div>
       </details>
       
@@ -112,6 +125,7 @@
   <script src="page/avisos.js"></script>
   <script src="page/comedor.js"></script>
   <script src="page/notas.js"></script>
+  <script src="page/buscar.js"></script>
 </body>
 
 </html>
