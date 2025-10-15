@@ -4,6 +4,7 @@ PAGES.avisos = {
     navcss: "btn5",
     icon: "static/appico/File_Plugin.svg",
     AccessControl: true,
+    Esconder: true,
     Title: "Avisos",
     edit: function (mid) {
       if (!checkRole("avisos:edit")) {setUrlHash("avisos");return}

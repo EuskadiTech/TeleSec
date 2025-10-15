@@ -3,6 +3,7 @@ PAGES.buscar = {
   icon: "static/appico/File_Plugin.svg",
   Title: "Buscar",
   AccessControl: true,
+  Esconder: true,
   
   index: function() {
     const searchInput = safeuuid();

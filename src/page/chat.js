@@ -1,19 +1,186 @@
 PERMS["chat"] = "Chat"
 PERMS["chat:edit"] = "&gt; Escribir"
 
+// Global chat notification system
+PAGES.chat_notifications = {
+  listener: null,
+  Esconder: true,
+  lastMessageTime: null, // Start with null to allow all messages initially
+  isActive: false,
+  
+  init: function() {
+    console.log("Initializing chat notifications...");
+    console.log("isActive:", this.isActive);
+    console.log("checkRole available:", typeof checkRole);
+    console.log("checkRole('chat'):", typeof checkRole === 'function' ? checkRole("chat") : "function not available");
+    
+    if (this.isActive) {
+      console.log("Chat notifications already active");
+      return;
+    }
+    
+    // Check if user has chat permissions (with fallback)
+    if (typeof checkRole === 'function' && !checkRole("chat")) {
+      console.log("No chat permissions");
+      return;
+    }
+    
+    this.isActive = true;
+    console.log("Starting chat notifications listener");
+    
+    var today = new Date().toISOString().split('T')[0];
+    var dayPath = `chat_${today}`;
+    
+    console.log("Listening for notifications on:", dayPath);
+    console.log("TABLE:", TABLE);
+    
+    // Set initial timestamp to current time to only notify for new messages from now on
+    if (!this.lastMessageTime) {
+      this.lastMessageTime = new Date().toISOString();
+      console.log("Set initial lastMessageTime:", this.lastMessageTime);
+    }
+    
+    // Listen for new messages on today's chat
+    this.listener = gun.get(TABLE).get(dayPath).map().on((data, messageId, _msg, _ev) => {
+      console.log("Notification listener received data:", data, "messageId:", messageId);
+      
+      if (data === null) return; // Ignore deletions
+      
+      if (typeof data === "string") {
+        // Encrypted message
+        console.log("Decrypting notification message...");
+        TS_decrypt(data, SECRET, (decryptedData) => {
+          console.log("Decrypted notification data:", decryptedData);
+          this.handleNewMessage(decryptedData, messageId);
+        });
+      } else {
+        // Unencrypted message
+        console.log("Processing unencrypted notification:", data);
+        this.handleNewMessage(data, messageId);
+      }
+    });
+    
+    // Add to cleanup listeners
+    EventListeners.GunJS.push(this.listener);
+    console.log("Chat notifications initialized successfully");
+  },
+  
+  handleNewMessage: function(messageData, messageId) {
+    console.log("Handling new message for notification:", messageData);
+    console.log("Current lastMessageTime:", this.lastMessageTime);
+    console.log("Message timestamp:", messageData.timestamp);
+    console.log("Message authorId:", messageData.authorId);
+    console.log("Current user ID:", SUB_LOGGED_IN_ID);
+    
+    // Don't notify for our own messages
+    if (messageData.authorId === SUB_LOGGED_IN_ID) {
+      console.log("Skipping notification - own message");
+      return;
+    }
+    
+    // Don't notify for old messages (only if we have a baseline)
+    if (this.lastMessageTime && messageData.timestamp && messageData.timestamp <= this.lastMessageTime) {
+      console.log("Skipping notification - old message");
+      return;
+    }
+    
+    // Don't notify if user is currently viewing the chat page
+    var currentHash = location.hash.replace("#", "");
+    console.log("Current page hash:", currentHash);
+    if (currentHash === 'chat') {
+      console.log("Skipping notification - user viewing chat");
+      return;
+    }
+    
+    // Update last message time
+    if (messageData.timestamp) {
+      this.lastMessageTime = messageData.timestamp;
+      console.log("Updated lastMessageTime to:", this.lastMessageTime);
+    }
+    
+    // Show notification
+    var author = messageData.author || 'Usuario Anónimo';
+    var preview = messageData.text.length > 50 ? 
+      messageData.text.substring(0, 50) + '...' : 
+      messageData.text;
+    
+    console.log("Showing notification for:", author, "-", preview);
+    console.log("Testing toastr availability:", typeof toastr);
+    
+    // Test notification to verify toastr works
+    console.log("Attempting to show notification...");
+    
+    toastr.info(
+      `<strong>${author}:</strong><br>${preview}`,
+      '💬 Nuevo mensaje en Chat',
+      {
+        onclick: function() {
+          console.log("Notification clicked, navigating to chat");
+          setUrlHash('chat');
+        },
+        timeOut: 8000,
+        extendedTimeOut: 2000,
+        closeButton: true,
+        progressBar: true,
+        positionClass: 'toast-top-right',
+        preventDuplicates: true,
+        newestOnTop: true,
+        escapeHtml: false
+      }
+    );
+    
+    console.log("Notification call completed");
+  },
+  
+  destroy: function() {
+    if (this.listener) {
+      this.listener.off();
+    }
+    this.isActive = false;
+  },
+  
+  // Test function to manually trigger a notification
+  testNotification: function() {
+    console.log("Testing notification manually...");
+    console.log("toastr available:", typeof toastr);
+    
+    toastr.success("¡Funciona! Esta es una notificación de prueba.", "Test de Notificación", {
+      timeOut: 5000,
+      closeButton: true,
+      progressBar: true,
+      positionClass: 'toast-top-right'
+    });
+  }
+};
+
 PAGES.chat = {
   navcss: "btn4",
   icon: "static/appico/Chat.svg",
   AccessControl: true,
   Title: "Chat",
   index: function() {
-    if (!checkRole("chat")) {setUrlHash("index");return}
+    console.log("Chat index function called");
+    console.log("SUB_LOGGED_IN:", SUB_LOGGED_IN);
+    console.log("checkRole function exists:", typeof checkRole);
+    
+    if (!checkRole("chat")) {
+      console.log("No chat permission, redirecting to index");
+      setUrlHash("index");
+      return;
+    }
+    
+    console.log("Chat permission granted, initializing chat");
+    
+    // Stop global notifications when viewing chat
+    PAGES.chat_notifications.destroy();
     
     var messagesList = safeuuid();
     var messageInput = safeuuid();
     var sendButton = safeuuid();
     var daySelector = safeuuid();
     var currentDay = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    
+    console.log("Creating chat UI with currentDay:", currentDay);
     
     container.innerHTML = `
       <h1>💬 Chat - ${GROUPID}</h1>
@@ -65,6 +232,10 @@ PAGES.chat = {
     var selectedDay = PAGES.chat.daySelector.value;
     PAGES.chat.currentDay = selectedDay;
     
+    console.log("Loading chat for day:", selectedDay);
+    console.log("TABLE:", TABLE);
+    console.log("SECRET:", SECRET ? "SET" : "NOT SET");
+    
     // Clear current messages
     PAGES.chat.messagesList.innerHTML = '<li style="text-align: center; color: #666; padding: 10px;">Cargando mensajes...</li>';
     
@@ -75,7 +246,11 @@ PAGES.chat = {
     
     // Listen for messages from the selected day
     var dayPath = `chat_${selectedDay}`;
+    console.log("Listening on path:", dayPath);
+    
     PAGES.chat.currentListener = gun.get(TABLE).get(dayPath).map().on((data, messageId, _msg, _ev) => {
+      console.log("Received chat data:", data, "messageId:", messageId);
+      
       if (data === null) {
         // Message deleted
         PAGES.chat.removeMessage(messageId);
@@ -84,11 +259,14 @@ PAGES.chat = {
       
       if (typeof data === "string") {
         // Encrypted message
+        console.log("Decrypting message...");
         TS_decrypt(data, SECRET, (decryptedData) => {
+          console.log("Decrypted data:", decryptedData);
           PAGES.chat.displayMessage(decryptedData, messageId);
         });
       } else {
         // Unencrypted message (shouldn't happen in production)
+        console.log("Displaying unencrypted message:", data);
         PAGES.chat.displayMessage(data, messageId);
       }
     });
@@ -100,6 +278,7 @@ PAGES.chat = {
     setTimeout(() => {
       var loadingMsg = PAGES.chat.messagesList.querySelector('li');
       if (loadingMsg && loadingMsg.textContent.includes('Cargando')) {
+        console.log("Clearing loading message");
         loadingMsg.remove();
       }
     }, 1000);
@@ -108,6 +287,10 @@ PAGES.chat = {
   sendMessage: function() {
     var messageText = PAGES.chat.messageInput.value.trim();
     
+    console.log("Sending message:", messageText);
+    console.log("User details:", SUB_LOGGED_IN_DETAILS);
+    console.log("User ID:", SUB_LOGGED_IN_ID);
+    
     if (!messageText) {
       toastr.warning("Por favor escribe un mensaje");
       return;
@@ -115,6 +298,7 @@ PAGES.chat = {
     
     if (!checkRole("chat:edit")) {
       toastr.error("No tienes permisos para escribir en el chat");
+      console.log("Permission denied for chat:edit");
       return;
     }
 
@@ -127,12 +311,18 @@ PAGES.chat = {
       day: PAGES.chat.currentDay
     };
 
+    console.log("Message data:", messageData);
+
     // Generate unique message ID
     var messageId = safeuuid();
+    console.log("Generated message ID:", messageId);
     
     // Encrypt and save message
     TS_encrypt(messageData, SECRET, (encrypted) => {
       var dayPath = `chat_${PAGES.chat.currentDay}`;
+      console.log("Saving to path:", dayPath);
+      console.log("Encrypted data:", encrypted);
+      
       betterGunPut(gun.get(TABLE).get(dayPath).get(messageId), encrypted);
       
       // Clear input
@@ -264,6 +454,11 @@ PAGES.chat = {
       PAGES.chat.currentListener.off();
     }
     PAGES.chat.messageCache = {};
+    
+    // Restart global notifications when leaving chat
+    setTimeout(() => {
+      PAGES.chat_notifications.init();
+    }, 1000);
   }
 };
 
@@ -277,4 +472,62 @@ PAGES.chat = {
     }
     return originalOpenPage(params);
   };
+})();
+
+// Initialize global chat notifications when user is logged in
+(function() {
+  function initChatNotifications() {
+    console.log("Attempting to initialize chat notifications...");
+    console.log("SUB_LOGGED_IN:", SUB_LOGGED_IN);
+    console.log("checkRole available:", typeof checkRole);
+    
+    // More robust check for login status and permissions
+    if (SUB_LOGGED_IN === true) {
+      console.log("User is logged in, checking permissions...");
+      if (typeof checkRole === 'function') {
+        var hasPermission = checkRole("chat");
+        console.log("User has chat permission:", hasPermission);
+        if (hasPermission) {
+          setTimeout(() => {
+            console.log("Calling PAGES.chat_notifications.init()");
+            PAGES.chat_notifications.init();
+          }, 2000);
+        }
+      } else {
+        // Fallback if checkRole is not available yet
+        console.log("checkRole not available, trying to initialize anyway...");
+        setTimeout(() => {
+          PAGES.chat_notifications.init();
+        }, 3000);
+      }
+    }
+  }
+  
+  // Try to initialize immediately if already logged in
+  console.log("Initial check for chat notifications...");
+  if (typeof SUB_LOGGED_IN !== 'undefined') {
+    initChatNotifications();
+  }
+  
+  // Also listen for login events by checking periodically
+  var initInterval = setInterval(() => {
+    if (SUB_LOGGED_IN === true && !PAGES.chat_notifications.isActive) {
+      console.log("Periodic check - attempting notification init");
+      initChatNotifications();
+    }
+    
+    // Stop checking after user is logged in and notifications are active
+    if (SUB_LOGGED_IN === true && PAGES.chat_notifications.isActive) {
+      console.log("Notifications active, stopping periodic checks");
+      clearInterval(initInterval);
+    }
+  }, 3000);
+  
+  // Also try to initialize when page loads
+  setTimeout(() => {
+    if (!PAGES.chat_notifications.isActive) {
+      console.log("Final attempt to initialize notifications");
+      initChatNotifications();
+    }
+  }, 10000);
 })();
