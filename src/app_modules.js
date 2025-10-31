@@ -231,6 +231,7 @@ function addCategory(
       span_0.innerText = option.value;
       change_cb(values);
       img_0.src = "static/ico/checkbox.png";
+      details_0.open = false;
     };
     btn.style.borderRadius = "20px";
     //btn.style.fontSize="17.5px"
@@ -330,6 +331,7 @@ function addCategory_Personas(
         span_0.append(img_5, value.Nombre);
         change_cb(defaultval);
         img_0.src = "static/ico/checkbox.png";
+        details_0.open = false;
       };
       btn.style.borderRadius = "20px";
       //btn.style.fontSize="17.5px"
