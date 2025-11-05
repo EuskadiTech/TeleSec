@@ -128,7 +128,10 @@ PAGES.chat_notifications = {
         escapeHtml: false
       }
     );
-    
+    var msg = `Nuevo mensaje en chat de ${author}. ${preview}`;
+    let utterance = new SpeechSynthesisUtterance(msg);
+    utterance.rate = 0.9;
+    speechSynthesis.speak(utterance);
     console.log("Notification call completed");
   },
   
