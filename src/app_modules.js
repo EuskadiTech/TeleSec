@@ -944,7 +944,7 @@ function TS_IndexElement(
               var comandaId = data._key;
               
               // Store prefilled data in sessionStorage for Pagos module
-              var data = JSON.stringify({
+              var sdata = JSON.stringify({
                 tipo: 'Gasto',
                 monto: precio / 100, // Convert cents to euros
                 persona: personaId,
@@ -954,7 +954,7 @@ function TS_IndexElement(
               });
               
               // Navigate to datafono
-              setUrlHash("pagos,datafono_prefill," + btoa(data));
+              setUrlHash("pagos,datafono_prefill," + btoa(sdata));
               
               return false;
             };
