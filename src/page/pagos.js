@@ -466,9 +466,11 @@ PAGES.pagos = {
     var tid2 = location.hash.split(",")
     if (tid == "datafono") {
       PAGES.pagos.datafono()
+      return
     }
     if (tid == "datafono_prefill") {
       PAGES.pagos.datafono(JSON.parse(atob(tid2[2])))
+      return
     }
     
     var nameh1 = safeuuid();
