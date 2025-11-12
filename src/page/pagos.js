@@ -633,28 +633,49 @@ PAGES.pagos = {
       }
     ];
     
+    // Persistent totals object by ID
+    let totalData = {
+      ingresos: {},  // { id: monto }
+      gastos: {}     // { id: monto }
+    };
+    
     TS_IndexElement(
       "pagos",
       config,
       gun.get(TABLE).get("pagos"),
       document.getElementById("tableContainer"),
-      (data, new_tr) => {
-        // Calculate totals
-        var monto = parseFloat(data.Monto || 0);
-        if (data.Tipo === "Ingreso") {
-          totals.ingresos += monto;
-        } else if (data.Tipo === "Gasto") {
-          totals.gastos += monto;
+      (data, new_tr, id) => {
+        if (!id) return;
+    
+        const monto = parseFloat(data.Monto || 0) || 0;
+        const tipo = data.Tipo;
+    
+        // Reset entries on every call for this ID
+        if (tipo === "Ingreso") {
+          totalData.gastos[id] = 0;
+          totalData.ingresos[id] = monto;
+        } else if (tipo === "Gasto") {
+          totalData.ingresos[id] = 0;
+          totalData.gastos[id] = monto;
+        } else {
+          // For Transferencias, count as gasto + ingreso (neutral)
+          totalData.ingresos[id] = 0;
+          totalData.gastos[id] = 0;
         }
-        
-        // Update totals display
-        document.getElementById(total_ingresos).innerText = totals.ingresos.toFixed(2) + "€";
-        document.getElementById(total_gastos).innerText = totals.gastos.toFixed(2) + "€";
-        var balance = totals.ingresos - totals.gastos;
+    
+        // Compute totals by summing all objects
+        const totalIngresos = Object.values(totalData.ingresos).reduce((a, b) => a + b, 0);
+        const totalGastos = Object.values(totalData.gastos).reduce((a, b) => a + b, 0);
+        const balance = totalIngresos - totalGastos;
+    
+        // Update UI
+        document.getElementById(total_ingresos).innerText = totalIngresos.toFixed(2) + "€";
+        document.getElementById(total_gastos).innerText = totalGastos.toFixed(2) + "€";
         document.getElementById(balance_total).innerText = balance.toFixed(2) + "€";
         document.getElementById(balance_total).style.color = balance >= 0 ? "white" : "#ffcccc";
       }
     );
+
     
     document.getElementById(btn_datafono).onclick = () => {
       setUrlHash("pagos,datafono");
