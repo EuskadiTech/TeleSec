@@ -944,17 +944,17 @@ function TS_IndexElement(
               var comandaId = data._key;
               
               // Store prefilled data in sessionStorage for Pagos module
-              sessionStorage.setItem('pagos_prefill', JSON.stringify({
+              var data = JSON.stringify({
                 tipo: 'Gasto',
                 monto: precio / 100, // Convert cents to euros
                 persona: personaId,
                 notas: 'Pago de comanda SuperCafé\n' + SC_parse(JSON.parse(data.Comanda)),
                 origen: 'SuperCafé',
                 origen_id: comandaId
-              }));
+              });
               
               // Navigate to datafono
-              setUrlHash("pagos,datafono_supercafe," + comandaId);
+              setUrlHash("pagos,datafono_prefill," + btoa(data);
               
               return false;
             };
