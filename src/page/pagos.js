@@ -32,7 +32,6 @@ PAGES.pagos = {
     var field_metodo = safeuuid();
     var field_notas = safeuuid();
     var numpad_display = safeuuid();
-    var numpad_container = safeuuid();
     var div_persona_destino = safeuuid();
     var btn_confirm = safeuuid();
     var btn_correct = safeuuid();
@@ -59,8 +58,8 @@ PAGES.pagos = {
               <label style="display: block; margin-bottom: 15px;">
                 <b>Tipo de Transacción:</b><br>
                 <select id="${field_tipo}" style="width: 100%; padding: 10px; font-size: 16px; border: 2px solid #ddd; border-radius: 5px;">
-                  <option value="Ingreso">💵 Ingreso (Depósito)</option>
-                  <option value="Gasto">💸 Gasto (Retiro/Pago)</option>
+                  <option value="Ingreso">➕ Ingreso (Depósito)</option>
+                  <option value="Gasto">➖ Gasto (Retiro/Pago)</option>
                   <option value="Transferencia">🔄 Transferencia</option>
                 </select>
               </label>
@@ -190,6 +189,7 @@ PAGES.pagos = {
     function loadPersonaSelector() {
       var container = document.querySelector('#personaSelector');
       container.innerHTML = '';
+      document.getElementById(field_persona).value = selectedPersona;
       addCategory_Personas(
         container,
         SC_Personas,
@@ -207,6 +207,7 @@ PAGES.pagos = {
     function loadPersonaDestinoSelector() {
       var container = document.querySelector('#personaDestinoSelector');
       container.innerHTML = '';
+      document.getElementById(field_persona_destino).value = selectedPersonaDestino;
       addCategory_Personas(
         container,
         SC_Personas,
