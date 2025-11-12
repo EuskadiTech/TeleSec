@@ -25,6 +25,13 @@ PAGES.pagos = {
       }
     }
     
+    // Check for scanned persona from QR scanner
+    var scannedPersona = sessionStorage.getItem('pagos_scanned_persona');
+    if (scannedPersona) {
+      prefilledData.persona = scannedPersona;
+      sessionStorage.removeItem('pagos_scanned_persona');
+    }
+    
     var field_tipo = safeuuid();
     var field_monto = safeuuid();
     var field_persona = safeuuid();
@@ -392,6 +399,14 @@ PAGES.pagos = {
       PAGES.pagos.datafono(JSON.parse(atob(tid2[2])))
       return
     }
+    if (tid == "scan_qr") {
+      PAGES.pagos.__scanQR()
+      return
+    }
+    if (tid == "edit_transaction") {
+      PAGES.pagos.__editTransaction(tid2[2])
+      return
+    }
     
     var nameh1 = safeuuid();
     var field_ticket = safeuuid();
@@ -408,6 +423,9 @@ PAGES.pagos = {
     var div_origen = safeuuid();
     var btn_volver = safeuuid();
     var btn_volver2 = safeuuid();
+    var btn_edit = safeuuid();
+    var btn_delete = safeuuid();
+    var btn_revert = safeuuid();
     
     container.innerHTML = `
       <h1>Transacción <code id="${nameh1}"></code></h1>
@@ -471,6 +489,19 @@ PAGES.pagos = {
           <textarea id="${field_notas}" readonly rows="4" style="background: #f0f0f0;"></textarea><br><br>
         </label>
       </fieldset>
+      
+      <fieldset style="margin-top: 20px;">
+        <legend>Acciones</legend>
+        <button id="${btn_edit}" class="btn5" style="font-size: 16px; padding: 10px 20px; margin: 5px;">
+          ✏️ Editar Transacción
+        </button>
+        <button id="${btn_revert}" class="btn6" style="font-size: 16px; padding: 10px 20px; margin: 5px;">
+          ↩️ Revertir Transacción
+        </button>
+        <button id="${btn_delete}" class="rojo" style="font-size: 16px; padding: 10px 20px; margin: 5px;">
+          🗑️ Eliminar Transacción
+        </button>
+      </fieldset>
     `;
     
     document.getElementById(btn_volver).onclick = () => {
@@ -510,6 +541,95 @@ PAGES.pagos = {
         if (data.Origen) {
           document.getElementById(field_origen).value = data.Origen + (data.OrigenID ? " (" + data.OrigenID + ")" : "");
           document.getElementById(div_origen).style.display = 'block';
+        }
+        
+        // Edit button - navigate to edit mode
+        document.getElementById(btn_edit).onclick = () => {
+          setUrlHash("pagos,edit_transaction," + key);
+        };
+        
+        // Delete button
+        document.getElementById(btn_delete).onclick = () => {
+          if (!checkRole("pagos:edit")) {
+            alert("No tienes permisos para eliminar transacciones");
+            return;
+          }
+          
+          if (confirm("¿Estás seguro de que quieres ELIMINAR esta transacción?\n\nEsta acción NO se puede deshacer y los cambios en los monederos NO se revertirán automáticamente.\n\nPara revertir los cambios en los monederos, usa el botón 'Revertir Transacción' en su lugar.")) {
+            betterGunPut(gun.get(TABLE).get("pagos").get(key), null);
+            toastr.success("Transacción eliminada");
+            setTimeout(() => {
+              setUrlHash("pagos");
+            }, 1000);
+          }
+        };
+        
+        // Revert button - reverses wallet balance changes and deletes transaction
+        document.getElementById(btn_revert).onclick = () => {
+          if (!checkRole("pagos:edit")) {
+            alert("No tienes permisos para revertir transacciones");
+            return;
+          }
+          
+          if (confirm("¿Estás seguro de que quieres REVERTIR esta transacción?\n\nEsto revertirá los cambios en los monederos y eliminará la transacción.")) {
+            // Reverse the wallet balance changes
+            var tipo = data.Tipo;
+            var monto = parseFloat(data.Monto || 0);
+            var personaId = data.Persona;
+            
+            // For Ingreso, subtract from balance (reverse)
+            // For Gasto, add to balance (reverse)
+            // For Transferencia, reverse both sides
+            
+            if (tipo === "Ingreso") {
+              revertWalletBalance(personaId, "Gasto", monto, () => {
+                deleteTransaction(key);
+              });
+            } else if (tipo === "Gasto") {
+              revertWalletBalance(personaId, "Ingreso", monto, () => {
+                deleteTransaction(key);
+              });
+            } else if (tipo === "Transferencia") {
+              var destinoId = data.PersonaDestino;
+              revertWalletBalance(personaId, "Ingreso", monto, () => {
+                revertWalletBalance(destinoId, "Gasto", monto, () => {
+                  deleteTransaction(key);
+                });
+              });
+            }
+          }
+        };
+        
+        function revertWalletBalance(personaId, tipo, monto, callback) {
+          var persona = SC_Personas[personaId];
+          if (!persona) {
+            toastr.error("Error: Persona no encontrada");
+            return;
+          }
+          
+          var currentBalance = parseFloat(persona.Monedero_Balance || 0);
+          var newBalance = currentBalance;
+          
+          if (tipo === "Ingreso") {
+            newBalance = currentBalance + monto;
+          } else if (tipo === "Gasto") {
+            newBalance = currentBalance - monto;
+          }
+          
+          persona.Monedero_Balance = newBalance;
+          
+          TS_encrypt(persona, SECRET, (encrypted) => {
+            betterGunPut(gun.get(TABLE).get("personas").get(personaId), encrypted);
+            if (callback) callback();
+          });
+        }
+        
+        function deleteTransaction(transactionKey) {
+          betterGunPut(gun.get(TABLE).get("pagos").get(transactionKey), null);
+          toastr.success("Transacción revertida y eliminada");
+          setTimeout(() => {
+            setUrlHash("pagos");
+          }, 1000);
         }
       }
       
@@ -654,16 +774,20 @@ PAGES.pagos = {
     
         const monto = parseFloat(data.Monto || 0) || 0;
         const tipo = data.Tipo;
+        const metodo = data.Metodo || "";
+    
+        // Only count Tarjeta Monedero transactions in balance totals
+        const isMonedero = metodo === "Tarjeta";
     
         // Reset entries on every call for this ID
-        if (tipo === "Ingreso") {
+        if (isMonedero && tipo === "Ingreso") {
           totalData.gastos[id] = 0;
           totalData.ingresos[id] = monto;
-        } else if (tipo === "Gasto") {
+        } else if (isMonedero && tipo === "Gasto") {
           totalData.ingresos[id] = 0;
           totalData.gastos[id] = monto;
         } else {
-          // For Transferencias, count as gasto + ingreso (neutral)
+          // For non-Monedero transactions or Transferencias, don't count in totals
           totalData.ingresos[id] = 0;
           totalData.gastos[id] = 0;
         }
@@ -694,5 +818,331 @@ PAGES.pagos = {
         setUrlHash("pagos," + safeuuid(""));
       };
     }
+  },
+  
+  // QR Scanner for selecting wallet/persona
+  __scanQR: function() {
+    if (!checkRole("pagos:edit")) {
+      setUrlHash("pagos");
+      return;
+    }
+    
+    var qrscan = safeuuid();
+    var btn_cancel = safeuuid();
+    
+    container.innerHTML = `
+      <div style="max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+        <h1 style="color: white; text-align: center; margin-bottom: 20px;">
+          📷 Escanear QR de Monedero
+        </h1>
+        
+        <div style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+          <p style="text-align: center; color: #333; margin-bottom: 15px;">
+            Escanea el código QR del monedero de la persona para seleccionarlo automáticamente
+          </p>
+          <div style="max-width: 400px; margin: 0 auto;" id="${qrscan}"></div>
+        </div>
+        
+        <button id="${btn_cancel}" style="width: 100%; padding: 20px; font-size: 18px; font-weight: bold; 
+          background: #ff4757; color: white; border: none; border-radius: 8px; cursor: pointer;">
+          ❌ Cancelar
+        </button>
+      </div>
+    `;
+    
+    // Initialize QR scanner
+    var html5QrcodeScanner = new Html5QrcodeScanner(
+      qrscan, { fps: 10, qrbox: 250 }
+    );
+    
+    function onScanSuccess(decodedText, decodedResult) {
+      html5QrcodeScanner.clear();
+      
+      // Parse the QR code result
+      // Expected format: "personas,{personaId}" or just "{personaId}"
+      var personaId = decodedText;
+      
+      // If it's a full URL hash, extract the persona ID
+      if (decodedText.includes("personas,")) {
+        var parts = decodedText.split(",");
+        if (parts.length > 1) {
+          personaId = parts[1];
+        }
+      }
+      
+      // Verify the persona exists
+      if (SC_Personas[personaId]) {
+        toastr.success("✅ Monedero escaneado: " + SC_Personas[personaId].Nombre);
+        
+        // Store the selected persona in sessionStorage and return to datafono
+        sessionStorage.setItem('pagos_scanned_persona', personaId);
+        
+        // Navigate back to datafono
+        setUrlHash("pagos,datafono");
+      } else {
+        toastr.error("❌ Código QR no reconocido como un monedero válido");
+        setTimeout(() => {
+          setUrlHash("pagos,datafono");
+        }, 2000);
+      }
+    }
+    
+    html5QrcodeScanner.render(onScanSuccess);
+    EventListeners.QRScanner.push(html5QrcodeScanner);
+    
+    // Cancel button
+    document.getElementById(btn_cancel).onclick = () => {
+      html5QrcodeScanner.clear();
+      setUrlHash("pagos,datafono");
+    };
+  },
+  
+  // Edit existing transaction
+  __editTransaction: function(transactionId) {
+    if (!checkRole("pagos:edit")) {
+      setUrlHash("pagos");
+      return;
+    }
+    
+    var field_tipo = safeuuid();
+    var field_monto = safeuuid();
+    var field_persona = safeuuid();
+    var field_persona_destino = safeuuid();
+    var field_metodo = safeuuid();
+    var field_notas = safeuuid();
+    var field_estado = safeuuid();
+    var div_persona_destino = safeuuid();
+    var btn_save = safeuuid();
+    var btn_cancel = safeuuid();
+    
+    var selectedPersona = "";
+    var selectedPersonaDestino = "";
+    var originalData = null;
+    
+    container.innerHTML = `
+      <div style="max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+        <h1 style="color: white; text-align: center; margin-bottom: 20px;">
+          ✏️ Editar Transacción
+        </h1>
+        
+        <div style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+          <fieldset style="border: 2px solid #667eea; border-radius: 8px; padding: 15px;">
+            <legend style="color: #667eea; font-weight: bold;">Información de Transacción</legend>
+            
+            <label style="display: block; margin-bottom: 15px;">
+              <b>Tipo de Transacción:</b><br>
+              <select id="${field_tipo}" style="width: 100%; padding: 10px; font-size: 16px; border: 2px solid #ddd; border-radius: 5px;">
+                <option value="Ingreso">➕ Ingreso (Depósito)</option>
+                <option value="Gasto">➖ Gasto (Retiro/Pago)</option>
+                <option value="Transferencia">🔄 Transferencia</option>
+              </select>
+            </label>
+            
+            <label style="display: block; margin-bottom: 15px;">
+              <b>Método de Pago:</b><br>
+              <select id="${field_metodo}" style="width: 100%; padding: 10px; font-size: 16px; border: 2px solid #ddd; border-radius: 5px;">
+                <option value="Efectivo">💵 Efectivo</option>
+                <option value="Tarjeta">💳 Tarjeta Monedero</option>
+                <option value="Transferencia">🏦 Transferencia Bancaria</option>
+                <option value="Otro">❓ Otro</option>
+              </select>
+            </label>
+            
+            <label style="display: block; margin-bottom: 15px;">
+              <b>Monto (€):</b><br>
+              <input type="number" id="${field_monto}" step="0.01" min="0"
+                style="width: calc(100% - 24px); padding: 15px; font-size: 24px; text-align: right; 
+                border: 3px solid #667eea; border-radius: 5px; font-weight: bold;">
+            </label>
+            
+            <label style="display: block; margin-bottom: 15px;">
+              <b>Estado:</b><br>
+              <select id="${field_estado}" style="width: 100%; padding: 10px; font-size: 16px; border: 2px solid #ddd; border-radius: 5px;">
+                <option value="Completado">✅ Completado</option>
+                <option value="Pendiente">⏳ Pendiente</option>
+                <option value="Cancelado">❌ Cancelado</option>
+              </select>
+            </label>
+            
+            <label style="display: block; margin-bottom: 15px;">
+              <b>Monedero (Persona):</b>
+              <input type="hidden" id="${field_persona}">
+              <div id="personaSelector"></div>
+            </label>
+            
+            <div id="${div_persona_destino}" style="display: none; margin-bottom: 15px;">
+              <b>Monedero Destino:</b>
+              <input type="hidden" id="${field_persona_destino}">
+              <div id="personaDestinoSelector"></div>
+            </div>
+            
+            <label style="display: block; margin-bottom: 15px;">
+              <b>Notas:</b><br>
+              <textarea id="${field_notas}" rows="3" 
+                style="width: calc(100% - 24px); padding: 10px; font-size: 14px; border: 2px solid #ddd; border-radius: 5px;"
+                placeholder="Notas adicionales..."></textarea>
+            </label>
+          </fieldset>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+          <button id="${btn_cancel}" style="padding: 20px; font-size: 18px; font-weight: bold; 
+            background: #ff4757; color: white; border: none; border-radius: 8px; cursor: pointer;">
+            ❌ CANCELAR
+          </button>
+          <button id="${btn_save}" style="padding: 20px; font-size: 18px; font-weight: bold; 
+            background: #2ed573; color: white; border: none; border-radius: 8px; cursor: pointer;">
+            💾 GUARDAR
+          </button>
+        </div>
+      </div>
+    `;
+    
+    // Load transaction data
+    gun.get(TABLE).get("pagos").get(transactionId).once((data, key) => {
+      function loadTransactionData(data) {
+        originalData = data;
+        
+        document.getElementById(field_tipo).value = data.Tipo || "Ingreso";
+        document.getElementById(field_metodo).value = data.Metodo || "Efectivo";
+        document.getElementById(field_monto).value = data.Monto || 0;
+        document.getElementById(field_estado).value = data.Estado || "Completado";
+        document.getElementById(field_notas).value = data.Notas || "";
+        
+        selectedPersona = data.Persona || "";
+        selectedPersonaDestino = data.PersonaDestino || "";
+        
+        loadPersonaSelector();
+        
+        if (data.Tipo === "Transferencia") {
+          document.getElementById(div_persona_destino).style.display = 'block';
+          loadPersonaDestinoSelector();
+        }
+      }
+      
+      if (typeof data == "string") {
+        TS_decrypt(data, SECRET, loadTransactionData);
+      } else {
+        loadTransactionData(data || {});
+      }
+    });
+    
+    // Tipo change handler
+    document.getElementById(field_tipo).addEventListener('change', function() {
+      var tipo = this.value;
+      var divDestino = document.getElementById(div_persona_destino);
+      if (tipo === 'Transferencia') {
+        divDestino.style.display = 'block';
+        loadPersonaDestinoSelector();
+      } else {
+        divDestino.style.display = 'none';
+      }
+    });
+    
+    function loadPersonaSelector() {
+      var container = document.querySelector('#personaSelector');
+      container.innerHTML = '';
+      document.getElementById(field_persona).value = selectedPersona;
+      addCategory_Personas(
+        container,
+        SC_Personas,
+        selectedPersona,
+        (personaId) => {
+          document.getElementById(field_persona).value = personaId;
+          selectedPersona = personaId;
+        },
+        "Monedero",
+        false,
+        "- No hay personas registradas -"
+      );
+    }
+    
+    function loadPersonaDestinoSelector() {
+      var container = document.querySelector('#personaDestinoSelector');
+      container.innerHTML = '';
+      document.getElementById(field_persona_destino).value = selectedPersonaDestino;
+      addCategory_Personas(
+        container,
+        SC_Personas,
+        selectedPersonaDestino,
+        (personaId) => {
+          document.getElementById(field_persona_destino).value = personaId;
+          selectedPersonaDestino = personaId;
+        },
+        "Monedero Destino",
+        false,
+        "- No hay personas registradas -"
+      );
+    }
+    
+    // Save button
+    document.getElementById(btn_save).onclick = () => {
+      var tipo = document.getElementById(field_tipo).value;
+      var monto = parseFloat(document.getElementById(field_monto).value);
+      var personaId = document.getElementById(field_persona).value;
+      var metodo = document.getElementById(field_metodo).value;
+      var notas = document.getElementById(field_notas).value;
+      var estado = document.getElementById(field_estado).value;
+      
+      if (!personaId) {
+        alert("Por favor selecciona un monedero");
+        return;
+      }
+      
+      if (isNaN(monto) || monto < 0) {
+        alert("Por favor ingresa un monto válido");
+        return;
+      }
+      
+      if (tipo === 'Transferencia') {
+        var personaDestinoId = document.getElementById(field_persona_destino).value;
+        if (!personaDestinoId) {
+          alert("Por favor selecciona el monedero destino");
+          return;
+        }
+        if (personaId === personaDestinoId) {
+          alert("No puedes transferir al mismo monedero");
+          return;
+        }
+      }
+      
+      if (!confirm("¿Estás seguro de que quieres guardar los cambios?\n\nNOTA: Los cambios en los monederos NO se ajustarán automáticamente. Si cambiaste el monto, tipo o persona, deberías revertir la transacción original y crear una nueva.")) {
+        return;
+      }
+      
+      // Update transaction data
+      var updatedData = {
+        ...originalData,
+        Tipo: tipo,
+        Monto: monto,
+        Persona: personaId,
+        Metodo: metodo,
+        Notas: notas,
+        Estado: estado
+      };
+      
+      if (tipo === 'Transferencia') {
+        updatedData.PersonaDestino = document.getElementById(field_persona_destino).value;
+      } else {
+        delete updatedData.PersonaDestino;
+      }
+      
+      TS_encrypt(updatedData, SECRET, (encrypted) => {
+        document.getElementById("actionStatus").style.display = "block";
+        betterGunPut(gun.get(TABLE).get("pagos").get(transactionId), encrypted);
+        toastr.success("¡Transacción actualizada!");
+        setTimeout(() => {
+          document.getElementById("actionStatus").style.display = "none";
+          setUrlHash("pagos," + transactionId);
+        }, 1500);
+      });
+    };
+    
+    // Cancel button
+    document.getElementById(btn_cancel).onclick = () => {
+      if (confirm("¿Seguro que quieres cancelar? Los cambios no se guardarán.")) {
+        setUrlHash("pagos," + transactionId);
+      }
+    };
   }
 };
