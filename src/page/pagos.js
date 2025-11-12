@@ -463,12 +463,12 @@ PAGES.pagos = {
       setUrlHash("pagos");
       return;
     }
-    var tid2 = tid.split(",")
-    if (tid2[0] == "datafono") {
+    var tid2 = location.hash.split(",")
+    if (tid == "datafono") {
       PAGES.pagos.datafono()
     }
-    if (tid2[0] == "datafono_prefill") {
-      PAGES.pagos.datafono(JSON.parse(atob(tid2[1])))
+    if (tid == "datafono_prefill") {
+      PAGES.pagos.datafono(JSON.parse(atob(tid2[2])))
     }
     
     var nameh1 = safeuuid();
