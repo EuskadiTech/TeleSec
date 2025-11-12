@@ -44,7 +44,7 @@ PAGES.pagos = {
     container.innerHTML = `
       <div style="max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
         <h1 style="color: white; text-align: center; margin-bottom: 20px;">
-          💳 DATAFONO / TERMINAL DE PAGO
+          Terminal de pago TeleSec
         </h1>
         
         <div style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
@@ -407,11 +407,13 @@ PAGES.pagos = {
     var div_persona_destino = safeuuid();
     var div_origen = safeuuid();
     var btn_volver = safeuuid();
+    var btn_volver2 = safeuuid();
     
     container.innerHTML = `
       <h1>Transacción <code id="${nameh1}"></code></h1>
       ${BuildQR("pagos," + tid, "Esta Transacción")}
       <button id="${btn_volver}">← Volver a Pagos</button>
+      <button id="${btn_volver2}">← Volver a SuperCafé</button>
       <fieldset>
         <legend>Detalles de la Transacción</legend>
         
@@ -473,6 +475,9 @@ PAGES.pagos = {
     
     document.getElementById(btn_volver).onclick = () => {
       setUrlHash("pagos");
+    };
+    document.getElementById(btn_volver2).onclick = () => {
+      setUrlHash("supercafe");
     };
     
     gun.get(TABLE).get("pagos").get(tid).once((data, key) => {
