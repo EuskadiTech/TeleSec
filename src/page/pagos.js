@@ -644,8 +644,8 @@ PAGES.pagos = {
       config,
       gun.get(TABLE).get("pagos"),
       document.getElementById("tableContainer"),
-      (data, new_tr, id) => {
-        if (!id) return;
+      (data, new_tr) => {
+        var id = data._key
     
         const monto = parseFloat(data.Monto || 0) || 0;
         const tipo = data.Tipo;
@@ -667,7 +667,7 @@ PAGES.pagos = {
         const totalIngresos = Object.values(totalData.ingresos).reduce((a, b) => a + b, 0);
         const totalGastos = Object.values(totalData.gastos).reduce((a, b) => a + b, 0);
         const balance = totalIngresos - totalGastos;
-    
+
         // Update UI
         document.getElementById(total_ingresos).innerText = totalIngresos.toFixed(2) + "€";
         document.getElementById(total_gastos).innerText = totalGastos.toFixed(2) + "€";
