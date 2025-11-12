@@ -954,7 +954,7 @@ function TS_IndexElement(
               });
               
               // Navigate to datafono
-              setUrlHash("pagos,datafono_prefill," + btoa(data);
+              setUrlHash("pagos,datafono_prefill," + btoa(data));
               
               return false;
             };
