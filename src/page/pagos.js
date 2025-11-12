@@ -366,8 +366,8 @@ PAGES.pagos = {
     
     // Pre-fill if data provided
     if (prefilledData.monto) {
-      displayValue = prefilledData.monto.toString();
-      displayEl.value = displayValue;
+      displayValue = prefilledData.monto;
+      document.getElementById(numpad_display).value = displayValue;
     }
     if (prefilledData.tipo) {
       document.getElementById(field_tipo).value = prefilledData.tipo;
