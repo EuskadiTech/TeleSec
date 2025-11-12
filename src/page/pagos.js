@@ -463,6 +463,9 @@ PAGES.pagos = {
       setUrlHash("pagos");
       return;
     }
+    if (tid == "datafono") {
+      PAGES.pagos.datafono()
+    }
     
     var nameh1 = safeuuid();
     var field_ticket = safeuuid();
