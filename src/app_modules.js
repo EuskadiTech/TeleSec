@@ -933,26 +933,29 @@ function TS_IndexElement(
             ];
             const paidButton = document.createElement("button");
             paidButton.textContent = "Pagado";
+            paidButton.className = "btn5";
             paidButton.onclick = (event) => {
               event.preventDefault();
               event.stopPropagation();
-              if (!confirm("¿Quieres marcar como pagado? - Se borrara la comanda y se actualizarán los puntos.")) {
-                return false;
-              }
-              data.Estado = "Pagado";
-              betterGunPut(ref.get(data._key), null);
-              toastr.success("Guardado!");
-              if (SC_Personas[data.Persona].Puntos >= 10 && confirm("¿Pagar con Puntos? - Cancela para pagar con Efectivo.")) {
-                SC_Personas[data.Persona].Puntos = parseInt(SC_Personas[data.Persona].Puntos) - 10;
-                toastr.success("¡Comada gratis para " + SC_Personas[data.Persona].Nombre + "!");
-                toastr.success("¡Comada gratis para " + SC_Personas[data.Persona].Nombre + "!");
-              } else {
-                SC_Personas[data.Persona].Puntos = parseInt(SC_Personas[data.Persona].Puntos) + 1;
-                toastr.success("¡Comada DE PAGO!");
-              }
-              TS_encrypt(SC_Personas[data.Persona], SECRET, (encrypted) => {
-                betterGunPut(gun.get(TABLE).get("personas").get(data.Persona), encrypted);
+              
+              // Open Pagos module with pre-filled data
+              var precio = SC_priceCalc(JSON.parse(data.Comanda))[0];
+              var personaId = data.Persona;
+              var comandaId = data._key;
+              
+              // Store prefilled data in sessionStorage for Pagos module
+              var sdata = JSON.stringify({
+                tipo: 'Gasto',
+                monto: precio / 100, // Convert cents to euros
+                persona: personaId,
+                notas: 'Pago de comanda SuperCafé\n' + SC_parse(JSON.parse(data.Comanda)),
+                origen: 'SuperCafé',
+                origen_id: comandaId
               });
+              
+              // Navigate to datafono
+              setUrlHash("pagos,datafono_prefill," + btoa(sdata));
+              
               return false;
             };
             td.append(data.Fecha)

@@ -17,10 +17,14 @@ PAGES.personas = {
     var field_anilla = safeuuid();
     var field_foto = safeuuid();
     var render_foto = safeuuid();
+    var field_monedero_balance = safeuuid();
+    var field_monedero_notas = safeuuid();
     var btn_guardar = safeuuid();
     var btn_borrar = safeuuid();
+    var btn_ver_monedero = safeuuid();
     container.innerHTML = `
                 <h1>Persona <code id="${nameh1}"></code></h1>
+                ${BuildQR("personas," + mid, "Esta Persona")}
                 <fieldset>
                     <label>
                         Nombre<br>
@@ -49,7 +53,22 @@ PAGES.personas = {
                         <img id="${render_foto}" height="100px" style="border: 3px inset; min-width: 7px;" src="static/ico/user_generic.png">
                         <input type="file" accept="image/*" id="${field_foto}" style="display: none;"><br><br>
                     </label>
-
+                    
+                    <details style="background: #e3f2fd; border: 2px solid #2196f3; border-radius: 8px; padding: 10px; margin: 15px 0;">
+                      <summary style="cursor: pointer; font-weight: bold; color: #1976d2;">💳 Tarjeta Monedero</summary>
+                      <div style="padding: 15px;">
+                        <label>
+                            Balance Actual<br>
+                            <input type="number" step="0.01" id="${field_monedero_balance}" style="font-size: 24px; font-weight: bold; color: #1976d2;"><br>
+                            <small>Se actualiza automáticamente con las transacciones</small><br><br>
+                        </label>
+                        <label>
+                            Notas del Monedero<br>
+                            <textarea id="${field_monedero_notas}" rows="3" placeholder="Notas adicionales sobre el monedero..."></textarea><br><br>
+                        </label>
+                        <button type="button" id="${btn_ver_monedero}" class="btn5">Ver Transacciones del Monedero</button>
+                      </div>
+                    </details>
 
                     <label>
                         Notas<br>
@@ -92,6 +111,8 @@ PAGES.personas = {
             data["Foto"] || "static/ico/user_generic.png";
           resized = data["Foto"] || "static/ico/user_generic.png";
           document.getElementById(field_notas).value = data["markdown"] || "";
+          document.getElementById(field_monedero_balance).value = data["Monedero_Balance"] || 0;
+          document.getElementById(field_monedero_notas).value = data["Monedero_Notas"] || "";
         }
         if (typeof data == "string") {
           TS_decrypt(data, SECRET, (data) => {
@@ -127,6 +148,8 @@ PAGES.personas = {
         SC_Anilla: document.getElementById(field_anilla).value,
         Foto: resized,
         markdown: document.getElementById(field_notas).value,
+        Monedero_Balance: parseFloat(document.getElementById(field_monedero_balance).value) || 0,
+        Monedero_Notas: document.getElementById(field_monedero_notas).value,
       };
       var enc = TS_encrypt(data, SECRET, (encrypted) => {
         document.getElementById("actionStatus").style.display = "block";
@@ -137,6 +160,9 @@ PAGES.personas = {
           setUrlHash("personas");
         }, 1500);
       });
+    };
+    document.getElementById(btn_ver_monedero).onclick = () => {
+      setUrlHash("pagos"); // Navigate to pagos and show transactions for this person
     };
     document.getElementById(btn_borrar).onclick = () => {
       if (confirm("¿Quieres borrar esta persona?") == true) {
