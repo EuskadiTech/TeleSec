@@ -77,26 +77,11 @@ PAGES.pagos = {
               
               <label style="display: block; margin-bottom: 15px;">
                 <b>Monto:</b><br>
-                <input type="text" id="${numpad_display}" readonly 
+                <input type="number" id="${numpad_display}" 
                   style="width: calc(100% - 24px); padding: 15px; font-size: 32px; text-align: right; 
-                  border: 3px solid #667eea; border-radius: 5px; background: #f0f0f0; font-weight: bold;"
+                  border: 3px solid #667eea; border-radius: 5px; font-weight: bold;"
                   value="0.00">
               </label>
-              
-              <!-- Numpad -->
-              <div id="${numpad_container}" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px;">
-                ${[7, 8, 9, 4, 5, 6, 1, 2, 3].map(num => 
-                  `<button class="numpad-btn" data-value="${num}" style="padding: 20px; font-size: 24px; font-weight: bold; 
-                    border: 2px solid #667eea; border-radius: 8px; background: white; cursor: pointer; 
-                    transition: all 0.2s;">${num}</button>`
-                ).join('')}
-                <button class="numpad-btn" data-value="." style="padding: 20px; font-size: 24px; font-weight: bold; 
-                  border: 2px solid #667eea; border-radius: 8px; background: white; cursor: pointer;">.</button>
-                <button class="numpad-btn" data-value="0" style="padding: 20px; font-size: 24px; font-weight: bold; 
-                  border: 2px solid #667eea; border-radius: 8px; background: white; cursor: pointer;">0</button>
-                <button class="numpad-btn" data-value="⌫" style="padding: 20px; font-size: 24px; font-weight: bold; 
-                  border: 2px solid #ff6b6b; border-radius: 8px; background: #ffe0e0; cursor: pointer;">⌫</button>
-              </div>
               
               <label style="display: block; margin-bottom: 15px;">
                 <b>Notas:</b><br>
@@ -138,14 +123,10 @@ PAGES.pagos = {
         </div>
         
         <!-- Action Buttons -->
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
           <button id="${btn_cancel}" style="padding: 20px; font-size: 18px; font-weight: bold; 
             background: #ff4757; color: white; border: none; border-radius: 8px; cursor: pointer;">
             ❌ CANCELAR
-          </button>
-          <button id="${btn_correct}" style="padding: 20px; font-size: 18px; font-weight: bold; 
-            background: #ffa502; color: white; border: none; border-radius: 8px; cursor: pointer;">
-            🔄 CORREGIR
           </button>
           <button id="${btn_confirm}" style="padding: 20px; font-size: 18px; font-weight: bold; 
             background: #2ed573; color: white; border: none; border-radius: 8px; cursor: pointer;">
@@ -154,54 +135,6 @@ PAGES.pagos = {
         </div>
       </div>
     `;
-    
-    // Numpad functionality
-    var displayValue = "0.00";
-    var displayEl = document.getElementById(numpad_display);
-    
-    document.querySelectorAll('.numpad-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
-        var value = this.getAttribute('data-value');
-        
-        if (value === '⌫') {
-          // Backspace
-          if (displayValue.length > 1) {
-            displayValue = displayValue.slice(0, -1);
-          } else {
-            displayValue = "0";
-          }
-        } else if (value === '.') {
-          // Decimal point
-          if (!displayValue.includes('.')) {
-            displayValue += '.';
-          }
-        } else {
-          // Number
-          if (displayValue === "0" || displayValue === "0.00") {
-            displayValue = value;
-          } else {
-            displayValue += value;
-          }
-        }
-        
-        displayEl.value = displayValue;
-      });
-      
-      // Hover effect
-      btn.addEventListener('mouseenter', function() {
-        this.style.background = '#667eea';
-        this.style.color = 'white';
-      });
-      btn.addEventListener('mouseleave', function() {
-        if (this.getAttribute('data-value') === '⌫') {
-          this.style.background = '#ffe0e0';
-          this.style.color = 'black';
-        } else {
-          this.style.background = 'white';
-          this.style.color = 'black';
-        }
-      });
-    });
     
     // Tipo change handler
     document.getElementById(field_tipo).addEventListener('change', function() {
@@ -218,7 +151,7 @@ PAGES.pagos = {
     document.getElementById(btn_confirm).onclick = () => {
       if (currentStep === 1) {
         // Move to step 2
-        var monto = parseFloat(displayValue);
+        var monto = parseFloat(document.getElementById(numpad_display).value);
         if (isNaN(monto) || monto <= 0) {
           alert("Por favor ingresa un monto válido");
           return;
@@ -241,20 +174,6 @@ PAGES.pagos = {
       }
     };
     
-    // Correct button
-    document.getElementById(btn_correct).onclick = () => {
-      if (currentStep === 2) {
-        // Go back to step 1
-        document.getElementById('step1').style.display = 'block';
-        document.getElementById('step2').style.display = 'none';
-        document.getElementById('stepIndicator').innerText = '1';
-        currentStep = 1;
-      } else {
-        // Reset numpad
-        displayValue = "0.00";
-        displayEl.value = displayValue;
-      }
-    };
     
     // Cancel button
     document.getElementById(btn_cancel).onclick = () => {
@@ -304,7 +223,7 @@ PAGES.pagos = {
     
     function processTransaction() {
       var tipo = document.getElementById(field_tipo).value;
-      var monto = parseFloat(displayValue);
+      var monto = parseFloat(document.getElementById(numpad_display).value);
       var personaId = document.getElementById(field_persona).value;
       var metodo = document.getElementById(field_metodo).value;
       var notas = document.getElementById(field_notas).value;
