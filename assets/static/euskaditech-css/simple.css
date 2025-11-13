@@ -419,3 +419,6 @@ fieldset legend {
   font-size: 20px;
   font-weight: bold;
 }
+pre {
+  font-size: 15px;
+}
