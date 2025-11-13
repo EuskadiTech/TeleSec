@@ -430,16 +430,24 @@ PAGES.pagos = {
       }
       
       // Update wallet balances
-      updateWalletBalance(personaId, tipo, monto, () => {
-        if (tipo === 'Transferencia') {
-          var destinoId = transactionData.PersonaDestino;
-          updateWalletBalance(destinoId, 'Ingreso', monto, () => {
+      // Don't update balance for Efectivo Gastos (paying with cash)
+      var shouldUpdateBalance = !(tipo === 'Gasto' && metodo === 'Efectivo');
+      
+      if (shouldUpdateBalance) {
+        updateWalletBalance(personaId, tipo, monto, () => {
+          if (tipo === 'Transferencia') {
+            var destinoId = transactionData.PersonaDestino;
+            updateWalletBalance(destinoId, 'Ingreso', monto, () => {
+              saveTransaction(ticketId, transactionData);
+            });
+          } else {
             saveTransaction(ticketId, transactionData);
-          });
-        } else {
-          saveTransaction(ticketId, transactionData);
-        }
-      });
+          }
+        });
+      } else {
+        // Skip balance update for Efectivo Gastos
+        saveTransaction(ticketId, transactionData);
+      }
     }
     
     function updateWalletBalance(personaId, tipo, monto, callback) {
