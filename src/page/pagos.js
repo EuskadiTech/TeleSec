@@ -54,7 +54,7 @@ PAGES.pagos = {
           Terminal de pago TeleSec
         </h1>
         
-        <div style="margin: 0 auto;width: 435px;background: white;padding: 20px;border-radius: 10px;margin-bottom: 20px;">
+        <div style="margin: 0 auto;max-width: 435px;background: white;padding: 20px;border-radius: 10px;margin-bottom: 20px;">
           <h2 style="text-align: center; color: #333; margin-top: 0;">Paso <span id="stepIndicator">1</span> de 3</h2>
           
           <!-- Step 1: Retailer Input -->
