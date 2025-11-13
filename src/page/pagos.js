@@ -41,7 +41,7 @@ PAGES.pagos = {
     var numpad_display = safeuuid();
     var div_persona_destino = safeuuid();
     var btn_confirm = safeuuid();
-    var btn_correct = safeuuid();
+    var btn_back = safeuuid();
     var btn_cancel = safeuuid();
     var scan_qr_btn = safeuuid();
     var currentStep = 1;
@@ -54,8 +54,8 @@ PAGES.pagos = {
           Terminal de pago TeleSec
         </h1>
         
-        <div style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-          <h2 style="text-align: center; color: #333; margin-top: 0;">Paso <span id="stepIndicator">1</span> de 2</h2>
+        <div style="margin: 0 auto;width: 435px;background: white;padding: 20px;border-radius: 10px;margin-bottom: 20px;">
+          <h2 style="text-align: center; color: #333; margin-top: 0;">Paso <span id="stepIndicator">1</span> de 3</h2>
           
           <!-- Step 1: Retailer Input -->
           <div id="step1">
@@ -64,7 +64,8 @@ PAGES.pagos = {
               
               <label style="display: block; margin-bottom: 15px;">
                 <b>Tipo de Transacción:</b><br>
-                <select id="${field_tipo}" style="width: 100%; padding: 10px; font-size: 16px; border: 2px solid #ddd; border-radius: 5px;">
+                <select id="${field_tipo}" style="background: #fff; width: 100%; padding: 10px; font-size: 16px; border: 2px solid #ddd; border-radius: 5px;">
+                  <option value="">-- operación --</option>
                   <option value="Ingreso">➕ Ingreso (Depósito)</option>
                   <option value="Gasto">➖ Gasto (Retiro/Pago)</option>
                   <option value="Transferencia">🔄 Transferencia</option>
@@ -73,17 +74,17 @@ PAGES.pagos = {
               
               <label style="display: block; margin-bottom: 15px;">
                 <b>Método de Pago:</b><br>
-                <select id="${field_metodo}" style="width: 100%; padding: 10px; font-size: 16px; border: 2px solid #ddd; border-radius: 5px;">
+                <select id="${field_metodo}" style="background: #fff; width: 100%; padding: 10px; font-size: 16px; border: 2px solid #ddd; border-radius: 5px;">
+                  <option value="">-- método --</option>
                   <option value="Efectivo">💵 Efectivo</option>
                   <option value="Tarjeta">💳 Tarjeta Monedero</option>
-                  <option value="Transferencia">🏦 Transferencia Bancaria</option>
                   <option value="Otro">❓ Otro</option>
                 </select>
               </label>
               
               <label style="display: block; margin-bottom: 15px;">
                 <b>Monto:</b><br>
-                <input type="number" id="${numpad_display}" 
+                <input type="number" id="${numpad_display}" step="0.01" min="0"
                   style="width: calc(100% - 24px); padding: 15px; font-size: 32px; text-align: right; 
                   border: 3px solid #667eea; border-radius: 5px; font-weight: bold;"
                   value="0.00">
@@ -98,18 +99,18 @@ PAGES.pagos = {
             </fieldset>
           </div>
           
-          <!-- Step 2: Client Confirmation -->
+          <!-- Step 2: Monedero Selection -->
           <div id="step2" style="display: none;">
             <fieldset style="border: 2px solid #667eea; border-radius: 8px; padding: 15px;">
-              <legend style="color: #667eea; font-weight: bold;">2. Confirmación del Cliente</legend>
+              <legend style="color: #667eea; font-weight: bold;">2. Seleccionar Monedero</legend>
               
               <div style="text-align: center; margin-bottom: 20px;">
-                <h3 style="color: #333;">Monto a Pagar:</h3>
-                <div style="font-size: 48px; font-weight: bold; color: #667eea; margin: 10px 0;" id="confirmAmount">0.00€</div>
+                <h3 style="color: #333;">Monto:</h3>
+                <div style="font-size: 48px; font-weight: bold; color: #667eea; margin: 10px 0;" id="step2Amount">0.00€</div>
               </div>
               
               <div style="margin-bottom: 15px;">
-                <b>Selecciona tu Monedero:</b>
+                <b>Selecciona el Monedero:</b>
                 <input type="hidden" id="${field_persona}">
                 <div id="personaSelector"></div>
                 <button id="${scan_qr_btn}" style="width: 100%; padding: 15px; margin-top: 10px; 
@@ -126,17 +127,63 @@ PAGES.pagos = {
               </div>
             </fieldset>
           </div>
+          
+          <!-- Step 3: Client Confirmation -->
+          <div id="step3" style="display: none;">
+            <fieldset style="border: 2px solid #667eea; border-radius: 8px; padding: 15px;">
+              <legend style="color: #667eea; font-weight: bold;">3. Confirmación del Cliente</legend>
+              
+              <div style="text-align: center; margin-bottom: 20px;">
+                <h3 style="color: #333;">Confirmar Transacción</h3>
+                <div style="font-size: 48px; font-weight: bold; color: #667eea; margin: 10px 0;" id="confirmAmount">0.00€</div>
+              </div>
+              
+              <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <div style="margin-bottom: 10px;">
+                  <b>Tipo:</b> <span id="confirmTipo"></span>
+                </div>
+                <div style="margin-bottom: 10px;">
+                  <b>Método:</b> <span id="confirmMetodo"></span>
+                </div>
+                <div style="margin-bottom: 10px;">
+                  <b>Monedero:</b> <span id="confirmPersona"></span>
+                </div>
+                <div id="confirmPersonaDestino" style="margin-bottom: 10px; display: none;">
+                  <b>Monedero Destino:</b> <span id="confirmPersonaDestinoName"></span>
+                </div>
+                <div style="margin-bottom: 10px;">
+                  <b>Notas:</b> <span id="confirmNotas"></span>
+                </div>
+              </div>
+              
+              <div style="text-align: center; padding: 20px; background: #fff3cd; border-radius: 8px; border: 2px solid #ffc107;">
+                <p style="margin: 0; font-size: 18px; font-weight: bold; color: #856404;">
+                  ⚠️ Cliente: Verifica los datos antes de confirmar
+                </p>
+              </div>
+            </fieldset>
+          </div>
         </div>
         
         <!-- Action Buttons -->
-        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+        <div id="buttonContainer" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
           <button id="${btn_cancel}" style="padding: 20px; font-size: 18px; font-weight: bold; 
             background: #ff4757; color: white; border: none; border-radius: 8px; cursor: pointer;">
-            ❌ CANCELAR
+            ✖️ CANCELAR
           </button>
           <button id="${btn_confirm}" style="padding: 20px; font-size: 18px; font-weight: bold; 
             background: #2ed573; color: white; border: none; border-radius: 8px; cursor: pointer;">
-            ✅ CONFIRMAR
+            → SIGUIENTE
+          </button>
+        </div>
+        <div id="buttonContainerFinal" style="display: none; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+          <button id="${btn_back}" style="padding: 20px; font-size: 18px; font-weight: bold; 
+            background: #ffa502; color: white; border: none; border-radius: 8px; cursor: pointer;">
+            ← ATRÁS
+          </button>
+          <button id="${btn_confirm}2" style="padding: 20px; font-size: 18px; font-weight: bold; 
+            background: #2ed573; color: white; border: none; border-radius: 8px; cursor: pointer;">
+            ✔️ CONFIRMAR
           </button>
         </div>
       </div>
@@ -146,37 +193,130 @@ PAGES.pagos = {
     document.getElementById(field_tipo).addEventListener('change', function() {
       var tipo = this.value;
       var divDestino = document.getElementById(div_persona_destino);
+      var metodoSelect = document.getElementById(field_metodo);
+      
       if (tipo === 'Transferencia') {
         divDestino.style.display = 'block';
       } else {
         divDestino.style.display = 'none';
       }
+      
+      // Restrict Ingreso to Efectivo only
+      if (tipo === 'Ingreso') {
+        metodoSelect.value = 'Efectivo';
+        metodoSelect.disabled = true;
+      } else {
+        metodoSelect.disabled = false;
+      }
     });
     
-    // Confirm button
+    // Confirm/Next button
     document.getElementById(btn_confirm).onclick = () => {
       if (currentStep === 1) {
-        // Move to step 2
+        // Validate step 1
+        var tipo = document.getElementById(field_tipo).value;
+        var metodo = document.getElementById(field_metodo).value;
         var monto = parseFloat(document.getElementById(numpad_display).value);
+        
+        if (!tipo) {
+          alert("Por favor selecciona el tipo de transacción");
+          return;
+        }
+        if (!metodo) {
+          alert("Por favor selecciona el método de pago");
+          return;
+        }
+        if (tipo === 'Ingreso' && metodo !== 'Efectivo') {
+          alert("Los ingresos solo pueden ser en Efectivo");
+          return;
+        }
         if (isNaN(monto) || monto <= 0) {
           alert("Por favor ingresa un monto válido");
           return;
         }
         
+        // Move to step 2
         document.getElementById('step1').style.display = 'none';
         document.getElementById('step2').style.display = 'block';
         document.getElementById('stepIndicator').innerText = '2';
-        document.getElementById('confirmAmount').innerText = monto.toFixed(2) + '€';
+        document.getElementById('step2Amount').innerText = monto.toFixed(2) + '€';
         currentStep = 2;
         
         // Load personas for selection
         loadPersonaSelector();
-        if (document.getElementById(field_tipo).value === 'Transferencia') {
+        if (tipo === 'Transferencia') {
           loadPersonaDestinoSelector();
         }
-      } else {
-        // Process transaction
-        processTransaction();
+      } else if (currentStep === 2) {
+        // Validate step 2
+        var personaId = document.getElementById(field_persona).value;
+        if (!personaId) {
+          alert("Por favor selecciona un monedero");
+          return;
+        }
+        
+        var tipo = document.getElementById(field_tipo).value;
+        if (tipo === 'Transferencia') {
+          var personaDestinoId = document.getElementById(field_persona_destino).value;
+          if (!personaDestinoId) {
+            alert("Por favor selecciona el monedero destino");
+            return;
+          }
+          if (personaId === personaDestinoId) {
+            alert("No puedes transferir al mismo monedero");
+            return;
+          }
+        }
+        
+        // Move to step 3 - confirmation
+        document.getElementById('step2').style.display = 'none';
+        document.getElementById('step3').style.display = 'block';
+        document.getElementById('stepIndicator').innerText = '3';
+        
+        var monto = parseFloat(document.getElementById(numpad_display).value);
+        document.getElementById('confirmAmount').innerText = monto.toFixed(2) + '€';
+        
+        // Populate confirmation data
+        var tipoText = document.getElementById(field_tipo).selectedOptions[0].text;
+        var metodoText = document.getElementById(field_metodo).selectedOptions[0].text;
+        var personaName = SC_Personas[personaId]?.Nombre || personaId;
+        var notas = document.getElementById(field_notas).value || "(sin notas)";
+        
+        document.getElementById('confirmTipo').innerText = tipoText;
+        document.getElementById('confirmMetodo').innerText = metodoText;
+        document.getElementById('confirmPersona').innerText = personaName;
+        document.getElementById('confirmNotas').innerText = notas;
+        
+        if (tipo === 'Transferencia') {
+          var personaDestinoId = document.getElementById(field_persona_destino).value;
+          var personaDestinoName = SC_Personas[personaDestinoId]?.Nombre || personaDestinoId;
+          document.getElementById('confirmPersonaDestinoName').innerText = personaDestinoName;
+          document.getElementById('confirmPersonaDestino').style.display = 'block';
+        }
+        
+        // Switch to final button layout
+        document.getElementById('buttonContainer').style.display = 'none';
+        document.getElementById('buttonContainerFinal').style.display = 'grid';
+        
+        currentStep = 3;
+      }
+    };
+    
+    // Confirm final transaction button
+    document.getElementById(btn_confirm + "2").onclick = () => {
+      processTransaction();
+    };
+    
+    // Back button
+    document.getElementById(btn_back).onclick = () => {
+      if (currentStep === 3) {
+        // Go back to step 2
+        document.getElementById('step3').style.display = 'none';
+        document.getElementById('step2').style.display = 'block';
+        document.getElementById('stepIndicator').innerText = '2';
+        document.getElementById('buttonContainer').style.display = 'grid';
+        document.getElementById('buttonContainerFinal').style.display = 'none';
+        currentStep = 2;
       }
     };
     
@@ -336,12 +476,70 @@ PAGES.pagos = {
           handleSuperCafePayment(data);
         }
         
+        // Check for promotional bonus on Ingreso transactions (Efectivo only)
+        if (data.Tipo === 'Ingreso' && data.Metodo === 'Efectivo') {
+          var bonusAmount = calculatePromoBonus(data.Monto);
+          if (bonusAmount > 0) {
+            createPromoBonusTransaction(data.Persona, bonusAmount, data.Monto);
+          }
+        }
+        
         toastr.success("¡Transacción completada!");
         setTimeout(() => {
           document.getElementById("actionStatus").style.display = "none";
           setUrlHash("pagos," + ticketId);
         }, 1500);
       });
+    }
+    
+    function calculatePromoBonus(monto) {
+      var amount = parseFloat(monto);
+      
+      if (amount >= 5) {
+        return 0.20; // 20% bonus
+      } else if (amount >= 4) {
+        return 0.15; // 15% bonus
+      } else if (amount >= 3) {
+        return 0.10; // 10% bonus
+      } else if (amount >= 2) {
+        return 0.05; // 5% bonus
+      }
+      
+      return 0; // No bonus for amounts under 2€
+    }
+    
+    function createPromoBonusTransaction(personaId, bonusAmount, originalAmount) {
+      var bonusTicketId = safeuuid("");
+      var bonusData = {
+        Ticket: bonusTicketId,
+        Fecha: CurrentISOTime(),
+        Tipo: "Ingreso",
+        Monto: bonusAmount,
+        Persona: personaId,
+        Metodo: "Efectivo",
+        Notas: "Promo Bono - " + bonusAmount.toFixed(2) + "€ extra por recarga de " + originalAmount.toFixed(2) + "€",
+        Estado: "Completado",
+        Origen: "Promo Bono"
+      };
+      
+      // Update wallet balance with bonus
+      var persona = SC_Personas[personaId];
+      if (persona) {
+        var currentBalance = parseFloat(persona.Monedero_Balance || 0);
+        var newBalance = currentBalance + bonusAmount;
+        persona.Monedero_Balance = newBalance;
+        
+        TS_encrypt(persona, SECRET, (encrypted) => {
+          betterGunPut(gun.get(TABLE).get("personas").get(personaId), encrypted);
+        });
+      }
+      
+      // Save bonus transaction
+      TS_encrypt(bonusData, SECRET, (encrypted) => {
+        betterGunPut(gun.get(TABLE).get("pagos").get(bonusTicketId), encrypted);
+      });
+      
+      toastr.success("🎉 ¡Promo Bono aplicado! +" + bonusAmount.toFixed(2) + "€ extra");
     }
     
     function handleSuperCafePayment(transactionData) {
@@ -776,18 +974,16 @@ PAGES.pagos = {
         const tipo = data.Tipo;
         const metodo = data.Metodo || "";
     
-        // Only count Tarjeta Monedero transactions in balance totals
-        const isMonedero = metodo === "Tarjeta";
-    
+        // Count all Ingresos and Gastos in totals (excluding Transferencias)
         // Reset entries on every call for this ID
-        if (isMonedero && tipo === "Ingreso") {
+        if (tipo === "Ingreso") {
           totalData.gastos[id] = 0;
           totalData.ingresos[id] = monto;
-        } else if (isMonedero && tipo === "Gasto") {
+        } else if (tipo === "Gasto") {
           totalData.ingresos[id] = 0;
           totalData.gastos[id] = monto;
         } else {
-          // For non-Monedero transactions or Transferencias, don't count in totals
+          // For Transferencias, don't count in totals
           totalData.ingresos[id] = 0;
           totalData.gastos[id] = 0;
         }
@@ -943,7 +1139,6 @@ PAGES.pagos = {
               <select id="${field_metodo}" style="width: 100%; padding: 10px; font-size: 16px; border: 2px solid #ddd; border-radius: 5px;">
                 <option value="Efectivo">💵 Efectivo</option>
                 <option value="Tarjeta">💳 Tarjeta Monedero</option>
-                <option value="Transferencia">🏦 Transferencia Bancaria</option>
                 <option value="Otro">❓ Otro</option>
               </select>
             </label>
