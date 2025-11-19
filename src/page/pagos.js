@@ -519,6 +519,7 @@ PAGES.pagos = {
     }
     
     function createPromoBonusTransaction(personaId, bonusAmount, originalAmount) {
+      return
       var bonusTicketId = safeuuid("");
       var bonusData = {
         Ticket: bonusTicketId,
