@@ -987,8 +987,10 @@ PAGES.pagos = {
         // Count all Ingresos and Gastos in totals (excluding Transferencias)
         // Reset entries on every call for this ID
         if (tipo === "Ingreso") {
-          totalData.gastos[id] = 0;
-          totalData.ingresos[id] = monto;
+          if (data.Origen != "Promo Bono") {
+            totalData.gastos[id] = 0;
+            totalData.ingresos[id] = monto;
+          }
         } else if (tipo === "Gasto") {
           if (metodo != "Tarjeta") {
             totalData.ingresos[id] = 0;
