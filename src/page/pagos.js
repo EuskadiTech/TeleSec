@@ -395,11 +395,13 @@ PAGES.pagos = {
       
       // Check if persona has enough balance for Gasto or Transferencia
       if (tipo === 'Gasto' || tipo === 'Transferencia') {
-        var persona = SC_Personas[personaId];
-        var currentBalance = parseFloat(persona.Monedero_Balance || 0);
-        if (currentBalance < monto) {
-          if (!confirm(`Saldo insuficiente (${currentBalance.toFixed(2)}€). ¿Continuar de todos modos?`)) {
-            return;
+        if (metodo == "Tarjeta") {
+          var persona = SC_Personas[personaId];
+          var currentBalance = parseFloat(persona.Monedero_Balance || 0);
+          if (currentBalance < monto) {
+            if (!confirm(`Saldo insuficiente (${currentBalance.toFixed(2)}€). ¿Continuar de todos modos?`)) {
+              return;
+            }
           }
         }
       }
@@ -988,8 +990,10 @@ PAGES.pagos = {
           totalData.gastos[id] = 0;
           totalData.ingresos[id] = monto;
         } else if (tipo === "Gasto") {
-          totalData.ingresos[id] = 0;
-          totalData.gastos[id] = monto;
+          if (metodo != "Tarjeta") {
+            totalData.ingresos[id] = 0;
+            totalData.gastos[id] = monto;
+          }
         } else {
           // For Transferencias, don't count in totals
           totalData.ingresos[id] = 0;
