@@ -974,8 +974,8 @@ PAGES.pagos = {
     };
     var balance_real = 0;
     setInterval(() => {
-      Object.values(SC_Personas).forEach(element => {
-        balance_real += SC_Personas.Monedero_Balance
+      Object.values(SC_Personas).forEach(persona => {
+        balance_real += parseFloat(persona.Monedero_Balance || 0)
       });
       document.getElementById(balance_total).innerText = balance_real.toFixed(2) + "€";
       document.getElementById(balance_total).style.color = balance_real >= 0 ? "white" : "#ffcccc";
