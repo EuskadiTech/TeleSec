@@ -974,6 +974,7 @@ PAGES.pagos = {
     };
     var balance_real = 0;
     setInterval(() => {
+      balance_real = 0;
       Object.values(SC_Personas).forEach(persona => {
         balance_real += parseFloat(persona.Monedero_Balance || 0)
       });
