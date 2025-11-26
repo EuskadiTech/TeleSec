@@ -562,7 +562,7 @@ PAGES.pagos = {
       if (!persona) return;
       
       // Check if paying with points or adding points
-      if (persona.Puntos >= 10) {
+      if (false && persona.Puntos >= 10) {
         if (confirm("¿Pagar con Puntos? (10 puntos) - Cancela para pagar con dinero y ganar 1 punto.")) {
           persona.Puntos = parseInt(persona.Puntos) - 10;
           toastr.success("¡Comanda gratis para " + persona.Nombre + "!");
@@ -972,7 +972,14 @@ PAGES.pagos = {
       ingresos: {},  // { id: monto }
       gastos: {}     // { id: monto }
     };
-    
+    var balance_real = 0;
+    setInterval(() => {
+      Object.values(SC_Personas).forEach(element => {
+        balance_real += SC_Personas.Monedero_Balance
+      });
+      document.getElementById(balance_total).innerText = balance_real.toFixed(2) + "€";
+      document.getElementById(balance_total).style.color = balance_real >= 0 ? "white" : "#ffcccc";
+    }, 1000);
     TS_IndexElement(
       "pagos",
       config,
@@ -1011,10 +1018,9 @@ PAGES.pagos = {
         // Update UI
         document.getElementById(total_ingresos).innerText = totalIngresos.toFixed(2) + "€";
         document.getElementById(total_gastos).innerText = totalGastos.toFixed(2) + "€";
-        document.getElementById(balance_total).innerText = balance.toFixed(2) + "€";
-        document.getElementById(balance_total).style.color = balance >= 0 ? "white" : "#ffcccc";
       }
     );
+    
 
     
     document.getElementById(btn_datafono).onclick = () => {
