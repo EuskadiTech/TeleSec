@@ -886,7 +886,7 @@ function TS_IndexElement(
             pre.style.height = "100%";
             const spanPrecio = document.createElement("span");
             spanPrecio.style.fontSize = "20px";
-            spanPrecio.innerHTML = SC_Personas[data.Persona].Puntos >= 10 ? `Total: Gratis!(${precio}c)` : `Total: ${precio}c`;
+            spanPrecio.innerHTML = `Total: ${precio}c`;
             pre.innerHTML = "<b>Ticket de compra</b> ";
             pre.appendChild(document.createTextNode("\n"));
             pre.innerHTML += SC_parse_short(parsedComanda) + "<hr>" + data.Notas + "<hr>";
@@ -998,7 +998,7 @@ function TS_IndexElement(
             infoSpan.appendChild(document.createElement("br"));
             const pointsSpan = document.createElement("span");
             pointsSpan.style.fontSize = "17px";
-            pointsSpan.textContent = (persona.Puntos || "0") + " puntos.";
+            pointsSpan.textContent = (persona.Monedero_Balance || "0") + " €";
             infoSpan.appendChild(pointsSpan);
             tdPersona.appendChild(infoSpan);
             new_tr.appendChild(tdPersona);

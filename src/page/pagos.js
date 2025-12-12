@@ -561,20 +561,6 @@ PAGES.pagos = {
       var persona = SC_Personas[transactionData.Persona];
       if (!persona) return;
       
-      // Check if paying with points or adding points
-      if (false && persona.Puntos >= 10) {
-        if (confirm("¿Pagar con Puntos? (10 puntos) - Cancela para pagar con dinero y ganar 1 punto.")) {
-          persona.Puntos = parseInt(persona.Puntos) - 10;
-          toastr.success("¡Comanda gratis para " + persona.Nombre + "!");
-        } else {
-          persona.Puntos = parseInt(persona.Puntos) + 1;
-          toastr.success("¡Comanda de pago! +1 punto");
-        }
-      } else {
-        persona.Puntos = parseInt(persona.Puntos) + 1;
-        toastr.success("¡Comanda de pago! +1 punto");
-      }
-      
       TS_encrypt(persona, SECRET, (encrypted) => {
         betterGunPut(gun.get(TABLE).get("personas").get(transactionData.Persona), encrypted);
       });

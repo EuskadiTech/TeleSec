@@ -132,7 +132,7 @@ PAGES.supercafe = {
     document.getElementById(btn_borrar).onclick = () => {
       if (
         confirm(
-          "¿Quieres borrar esta comanda? - NO se actualizaran los puntos de la persona asignada."
+          "¿Quieres borrar esta comanda? - NO se actualizará el monedero de la persona asignada."
         ) == true
       ) {
         betterGunPut(gun.get(TABLE).get("supercafe").get(mid), null);

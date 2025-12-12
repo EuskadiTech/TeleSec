@@ -11,8 +11,6 @@ PAGES.personas = {
     var permisosdet = safeuuid();
     var field_nombre = safeuuid();
     var field_zona = safeuuid();
-    //var field_roles = safeuuid();
-    var field_puntos = safeuuid();
     var field_notas = safeuuid();
     var field_anilla = safeuuid();
     var field_foto = safeuuid();
@@ -40,10 +38,6 @@ PAGES.personas = {
                       <form id="${permisosdet}">
                       </form>
                     </details>
-                    <label>
-                        Puntos<br>
-                        <input type="number" id="${field_puntos}"><br><br>
-                    </label>
                     <label>
                         Anilla<br>
                         <input type="color" id="${field_anilla}"><br><br>
@@ -103,10 +97,7 @@ PAGES.personas = {
           pdel.innerHTML = pot + "</ul>"
           document.getElementById(field_nombre).value = data["Nombre"] || "";
           document.getElementById(field_zona).value = data["Region"] || "";
-          //document.getElementById(field_roles).value = data["Roles"] || "";
-          document.getElementById(field_puntos).value = data["Puntos"] || 0;
           document.getElementById(field_anilla).value = data["SC_Anilla"] || "";
-          // document.getElementById(field_foto).value = "";
           document.getElementById(render_foto).src =
             data["Foto"] || "static/ico/user_generic.png";
           resized = data["Foto"] || "static/ico/user_generic.png";
@@ -134,7 +125,7 @@ PAGES.personas = {
             document.getElementById(render_foto).src = url;
             resized = url;
           },
-          125,
+          256,
           0.7
         );
       });
@@ -144,7 +135,6 @@ PAGES.personas = {
         Nombre: document.getElementById(field_nombre).value,
         Region: document.getElementById(field_zona).value,
         Roles: dt.getAll("perm").join(",") + ",",
-        Puntos: parseInt(document.getElementById(field_puntos).value),
         SC_Anilla: document.getElementById(field_anilla).value,
         Foto: resized,
         markdown: document.getElementById(field_notas).value,
@@ -197,13 +187,7 @@ PAGES.personas = {
       config,
       gun.get(TABLE).get("personas"),
       document.getElementById("tableContainer"),
-      (row, data) => {
-        // Add gold background for high points
-        const points = parseFloat(data.Puntos);
-        if (points >= 10) {
-          row.style.backgroundColor = "gold";
-        }
-      },
+      undefined,
       undefined,
       true // Enable global search bar
     );
