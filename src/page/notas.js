@@ -93,7 +93,7 @@ PAGES.notas = {
           setTimeout(() => {
             document.getElementById("actionStatus").style.display = "none";
             setUrlHash("notas");
-          }, 1500);
+          }, 750);
         });
       };
       document.getElementById(btn_borrar).onclick = () => {
@@ -102,7 +102,7 @@ PAGES.notas = {
           toastr.error("Borrado!");
           setTimeout(() => {
             setUrlHash("notas");
-          }, 1500);
+          }, 750);
         }
       };
     },

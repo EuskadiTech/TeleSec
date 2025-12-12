@@ -98,7 +98,7 @@ PAGES.materiales = {
         setTimeout(() => {
           document.getElementById("actionStatus").style.display = "none";
           setUrlHash("materiales");
-        }, 1500);
+        }, 750);
       });
     };
     document.getElementById(btn_borrar).onclick = () => {
@@ -107,7 +107,7 @@ PAGES.materiales = {
         toastr.error("Borrado!");
         setTimeout(() => {
           setUrlHash("materiales");
-        }, 1500);
+        }, 750);
       }
     };
   },

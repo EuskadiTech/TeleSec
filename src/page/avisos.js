@@ -158,7 +158,7 @@ PAGES.avisos = {
           setTimeout(() => {
             document.getElementById("actionStatus").style.display = "none";
             setUrlHash("avisos");
-          }, 1500);
+          }, 750);
         });
       };
       document.getElementById(btn_borrar).onclick = () => {
@@ -167,7 +167,7 @@ PAGES.avisos = {
           toastr.error("Borrado!");
           setTimeout(() => {
             setUrlHash("avisos");
-          }, 1500);
+          }, 750);
         }
       };
     },

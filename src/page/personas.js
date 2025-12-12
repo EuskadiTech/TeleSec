@@ -148,7 +148,7 @@ PAGES.personas = {
         setTimeout(() => {
           document.getElementById("actionStatus").style.display = "none";
           setUrlHash("personas");
-        }, 1500);
+        }, 750);
       });
     };
     document.getElementById(btn_ver_monedero).onclick = () => {
@@ -160,7 +160,7 @@ PAGES.personas = {
         toastr.error("Borrado!");
         setTimeout(() => {
           setUrlHash("personas");
-        }, 1500);
+        }, 750);
       }
     };
   },

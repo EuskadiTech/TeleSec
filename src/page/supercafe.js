@@ -126,7 +126,7 @@ PAGES.supercafe = {
         setTimeout(() => {
           document.getElementById("actionStatus").style.display = "none";
           setUrlHash("supercafe");
-        }, 1500);
+        }, 750);
       });
     };
     document.getElementById(btn_borrar).onclick = () => {
@@ -138,7 +138,7 @@ PAGES.supercafe = {
         betterGunPut(gun.get(TABLE).get("supercafe").get(mid), null);
         setTimeout(() => {
           setUrlHash("supercafe");
-        }, 1500);
+        }, 750);
       }
     };
   },

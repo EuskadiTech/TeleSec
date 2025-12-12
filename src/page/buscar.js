@@ -199,7 +199,7 @@ PAGES.buscar = {
         if (searchInputEl.value.trim().length >= 2) {
           performSearch();
         }
-      }, 1500);
+      }, 1501);
     };
     
     // Focus on search input

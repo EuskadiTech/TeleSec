@@ -230,7 +230,7 @@ PAGES.aulas = {
         setTimeout(() => {
           document.getElementById("actionStatus").style.display = "none";
           setUrlHash("aulas,solicitudes");
-        }, 1500);
+        }, 750);
       });
     };
     document.getElementById(btn_borrar).onclick = () => {
@@ -239,7 +239,7 @@ PAGES.aulas = {
         toastr.error("Borrado!");
         setTimeout(() => {
           setUrlHash("aulas,solicitudes");
-        }, 1500);
+        }, 750);
       }
     };
   },
@@ -366,7 +366,7 @@ PAGES.aulas = {
         setTimeout(() => {
           document.getElementById("actionStatus").style.display = "none";
           setUrlHash("aulas,informes");
-        }, 1500);
+        }, 750);
       });
     };
     document.getElementById(btn_borrar).onclick = () => {
@@ -375,7 +375,7 @@ PAGES.aulas = {
         toastr.error("Borrado!");
         setTimeout(() => {
           setUrlHash("aulas,informes");
-        }, 1500);
+        }, 750);
       }
     };
   },

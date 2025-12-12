@@ -66,7 +66,7 @@ PAGES.comedor = {
         setTimeout(() => {
           document.getElementById("actionStatus").style.display = "none";
           setUrlHash("comedor");
-        }, 1500);
+        }, 750);
       });
     };
     document.getElementById(btn_borrar).onclick = () => {
@@ -75,7 +75,7 @@ PAGES.comedor = {
         toastr.error("Borrado!");
         setTimeout(() => {
           setUrlHash("comedor");
-        }, 1500);
+        }, 750);
       }
     };
   },

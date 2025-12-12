@@ -44,7 +44,7 @@ if (urlParams.get("sublogin") != null) {
   SUB_LOGGED_IN_DETAILS = true;
   setInterval(() => {
     SUB_LOGGED_IN_DETAILS = SC_Personas[SUB_LOGGED_IN_ID];
-  }, 1500);
+  }, 7500;
 }
 function LogOutTeleSec() {
   SUB_LOGGED_IN = false;

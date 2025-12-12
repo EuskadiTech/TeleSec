@@ -498,7 +498,7 @@ PAGES.pagos = {
         setTimeout(() => {
           document.getElementById("actionStatus").style.display = "none";
           setUrlHash("pagos," + ticketId);
-        }, 1500);
+        }, 750);
       });
     }
     
@@ -1337,7 +1337,7 @@ PAGES.pagos = {
         setTimeout(() => {
           document.getElementById("actionStatus").style.display = "none";
           setUrlHash("pagos," + transactionId);
-        }, 1500);
+        }, 750);
       });
     };
     
