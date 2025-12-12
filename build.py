@@ -16,7 +16,8 @@ def get_all_files(directory):
 PREFETCH = ""
 VERSIONCO = "2025-08"
 HANDLEPARSE = get_all_files("src")
-
+TITLE = os.environ.get("TELESEC_TITLE", "TeleSec")
+HOSTER = os.environ.get("TELESEC_HOSTER", "EuskadiTech")
 # Combine assets from JSON and recursively found files
 ASSETS = get_all_files("assets")
 
@@ -35,6 +36,7 @@ def replace_handles(string):
     string = string.replace("%%PREFETCH%%", PREFETCH)
     string = string.replace("%%VERSIONCO%%", VERSIONCO)
     string = string.replace("%%TITLE%%", "TeleSec")
+    string = string.replace("%%HOSTER%%", HOSTER)
     string = string.replace("%%ASSETSJSON%%", json.dumps(ASSETS, ensure_ascii=False))
     return string
 

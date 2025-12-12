@@ -34,7 +34,7 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Build
-        run: python3 build.py
+        run: TELESEC_HOSTER=GitHub-Pages python3 build.py
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

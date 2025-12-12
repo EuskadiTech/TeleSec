@@ -15,16 +15,16 @@ PAGES.login = {
       var btn_reload = safeuuid();
       var div_actions = safeuuid();
       container.innerHTML = `
-                <h1>Iniciar sesión</h1>
-                <fieldset>
-                    <legend>Valores</legend>
-                    <input type="hidden" id="${field_persona}">
-                    <div id="${div_actions}"></div>
-                    <button class="btn5" id="${btn_guardar}">Acceder</button>
-                    <button class="btn1" id="${btn_reload}">Recargar lista</button>
-                </fieldset>
-                <a href="#login,setup">Empezar desde cero</a>
-                `;
+        <h1>Iniciar sesión</h1>
+        <fieldset>
+            <legend>Valores</legend>
+            <input type="hidden" id="${field_persona}">
+            <div id="${div_actions}"></div>
+            <button class="btn5" id="${btn_guardar}">Acceder</button>
+            <button class="btn1" id="${btn_reload}">Recargar lista</button>
+        </fieldset>
+        <a href="#login,setup">Empezar desde cero</a>
+        `;
       var divact = document.getElementById(div_actions);
       addCategory_Personas(
         divact,

@@ -1,10 +1,10 @@
-PERMS["notas"] = "Notas"
+PERMS["notas"] = "Noticias"
 PERMS["notas:edit"] = "&gt; Editar"
 PAGES.notas = {
     navcss: "btn5",
-    icon: "static/appico/Notepad.svg",
+    icon: "static/appico/Newspaper.svg",
     AccessControl: true,
-    Title: "Notas",
+    Title: "Noticias",
     edit: function (mid) {
       if (!checkRole("notas:edit")) {setUrlHash("notas");return}
       var nameh1 = safeuuid();
@@ -15,7 +15,7 @@ PAGES.notas = {
       var btn_borrar = safeuuid();
       var div_actions = safeuuid();
       container.innerHTML = `
-        <h1>Nota <code id="${nameh1}"></code></h1>
+        <h1>Noticia <code id="${nameh1}"></code></h1>
         <fieldset style="float: none; width: calc(100% - 40px);max-width: none;">
             <legend>Valores</legend>
             <div style="max-width: 400px;">
@@ -28,7 +28,7 @@ PAGES.notas = {
             </div>
             <label>
                 Contenido<br>
-                <textarea id="${field_contenido}" style="width: 100%; height: 400px;"></textarea><br><br>
+                <textarea id="${field_contenido}" style="width: calc(100% - 15px); height: 400px;"></textarea><br><br>
             </label>
             <hr>
             <button class="btn5" id="${btn_guardar}">Guardar</button>
@@ -62,7 +62,7 @@ PAGES.notas = {
             addCategory_Personas(
               divact,
               SC_Personas,
-              data["Autor"] || "",
+              data["Autor"] || SUB_LOGGED_IN_ID || "",
               (value) => {
                 document.getElementById(field_autor).value = value;
               },
@@ -93,7 +93,7 @@ PAGES.notas = {
           setTimeout(() => {
             document.getElementById("actionStatus").style.display = "none";
             setUrlHash("notas");
-          }, 750);
+          }, SAVE_WAIT);
         });
       };
       document.getElementById(btn_borrar).onclick = () => {
@@ -102,7 +102,7 @@ PAGES.notas = {
           toastr.error("Borrado!");
           setTimeout(() => {
             setUrlHash("notas");
-          }, 750);
+          }, SAVE_WAIT);
         }
       };
     },
@@ -111,8 +111,8 @@ PAGES.notas = {
       const tablebody = safeuuid();
       var btn_new = safeuuid();
       container.innerHTML = `
-                <h1>Notas</h1>
-                <button id="${btn_new}">Nueva nota</button>
+                <h1>Noticias</h1>
+                <button id="${btn_new}">Nueva noticia</button>
                 <div id="cont"></div>
                 `;
       TS_IndexElement(

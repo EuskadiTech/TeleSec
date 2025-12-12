@@ -4,7 +4,6 @@ PAGES.avisos = {
     navcss: "btn5",
     icon: "static/appico/File_Plugin.svg",
     AccessControl: true,
-    Esconder: true,
     Title: "Avisos",
     edit: function (mid) {
       if (!checkRole("avisos:edit")) {setUrlHash("avisos");return}
@@ -22,40 +21,40 @@ PAGES.avisos = {
       var btn_borrar = safeuuid();
       var div_actions = safeuuid();
       container.innerHTML = `
-                <h1>Aviso <code id="${nameh1}"></code></h1>
-                <fieldset style="float: left;">
-                    <legend>Valores</legend>
-                    <label>
-                        Fecha<br>
-                        <input readonly disabled type="text" id="${field_fecha}" value=""><br><br>
-                    </label>
-                    <label>
-                        Asunto<br>
-                        <input type="text" id="${field_asunto}" value=""><br><br>
-                    </label>
-                    <input type="hidden" id="${field_origen}">
-                    <input type="hidden" id="${field_destino}">
-                    <div id="${div_actions}"></div>
-                    <label>
-                        Mensaje<br>
-                        <textarea id="${field_mensaje}"></textarea><br><br>
-                    </label>
-                    <label>
-                        Respuesta<br>
-                        <textarea id="${field_respuesta}"></textarea><br><br>
-                    </label>
-                    <label>
-                        Estado<br>
-                        <input readonly disabled type="text" id="${field_estado}" value="">
-                        <br>
-                        <button id="${btn_leer}">Leido</button>
-                        <button id="${btn_desleer}">No leido</button>
-                        <br>
-                    </label><hr>
-                    <button class="btn5" id="${btn_guardar}">Guardar</button>
-                    <button class="rojo" id="${btn_borrar}">Borrar</button>
-                </fieldset>
-                `;
+        <h1>Aviso <code id="${nameh1}"></code></h1>
+        <fieldset style="float: left;">
+            <legend>Valores</legend>
+            <label>
+                Fecha<br>
+                <input readonly disabled type="text" id="${field_fecha}" value=""><br><br>
+            </label>
+            <label>
+                Asunto<br>
+                <input type="text" id="${field_asunto}" value=""><br><br>
+            </label>
+            <input type="hidden" id="${field_origen}">
+            <input type="hidden" id="${field_destino}">
+            <div id="${div_actions}"></div>
+            <label>
+                Mensaje<br>
+                <textarea id="${field_mensaje}"></textarea><br><br>
+            </label>
+            <label>
+                Respuesta<br>
+                <textarea id="${field_respuesta}"></textarea><br><br>
+            </label>
+            <label>
+                Estado<br>
+                <input readonly disabled type="text" id="${field_estado}" value="">
+                <br>
+                <button id="${btn_leer}">Leido</button>
+                <button id="${btn_desleer}">No leido</button>
+                <br>
+            </label><hr>
+            <button class="btn5" id="${btn_guardar}">Guardar</button>
+            <button class="rojo" id="${btn_borrar}">Borrar</button>
+        </fieldset>
+        `;
       document.getElementById(btn_leer).onclick = () => {
         document.getElementById(field_estado).value = "leido";
       };
@@ -158,7 +157,7 @@ PAGES.avisos = {
           setTimeout(() => {
             document.getElementById("actionStatus").style.display = "none";
             setUrlHash("avisos");
-          }, 750);
+          }, SAVE_WAIT);
         });
       };
       document.getElementById(btn_borrar).onclick = () => {
@@ -167,7 +166,7 @@ PAGES.avisos = {
           toastr.error("Borrado!");
           setTimeout(() => {
             setUrlHash("avisos");
-          }, 750);
+          }, SAVE_WAIT);
         }
       };
     },
@@ -176,10 +175,10 @@ PAGES.avisos = {
       const tablebody = safeuuid();
       var btn_new = safeuuid();
       container.innerHTML = `
-                <h1>Avisos</h1>
-                <button id="${btn_new}">Nuevo aviso</button>
-                <div id="cont"></div>
-                `;
+        <h1>Avisos</h1>
+        <button id="${btn_new}">Nuevo aviso</button>
+        <div id="cont"></div>
+        `;
       TS_IndexElement(
         "avisos",
         [

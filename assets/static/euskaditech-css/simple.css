@@ -348,10 +348,11 @@ hr {
   align-items: center;
   padding: 0 5px;
   border-radius: 3px 3px 0 0;
+  overflow-x: auto;
 }
 
 .ribbon-tab {
-  padding: 4px 15px;
+  padding: 4px 9px;
   cursor: pointer;
   border-right: 1px solid #a2a9b9;
   font-size: 13px;
@@ -367,7 +368,7 @@ hr {
   gap: 10px;
   background-color: #c8d4eb;
   border: 1px solid #a2a9b9;
-  overflow-x: scroll;
+  overflow-x: auto;
   padding: 5px;
 }
 

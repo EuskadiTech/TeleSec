@@ -52,16 +52,16 @@ PAGES.dataman = {
     container.innerHTML = `
       <h1>Exportar Datos</h1>
       <fieldset>
-          <legend>Exportar datos</legend>
-          <em>Al pulsar, Espera hasta que salga una notificacion verde.</em>
-          <br>
-          <br>
-          <button id="${button_export_local}" type="button">Exportar sin cifrar</button>
-          <button id="${button_export_safe}" type="button">Exportar con cifrado</button>
-          <button id="${button_export_safe_cloud}" style="display: none;" type="button">Exportar a EuskadiTech - cifrado</button>
-          <!--<br><br><em>Para descargar envia un correo a telesec@tech.eus con el asunto "TSBK %${GROUPID}".</em>-->
+        <legend>Exportar datos</legend>
+        <em>Al pulsar, Espera hasta que salga una notificacion verde.</em>
+        <br>
+        <br>
+        <button id="${button_export_local}" type="button">Exportar sin cifrar</button>
+        <button id="${button_export_safe}" type="button">Exportar con cifrado</button>
+        <button id="${button_export_safe_cloud}" style="display: none;" type="button">Exportar a EuskadiTech - cifrado</button>
+        <!--<br><br><em>Para descargar envia un correo a telesec@tech.eus con el asunto "TSBK %${GROUPID}".</em>-->
       </fieldset>
-            `;
+      `;
     document.getElementById(button_export_local).onclick = () => {
       var data_export = {};
       var output = {
@@ -85,7 +85,7 @@ PAGES.dataman = {
           });
           toastr.success("Exportado todo, descargando!");
           download(
-            `Export TeleSec ${GROUPID}.json.txt`,
+            `Export %%TITLE%% ${GROUPID}.json.txt`,
             JSON.stringify(output)
           );
           //setUrlHash(sel);
@@ -97,32 +97,32 @@ PAGES.dataman = {
       var download_data = (DATA) => {
         toastr.success("Exportado todo, descargado!");
         download(
-          `Export TeleSec Encriptado ${GROUPID}.json.txt`,
+          `Export %%TITLE%% Encriptado ${GROUPID}.json.txt`,
           JSON.stringify(DATA)
         );
         //setUrlHash(sel);
       };
       gun.get(TABLE).load(download_data);
     };
-    document.getElementById(button_export_safe_cloud).onclick = () => {
-      var download_data = (DATA) => {
-        toastr.info("Exportado todo, subiendo!");
-        fetch(
-          "https://telesec-sync.tech.eus/upload_backup.php?table=" + GROUPID,
-          {
-            method: "POST",
-            body: JSON.stringify(DATA),
-          }
-        )
-          .then(() => {
-            toastr.success("Subido correctamente!");
-          })
-          .catch(() => {
-            toastr.error("Ha ocurrido un error en la subida.");
-          });
-      };
-      gun.get(TABLE).load(download_data);
-    };
+    // document.getElementById(button_export_safe_cloud).onclick = () => {
+    //   var download_data = (DATA) => {
+    //     toastr.info("Exportado todo, subiendo!");
+    //     fetch(
+    //       "https://telesec-sync.tech.eus/upload_backup.php?table=" + GROUPID,
+    //       {
+    //         method: "POST",
+    //         body: JSON.stringify(DATA),
+    //       }
+    //     )
+    //       .then(() => {
+    //         toastr.success("Subido correctamente!");
+    //       })
+    //       .catch(() => {
+    //         toastr.error("Ha ocurrido un error en la subida.");
+    //       });
+    //   };
+    //   gun.get(TABLE).load(download_data);
+    // };
   },
   __import: function () {
     var select_type = safeuuid();

@@ -2,7 +2,7 @@ window.rtcRoom = "telesec.tech.eus";
 var opt = {
   axe: false,
   localStorage: false,
-  peers: RELAYS
+  peers: RELAYS,
   // radisk: true,
 };
 
@@ -40,8 +40,10 @@ function formatPeerInfo(peer) {
 }
 
 function isPeerConnected(peer) {
-  return peer.wire != undefined && 
-         (peer.wire.readyState == 1 || peer.wire.readyState == "open");
+  return (
+    peer.wire != undefined &&
+    (peer.wire.readyState == 1 || peer.wire.readyState == "open")
+  );
 }
 
 function createPeerListElement(wireHType, wireID) {
@@ -53,21 +55,21 @@ function createPeerListElement(wireHType, wireID) {
 function updateConnectionStatus(peerCount) {
   var statusImage = peerCount < 1 ? "connect_ko.svg" : "connect_ok.svg";
   if (window.navigator.onLine == false) {
-    statusImage = "offline.svg"
+    statusImage = "offline.svg";
   }
   document.getElementById("connectStatus").src = `static/ico/${statusImage}`;
-  
+
   if (peerCount < 1) {
     if (!window.peerRetryCount) window.peerRetryCount = 0;
     window.peerRetryCount = (window.peerRetryCount + 1) % 3;
     if (window.peerRetryCount === 0) {
       gun.opt({ peers: RELAYS });
-      
+
       // Enhanced peer connection retry
       setTimeout(() => {
         gun.opt({ peers: RELAYS });
       }, 1000);
-      
+
       setTimeout(() => {
         gun.opt({ peers: RELAYS });
       }, 3000);
@@ -76,9 +78,9 @@ function updateConnectionStatus(peerCount) {
   } else {
     ConnectionStarted = true;
     AtLeastThreePeers = true;
-    
+
     // When we have good connectivity, force a data refresh
-    if (typeof refreshAllData === 'function') {
+    if (typeof refreshAllData === "function") {
       setTimeout(refreshAllData, 1000);
     }
   }
@@ -88,22 +90,22 @@ function getPeers() {
   const peerCountEl = document.getElementById("peerCount");
   const peerListEl = document.getElementById("peerList");
   const list = document.createElement("ul");
-  
+
   document.getElementById("peerPID").innerText = "PID " + gun.back("opt.pid");
-  
+
   const connectedPeers = Object.values(gun.back("opt.peers"))
     .filter(isPeerConnected)
-    .map(peer => {
+    .map((peer) => {
       const { wireHType, wireID } = formatPeerInfo(peer);
       return createPeerListElement(wireHType, wireID);
     });
-    
-  connectedPeers.forEach(el => list.append(el));
-  
+
+  connectedPeers.forEach((el) => list.append(el));
+
   peerListEl.innerHTML = list.innerHTML;
   const peerCount = connectedPeers.length;
   peerCountEl.innerText = peerCount;
-  
+
   updateConnectionStatus(peerCount);
 }
 function safeuuid(prefix = "AXLUID_") {

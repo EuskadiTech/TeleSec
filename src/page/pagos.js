@@ -51,7 +51,7 @@ PAGES.pagos = {
     container.innerHTML = `
       <div style="max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
         <h1 style="color: white; text-align: center; margin-bottom: 20px;">
-          Terminal de pago TeleSec
+          Terminal de pago %%TITLE%%
         </h1>
         
         <div style="margin: 0 auto;max-width: 435px;background: white;padding: 20px;border-radius: 10px;margin-bottom: 20px;">
@@ -268,6 +268,19 @@ PAGES.pagos = {
           }
         }
         
+      
+        // Check if persona has enough balance for Gasto or Transferencia
+        if (tipo === 'Gasto' || tipo === 'Transferencia') {
+          if (metodo == "Tarjeta") {
+            var persona = SC_Personas[personaId];
+            var currentBalance = parseFloat(persona.Monedero_Balance || 0);
+            if (currentBalance < monto) {
+              if (!confirm(`Saldo insuficiente (${currentBalance.toFixed(2)}€). ¿Continuar de todos modos?`)) {
+                return;
+              }
+            }
+          }
+        }
         // Move to step 3 - confirmation
         document.getElementById('step2').style.display = 'none';
         document.getElementById('step3').style.display = 'block';
@@ -393,19 +406,6 @@ PAGES.pagos = {
         }
       }
       
-      // Check if persona has enough balance for Gasto or Transferencia
-      if (tipo === 'Gasto' || tipo === 'Transferencia') {
-        if (metodo == "Tarjeta") {
-          var persona = SC_Personas[personaId];
-          var currentBalance = parseFloat(persona.Monedero_Balance || 0);
-          if (currentBalance < monto) {
-            if (!confirm(`Saldo insuficiente (${currentBalance.toFixed(2)}€). ¿Continuar de todos modos?`)) {
-              return;
-            }
-          }
-        }
-      }
-      
       // Create transaction
       var ticketId = safeuuid("");
       var transactionData = {
@@ -498,7 +498,7 @@ PAGES.pagos = {
         setTimeout(() => {
           document.getElementById("actionStatus").style.display = "none";
           setUrlHash("pagos," + ticketId);
-        }, 750);
+        }, SAVE_WAIT);
       });
     }
     
@@ -1337,7 +1337,7 @@ PAGES.pagos = {
         setTimeout(() => {
           document.getElementById("actionStatus").style.display = "none";
           setUrlHash("pagos," + transactionId);
-        }, 750);
+        }, SAVE_WAIT);
       });
     };
     

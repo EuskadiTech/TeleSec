@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="manifest" href="manifest.json" />
   <title>%%TITLE%%</title>
-  <link rel="icon" type="image/png" href="static/TeleSec.jpg" />
+  <link rel="icon" type="image/png" href="static/logo.jpg" />
   <link href="static/euskaditech-css/simple.css" rel="stylesheet" />
   <link href="static/toastr.min.css" rel="stylesheet" />
   %%PREFETCH%%
@@ -19,7 +19,7 @@
     <div class="ribbon-content">
       <div class="ribbon-tabs">
         <div class="ribbon-tab active" data-tab="modulos">Modulos</div>
-        <div class="ribbon-tab" data-tab="buscar">🔍 Buscar</div>
+        <div class="ribbon-tab" data-tab="buscar">Buscar</div>
         <div class="ribbon-tab" data-tab="credenciales">Credenciales</div>
       </div>
       
@@ -56,7 +56,7 @@
               Iniciar sesión
             </button><br>
             <b>Conectado a <span id="peerCount">?</span>
-              nodos</b>
+              nodos - proveedor %%HOSTER%%</b>
           </div>
         </div>
       </details>
@@ -86,7 +86,7 @@
         display: none;
       " />
   <div id="snackbar">
-    Hay una nueva versión de TeleSec.<br /><a id="reload">Pulsa aqui para actualizar.</a>
+    Hay una nueva versión de %%TITLE%%.<br /><a id="reload">Pulsa aqui para actualizar.</a>
   </div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/aes.js" integrity="sha256-/H4YS+7aYb9kJ5OKhFYPUjSJdrtV6AeyJOtTkw6X72o=" crossorigin="anonymous"></script>
   <script src="static/showdown.min.js"></script>
@@ -122,10 +122,10 @@
   <script src="page/resumen_diario.js"></script>
   <script src="page/personas.js"></script>
   <script src="page/supercafe.js"></script>
-  <script src="page/avisos.js"></script>
+  <!-- <script src="page/avisos.js"></script> -->
   <script src="page/comedor.js"></script>
   <script src="page/notas.js"></script>
-  <script src="page/chat.js"></script>
+  <!-- <script src="page/chat.js"></script> -->
   <script src="page/buscar.js"></script>
   <script src="page/pagos.js"></script>
 </body>

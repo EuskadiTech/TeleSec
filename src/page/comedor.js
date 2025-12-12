@@ -15,17 +15,17 @@ PAGES.comedor = {
     container.innerHTML = `
       <h1>Entrada del menú <code id="${nameh1}"></code></h1>
       <fieldset style="float: left;">
-          <legend>Valores</legend>
-          <label>
-              Fecha<br>
-              <input type="date" id="${field_fecha}" value=""><br><br>
-          </label>
-          <label>
-              Platos<br>
-              <textarea id="${field_platos}"></textarea><br><br>
-          </label>
-          <button class="btn5" id="${btn_guardar}">Guardar</button>
-          <button class="rojo" id="${btn_borrar}">Borrar</button>
+        <legend>Valores</legend>
+        <label>
+          Fecha<br>
+          <input type="date" id="${field_fecha}" value=""><br><br>
+        </label>
+        <label>
+          Platos<br>
+          <textarea id="${field_platos}"></textarea><br><br>
+        </label>
+        <button class="btn5" id="${btn_guardar}">Guardar</button>
+        <button class="rojo" id="${btn_borrar}">Borrar</button>
       </fieldset>
       `;
     gun
@@ -66,7 +66,7 @@ PAGES.comedor = {
         setTimeout(() => {
           document.getElementById("actionStatus").style.display = "none";
           setUrlHash("comedor");
-        }, 750);
+        }, SAVE_WAIT);
       });
     };
     document.getElementById(btn_borrar).onclick = () => {
@@ -75,19 +75,19 @@ PAGES.comedor = {
         toastr.error("Borrado!");
         setTimeout(() => {
           setUrlHash("comedor");
-        }, 750);
+        }, SAVE_WAIT);
       }
     };
   },
   index: function () {
     if (!checkRole("comedor")) {setUrlHash("index");return}
-    const tablebody = safeuuid();
+    const cont = safeuuid();
     var btn_new = safeuuid();
     container.innerHTML = `
-                <h1>Menú del comedor</h1>
-                <button id="${btn_new}">Nueva entrada</button>
-                <div id="cont"></div>
-                `;
+      <h1>Menú del comedor</h1>
+      <button id="${btn_new}">Nueva entrada</button>
+      <div id="${cont}"></div>
+      `;
     TS_IndexElement(
       "comedor",
       [
@@ -105,7 +105,7 @@ PAGES.comedor = {
         }
       ],
       gun.get(TABLE).get("comedor"),
-      document.querySelector("#cont"),
+      document.getElementById(cont),
       (data, new_tr) => {
         // new_tr.style.backgroundColor = "#FFCCCB";
         if (data.Fecha == CurrentISODate()) {

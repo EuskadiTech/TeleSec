@@ -230,7 +230,7 @@ PAGES.aulas = {
         setTimeout(() => {
           document.getElementById("actionStatus").style.display = "none";
           setUrlHash("aulas,solicitudes");
-        }, 750);
+        }, SAVE_WAIT);
       });
     };
     document.getElementById(btn_borrar).onclick = () => {
@@ -239,7 +239,7 @@ PAGES.aulas = {
         toastr.error("Borrado!");
         setTimeout(() => {
           setUrlHash("aulas,solicitudes");
-        }, 750);
+        }, SAVE_WAIT);
       }
     };
   },
@@ -310,27 +310,27 @@ PAGES.aulas = {
       title = "Diario " + date[2] + "/" + date[1] + "/" + date[0];
     }
     container.innerHTML = `
-        <a class="button" href="#aulas,informes">← Volver a informes</a>
-        <h1>Informe <code id="${nameh1}"></code></h1>
-        <fieldset style="float: none; width: calc(100% - 40px);max-width: none;">
-            <legend>Valores</legend>
-            <div style="max-width: 400px;">
-              <label>
-                  Asunto<br>
-                  <input type="text" id="${field_asunto}" value=""><br><br>
-              </label>
-              <input type="hidden" id="${field_autor}" readonly value="">
-              <input type="hidden" id="${field_fecha}" value="">
-            </div>
+      <a class="button" href="#aulas,informes">← Volver a informes</a>
+      <h1>Informe <code id="${nameh1}"></code></h1>
+      <fieldset style="float: none; width: calc(100% - 40px);max-width: none;">
+          <legend>Valores</legend>
+          <div style="max-width: 400px;">
             <label>
-                Contenido<br>
-                <textarea id="${field_contenido}" style="width: 100%; height: 400px;"></textarea><br><br>
+                Asunto<br>
+                <input type="text" id="${field_asunto}" value=""><br><br>
             </label>
-            <hr>
-            <button class="btn5" id="${btn_guardar}">Guardar</button>
-            <button class="rojo" id="${btn_borrar}">Borrar</button>
-        </fieldset>
-        `;
+            <input type="hidden" id="${field_autor}" readonly value="">
+            <input type="hidden" id="${field_fecha}" value="">
+          </div>
+          <label>
+              Contenido<br>
+              <textarea id="${field_contenido}" style="width: 100%; height: 400px;"></textarea><br><br>
+          </label>
+          <hr>
+          <button class="btn5" id="${btn_guardar}">Guardar</button>
+          <button class="rojo" id="${btn_borrar}">Borrar</button>
+      </fieldset>
+      `;
     gun
       .get(TABLE)
       .get("aulas_informes")
@@ -366,7 +366,7 @@ PAGES.aulas = {
         setTimeout(() => {
           document.getElementById("actionStatus").style.display = "none";
           setUrlHash("aulas,informes");
-        }, 750);
+        }, SAVE_WAIT);
       });
     };
     document.getElementById(btn_borrar).onclick = () => {
@@ -375,7 +375,7 @@ PAGES.aulas = {
         toastr.error("Borrado!");
         setTimeout(() => {
           setUrlHash("aulas,informes");
-        }, 750);
+        }, SAVE_WAIT);
       }
     };
   },

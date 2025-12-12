@@ -3,14 +3,14 @@ var EventListeners = {
   Timeout: [],
   Interval: [],
   QRScanner: [],
-}
+};
 var urlParams = new URLSearchParams(location.search);
 var AC_BYPASS = false;
 if (urlParams.get("ac_bypass") == "yes") {
   AC_BYPASS = true;
 }
-if (urlParams.get("hidenav") != undefined){
-  document.getElementById("header_hide_query").style.display = "none"
+if (urlParams.get("hidenav") != undefined) {
+  document.getElementById("header_hide_query").style.display = "none";
 }
 var GROUPID = "";
 // const PUBLIC_KEY = "~cppGiuA4UFUPGTDoC-4r2izVC3F7MfpaCmF3iZdESN4.vntmjgbAVUpF_zfinYY6EKVFuuTYxh5xOrL4KmtdTmc"
@@ -38,13 +38,21 @@ var SECRET = "";
 var SUB_LOGGED_IN = false;
 var SUB_LOGGED_IN_DETAILS = false;
 var SUB_LOGGED_IN_ID = false;
+var SAVE_WAIT = 500;
+var SC_Personas = {};
+var PeerConnectionInterval = 5000;
 if (urlParams.get("sublogin") != null) {
   SUB_LOGGED_IN = true;
   SUB_LOGGED_IN_ID = urlParams.get("sublogin");
-  SUB_LOGGED_IN_DETAILS = true;
-  setInterval(() => {
+  SUB_LOGGED_IN_DETAILS = SC_Personas[SUB_LOGGED_IN_ID];
+  var sli = 15;
+  var slii = setInterval(() => {
     SUB_LOGGED_IN_DETAILS = SC_Personas[SUB_LOGGED_IN_ID];
-  }, 7500);
+    sli-=1;
+    if (sli < 0) {
+      clearInterval(slii);
+    }
+  }, 500);
 }
 function LogOutTeleSec() {
   SUB_LOGGED_IN = false;

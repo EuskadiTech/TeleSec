@@ -12,7 +12,6 @@ PAGES.materiales = {
     var field_cantidad = safeuuid();
     var field_unidad = safeuuid();
     var field_cantidad_min = safeuuid();
-    var field_abierto = safeuuid();
     var field_ubicacion = safeuuid();
     var field_referencia = safeuuid();
     var field_notas = safeuuid();
@@ -98,7 +97,7 @@ PAGES.materiales = {
         setTimeout(() => {
           document.getElementById("actionStatus").style.display = "none";
           setUrlHash("materiales");
-        }, 750);
+        }, SAVE_WAIT);
       });
     };
     document.getElementById(btn_borrar).onclick = () => {
@@ -107,7 +106,7 @@ PAGES.materiales = {
         toastr.error("Borrado!");
         setTimeout(() => {
           setUrlHash("materiales");
-        }, 750);
+        }, SAVE_WAIT);
       }
     };
   },
@@ -115,6 +114,7 @@ PAGES.materiales = {
     if (!checkRole("materiales")) {setUrlHash("index");return}
     var btn_new = safeuuid();
     var select_ubicacion = safeuuid();
+    var tableContainer = safeuuid();
     container.innerHTML = `
       <h1>Materiales</h1>
       <label>Filtrar por ubicación:
@@ -123,7 +123,7 @@ PAGES.materiales = {
         </select>
       </label>
       <button id="${btn_new}">Nuevo Material</button>
-      <div id="tableContainer"></div>
+      <div id="${tableContainer}"></div>
     `;
 
     const config = [
@@ -190,7 +190,7 @@ PAGES.materiales = {
         "materiales",
         config,
         gun.get(TABLE).get("materiales"),
-        document.getElementById("tableContainer"),
+        document.getElementById(tableContainer),
         function(data, new_tr) {
           if (parseFloat(data.Cantidad) < parseFloat(data.Cantidad_Minima)) {
             new_tr.style.background = "lightcoral"

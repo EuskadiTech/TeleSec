@@ -4,10 +4,11 @@ PAGES.index = {
   index: function() {
     container.innerHTML = `
       <h1>¡Hola, ${SUB_LOGGED_IN_DETAILS.Nombre}!<br>Bienvenidx a %%TITLE%%</h1>
+      <h2>Tienes ${parseFloat(SUB_LOGGED_IN_DETAILS.Monedero_Balance).toString()} € en el monedero.</h2>
       <em>Utiliza el menú superior para abrir un modulo</em>
       <br><br>
       <button class="btn1" onclick="LogOutTeleSec()">Cerrar sesión</button>
-            `;
+    `;
   },
   edit: function(mid) {
     switch (mid) {

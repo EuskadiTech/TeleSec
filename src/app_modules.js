@@ -61,11 +61,11 @@ const wheelcolors = [
   "#9f3fff", // 240°
   "#ff3fff", // 270°
   "#ff3f7f", // 300°
-  "#ff3f3f"  // 330°
+  "#ff3f3f", // 330°
 ];
 
 // String prototype using the precomputed array
-String.prototype.toHex = function() {
+String.prototype.toHex = function () {
   let hash = 0;
   for (let i = 0; i < this.length; i++) {
     hash = (hash * 31 + this.charCodeAt(i)) >>> 0;
@@ -102,7 +102,7 @@ function setLayeredImages(comanda, key) {
     Cafeina: "static/ico/layered1/",
     Leche: "static/ico/layered1/",
   };
-  
+
   // Map for Selección to filenames
   const selectionMap = {
     "ColaCao con leche": "Selección-ColaCao.png",
@@ -111,10 +111,10 @@ function setLayeredImages(comanda, key) {
     "Solo Leche": "Selección-Leche.png",
     "Solo café (sin leche)": "Selección-CaféSolo.png",
   };
-  
+
   // Start div with relative positioning for layering
   let html = `<div style="position: relative; width: 200px; height: 200px; background: white; display: inline-block; border: 1px dotted black;">`;
-  
+
   // Layer 1: Selección image
   const selection = comanda["Selección"];
   if (selectionMap[selection]) {
@@ -122,17 +122,17 @@ function setLayeredImages(comanda, key) {
       basePaths.Selección + selectionMap[selection]
     }" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">`;
   }
-  
+
   // Layer 2: Café
   if (comanda.Café) {
     html += `<img id="img2-${key}" src="${basePaths.Café}Café-${comanda.Café}.png" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">`;
   }
-  
+
   // Layer 3: Endulzante
   if (comanda.Endulzante) {
     html += `<img id="img3-${key}" src="${basePaths.Endulzante}Azucar-${comanda.Endulzante}.png" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">`;
   }
-  
+
   // Layer 4: Cafeina
   if (comanda.Cafeina) {
     html += `<img id="img4-${key}" src="${basePaths.Cafeina}Cafeina-${comanda.Cafeina}.png" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">`;
@@ -149,10 +149,10 @@ function setLayeredImages(comanda, key) {
   if (comanda.Tamaño) {
     html += `<img id="img7-${key}" src="${basePaths.Leche}Tamaño-${comanda.Tamaño}.png" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">`;
   }
-  
+
   // Close div
   html += "</div>";
-  
+
   return html;
 }
 
@@ -197,14 +197,14 @@ function addCategory(
   summary_0.style.textAlign = "left";
   summary_0.style.paddingLeft = "55px";
   parent.append(details_0);
-  
+
   options.forEach((option) => {
     var btn = document.createElement("button");
     var br1 = document.createElement("br");
     //btn.innerText = option.key + ": " + option.value
     btn.append(option.value);
     // for each image in option.img:
-    
+
     if (option.img) {
       var br2 = document.createElement("br");
       btn.append(br2);
@@ -304,7 +304,7 @@ function addCategory_Personas(
       var br1 = document.createElement("br");
       //btn.innerText = option.key + ": " + option.value
       btn.append(option);
-      
+
       var br2 = document.createElement("br");
       btn.append(br2);
       var img = document.createElement("img");
@@ -313,7 +313,7 @@ function addCategory_Personas(
       img.style.padding = "5px";
       img.style.backgroundColor = "white";
       btn.append(img, " ");
-      
+
       if (defaultval == key) {
         btn.classList.add("activeSCButton");
       }
@@ -354,178 +354,184 @@ const SC_actions_icons = {
 };
 const SC_actions = {
   Selección: [
-  {
-    value: "Solo Leche",
-    key: "Selección",
-    className: "btn4",
-    img: ["static/ico/milk.png"],
-  },
-  {
-    value: "Solo café (sin leche)",
-    key: "Selección",
-    className: "btn4",
-    img: ["static/ico/coffee_bean.png"],
-  },
-  {
-    value: "Café con leche",
-    key: "Selección",
-    className: "btn4",
-    img: ["static/ico/coffee_bean.png", "static/ico/milk.png"],
-  },
-  {
-    value: "ColaCao con leche",
-    key: "Selección",
-    className: "btn4",
-    img: ["static/ico/colacao.jpg", "static/ico/milk.png"],
-  },
-  {
-    value: "Leche con cereales",
-    key: "Selección",
-    className: "btn4",
-    img: ["static/ico/cereales.png", "static/ico/milk.png"],
-  },
-  {
-    value: "Infusión",
-    key: "Selección",
-    className: "btn4",
-    img: ["static/ico/tea_bag.png"],
-  }, ],
+    {
+      value: "Solo Leche",
+      key: "Selección",
+      className: "btn4",
+      img: ["static/ico/milk.png"],
+    },
+    {
+      value: "Solo café (sin leche)",
+      key: "Selección",
+      className: "btn4",
+      img: ["static/ico/coffee_bean.png"],
+    },
+    {
+      value: "Café con leche",
+      key: "Selección",
+      className: "btn4",
+      img: ["static/ico/coffee_bean.png", "static/ico/milk.png"],
+    },
+    {
+      value: "ColaCao con leche",
+      key: "Selección",
+      className: "btn4",
+      img: ["static/ico/colacao.jpg", "static/ico/milk.png"],
+    },
+    {
+      value: "Leche con cereales",
+      key: "Selección",
+      className: "btn4",
+      img: ["static/ico/cereales.png", "static/ico/milk.png"],
+    },
+    {
+      value: "Infusión",
+      key: "Selección",
+      className: "btn4",
+      img: ["static/ico/tea_bag.png"],
+    },
+  ],
   Tamaño: [
-  {
-    value: "Grande",
-    key: "Tamaño",
-    className: "btn1",
-    img: ["static/ico/keyboard_key_g.png"],
-  },
-  {
-    value: "Pequeño",
-    key: "Tamaño",
-    className: "btn1",
-    img: ["static/ico/keyboard_key_p.png"],
-  }, ],
+    {
+      value: "Grande",
+      key: "Tamaño",
+      className: "btn1",
+      img: ["static/ico/keyboard_key_g.png"],
+    },
+    {
+      value: "Pequeño",
+      key: "Tamaño",
+      className: "btn1",
+      img: ["static/ico/keyboard_key_p.png"],
+    },
+  ],
   Temperatura: [
-  {
-    value: "Caliente",
-    key: "Temperatura",
-    className: "btn2",
-    img: [
-      "static/ico/thermometer2.png",
-      "static/ico/arrow_up_red.png",
-      "static/ico/fire.png",
-    ],
-  },
-  {
-    value: "Templado",
-    key: "Temperatura",
-    className: "btn2",
-    img: ["static/ico/thermometer2.png", "static/ico/arrow_left_green.png"],
-  },
-  {
-    value: "Frio",
-    key: "Temperatura",
-    className: "btn2",
-    img: [
-      "static/ico/thermometer2.png",
-      "static/ico/arrow_down_blue.png",
-      "static/ico/snowflake.png",
-    ],
-  }, ],
+    {
+      value: "Caliente",
+      key: "Temperatura",
+      className: "btn2",
+      img: [
+        "static/ico/thermometer2.png",
+        "static/ico/arrow_up_red.png",
+        "static/ico/fire.png",
+      ],
+    },
+    {
+      value: "Templado",
+      key: "Temperatura",
+      className: "btn2",
+      img: ["static/ico/thermometer2.png", "static/ico/arrow_left_green.png"],
+    },
+    {
+      value: "Frio",
+      key: "Temperatura",
+      className: "btn2",
+      img: [
+        "static/ico/thermometer2.png",
+        "static/ico/arrow_down_blue.png",
+        "static/ico/snowflake.png",
+      ],
+    },
+  ],
   Leche: [
-  {
-    value: "de Vaca",
-    key: "Leche",
-    className: "btn3",
-    img: ["static/ico/cow.png", "static/ico/add.png"],
-  },
-  {
-    value: "Sin lactosa",
-    key: "Leche",
-    className: "btn3",
-    img: ["static/ico/cow.png", "static/ico/delete.png"],
-  },
-  {
-    value: "Vegetal",
-    key: "Leche",
-    className: "btn3",
-    img: ["static/ico/milk.png", "static/ico/wheat.png"],
-  },
-  {
-    value: "Almendras",
-    key: "Leche",
-    className: "btn3",
-    img: ["static/ico/milk.png", "static/ico/almond.svg"],
-  },
-  {
-    value: "Agua",
-    key: "Leche",
-    className: "btn3",
-    img: ["static/ico/water_tap.png"],
-  }, ],
+    {
+      value: "de Vaca",
+      key: "Leche",
+      className: "btn3",
+      img: ["static/ico/cow.png", "static/ico/add.png"],
+    },
+    {
+      value: "Sin lactosa",
+      key: "Leche",
+      className: "btn3",
+      img: ["static/ico/cow.png", "static/ico/delete.png"],
+    },
+    {
+      value: "Vegetal",
+      key: "Leche",
+      className: "btn3",
+      img: ["static/ico/milk.png", "static/ico/wheat.png"],
+    },
+    {
+      value: "Almendras",
+      key: "Leche",
+      className: "btn3",
+      img: ["static/ico/milk.png", "static/ico/almond.svg"],
+    },
+    {
+      value: "Agua",
+      key: "Leche",
+      className: "btn3",
+      img: ["static/ico/water_tap.png"],
+    },
+  ],
   Cafeina: [
-  {
-    value: "Con",
-    key: "Cafeina",
-    className: "btn5",
-    img: ["static/ico/coffee_bean.png", "static/ico/add.png"],
-  },
-  {
-    value: "Sin",
-    key: "Cafeina",
-    className: "btn5",
-    img: ["static/ico/coffee_bean.png", "static/ico/delete.png"],
-  }, ],
+    {
+      value: "Con",
+      key: "Cafeina",
+      className: "btn5",
+      img: ["static/ico/coffee_bean.png", "static/ico/add.png"],
+    },
+    {
+      value: "Sin",
+      key: "Cafeina",
+      className: "btn5",
+      img: ["static/ico/coffee_bean.png", "static/ico/delete.png"],
+    },
+  ],
   Endulzante: [
-  {
-    value: "Az. Blanco",
-    key: "Endulzante",
-    className: "btn6",
-    img: ["static/ico/azucar-blanco.jpg"],
-  },
-  {
-    value: "Az. Moreno",
-    key: "Endulzante",
-    className: "btn6",
-    img: ["static/ico/azucar-moreno.png"],
-  },
-  {
-    value: "Sacarina",
-    key: "Endulzante",
-    className: "btn6",
-    img: ["static/ico/sacarina.jpg"],
-  },
-  {
-    value: "Stevia (Pastillas)",
-    key: "Endulzante",
-    className: "btn6",
-    img: ["static/ico/stevia.jpg"],
-  },
-  {
-    value: "Stevia (Gotas)",
-    key: "Endulzante",
-    className: "btn6",
-    img: ["static/ico/stevia-gotas.webp"],
-  },
-  {
-    value: "Sin",
-    key: "Endulzante",
-    className: "btn6",
-    img: ["static/ico/delete.png"],
-  }, ],
+    {
+      value: "Az. Blanco",
+      key: "Endulzante",
+      className: "btn6",
+      img: ["static/ico/azucar-blanco.jpg"],
+    },
+    {
+      value: "Az. Moreno",
+      key: "Endulzante",
+      className: "btn6",
+      img: ["static/ico/azucar-moreno.png"],
+    },
+    {
+      value: "Sacarina",
+      key: "Endulzante",
+      className: "btn6",
+      img: ["static/ico/sacarina.jpg"],
+    },
+    {
+      value: "Stevia (Pastillas)",
+      key: "Endulzante",
+      className: "btn6",
+      img: ["static/ico/stevia.jpg"],
+    },
+    {
+      value: "Stevia (Gotas)",
+      key: "Endulzante",
+      className: "btn6",
+      img: ["static/ico/stevia-gotas.webp"],
+    },
+    {
+      value: "Sin",
+      key: "Endulzante",
+      className: "btn6",
+      img: ["static/ico/delete.png"],
+    },
+  ],
   Receta: [
-  {
-    value: "Si",
-    key: "Receta",
-    className: "btn7",
-    img: ["static/ico/add.png"],
-  },
-  {
-    value: "No",
-    key: "Receta",
-    className: "btn7",
-    img: ["static/ico/delete.png"],
-  }, ],
+    {
+      value: "Si",
+      key: "Receta",
+      className: "btn7",
+      img: ["static/ico/add.png"],
+    },
+    {
+      value: "No",
+      key: "Receta",
+      className: "btn7",
+      img: ["static/ico/delete.png"],
+    },
+  ],
 };
-var SC_Personas = {};
 // Listado precargado de personas:
 function TS_decrypt(input, secret, callback) {
   // if input starts with "SEA{" and ends with "}", then it's encrypted with SEA
@@ -539,7 +545,9 @@ function TS_decrypt(input, secret, callback) {
   } else if (input.startsWith("RSA{") && input.endsWith("}")) {
     // ignore RSA{}
     var data = input.slice(4, -1);
-    var decrypted = CryptoJS.AES.decrypt(data, secret).toString(CryptoJS.enc.Utf8);
+    var decrypted = CryptoJS.AES.decrypt(data, secret).toString(
+      CryptoJS.enc.Utf8
+    );
     callback(JSON.parse(decrypted));
   }
 }
@@ -549,7 +557,10 @@ function TS_encrypt(input, secret, callback, mode = "RSA") {
       callback(encrypted);
     });
   } else if (mode == "RSA") {
-    var encrypted = CryptoJS.AES.encrypt(JSON.stringify(input), secret).toString();
+    var encrypted = CryptoJS.AES.encrypt(
+      JSON.stringify(input),
+      secret
+    ).toString();
     callback("RSA{" + encrypted + "}");
   }
 }
@@ -585,7 +596,7 @@ function SC_parse(json) {
 
 function SC_parse_short(json) {
   var valores = "<small style='font-size: 60%;'>Servicio base (10c)</small>\n";
-  
+
   Object.entries(json).forEach((entry) => {
     valores +=
       "<small style='font-size: 60%;'>" +
@@ -598,13 +609,19 @@ function SC_parse_short(json) {
       case "Leche":
         // Leche pequeña = 10c
         if (
-          json["Tamaño"] == "Pequeño" && ["de Vaca", "Sin lactosa", "Vegetal", "Almendras"].includes(json["Leche"])
+          json["Tamaño"] == "Pequeño" &&
+          ["de Vaca", "Sin lactosa", "Vegetal", "Almendras"].includes(
+            json["Leche"]
+          )
         ) {
           valores += "<small>(P = 10c)</small>";
         }
         // Leche grande = 20c
         if (
-          json["Tamaño"] == "Grande" && ["de Vaca", "Sin lactosa", "Vegetal", "Almendras"].includes(json["Leche"])
+          json["Tamaño"] == "Grande" &&
+          ["de Vaca", "Sin lactosa", "Vegetal", "Almendras"].includes(
+            json["Leche"]
+          )
         ) {
           valores += "<small>(G = 20c)</small>";
         }
@@ -625,7 +642,7 @@ function SC_parse_short(json) {
       default:
         break;
     }
-    
+
     valores += "\n";
   });
   return valores;
@@ -639,14 +656,16 @@ function SC_priceCalc(json) {
   valores += "Servicio base = 10c\n";
   // Leche pequeña = 10c
   if (
-    json["Tamaño"] == "Pequeño" && ["de Vaca", "Sin lactosa", "Vegetal", "Almendras"].includes(json["Leche"])
+    json["Tamaño"] == "Pequeño" &&
+    ["de Vaca", "Sin lactosa", "Vegetal", "Almendras"].includes(json["Leche"])
   ) {
     precio += 10;
     valores += "Leche pequeña = 10c\n";
   }
   // Leche grande = 20c
   if (
-    json["Tamaño"] == "Grande" && ["de Vaca", "Sin lactosa", "Vegetal", "Almendras"].includes(json["Leche"])
+    json["Tamaño"] == "Grande" &&
+    ["de Vaca", "Sin lactosa", "Vegetal", "Almendras"].includes(json["Leche"])
   ) {
     precio += 20;
     valores += "Leche grande = 20c\n";
@@ -695,7 +714,7 @@ function TS_IndexElement(
   var searchKeyInput = safeuuid();
   var debounce_search = safeuuid();
   var debounce_load = safeuuid();
-  
+
   // Create the container with search bar and table
   container.innerHTML = `
     <div id="${scrolltable}">
@@ -722,21 +741,20 @@ function TS_IndexElement(
   });
   // Add search functionality
   const searchKeyEl = document.getElementById(searchKeyInput);
-  searchKeyEl.addEventListener(
-    "input",
-    () => debounce(debounce_search, render, 300, [rows])
+  searchKeyEl.addEventListener("input", () =>
+    debounce(debounce_search, render, 300, [rows])
   );
-  
+
   function searchInData(data, searchValue, config) {
     if (!searchValue) return true;
-    
+
     // Search in ID
     if (data._key.toLowerCase().includes(searchValue)) return true;
-    
+
     // Search in configured fields
     for (var field of config) {
       const value = data[field.key] || field.default || "";
-      
+
       // Handle different field types
       switch (field.type) {
         case "comanda":
@@ -761,10 +779,8 @@ function TS_IndexElement(
           }
           if (persona) {
             // Search in persona fields
-            if (persona.Nombre.toLowerCase().includes(searchValue))
-              return true;
-            if (persona.Region.toLowerCase().includes(searchValue))
-              return true;
+            if (persona.Nombre.toLowerCase().includes(searchValue)) return true;
+            if (persona.Region.toLowerCase().includes(searchValue)) return true;
           }
           break;
         case "fecha":
@@ -783,7 +799,7 @@ function TS_IndexElement(
     }
     return false;
   }
-  
+
   // --- Optimized render function ---
   var lastSearchValue = "";
   var lastFilteredSorted = [];
@@ -793,16 +809,30 @@ function TS_IndexElement(
       return a.Fecha > b.Fecha ? -1 : 1;
     }
     // 2. Region (ascending, from SC_Personas if Persona exists)
-    const regionA = a.Persona && SC_Personas[a.Persona] ? SC_Personas[a.Persona].Region || "" : a.Region || "";
-    const regionB = b.Persona && SC_Personas[b.Persona] ? SC_Personas[b.Persona].Region || "" : b.Region || "";
+    const regionA =
+      a.Persona && SC_Personas[a.Persona]
+        ? SC_Personas[a.Persona].Region || ""
+        : a.Region || "";
+    const regionB =
+      b.Persona && SC_Personas[b.Persona]
+        ? SC_Personas[b.Persona].Region || ""
+        : b.Region || "";
     if (regionA !== regionB) {
       return regionA < regionB ? -1 : 1;
     }
     // 3. Persona (Nombre, ascending, from SC_Personas if Persona exists)
-    const nombrePersonaA = a.Persona && SC_Personas[a.Persona] ? SC_Personas[a.Persona].Nombre || "" : "";
-    const nombrePersonaB = b.Persona && SC_Personas[b.Persona] ? SC_Personas[b.Persona].Nombre || "" : "";
+    const nombrePersonaA =
+      a.Persona && SC_Personas[a.Persona]
+        ? SC_Personas[a.Persona].Nombre || ""
+        : "";
+    const nombrePersonaB =
+      b.Persona && SC_Personas[b.Persona]
+        ? SC_Personas[b.Persona].Nombre || ""
+        : "";
     if (nombrePersonaA !== nombrePersonaB) {
-      return nombrePersonaA.toLowerCase() < nombrePersonaB.toLowerCase() ? -1 : 1;
+      return nombrePersonaA.toLowerCase() < nombrePersonaB.toLowerCase()
+        ? -1
+        : 1;
     }
     // 4. Nombre (ascending, from a.Nombre/b.Nombre)
     if (a.Nombre && b.Nombre && a.Nombre !== b.Nombre) {
@@ -813,7 +843,11 @@ function TS_IndexElement(
 
   function getFilteredSortedRows(searchValue) {
     // Only use cache if searchValue is not empty and cache is valid
-    if (searchValue && searchValue === lastSearchValue && lastFilteredSorted.length > 0) {
+    if (
+      searchValue &&
+      searchValue === lastSearchValue &&
+      lastFilteredSorted.length > 0
+    ) {
       return lastFilteredSorted;
     }
     const filtered = Object.entries(rows)
@@ -844,7 +878,11 @@ function TS_IndexElement(
           case "raw":
           case "text": {
             const tdRaw = document.createElement("td");
-            const rawContent = (String(data[key.key]) || key.default || "").replace(/\n/g, "<br>");
+            const rawContent = (
+              String(data[key.key]) ||
+              key.default ||
+              ""
+            ).replace(/\n/g, "<br>");
             tdRaw.innerHTML = rawContent;
             new_tr.appendChild(tdRaw);
             break;
@@ -854,7 +892,8 @@ function TS_IndexElement(
             const tdFechaISO = document.createElement("td");
             if (data[key.key]) {
               const fechaArray = data[key.key].split("-");
-              tdFechaISO.innerText = fechaArray[2] + "/" + fechaArray[1] + "/" + fechaArray[0];
+              tdFechaISO.innerText =
+                fechaArray[2] + "/" + fechaArray[1] + "/" + fechaArray[0];
             }
             new_tr.appendChild(tdFechaISO);
             break;
@@ -889,7 +928,8 @@ function TS_IndexElement(
             spanPrecio.innerHTML = `Total: ${precio}c`;
             pre.innerHTML = "<b>Ticket de compra</b> ";
             pre.appendChild(document.createTextNode("\n"));
-            pre.innerHTML += SC_parse_short(parsedComanda) + "<hr>" + data.Notas + "<hr>";
+            pre.innerHTML +=
+              SC_parse_short(parsedComanda) + "<hr>" + data.Notas + "<hr>";
             pre.appendChild(spanPrecio);
             tdComanda.appendChild(pre);
             new_tr.appendChild(tdComanda);
@@ -937,29 +977,31 @@ function TS_IndexElement(
             paidButton.onclick = (event) => {
               event.preventDefault();
               event.stopPropagation();
-              
+
               // Open Pagos module with pre-filled data
               var precio = SC_priceCalc(JSON.parse(data.Comanda))[0];
               var personaId = data.Persona;
               var comandaId = data._key;
-              
+
               // Store prefilled data in sessionStorage for Pagos module
               var sdata = JSON.stringify({
-                tipo: 'Gasto',
+                tipo: "Gasto",
                 monto: precio / 100, // Convert cents to euros
                 persona: personaId,
-                notas: 'Pago de comanda SuperCafé\n' + SC_parse(JSON.parse(data.Comanda)),
-                origen: 'SuperCafé',
-                origen_id: comandaId
+                notas:
+                  "Pago de comanda SuperCafé\n" +
+                  SC_parse(JSON.parse(data.Comanda)),
+                origen: "SuperCafé",
+                origen_id: comandaId,
               });
-              
+
               // Navigate to datafono
               setUrlHash("pagos,datafono_prefill," + btoa(sdata));
-              
+
               return false;
             };
-            td.append(data.Fecha)
-            td.append(document.createElement("br"))
+            td.append(data.Fecha);
+            td.append(document.createElement("br"));
             buttons.forEach((button) => {
               td.appendChild(button);
               td.appendChild(document.createElement("br"));
@@ -969,7 +1011,8 @@ function TS_IndexElement(
             break;
           }
           case "persona": {
-            let persona = key.self === true ? data : SC_Personas[data[key.key]] || {};
+            let persona =
+              key.self === true ? data : SC_Personas[data[key.key]] || {};
             const regco = stringToColour((persona.Region || "?").toLowerCase());
             const tdPersona = document.createElement("td");
             tdPersona.style.textAlign = "center";
@@ -1026,7 +1069,7 @@ function TS_IndexElement(
       } else {
         delete rows[key];
       }
-      debounce(debounce_load, render, 300, [rows])
+      debounce(debounce_load, render, 300, [rows]);
     }
     if (typeof data == "string") {
       TS_decrypt(data, SECRET, (data) => {
@@ -1041,62 +1084,60 @@ function TS_IndexElement(
 function BuildQR(mid, label) {
   return `
   <span style="border: 2px dashed black; padding: 10px; display: inline-block; background: white; border-radius: 7px; text-align: center; margin: 10px;">
-      <b>TeleSec QR</b>
-      <br>${toHtml(quickresponse(mid),[6,6])}<br>
+      <b>QR %%TITLE%%</b>
+      <br>${toHtml(quickresponse(mid), [6, 6])}<br>
       <small>${label}</small>
   </span>
-  `
+  `;
 }
 
 var PAGES = {};
 var PERMS = {
-  "ADMIN": "Administrador",
+  ADMIN: "Administrador",
 };
 function checkRole(role) {
-  var roles = SUB_LOGGED_IN_DETAILS.Roles || ""
-  var rolesArr = roles.split(",")
+  var roles = SUB_LOGGED_IN_DETAILS.Roles || "";
+  var rolesArr = roles.split(",");
   if (rolesArr.includes("ADMIN") || rolesArr.includes(role) || AC_BYPASS) {
-    return true
+    return true;
   } else {
-  return false
+    return false;
   }
 }
 function SetPages() {
-  document.getElementById("appendApps2").innerHTML = ""
+  document.getElementById("appendApps2").innerHTML = "";
   Object.keys(PAGES).forEach((key) => {
     if (PAGES[key].Esconder == true) {
       return;
     }
     if (PAGES[key].AccessControl == true) {
-      var roles = SUB_LOGGED_IN_DETAILS.Roles || ""
-      var rolesArr = roles.split(",")
+      var roles = SUB_LOGGED_IN_DETAILS.Roles || "";
+      var rolesArr = roles.split(",");
       if (rolesArr.includes("ADMIN") || rolesArr.includes(key) || AC_BYPASS) {
-        
       } else {
-        return
+        return;
       }
-      
     }
     var a = document.createElement("a");
-    var img = document.createElement("img")
-    var label = document.createElement("div")
+    var img = document.createElement("img");
+    var label = document.createElement("div");
     a.className = "ribbon-button";
     a.href = "#" + key;
     label.innerText = PAGES[key].Title;
-    label.className = "label"
-    img.src = PAGES[key].icon || "static/appico/File_Plugin.svg"
-    a.append(img, label)
+    label.className = "label";
+    img.src = PAGES[key].icon || "static/appico/File_Plugin.svg";
+    a.append(img, label);
     document.getElementById("appendApps2").append(a);
   });
   var a = document.createElement("a");
-  var img = document.createElement("img")
-  var label = document.createElement("div")
+  var img = document.createElement("img");
+  var label = document.createElement("div");
   a.className = "ribbon-button";
   a.href = "#index,qr";
   label.innerText = "Escanear QR";
-  label.className = "label"
-  img.src = "static/appico/App_CodyCam.svg"
-  a.append(img, label)
+  label.className = "label";
+  img.src = "static/appico/App_CodyCam.svg";
+  a.append(img, label);
   document.getElementById("appendApps2").append(a);
 }
 var Booted = false;
@@ -1105,18 +1146,24 @@ var BootLoops = 0;
 getPeers();
 setInterval(() => {
   getPeers();
-}, 750);
+}, PeerConnectionInterval);
 
 var BootIntervalID = setInterval(() => {
   BootLoops += 1;
-  if ((BootLoops >= TimeoutBoot || window.navigator.onLine == false) && !Booted) {
+  getPeers();
+  if (
+    (BootLoops >= TimeoutBoot || window.navigator.onLine == false) &&
+    !Booted
+  ) {
     Booted = true;
     document.getElementById("loading").style.display = "none";
-    toastr.error("Sin conexion! Los cambios se sincronizarán cuando te vuelvas a conectar.")
+    toastr.error(
+      "Sin conexion! Los cambios se sincronizarán cuando te vuelvas a conectar."
+    );
     if (!SUB_LOGGED_IN) {
       open_page("login");
     } else {
-      SetPages()
+      SetPages();
       open_page(location.hash.replace("#", ""));
     }
     clearInterval(BootIntervalID);
@@ -1128,36 +1175,35 @@ var BootIntervalID = setInterval(() => {
       open_page("login");
       return;
     }
-    SetPages()
+    SetPages();
     open_page(location.hash.replace("#", ""));
     clearInterval(BootIntervalID);
   }
-}, 1000);
+}, 750);
 
-
-const tabs = document.querySelectorAll('.ribbon-tab');
+const tabs = document.querySelectorAll(".ribbon-tab");
 const detailTabs = {
-  modulos: document.getElementById('tab-modulos'),
-  buscar: document.getElementById('tab-buscar'),
-  credenciales: document.getElementById('tab-credenciales')
+  modulos: document.getElementById("tab-modulos"),
+  buscar: document.getElementById("tab-buscar"),
+  credenciales: document.getElementById("tab-credenciales"),
 };
 
-tabs.forEach(tab => {
-  tab.addEventListener('click', () => {
-    const selected = tab.getAttribute('data-tab');
-    
+tabs.forEach((tab) => {
+  tab.addEventListener("click", () => {
+    const selected = tab.getAttribute("data-tab");
+
     // Toggle details
     for (const [key, detailsEl] of Object.entries(detailTabs)) {
       if (key === selected) {
-        detailsEl.setAttribute('open', '');
+        detailsEl.setAttribute("open", "");
       } else {
-        detailsEl.removeAttribute('open');
+        detailsEl.removeAttribute("open");
       }
     }
-    
+
     // Toggle tab active class
-    tabs.forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
+    tabs.forEach((t) => t.classList.remove("active"));
+    tab.classList.add("active");
   });
 });
 
@@ -1165,108 +1211,160 @@ tabs.forEach(tab => {
 function GlobalSearch() {
   const searchData = {};
   const allSearchableModules = [
-    { role: 'personas', key: 'personas', title: 'Personas', icon: 'static/appico/File_Person.svg', fields: ['Nombre', 'Region', 'Notas', 'email'] },
-    { role: 'materiales', key: 'materiales', title: 'Materiales', icon: 'static/appico/Database.svg', fields: ['Nombre', 'Referencia', 'Ubicacion', 'Notas'] },
-    { role: 'supercafe', key: 'supercafe', title: 'SuperCafé', icon: 'static/appico/Coffee.svg', fields: ['Persona', 'Comanda', 'Estado'] },
-    { role: 'comedor', key: 'comedor', title: 'Comedor', icon: 'static/appico/Meal.svg', fields: ['Fecha', 'Platos'] },
-    { role: 'notas', key: 'notas', title: 'Notas', icon: 'static/appico/Notepad.svg', fields: ['Asunto', 'Contenido', 'Autor'] },
-    { role: 'notificaciones', key: 'notificaciones', title: 'Avisos', icon: 'static/appico/Alert_Warning.svg', fields: ['Asunto', 'Mensaje', 'Origen', 'Destino'] },
-    { role: 'aulas', key: 'aulas_solicitudes', title: 'Solicitudes de Aulas', icon: 'static/appico/Classroom.svg', fields: ['Asunto', 'Contenido', 'Solicitante'] },
-    { role: 'aulas', key: 'aulas_informes', title: 'Informes de Aulas', icon: 'static/appico/Newspaper.svg', fields: ['Asunto', 'Contenido', 'Autor', 'Fecha'] }
+    {
+      role: "personas",
+      key: "personas",
+      title: "Personas",
+      icon: "static/appico/File_Person.svg",
+      fields: ["Nombre", "Region", "Notas", "email"],
+    },
+    {
+      role: "materiales",
+      key: "materiales",
+      title: "Materiales",
+      icon: "static/appico/Database.svg",
+      fields: ["Nombre", "Referencia", "Ubicacion", "Notas"],
+    },
+    {
+      role: "supercafe",
+      key: "supercafe",
+      title: "SuperCafé",
+      icon: "static/appico/Coffee.svg",
+      fields: ["Persona", "Comanda", "Estado"],
+    },
+    {
+      role: "comedor",
+      key: "comedor",
+      title: "Comedor",
+      icon: "static/appico/Meal.svg",
+      fields: ["Fecha", "Platos"],
+    },
+    {
+      role: "notas",
+      key: "notas",
+      title: "Notas",
+      icon: "static/appico/Notepad.svg",
+      fields: ["Asunto", "Contenido", "Autor"],
+    },
+    {
+      role: "notificaciones",
+      key: "notificaciones",
+      title: "Avisos",
+      icon: "static/appico/Alert_Warning.svg",
+      fields: ["Asunto", "Mensaje", "Origen", "Destino"],
+    },
+    {
+      role: "aulas",
+      key: "aulas_solicitudes",
+      title: "Solicitudes de Aulas",
+      icon: "static/appico/Classroom.svg",
+      fields: ["Asunto", "Contenido", "Solicitante"],
+    },
+    {
+      role: "aulas",
+      key: "aulas_informes",
+      title: "Informes de Aulas",
+      icon: "static/appico/Newspaper.svg",
+      fields: ["Asunto", "Contenido", "Autor", "Fecha"],
+    },
   ];
-  
+
   // Filter modules based on user permissions
-  const searchableModules = allSearchableModules.filter(module => {
+  const searchableModules = allSearchableModules.filter((module) => {
     return checkRole(module.role);
   });
 
   // Load all data from modules
   function loadAllData() {
-    searchableModules.forEach(module => {
+    searchableModules.forEach((module) => {
       searchData[module.key] = {};
-      gun.get(TABLE).get(module.key).map().on((data, key) => {
-        if (!data) return;
-        
-        function processData(processedData) {
-          if (processedData && typeof processedData === 'object') {
-            searchData[module.key][key] = {
-              _key: key,
-              _module: module.key,
-              _title: module.title,
-              _icon: module.icon,
-              ...processedData
-            };
-          }
-        }
+      gun
+        .get(TABLE)
+        .get(module.key)
+        .map()
+        .on((data, key) => {
+          if (!data) return;
 
-        if (typeof data === "string") {
-          TS_decrypt(data, SECRET, processData);
-        } else {
-          processData(data);
-        }
-      });
+          function processData(processedData) {
+            if (processedData && typeof processedData === "object") {
+              searchData[module.key][key] = {
+                _key: key,
+                _module: module.key,
+                _title: module.title,
+                _icon: module.icon,
+                ...processedData,
+              };
+            }
+          }
+
+          if (typeof data === "string") {
+            TS_decrypt(data, SECRET, processData);
+          } else {
+            processData(data);
+          }
+        });
     });
   }
 
   // Perform search across all modules
   function performSearch(searchTerm) {
     if (!searchTerm || searchTerm.length < 2) return [];
-    
+
     const results = [];
     const searchLower = searchTerm.toLowerCase();
 
-    searchableModules.forEach(module => {
+    searchableModules.forEach((module) => {
       const moduleData = searchData[module.key] || {};
-      
-      Object.values(moduleData).forEach(item => {
+
+      Object.values(moduleData).forEach((item) => {
         if (!item) return;
-        
+
         let relevanceScore = 0;
         let matchedFields = [];
-        
+
         // Search in key/ID
         if (item._key && item._key.toLowerCase().includes(searchLower)) {
           relevanceScore += 10;
-          matchedFields.push('ID');
+          matchedFields.push("ID");
         }
-        
+
         // Search in configured fields
-        module.fields.forEach(field => {
+        module.fields.forEach((field) => {
           const value = item[field];
           if (!value) return;
-          
-          let searchValue = '';
-          
+
+          let searchValue = "";
+
           // Handle special field types
-          if (field === 'Persona' && SC_Personas[value]) {
-            searchValue = SC_Personas[value].Nombre || '';
-          } else if (field === 'Comanda' && typeof value === 'string') {
+          if (field === "Persona" && SC_Personas[value]) {
+            searchValue = SC_Personas[value].Nombre || "";
+          } else if (field === "Comanda" && typeof value === "string") {
             try {
               const comandaData = JSON.parse(value);
-              searchValue = Object.values(comandaData).join(' ');
+              searchValue = Object.values(comandaData).join(" ");
             } catch (e) {
               searchValue = value;
             }
           } else {
             searchValue = String(value);
           }
-          
+
           if (searchValue.toLowerCase().includes(searchLower)) {
-            relevanceScore += field === 'Nombre' || field === 'Asunto' ? 5 : 2;
+            relevanceScore += field === "Nombre" || field === "Asunto" ? 5 : 2;
             matchedFields.push(field);
           }
         });
-        
+
         if (relevanceScore > 0) {
           results.push({
             ...item,
             _relevance: relevanceScore,
-            _matchedFields: matchedFields
+            _matchedFields: matchedFields,
           });
         }
       });
     });
-    
+
     return results.sort((a, b) => b._relevance - a._relevance);
   }
 
@@ -1282,38 +1380,42 @@ function GlobalSearch() {
       `;
       return;
     }
-    
-    let html = '';
-    
+
+    let html = "";
+
     // Group by module
     const groupedResults = {};
-    results.forEach(result => {
+    results.forEach((result) => {
       if (!groupedResults[result._module]) {
         groupedResults[result._module] = [];
       }
       groupedResults[result._module].push(result);
     });
-    
+
     Object.entries(groupedResults).forEach(([moduleKey, moduleResults]) => {
-      const module = searchableModules.find(m => m.key === moduleKey);
+      const module = searchableModules.find((m) => m.key === moduleKey);
       if (!module) return;
-      
+
       html += `
         <fieldset>
           <legend>
             <img src="${module.icon}" height="20"> ${module.title} (${moduleResults.length})
           </legend>
       `;
-      
-      moduleResults.slice(0, 5).forEach(result => {
+
+      moduleResults.slice(0, 5).forEach((result) => {
         let title = result.Nombre || result.Asunto || result._key;
-        let subtitle = '';
-        
+        let subtitle = "";
+
         // Handle comedor specific display
-        if (result._module === 'comedor') {
-          title = result.Fecha ? `Menú del ${result.Fecha.split('-').reverse().join('/')}` : result._key;
+        if (result._module === "comedor") {
+          title = result.Fecha
+            ? `Menú del ${result.Fecha.split("-").reverse().join("/")}`
+            : result._key;
           if (result.Platos) {
-            subtitle = `🍽️ ${result.Platos.substring(0, 50)}${result.Platos.length > 50 ? '...' : ''}`;
+            subtitle = `🍽️ ${result.Platos.substring(0, 50)}${
+              result.Platos.length > 50 ? "..." : ""
+            }`;
           }
         } else {
           // Default display for other modules
@@ -1321,31 +1423,35 @@ function GlobalSearch() {
             subtitle = `👤 ${SC_Personas[result.Persona].Nombre}`;
           }
           if (result.Fecha) {
-            const fecha = result.Fecha.split('-').reverse().join('/');
+            const fecha = result.Fecha.split("-").reverse().join("/");
             subtitle += subtitle ? ` • 📅 ${fecha}` : `📅 ${fecha}`;
           }
           if (result.Region) {
-            subtitle += subtitle ? ` • 🌍 ${result.Region}` : `🌍 ${result.Region}`;
+            subtitle += subtitle
+              ? ` • 🌍 ${result.Region}`
+              : `🌍 ${result.Region}`;
           }
         }
-        
+
         html += `
-          <button onclick="navigateToResult('${moduleKey}', '${result._key}')" class="button">
+          <button onclick="navigateToResult('${moduleKey}', '${
+          result._key
+        }')" class="button">
             <strong>${title}</strong>
-            ${subtitle ? `<br><small>${subtitle}</small>` : ''}
-            <br><code>📍 ${result._matchedFields.join(', ')}</code>
+            ${subtitle ? `<br><small>${subtitle}</small>` : ""}
+            <br><code>📍 ${result._matchedFields.join(", ")}</code>
           </button>
         `;
       });
-      
+
       if (moduleResults.length > 5) {
         let moreLink = moduleKey;
-        if (moduleKey === 'aulas_solicitudes') {
-          moreLink = 'aulas,solicitudes';
-        } else if (moduleKey === 'aulas_informes') {
-          moreLink = 'aulas,informes';
+        if (moduleKey === "aulas_solicitudes") {
+          moreLink = "aulas,solicitudes";
+        } else if (moduleKey === "aulas_informes") {
+          moreLink = "aulas,informes";
         }
-        
+
         html += `
           <hr>
           <button onclick="setUrlHash('${moreLink}')" class="btn8">
@@ -1353,10 +1459,10 @@ function GlobalSearch() {
           </button>
         `;
       }
-      
-      html += '</fieldset>';
+
+      html += "</fieldset>";
     });
-    
+
     container.innerHTML = html;
   }
 
@@ -1364,20 +1470,20 @@ function GlobalSearch() {
     loadAllData,
     performSearch,
     renderResults,
-    getAccessibleModules: () => searchableModules
+    getAccessibleModules: () => searchableModules,
   };
 }
 
 // Helper function to navigate to search results
 function navigateToResult(moduleKey, resultKey) {
   switch (moduleKey) {
-    case 'aulas_solicitudes':
-      setUrlHash('aulas,solicitudes,' + resultKey);
+    case "aulas_solicitudes":
+      setUrlHash("aulas,solicitudes," + resultKey);
       break;
-    case 'aulas_informes':
-      setUrlHash('aulas,informes,' + resultKey);
+    case "aulas_informes":
+      setUrlHash("aulas,informes," + resultKey);
       break;
     default:
-      setUrlHash(moduleKey + ',' + resultKey);
+      setUrlHash(moduleKey + "," + resultKey);
   }
 }
