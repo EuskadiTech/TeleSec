@@ -66,12 +66,16 @@ PAGES.personas = {
               <button type="button" id="${btn_ver_monedero}" class="btn5">Ver Transacciones del Monedero</button>
             </div>
           </details>
-          <details style="background: #e3f2fd; border: 2px solid #21f328ff; border-radius: 8px; padding: 10px; margin: 15px 0;">
-            <summary style="cursor: pointer; font-weight: bold; color: #38d219ff;">Generar enlaces</summary>
+          <details style="background: #e3fde3ff; border: 2px solid #21f328ff; border-radius: 8px; padding: 10px; margin: 15px 0;">
+            <summary style="cursor: pointer; font-weight: bold; color: rgba(26, 141, 3, 1);">🔗 Generar enlaces</summary>
             <div style="padding: 15px;">
               <label>
-                  Inicio de sesión automatico<br>
-                  <input type="url" value="https://" style="font-size: 24px; font-weight: bold; color: #1976d2;"><br>
+                  Este servidor<br>
+                  <input type="url" value="${location.protocol}//${location.hostname}:${location.port}${location.pathname}?login=${GROUPID}:${SECRET}&sublogin=${mid}" style="font-size: 10px; font-weight: bold; color: #000;"><br>
+              </label>
+              <label>
+                  Cualquier Servidor<br>
+                  <input type="url" value="https://tech.eus/ts/?login=${GROUPID}:${SECRET}&sublogin=${mid}" style="font-size: 10px; font-weight: bold; color: #000;"><br>
               </label>
             </div>
           </details>

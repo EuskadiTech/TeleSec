@@ -838,6 +838,10 @@ function TS_IndexElement(
     if (a.Nombre && b.Nombre && a.Nombre !== b.Nombre) {
       return a.Nombre.toLowerCase() < b.Nombre.toLowerCase() ? -1 : 1;
     }
+    // 5. Asunto (ascending, from a.Asunto/b.Asunto)
+    if (a.Asunto && b.Asunto && a.Asunto !== b.Asunto) {
+      return a.Asunto.toLowerCase() < b.Asunto.toLowerCase() ? -1 : 1;
+    }
     return 0;
   }
 
@@ -1039,10 +1043,12 @@ function TS_IndexElement(
             infoSpan.appendChild(document.createElement("br"));
             infoSpan.appendChild(document.createTextNode(persona.Nombre || ""));
             infoSpan.appendChild(document.createElement("br"));
-            const pointsSpan = document.createElement("span");
-            pointsSpan.style.fontSize = "17px";
-            pointsSpan.textContent = (persona.Monedero_Balance || "0") + " €";
-            infoSpan.appendChild(pointsSpan);
+            if (parseFloat(persona.Monedero_Balance || "0") != 0) {
+              const pointsSpan = document.createElement("span");
+              pointsSpan.style.fontSize = "17px";
+              pointsSpan.textContent = parseFloat(persona.Monedero_Balance || "0").toString() + " €";
+              infoSpan.appendChild(pointsSpan);
+            }
             tdPersona.appendChild(infoSpan);
             new_tr.appendChild(tdPersona);
             break;

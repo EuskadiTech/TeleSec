@@ -5,33 +5,33 @@ PAGES.pagos = {
   icon: "static/appico/Database.svg",
   AccessControl: true,
   Title: "Pagos",
-  
+
   // Datafono view for creating/processing transactions
   datafono: function (prefilledData = {}) {
     if (!checkRole("pagos:edit")) {
       setUrlHash("pagos");
       return;
     }
-    
+
     // Check for prefilled data from SuperCafé
-    var prefilledStr = sessionStorage.getItem('pagos_prefill');
+    var prefilledStr = sessionStorage.getItem("pagos_prefill");
     if (prefilledStr) {
       try {
         var prefilled = JSON.parse(prefilledStr);
         prefilledData = { ...prefilled, ...prefilledData };
-        sessionStorage.removeItem('pagos_prefill');
+        sessionStorage.removeItem("pagos_prefill");
       } catch (e) {
         console.error("Error parsing prefilled data:", e);
       }
     }
-    
+
     // Check for scanned persona from QR scanner
-    var scannedPersona = sessionStorage.getItem('pagos_scanned_persona');
+    var scannedPersona = sessionStorage.getItem("pagos_scanned_persona");
     if (scannedPersona) {
       prefilledData.persona = scannedPersona;
-      sessionStorage.removeItem('pagos_scanned_persona');
+      sessionStorage.removeItem("pagos_scanned_persona");
     }
-    
+
     var field_tipo = safeuuid();
     var field_monto = safeuuid();
     var field_persona = safeuuid();
@@ -188,28 +188,28 @@ PAGES.pagos = {
         </div>
       </div>
     `;
-    
+
     // Tipo change handler
-    document.getElementById(field_tipo).addEventListener('change', function() {
+    document.getElementById(field_tipo).addEventListener("change", function () {
       var tipo = this.value;
       var divDestino = document.getElementById(div_persona_destino);
       var metodoSelect = document.getElementById(field_metodo);
-      
-      if (tipo === 'Transferencia') {
-        divDestino.style.display = 'block';
+
+      if (tipo === "Transferencia") {
+        divDestino.style.display = "block";
       } else {
-        divDestino.style.display = 'none';
+        divDestino.style.display = "none";
       }
-      
+
       // Restrict Ingreso to Efectivo only
-      if (tipo === 'Ingreso') {
-        metodoSelect.value = 'Efectivo';
+      if (tipo === "Ingreso") {
+        metodoSelect.value = "Efectivo";
         metodoSelect.disabled = true;
       } else {
         metodoSelect.disabled = false;
       }
     });
-    
+
     // Confirm/Next button
     document.getElementById(btn_confirm).onclick = () => {
       if (currentStep === 1) {
@@ -217,7 +217,7 @@ PAGES.pagos = {
         var tipo = document.getElementById(field_tipo).value;
         var metodo = document.getElementById(field_metodo).value;
         var monto = parseFloat(document.getElementById(numpad_display).value);
-        
+
         if (!tipo) {
           alert("Por favor selecciona el tipo de transacción");
           return;
@@ -226,7 +226,7 @@ PAGES.pagos = {
           alert("Por favor selecciona el método de pago");
           return;
         }
-        if (tipo === 'Ingreso' && metodo !== 'Efectivo') {
+        if (tipo === "Ingreso" && metodo !== "Efectivo") {
           alert("Los ingresos solo pueden ser en Efectivo");
           return;
         }
@@ -234,17 +234,18 @@ PAGES.pagos = {
           alert("Por favor ingresa un monto válido");
           return;
         }
-        
+
         // Move to step 2
-        document.getElementById('step1').style.display = 'none';
-        document.getElementById('step2').style.display = 'block';
-        document.getElementById('stepIndicator').innerText = '2';
-        document.getElementById('step2Amount').innerText = monto.toFixed(2) + '€';
+        document.getElementById("step1").style.display = "none";
+        document.getElementById("step2").style.display = "block";
+        document.getElementById("stepIndicator").innerText = "2";
+        document.getElementById("step2Amount").innerText =
+          monto.toFixed(2) + "€";
         currentStep = 2;
-        
+
         // Load personas for selection
         loadPersonaSelector();
-        if (tipo === 'Transferencia') {
+        if (tipo === "Transferencia") {
           loadPersonaDestinoSelector();
         }
       } else if (currentStep === 2) {
@@ -254,10 +255,12 @@ PAGES.pagos = {
           alert("Por favor selecciona un monedero");
           return;
         }
-        
+
         var tipo = document.getElementById(field_tipo).value;
-        if (tipo === 'Transferencia') {
-          var personaDestinoId = document.getElementById(field_persona_destino).value;
+        if (tipo === "Transferencia") {
+          var personaDestinoId = document.getElementById(
+            field_persona_destino
+          ).value;
           if (!personaDestinoId) {
             alert("Por favor selecciona el monedero destino");
             return;
@@ -267,88 +270,100 @@ PAGES.pagos = {
             return;
           }
         }
-        
-      
+
         // Check if persona has enough balance for Gasto or Transferencia
-        if (tipo === 'Gasto' || tipo === 'Transferencia') {
+        if (tipo === "Gasto" || tipo === "Transferencia") {
           if (metodo == "Tarjeta") {
             var persona = SC_Personas[personaId];
             var currentBalance = parseFloat(persona.Monedero_Balance || 0);
             if (currentBalance < monto) {
-              if (!confirm(`Saldo insuficiente (${currentBalance.toFixed(2)}€). ¿Continuar de todos modos?`)) {
+              if (
+                !confirm(
+                  `Saldo insuficiente (${currentBalance.toFixed(
+                    2
+                  )}€). ¿Continuar de todos modos?`
+                )
+              ) {
                 return;
               }
             }
           }
         }
         // Move to step 3 - confirmation
-        document.getElementById('step2').style.display = 'none';
-        document.getElementById('step3').style.display = 'block';
-        document.getElementById('stepIndicator').innerText = '3';
-        
+        document.getElementById("step2").style.display = "none";
+        document.getElementById("step3").style.display = "block";
+        document.getElementById("stepIndicator").innerText = "3";
+
         var monto = parseFloat(document.getElementById(numpad_display).value);
-        document.getElementById('confirmAmount').innerText = monto.toFixed(2) + '€';
-        
+        document.getElementById("confirmAmount").innerText =
+          monto.toFixed(2) + "€";
+
         // Populate confirmation data
-        var tipoText = document.getElementById(field_tipo).selectedOptions[0].text;
-        var metodoText = document.getElementById(field_metodo).selectedOptions[0].text;
+        var tipoText =
+          document.getElementById(field_tipo).selectedOptions[0].text;
+        var metodoText =
+          document.getElementById(field_metodo).selectedOptions[0].text;
         var personaName = SC_Personas[personaId]?.Nombre || personaId;
         var notas = document.getElementById(field_notas).value || "(sin notas)";
-        
-        document.getElementById('confirmTipo').innerText = tipoText;
-        document.getElementById('confirmMetodo').innerText = metodoText;
-        document.getElementById('confirmPersona').innerText = personaName;
-        document.getElementById('confirmNotas').innerText = notas;
-        
-        if (tipo === 'Transferencia') {
-          var personaDestinoId = document.getElementById(field_persona_destino).value;
-          var personaDestinoName = SC_Personas[personaDestinoId]?.Nombre || personaDestinoId;
-          document.getElementById('confirmPersonaDestinoName').innerText = personaDestinoName;
-          document.getElementById('confirmPersonaDestino').style.display = 'block';
+
+        document.getElementById("confirmTipo").innerText = tipoText;
+        document.getElementById("confirmMetodo").innerText = metodoText;
+        document.getElementById("confirmPersona").innerText = personaName;
+        document.getElementById("confirmNotas").innerText = notas;
+
+        if (tipo === "Transferencia") {
+          var personaDestinoId = document.getElementById(
+            field_persona_destino
+          ).value;
+          var personaDestinoName =
+            SC_Personas[personaDestinoId]?.Nombre || personaDestinoId;
+          document.getElementById("confirmPersonaDestinoName").innerText =
+            personaDestinoName;
+          document.getElementById("confirmPersonaDestino").style.display =
+            "block";
         }
-        
+
         // Switch to final button layout
-        document.getElementById('buttonContainer').style.display = 'none';
-        document.getElementById('buttonContainerFinal').style.display = 'grid';
-        
+        document.getElementById("buttonContainer").style.display = "none";
+        document.getElementById("buttonContainerFinal").style.display = "grid";
+
         currentStep = 3;
       }
     };
-    
+
     // Confirm final transaction button
     document.getElementById(btn_confirm + "2").onclick = () => {
       processTransaction();
     };
-    
+
     // Back button
     document.getElementById(btn_back).onclick = () => {
       if (currentStep === 3) {
         // Go back to step 2
-        document.getElementById('step3').style.display = 'none';
-        document.getElementById('step2').style.display = 'block';
-        document.getElementById('stepIndicator').innerText = '2';
-        document.getElementById('buttonContainer').style.display = 'grid';
-        document.getElementById('buttonContainerFinal').style.display = 'none';
+        document.getElementById("step3").style.display = "none";
+        document.getElementById("step2").style.display = "block";
+        document.getElementById("stepIndicator").innerText = "2";
+        document.getElementById("buttonContainer").style.display = "grid";
+        document.getElementById("buttonContainerFinal").style.display = "none";
         currentStep = 2;
       }
     };
-    
-    
+
     // Cancel button
     document.getElementById(btn_cancel).onclick = () => {
       if (confirm("¿Seguro que quieres cancelar esta transacción?")) {
         setUrlHash("pagos");
       }
     };
-    
+
     // QR Scanner button
     document.getElementById(scan_qr_btn).onclick = () => {
       setUrlHash("pagos,scan_qr");
     };
-    
+
     function loadPersonaSelector() {
-      var container = document.querySelector('#personaSelector');
-      container.innerHTML = '';
+      var container = document.querySelector("#personaSelector");
+      container.innerHTML = "";
       document.getElementById(field_persona).value = selectedPersona;
       addCategory_Personas(
         container,
@@ -363,11 +378,12 @@ PAGES.pagos = {
         "- No hay personas registradas -"
       );
     }
-    
+
     function loadPersonaDestinoSelector() {
-      var container = document.querySelector('#personaDestinoSelector');
-      container.innerHTML = '';
-      document.getElementById(field_persona_destino).value = selectedPersonaDestino;
+      var container = document.querySelector("#personaDestinoSelector");
+      container.innerHTML = "";
+      document.getElementById(field_persona_destino).value =
+        selectedPersonaDestino;
       addCategory_Personas(
         container,
         SC_Personas,
@@ -381,21 +397,23 @@ PAGES.pagos = {
         "- No hay personas registradas -"
       );
     }
-    
+
     function processTransaction() {
       var tipo = document.getElementById(field_tipo).value;
       var monto = parseFloat(document.getElementById(numpad_display).value);
       var personaId = document.getElementById(field_persona).value;
       var metodo = document.getElementById(field_metodo).value;
       var notas = document.getElementById(field_notas).value;
-      
+
       if (!personaId) {
         alert("Por favor selecciona un monedero");
         return;
       }
-      
-      if (tipo === 'Transferencia') {
-        var personaDestinoId = document.getElementById(field_persona_destino).value;
+
+      if (tipo === "Transferencia") {
+        var personaDestinoId = document.getElementById(
+          field_persona_destino
+        ).value;
         if (!personaDestinoId) {
           alert("Por favor selecciona el monedero destino");
           return;
@@ -405,7 +423,7 @@ PAGES.pagos = {
           return;
         }
       }
-      
+
       // Create transaction
       var ticketId = safeuuid("");
       var transactionData = {
@@ -416,13 +434,15 @@ PAGES.pagos = {
         Persona: personaId,
         Metodo: metodo,
         Notas: notas,
-        Estado: "Completado"
+        Estado: "Completado",
       };
-      
-      if (tipo === 'Transferencia') {
-        transactionData.PersonaDestino = document.getElementById(field_persona_destino).value;
+
+      if (tipo === "Transferencia") {
+        transactionData.PersonaDestino = document.getElementById(
+          field_persona_destino
+        ).value;
       }
-      
+
       // Add prefilled data if exists
       if (prefilledData.origen) {
         transactionData.Origen = prefilledData.origen;
@@ -430,16 +450,16 @@ PAGES.pagos = {
       if (prefilledData.origen_id) {
         transactionData.OrigenID = prefilledData.origen_id;
       }
-      
+
       // Update wallet balances
       // Don't update balance for Efectivo Gastos (paying with cash)
-      var shouldUpdateBalance = !(tipo === 'Gasto' && metodo === 'Efectivo');
-      
+      var shouldUpdateBalance = !(tipo === "Gasto" && metodo === "Efectivo");
+
       if (shouldUpdateBalance) {
         updateWalletBalance(personaId, tipo, monto, () => {
-          if (tipo === 'Transferencia') {
+          if (tipo === "Transferencia") {
             var destinoId = transactionData.PersonaDestino;
-            updateWalletBalance(destinoId, 'Ingreso', monto, () => {
+            updateWalletBalance(destinoId, "Ingreso", monto, () => {
               saveTransaction(ticketId, transactionData);
             });
           } else {
@@ -451,49 +471,49 @@ PAGES.pagos = {
         saveTransaction(ticketId, transactionData);
       }
     }
-    
+
     function updateWalletBalance(personaId, tipo, monto, callback) {
       var persona = SC_Personas[personaId];
       if (!persona) {
         alert("Error: Persona no encontrada");
         return;
       }
-      
+
       var currentBalance = parseFloat(persona.Monedero_Balance || 0);
       var newBalance = currentBalance;
-      
-      if (tipo === 'Ingreso') {
+
+      if (tipo === "Ingreso") {
         newBalance = currentBalance + monto;
-      } else if (tipo === 'Gasto' || tipo === 'Transferencia') {
+      } else if (tipo === "Gasto" || tipo === "Transferencia") {
         newBalance = currentBalance - monto;
       }
-      
+
       persona.Monedero_Balance = newBalance;
-      
+
       TS_encrypt(persona, SECRET, (encrypted) => {
         betterGunPut(gun.get(TABLE).get("personas").get(personaId), encrypted);
         if (callback) callback();
       });
     }
-    
+
     function saveTransaction(ticketId, data) {
       TS_encrypt(data, SECRET, (encrypted) => {
         document.getElementById("actionStatus").style.display = "block";
         betterGunPut(gun.get(TABLE).get("pagos").get(ticketId), encrypted);
-        
+
         // If this is from SuperCafé, update the order
-        if (data.Origen === 'SuperCafé' && data.OrigenID) {
+        if (data.Origen === "SuperCafé" && data.OrigenID) {
           handleSuperCafePayment(data);
         }
-        
+
         // Check for promotional bonus on Ingreso transactions (Efectivo only)
-        if (data.Tipo === 'Ingreso' && data.Metodo === 'Efectivo') {
+        if (data.Tipo === "Ingreso" && data.Metodo === "Efectivo") {
           var bonusAmount = calculatePromoBonus(data.Monto);
           if (bonusAmount > 0) {
             createPromoBonusTransaction(data.Persona, bonusAmount, data.Monto);
           }
         }
-        
+
         toastr.success("¡Transacción completada!");
         setTimeout(() => {
           document.getElementById("actionStatus").style.display = "none";
@@ -501,25 +521,29 @@ PAGES.pagos = {
         }, SAVE_WAIT);
       });
     }
-    
+
     function calculatePromoBonus(monto) {
       var amount = parseFloat(monto);
-      
+
       if (amount >= 5) {
-        return 0.20; // 20% bonus
+        return 0.2; // 20% bonus
       } else if (amount >= 4) {
         return 0.15; // 15% bonus
       } else if (amount >= 3) {
-        return 0.10; // 10% bonus
+        return 0.1; // 10% bonus
       } else if (amount >= 2) {
         return 0.05; // 5% bonus
       }
-      
+
       return 0; // No bonus for amounts under 2€
     }
-    
-    function createPromoBonusTransaction(personaId, bonusAmount, originalAmount) {
-      return
+
+    function createPromoBonusTransaction(
+      personaId,
+      bonusAmount,
+      originalAmount
+    ) {
+      return;
       var bonusTicketId = safeuuid("");
       var bonusData = {
         Ticket: bonusTicketId,
@@ -528,44 +552,60 @@ PAGES.pagos = {
         Monto: bonusAmount,
         Persona: personaId,
         Metodo: "Efectivo",
-        Notas: "Promo Bono - " + bonusAmount.toFixed(2) + "€ extra por recarga de " + originalAmount.toFixed(2) + "€",
+        Notas:
+          "Promo Bono - " +
+          bonusAmount.toFixed(2) +
+          "€ extra por recarga de " +
+          originalAmount.toFixed(2) +
+          "€",
         Estado: "Completado",
-        Origen: "Promo Bono"
+        Origen: "Promo Bono",
       };
-      
+
       // Update wallet balance with bonus
       var persona = SC_Personas[personaId];
       if (persona) {
         var currentBalance = parseFloat(persona.Monedero_Balance || 0);
         var newBalance = currentBalance + bonusAmount;
         persona.Monedero_Balance = newBalance;
-        
+
         TS_encrypt(persona, SECRET, (encrypted) => {
-          betterGunPut(gun.get(TABLE).get("personas").get(personaId), encrypted);
+          betterGunPut(
+            gun.get(TABLE).get("personas").get(personaId),
+            encrypted
+          );
         });
       }
-      
+
       // Save bonus transaction
       TS_encrypt(bonusData, SECRET, (encrypted) => {
         betterGunPut(gun.get(TABLE).get("pagos").get(bonusTicketId), encrypted);
       });
-      
-      toastr.success("🎉 ¡Promo Bono aplicado! +" + bonusAmount.toFixed(2) + "€ extra");
+
+      toastr.success(
+        "🎉 ¡Promo Bono aplicado! +" + bonusAmount.toFixed(2) + "€ extra"
+      );
     }
-    
+
     function handleSuperCafePayment(transactionData) {
       // Mark the SuperCafé order as paid and delete it
-      betterGunPut(gun.get(TABLE).get("supercafe").get(transactionData.OrigenID), null);
-      
+      betterGunPut(
+        gun.get(TABLE).get("supercafe").get(transactionData.OrigenID),
+        null
+      );
+
       // Update persona points
       var persona = SC_Personas[transactionData.Persona];
       if (!persona) return;
-      
+
       TS_encrypt(persona, SECRET, (encrypted) => {
-        betterGunPut(gun.get(TABLE).get("personas").get(transactionData.Persona), encrypted);
+        betterGunPut(
+          gun.get(TABLE).get("personas").get(transactionData.Persona),
+          encrypted
+        );
       });
     }
-    
+
     // Pre-fill if data provided
     if (prefilledData.monto) {
       displayValue = prefilledData.monto;
@@ -578,31 +618,31 @@ PAGES.pagos = {
       document.getElementById(field_notas).value = prefilledData.notas;
     }
   },
-  
+
   // Edit/view transaction
   edit: function (tid) {
     if (!checkRole("pagos")) {
       setUrlHash("pagos");
       return;
     }
-    var tid2 = location.hash.split(",")
+    var tid2 = location.hash.split(",");
     if (tid == "datafono") {
-      PAGES.pagos.datafono()
-      return
+      PAGES.pagos.datafono();
+      return;
     }
     if (tid == "datafono_prefill") {
-      PAGES.pagos.datafono(JSON.parse(atob(tid2[2])))
-      return
+      PAGES.pagos.datafono(JSON.parse(atob(tid2[2])));
+      return;
     }
     if (tid == "scan_qr") {
-      PAGES.pagos.__scanQR()
-      return
+      PAGES.pagos.__scanQR();
+      return;
     }
     if (tid == "edit_transaction") {
-      PAGES.pagos.__editTransaction(tid2[2])
-      return
+      PAGES.pagos.__editTransaction(tid2[2]);
+      return;
     }
-    
+
     var nameh1 = safeuuid();
     var field_ticket = safeuuid();
     var field_fecha = safeuuid();
@@ -621,7 +661,7 @@ PAGES.pagos = {
     var btn_edit = safeuuid();
     var btn_delete = safeuuid();
     var btn_revert = safeuuid();
-    
+
     container.innerHTML = `
       <h1>Transacción <code id="${nameh1}"></code></h1>
       ${BuildQR("pagos," + tid, "Esta Transacción")}
@@ -698,157 +738,177 @@ PAGES.pagos = {
         </button>
       </fieldset>
     `;
-    
+
     document.getElementById(btn_volver).onclick = () => {
       setUrlHash("pagos");
     };
     document.getElementById(btn_volver2).onclick = () => {
       setUrlHash("supercafe");
     };
-    
-    gun.get(TABLE).get("pagos").get(tid).once((data, key) => {
-      function load_data(data) {
-        document.getElementById(nameh1).innerText = key;
-        document.getElementById(field_ticket).value = data.Ticket || key;
-        
-        var fecha = data.Fecha || "";
-        if (fecha) {
-          var d = new Date(fecha);
-          document.getElementById(field_fecha).value = d.toLocaleString('es-ES');
-        }
-        
-        document.getElementById(field_tipo).value = data.Tipo || "";
-        document.getElementById(field_monto).value = (data.Monto || 0).toFixed(2) + "€";
-        
-        var persona = SC_Personas[data.Persona] || {};
-        document.getElementById(field_persona).value = persona.Nombre || data.Persona || "";
-        
-        if (data.PersonaDestino) {
-          var personaDestino = SC_Personas[data.PersonaDestino] || {};
-          document.getElementById(field_persona_destino).value = personaDestino.Nombre || data.PersonaDestino || "";
-          document.getElementById(div_persona_destino).style.display = 'block';
-        }
-        
-        document.getElementById(field_metodo).value = data.Metodo || "";
-        document.getElementById(field_estado).value = data.Estado || "";
-        document.getElementById(field_notas).value = data.Notas || "";
-        
-        if (data.Origen) {
-          document.getElementById(field_origen).value = data.Origen + (data.OrigenID ? " (" + data.OrigenID + ")" : "");
-          document.getElementById(div_origen).style.display = 'block';
-        }
-        
-        // Edit button - navigate to edit mode
-        document.getElementById(btn_edit).onclick = () => {
-          setUrlHash("pagos,edit_transaction," + key);
-        };
-        
-        // Delete button
-        document.getElementById(btn_delete).onclick = () => {
-          if (!checkRole("pagos:edit")) {
-            alert("No tienes permisos para eliminar transacciones");
-            return;
+
+    gun
+      .get(TABLE)
+      .get("pagos")
+      .get(tid)
+      .once((data, key) => {
+        function load_data(data) {
+          document.getElementById(nameh1).innerText = key;
+          document.getElementById(field_ticket).value = data.Ticket || key;
+
+          var fecha = data.Fecha || "";
+          if (fecha) {
+            var d = new Date(fecha);
+            document.getElementById(field_fecha).value =
+              d.toLocaleString("es-ES");
           }
-          
-          if (confirm("¿Estás seguro de que quieres ELIMINAR esta transacción?\n\nEsta acción NO se puede deshacer y los cambios en los monederos NO se revertirán automáticamente.\n\nPara revertir los cambios en los monederos, usa el botón 'Revertir Transacción' en su lugar.")) {
-            betterGunPut(gun.get(TABLE).get("pagos").get(key), null);
-            toastr.success("Transacción eliminada");
+
+          document.getElementById(field_tipo).value = data.Tipo || "";
+          document.getElementById(field_monto).value =
+            (data.Monto || 0).toFixed(2) + "€";
+
+          var persona = SC_Personas[data.Persona] || {};
+          document.getElementById(field_persona).value =
+            persona.Nombre || data.Persona || "";
+
+          if (data.PersonaDestino) {
+            var personaDestino = SC_Personas[data.PersonaDestino] || {};
+            document.getElementById(field_persona_destino).value =
+              personaDestino.Nombre || data.PersonaDestino || "";
+            document.getElementById(div_persona_destino).style.display =
+              "block";
+          }
+
+          document.getElementById(field_metodo).value = data.Metodo || "";
+          document.getElementById(field_estado).value = data.Estado || "";
+          document.getElementById(field_notas).value = data.Notas || "";
+
+          if (data.Origen) {
+            document.getElementById(field_origen).value =
+              data.Origen + (data.OrigenID ? " (" + data.OrigenID + ")" : "");
+            document.getElementById(div_origen).style.display = "block";
+          }
+
+          // Edit button - navigate to edit mode
+          document.getElementById(btn_edit).onclick = () => {
+            setUrlHash("pagos,edit_transaction," + key);
+          };
+
+          // Delete button
+          document.getElementById(btn_delete).onclick = () => {
+            if (!checkRole("pagos:edit")) {
+              alert("No tienes permisos para eliminar transacciones");
+              return;
+            }
+
+            if (
+              confirm(
+                "¿Estás seguro de que quieres ELIMINAR esta transacción?\n\nEsta acción NO se puede deshacer y los cambios en los monederos NO se revertirán automáticamente.\n\nPara revertir los cambios en los monederos, usa el botón 'Revertir Transacción' en su lugar."
+              )
+            ) {
+              betterGunPut(gun.get(TABLE).get("pagos").get(key), null);
+              toastr.success("Transacción eliminada");
+              setTimeout(() => {
+                setUrlHash("pagos");
+              }, 1000);
+            }
+          };
+
+          // Revert button - reverses wallet balance changes and deletes transaction
+          document.getElementById(btn_revert).onclick = () => {
+            if (!checkRole("pagos:edit")) {
+              alert("No tienes permisos para revertir transacciones");
+              return;
+            }
+
+            if (
+              confirm(
+                "¿Estás seguro de que quieres REVERTIR esta transacción?\n\nEsto revertirá los cambios en los monederos y eliminará la transacción."
+              )
+            ) {
+              // Reverse the wallet balance changes
+              var tipo = data.Tipo;
+              var monto = parseFloat(data.Monto || 0);
+              var personaId = data.Persona;
+
+              // For Ingreso, subtract from balance (reverse)
+              // For Gasto, add to balance (reverse)
+              // For Transferencia, reverse both sides
+
+              if (tipo === "Ingreso") {
+                revertWalletBalance(personaId, "Gasto", monto, () => {
+                  deleteTransaction(key);
+                });
+              } else if (tipo === "Gasto") {
+                revertWalletBalance(personaId, "Ingreso", monto, () => {
+                  deleteTransaction(key);
+                });
+              } else if (tipo === "Transferencia") {
+                var destinoId = data.PersonaDestino;
+                revertWalletBalance(personaId, "Ingreso", monto, () => {
+                  revertWalletBalance(destinoId, "Gasto", monto, () => {
+                    deleteTransaction(key);
+                  });
+                });
+              }
+            }
+          };
+
+          function revertWalletBalance(personaId, tipo, monto, callback) {
+            var persona = SC_Personas[personaId];
+            if (!persona) {
+              toastr.error("Error: Persona no encontrada");
+              return;
+            }
+
+            var currentBalance = parseFloat(persona.Monedero_Balance || 0);
+            var newBalance = currentBalance;
+
+            if (tipo === "Ingreso") {
+              newBalance = currentBalance + monto;
+            } else if (tipo === "Gasto") {
+              newBalance = currentBalance - monto;
+            }
+
+            persona.Monedero_Balance = newBalance;
+
+            TS_encrypt(persona, SECRET, (encrypted) => {
+              betterGunPut(
+                gun.get(TABLE).get("personas").get(personaId),
+                encrypted
+              );
+              if (callback) callback();
+            });
+          }
+
+          function deleteTransaction(transactionKey) {
+            betterGunPut(gun.get(TABLE).get("pagos").get(transactionKey), null);
+            toastr.success("Transacción revertida y eliminada");
             setTimeout(() => {
               setUrlHash("pagos");
             }, 1000);
           }
-        };
-        
-        // Revert button - reverses wallet balance changes and deletes transaction
-        document.getElementById(btn_revert).onclick = () => {
-          if (!checkRole("pagos:edit")) {
-            alert("No tienes permisos para revertir transacciones");
-            return;
-          }
-          
-          if (confirm("¿Estás seguro de que quieres REVERTIR esta transacción?\n\nEsto revertirá los cambios en los monederos y eliminará la transacción.")) {
-            // Reverse the wallet balance changes
-            var tipo = data.Tipo;
-            var monto = parseFloat(data.Monto || 0);
-            var personaId = data.Persona;
-            
-            // For Ingreso, subtract from balance (reverse)
-            // For Gasto, add to balance (reverse)
-            // For Transferencia, reverse both sides
-            
-            if (tipo === "Ingreso") {
-              revertWalletBalance(personaId, "Gasto", monto, () => {
-                deleteTransaction(key);
-              });
-            } else if (tipo === "Gasto") {
-              revertWalletBalance(personaId, "Ingreso", monto, () => {
-                deleteTransaction(key);
-              });
-            } else if (tipo === "Transferencia") {
-              var destinoId = data.PersonaDestino;
-              revertWalletBalance(personaId, "Ingreso", monto, () => {
-                revertWalletBalance(destinoId, "Gasto", monto, () => {
-                  deleteTransaction(key);
-                });
-              });
-            }
-          }
-        };
-        
-        function revertWalletBalance(personaId, tipo, monto, callback) {
-          var persona = SC_Personas[personaId];
-          if (!persona) {
-            toastr.error("Error: Persona no encontrada");
-            return;
-          }
-          
-          var currentBalance = parseFloat(persona.Monedero_Balance || 0);
-          var newBalance = currentBalance;
-          
-          if (tipo === "Ingreso") {
-            newBalance = currentBalance + monto;
-          } else if (tipo === "Gasto") {
-            newBalance = currentBalance - monto;
-          }
-          
-          persona.Monedero_Balance = newBalance;
-          
-          TS_encrypt(persona, SECRET, (encrypted) => {
-            betterGunPut(gun.get(TABLE).get("personas").get(personaId), encrypted);
-            if (callback) callback();
-          });
         }
-        
-        function deleteTransaction(transactionKey) {
-          betterGunPut(gun.get(TABLE).get("pagos").get(transactionKey), null);
-          toastr.success("Transacción revertida y eliminada");
-          setTimeout(() => {
-            setUrlHash("pagos");
-          }, 1000);
+
+        if (typeof data == "string") {
+          TS_decrypt(data, SECRET, load_data);
+        } else {
+          load_data(data || {});
         }
-      }
-      
-      if (typeof data == "string") {
-        TS_decrypt(data, SECRET, load_data);
-      } else {
-        load_data(data || {});
-      }
-    });
+      });
   },
-  
+
   // Main index view with transaction log
   index: function () {
     if (!checkRole("pagos")) {
       setUrlHash("index");
       return;
     }
-    
-    var btn_new = safeuuid();
+
     var btn_datafono = safeuuid();
     var total_ingresos = safeuuid();
     var total_gastos = safeuuid();
     var balance_total = safeuuid();
-    
+
     container.innerHTML = `
       <h1>💳 Pagos y Transacciones</h1>
       
@@ -867,19 +927,16 @@ PAGES.pagos = {
         </div>
       </div>
       
-      <button id="${btn_datafono}" class="btn5" style="font-size: 18px; padding: 15px 30px;">
+      <button id="${btn_datafono}" class="btn5">
         💳 Abrir Datafono
-      </button>
-      <button id="${btn_new}" style="font-size: 18px; padding: 15px 30px;">
-        ➕ Nueva Transacción Manual
       </button>
       
       <h2>Registro de Transacciones</h2>
       <div id="tableContainer"></div>
     `;
-    
+
     var totals = { ingresos: 0, gastos: 0 };
-    
+
     const config = [
       {
         key: "Fecha",
@@ -888,10 +945,10 @@ PAGES.pagos = {
         template: (data, element) => {
           if (data.Fecha) {
             var d = new Date(data.Fecha);
-            element.innerText = d.toLocaleString('es-ES');
+            element.innerText = d.toLocaleString("es-ES");
           }
         },
-        default: ""
+        default: "",
       },
       {
         key: "Tipo",
@@ -901,7 +958,7 @@ PAGES.pagos = {
           var tipo = data.Tipo || "";
           var icon = "";
           var color = "";
-          
+
           if (tipo === "Ingreso") {
             icon = "💵";
             color = "#2ed573";
@@ -912,10 +969,10 @@ PAGES.pagos = {
             icon = "🔄";
             color = "#667eea";
           }
-          
+
           element.innerHTML = `<span style="background: ${color}; color: white; padding: 5px 10px; border-radius: 5px; font-weight: bold;">${icon} ${tipo}</span>`;
         },
-        default: ""
+        default: "",
       },
       {
         key: "Monto",
@@ -924,21 +981,23 @@ PAGES.pagos = {
         template: (data, element) => {
           var monto = parseFloat(data.Monto || 0);
           var color = data.Tipo === "Ingreso" ? "#2ed573" : "#ff4757";
-          element.innerHTML = `<span style="font-size: 20px; font-weight: bold; color: ${color};">${monto.toFixed(2)}€</span>`;
+          element.innerHTML = `<span style="font-size: 20px; font-weight: bold; color: ${color};">${monto.toFixed(
+            2
+          )}€</span>`;
         },
-        default: "0.00€"
+        default: "0.00€",
       },
       {
         key: "Persona",
         label: "Monedero",
         type: "persona",
-        default: ""
+        default: "",
       },
       {
         key: "Metodo",
         label: "Método",
         type: "text",
-        default: ""
+        default: "",
       },
       {
         key: "Estado",
@@ -949,23 +1008,25 @@ PAGES.pagos = {
           var color = estado === "Completado" ? "#2ed573" : "#ffa502";
           element.innerHTML = `<span style="background: ${color}; color: white; padding: 5px 10px; border-radius: 5px;">${estado}</span>`;
         },
-        default: "Pendiente"
-      }
+        default: "Pendiente",
+      },
     ];
-    
+
     // Persistent totals object by ID
     let totalData = {
-      ingresos: {},  // { id: monto }
-      gastos: {}     // { id: monto }
+      ingresos: {}, // { id: monto }
+      gastos: {}, // { id: monto }
     };
     var balance_real = 0;
     setInterval(() => {
       balance_real = 0;
-      Object.values(SC_Personas).forEach(persona => {
-        balance_real += parseFloat(persona.Monedero_Balance || 0)
+      Object.values(SC_Personas).forEach((persona) => {
+        balance_real += parseFloat(persona.Monedero_Balance || 0);
       });
-      document.getElementById(balance_total).innerText = balance_real.toFixed(2) + "€";
-      document.getElementById(balance_total).style.color = balance_real >= 0 ? "white" : "#ffcccc";
+      document.getElementById(balance_total).innerText =
+        balance_real.toFixed(2) + "€";
+      document.getElementById(balance_total).style.color =
+        balance_real >= 0 ? "white" : "#ffcccc";
     }, 1000);
     TS_IndexElement(
       "pagos",
@@ -973,12 +1034,12 @@ PAGES.pagos = {
       gun.get(TABLE).get("pagos"),
       document.getElementById("tableContainer"),
       (data, new_tr) => {
-        var id = data._key
-    
+        var id = data._key;
+
         const monto = parseFloat(data.Monto || 0) || 0;
         const tipo = data.Tipo;
         const metodo = data.Metodo || "";
-    
+
         // Count all Ingresos and Gastos in totals (excluding Transferencias)
         // Reset entries on every call for this ID
         if (tipo === "Ingreso") {
@@ -996,44 +1057,45 @@ PAGES.pagos = {
           totalData.ingresos[id] = 0;
           totalData.gastos[id] = 0;
         }
-    
+
         // Compute totals by summing all objects
-        const totalIngresos = Object.values(totalData.ingresos).reduce((a, b) => a + b, 0);
-        const totalGastos = Object.values(totalData.gastos).reduce((a, b) => a + b, 0);
+        const totalIngresos = Object.values(totalData.ingresos).reduce(
+          (a, b) => a + b,
+          0
+        );
+        const totalGastos = Object.values(totalData.gastos).reduce(
+          (a, b) => a + b,
+          0
+        );
         const balance = totalIngresos - totalGastos;
 
         // Update UI
-        document.getElementById(total_ingresos).innerText = totalIngresos.toFixed(2) + "€";
-        document.getElementById(total_gastos).innerText = totalGastos.toFixed(2) + "€";
+        document.getElementById(total_ingresos).innerText =
+          totalIngresos.toFixed(2) + "€";
+        document.getElementById(total_gastos).innerText =
+          totalGastos.toFixed(2) + "€";
       }
     );
-    
 
-    
     document.getElementById(btn_datafono).onclick = () => {
       setUrlHash("pagos,datafono");
     };
-    
+
     if (!checkRole("pagos:edit")) {
-      document.getElementById(btn_new).style.display = "none";
       document.getElementById(btn_datafono).style.display = "none";
-    } else {
-      document.getElementById(btn_new).onclick = () => {
-        setUrlHash("pagos," + safeuuid(""));
-      };
     }
   },
-  
+
   // QR Scanner for selecting wallet/persona
-  __scanQR: function() {
+  __scanQR: function () {
     if (!checkRole("pagos:edit")) {
       setUrlHash("pagos");
       return;
     }
-    
+
     var qrscan = safeuuid();
     var btn_cancel = safeuuid();
-    
+
     container.innerHTML = `
       <div style="max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
         <h1 style="color: white; text-align: center; margin-bottom: 20px;">
@@ -1053,19 +1115,20 @@ PAGES.pagos = {
         </button>
       </div>
     `;
-    
+
     // Initialize QR scanner
-    var html5QrcodeScanner = new Html5QrcodeScanner(
-      qrscan, { fps: 10, qrbox: 250 }
-    );
-    
+    var html5QrcodeScanner = new Html5QrcodeScanner(qrscan, {
+      fps: 10,
+      qrbox: 250,
+    });
+
     function onScanSuccess(decodedText, decodedResult) {
       html5QrcodeScanner.clear();
-      
+
       // Parse the QR code result
       // Expected format: "personas,{personaId}" or just "{personaId}"
       var personaId = decodedText;
-      
+
       // If it's a full URL hash, extract the persona ID
       if (decodedText.includes("personas,")) {
         var parts = decodedText.split(",");
@@ -1073,14 +1136,16 @@ PAGES.pagos = {
           personaId = parts[1];
         }
       }
-      
+
       // Verify the persona exists
       if (SC_Personas[personaId]) {
-        toastr.success("✅ Monedero escaneado: " + SC_Personas[personaId].Nombre);
-        
+        toastr.success(
+          "✅ Monedero escaneado: " + SC_Personas[personaId].Nombre
+        );
+
         // Store the selected persona in sessionStorage and return to datafono
-        sessionStorage.setItem('pagos_scanned_persona', personaId);
-        
+        sessionStorage.setItem("pagos_scanned_persona", personaId);
+
         // Navigate back to datafono
         setUrlHash("pagos,datafono");
       } else {
@@ -1090,24 +1155,24 @@ PAGES.pagos = {
         }, 2000);
       }
     }
-    
+
     html5QrcodeScanner.render(onScanSuccess);
     EventListeners.QRScanner.push(html5QrcodeScanner);
-    
+
     // Cancel button
     document.getElementById(btn_cancel).onclick = () => {
       html5QrcodeScanner.clear();
       setUrlHash("pagos,datafono");
     };
   },
-  
+
   // Edit existing transaction
-  __editTransaction: function(transactionId) {
+  __editTransaction: function (transactionId) {
     if (!checkRole("pagos:edit")) {
       setUrlHash("pagos");
       return;
     }
-    
+
     var field_tipo = safeuuid();
     var field_monto = safeuuid();
     var field_persona = safeuuid();
@@ -1118,11 +1183,11 @@ PAGES.pagos = {
     var div_persona_destino = safeuuid();
     var btn_save = safeuuid();
     var btn_cancel = safeuuid();
-    
+
     var selectedPersona = "";
     var selectedPersonaDestino = "";
     var originalData = null;
-    
+
     container.innerHTML = `
       <div style="max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
         <h1 style="color: white; text-align: center; margin-bottom: 20px;">
@@ -1200,51 +1265,58 @@ PAGES.pagos = {
         </div>
       </div>
     `;
-    
+
     // Load transaction data
-    gun.get(TABLE).get("pagos").get(transactionId).once((data, key) => {
-      function loadTransactionData(data) {
-        originalData = data;
-        
-        document.getElementById(field_tipo).value = data.Tipo || "Ingreso";
-        document.getElementById(field_metodo).value = data.Metodo || "Efectivo";
-        document.getElementById(field_monto).value = data.Monto || 0;
-        document.getElementById(field_estado).value = data.Estado || "Completado";
-        document.getElementById(field_notas).value = data.Notas || "";
-        
-        selectedPersona = data.Persona || "";
-        selectedPersonaDestino = data.PersonaDestino || "";
-        
-        loadPersonaSelector();
-        
-        if (data.Tipo === "Transferencia") {
-          document.getElementById(div_persona_destino).style.display = 'block';
-          loadPersonaDestinoSelector();
+    gun
+      .get(TABLE)
+      .get("pagos")
+      .get(transactionId)
+      .once((data, key) => {
+        function loadTransactionData(data) {
+          originalData = data;
+
+          document.getElementById(field_tipo).value = data.Tipo || "Ingreso";
+          document.getElementById(field_metodo).value =
+            data.Metodo || "Efectivo";
+          document.getElementById(field_monto).value = data.Monto || 0;
+          document.getElementById(field_estado).value =
+            data.Estado || "Completado";
+          document.getElementById(field_notas).value = data.Notas || "";
+
+          selectedPersona = data.Persona || "";
+          selectedPersonaDestino = data.PersonaDestino || "";
+
+          loadPersonaSelector();
+
+          if (data.Tipo === "Transferencia") {
+            document.getElementById(div_persona_destino).style.display =
+              "block";
+            loadPersonaDestinoSelector();
+          }
         }
-      }
-      
-      if (typeof data == "string") {
-        TS_decrypt(data, SECRET, loadTransactionData);
-      } else {
-        loadTransactionData(data || {});
-      }
-    });
-    
+
+        if (typeof data == "string") {
+          TS_decrypt(data, SECRET, loadTransactionData);
+        } else {
+          loadTransactionData(data || {});
+        }
+      });
+
     // Tipo change handler
-    document.getElementById(field_tipo).addEventListener('change', function() {
+    document.getElementById(field_tipo).addEventListener("change", function () {
       var tipo = this.value;
       var divDestino = document.getElementById(div_persona_destino);
-      if (tipo === 'Transferencia') {
-        divDestino.style.display = 'block';
+      if (tipo === "Transferencia") {
+        divDestino.style.display = "block";
         loadPersonaDestinoSelector();
       } else {
-        divDestino.style.display = 'none';
+        divDestino.style.display = "none";
       }
     });
-    
+
     function loadPersonaSelector() {
-      var container = document.querySelector('#personaSelector');
-      container.innerHTML = '';
+      var container = document.querySelector("#personaSelector");
+      container.innerHTML = "";
       document.getElementById(field_persona).value = selectedPersona;
       addCategory_Personas(
         container,
@@ -1259,11 +1331,12 @@ PAGES.pagos = {
         "- No hay personas registradas -"
       );
     }
-    
+
     function loadPersonaDestinoSelector() {
-      var container = document.querySelector('#personaDestinoSelector');
-      container.innerHTML = '';
-      document.getElementById(field_persona_destino).value = selectedPersonaDestino;
+      var container = document.querySelector("#personaDestinoSelector");
+      container.innerHTML = "";
+      document.getElementById(field_persona_destino).value =
+        selectedPersonaDestino;
       addCategory_Personas(
         container,
         SC_Personas,
@@ -1277,7 +1350,7 @@ PAGES.pagos = {
         "- No hay personas registradas -"
       );
     }
-    
+
     // Save button
     document.getElementById(btn_save).onclick = () => {
       var tipo = document.getElementById(field_tipo).value;
@@ -1286,19 +1359,21 @@ PAGES.pagos = {
       var metodo = document.getElementById(field_metodo).value;
       var notas = document.getElementById(field_notas).value;
       var estado = document.getElementById(field_estado).value;
-      
+
       if (!personaId) {
         alert("Por favor selecciona un monedero");
         return;
       }
-      
+
       if (isNaN(monto) || monto < 0) {
         alert("Por favor ingresa un monto válido");
         return;
       }
-      
-      if (tipo === 'Transferencia') {
-        var personaDestinoId = document.getElementById(field_persona_destino).value;
+
+      if (tipo === "Transferencia") {
+        var personaDestinoId = document.getElementById(
+          field_persona_destino
+        ).value;
         if (!personaDestinoId) {
           alert("Por favor selecciona el monedero destino");
           return;
@@ -1308,11 +1383,15 @@ PAGES.pagos = {
           return;
         }
       }
-      
-      if (!confirm("¿Estás seguro de que quieres guardar los cambios?\n\nNOTA: Los cambios en los monederos NO se ajustarán automáticamente. Si cambiaste el monto, tipo o persona, deberías revertir la transacción original y crear una nueva.")) {
+
+      if (
+        !confirm(
+          "¿Estás seguro de que quieres guardar los cambios?\n\nNOTA: Los cambios en los monederos NO se ajustarán automáticamente. Si cambiaste el monto, tipo o persona, deberías revertir la transacción original y crear una nueva."
+        )
+      ) {
         return;
       }
-      
+
       // Update transaction data
       var updatedData = {
         ...originalData,
@@ -1321,15 +1400,17 @@ PAGES.pagos = {
         Persona: personaId,
         Metodo: metodo,
         Notas: notas,
-        Estado: estado
+        Estado: estado,
       };
-      
-      if (tipo === 'Transferencia') {
-        updatedData.PersonaDestino = document.getElementById(field_persona_destino).value;
+
+      if (tipo === "Transferencia") {
+        updatedData.PersonaDestino = document.getElementById(
+          field_persona_destino
+        ).value;
       } else {
         delete updatedData.PersonaDestino;
       }
-      
+
       TS_encrypt(updatedData, SECRET, (encrypted) => {
         document.getElementById("actionStatus").style.display = "block";
         betterGunPut(gun.get(TABLE).get("pagos").get(transactionId), encrypted);
@@ -1340,12 +1421,14 @@ PAGES.pagos = {
         }, SAVE_WAIT);
       });
     };
-    
+
     // Cancel button
     document.getElementById(btn_cancel).onclick = () => {
-      if (confirm("¿Seguro que quieres cancelar? Los cambios no se guardarán.")) {
+      if (
+        confirm("¿Seguro que quieres cancelar? Los cambios no se guardarán.")
+      ) {
         setUrlHash("pagos," + transactionId);
       }
     };
-  }
+  },
 };
