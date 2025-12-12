@@ -24,13 +24,15 @@ const RELAYS = [
   // "https://gun-es05.tech.eus/gun",
   // "https://gun-es06.tech.eus/gun",
   // "https://gun-es07.tech.eus/gun", // No he podido instalar el nodo.
-  "https://gun-manhattan.herokuapp.com/gun",
-  "https://peer.wallie.io/gun",
-  "https://gundb-relay-mlccl.ondigitalocean.app/gun",
-  "https://plankton-app-6qfp3.ondigitalocean.app/",
-  "https://gun.defucc.me/gun",
-  "https://gun.o8.is/gun",
-  "https://shogun-relay.scobrudot.dev/gun",
+
+  // Desactivado por fallos:
+  // "https://gun-manhattan.herokuapp.com/gun",
+  // "https://peer.wallie.io/gun",
+  // "https://gundb-relay-mlccl.ondigitalocean.app/gun",
+  // "https://plankton-app-6qfp3.ondigitalocean.app/",
+  // "https://gun.defucc.me/gun",
+  // "https://gun.o8.is/gun",
+  // "https://shogun-relay.scobrudot.dev/gun",
 ];
 var SECRET = "";
 var SUB_LOGGED_IN = false;

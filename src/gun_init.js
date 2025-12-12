@@ -51,13 +51,13 @@ function createPeerListElement(wireHType, wireID) {
 }
 
 function updateConnectionStatus(peerCount) {
-  var statusImage = peerCount < 3 ? "connect_ko.svg" : "connect_ok.svg";
+  var statusImage = peerCount < 1 ? "connect_ko.svg" : "connect_ok.svg";
   if (window.navigator.onLine == false) {
     statusImage = "offline.svg"
   }
   document.getElementById("connectStatus").src = `static/ico/${statusImage}`;
   
-  if (peerCount < 3) {
+  if (peerCount < 1) {
     if (!window.peerRetryCount) window.peerRetryCount = 0;
     window.peerRetryCount = (window.peerRetryCount + 1) % 3;
     if (window.peerRetryCount === 0) {

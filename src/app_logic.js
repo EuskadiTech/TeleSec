@@ -144,6 +144,7 @@ function fixGunLocalStorage() {
 function betterGunPut(ref, data) {
   ref.put(data, (ack) => {
     if (ack.err) {
+      console.error("Ack failure", ack)
       toastr.error(
         ack.err + "<br>Pulsa aqui para reiniciar la app",
         "Error al guardar", { onclick: () => fixGunLocalStorage() }
