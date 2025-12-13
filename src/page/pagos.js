@@ -258,6 +258,7 @@ PAGES.pagos = {
 
         var tipo = document.getElementById(field_tipo).value;
         var metodo = document.getElementById(field_metodo).value;
+        var monto = parseFloat(document.getElementById(numpad_display).value);
         if (tipo === "Transferencia") {
           var personaDestinoId = document.getElementById(
             field_persona_destino
@@ -295,7 +296,6 @@ PAGES.pagos = {
         document.getElementById("step3").style.display = "block";
         document.getElementById("stepIndicator").innerText = "3";
 
-        var monto = parseFloat(document.getElementById(numpad_display).value);
         document.getElementById("confirmAmount").innerText =
           monto.toFixed(2) + "€";
 
