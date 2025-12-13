@@ -257,6 +257,7 @@ PAGES.pagos = {
         }
 
         var tipo = document.getElementById(field_tipo).value;
+        var metodo = document.getElementById(field_metodo).value;
         if (tipo === "Transferencia") {
           var personaDestinoId = document.getElementById(
             field_persona_destino
