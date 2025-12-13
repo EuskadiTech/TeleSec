@@ -449,7 +449,7 @@ PAGES.pagos = {
         newBalance = currentBalance - monto;
       }
       
-      persona.Monedero_Balance = newBalance;
+      persona.Monedero_Balance = fixfloat(newBalance);
       
       TS_encrypt(persona, SECRET, (encrypted) => {
         betterGunPut(gun.get(TABLE).get("personas").get(personaId), encrypted);
@@ -527,7 +527,7 @@ PAGES.pagos = {
       if (persona) {
         var currentBalance = parseFloat(persona.Monedero_Balance || 0);
         var newBalance = currentBalance + bonusAmount;
-        persona.Monedero_Balance = newBalance;
+        persona.Monedero_Balance = fixfloat(newBalance);
         
         TS_encrypt(persona, SECRET, (encrypted) => {
           betterGunPut(
@@ -829,7 +829,7 @@ PAGES.pagos = {
               newBalance = currentBalance - monto;
             }
             
-            persona.Monedero_Balance = newBalance;
+            persona.Monedero_Balance = fixfloat(newBalance);
             
             TS_encrypt(persona, SECRET, (encrypted) => {
               betterGunPut(
