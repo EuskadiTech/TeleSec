@@ -1,3 +1,7 @@
+function fixfloat(number) {
+    return (parseFloat(number).toPrecision(8));
+}
+
 function tableScroll(query) {
   $(query).doubleScroll();
 }
