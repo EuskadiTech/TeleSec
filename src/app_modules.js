@@ -287,7 +287,7 @@ function addCategory_Personas(
   parent.append(details_0);
   var lastreg = "";
   Object.entries(options)
-    .sort(PERSONAS_Sorter)
+    .sort(betterSorter)
     .map((entry) => {
       var key = entry[0];
       var value = entry[1];
@@ -1006,7 +1006,7 @@ function TS_IndexElement(
             if (parseFloat(persona.Monedero_Balance || "0") != 0) {
               const pointsSpan = document.createElement("span");
               pointsSpan.style.fontSize = "17px";
-              pointsSpan.textContent = parseFloat(persona.Monedero_Balance || "0").toString() + " €";
+              pointsSpan.textContent = parseFloat(persona.Monedero_Balance || "0").toPrecision(2) + " €";
               infoSpan.appendChild(pointsSpan);
             }
             tdPersona.appendChild(infoSpan);
