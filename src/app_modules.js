@@ -287,10 +287,14 @@ function addCategory_Personas(
   parent.append(details_0);
   var lastreg = "";
   Object.entries(options)
+    .map(([_, data]) => {
+      data["_key"] = _;
+      return data
+    })
     .sort(betterSorter)
     .map((entry) => {
-      var key = entry[0];
-      var value = entry[1];
+      var key = entry["_key"];
+      var value = entry;
       if (lastreg != value.Region.toUpperCase()) {
         lastreg = value.Region.toUpperCase();
         var h3_0 = document.createElement("h2");
@@ -682,16 +686,6 @@ function SC_priceCalc(json) {
   }
   valores += "<hr>Total: " + precio + "c\n";
   return [precio, valores];
-}
-
-function PERSONAS_Sorter(a, b) {
-  if (a[1].Region < b[1].Region) {
-    return -1;
-  }
-  if (a[1].Region > b[1].Region) {
-    return 1;
-  }
-  return 0;
 }
 
 function TS_IndexElement(
