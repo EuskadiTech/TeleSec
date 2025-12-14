@@ -977,7 +977,7 @@ PAGES.pagos = {
       gastos: {}, // { id: monto }
     };
     var balance_real = 0;
-    setInterval(() => {
+    EventListeners.Interval.push(setInterval(() => {
       balance_real = 0;
       Object.values(SC_Personas).forEach((persona) => {
         balance_real += parseFloat(persona.Monedero_Balance || 0);
@@ -986,7 +986,7 @@ PAGES.pagos = {
         balance_real.toFixed(2) + "€";
       document.getElementById(balance_total).style.color =
         balance_real >= 0 ? "white" : "#ffcccc";
-    }, 1000);
+    }, 1000));
     TS_IndexElement(
       "pagos",
       config,

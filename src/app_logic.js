@@ -47,6 +47,8 @@ function open_page(params) {
   EventListeners.Interval = []
   EventListeners.QRScanner.forEach(ev => ev.clear());
   EventListeners.QRScanner = []
+  EventListeners.Custom.forEach(ev => ev());
+  EventListeners.Custom = []
   if (SUB_LOGGED_IN != true && params != "login,setup") {
     PAGES["login"].index();
     return;

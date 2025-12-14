@@ -3,6 +3,7 @@ var EventListeners = {
   Timeout: [],
   Interval: [],
   QRScanner: [],
+  Custom: [],
 };
 var urlParams = new URLSearchParams(location.search);
 var AC_BYPASS = false;
