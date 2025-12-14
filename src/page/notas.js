@@ -1,10 +1,10 @@
-PERMS["notas"] = "Noticias"
+PERMS["notas"] = "Notas"
 PERMS["notas:edit"] = "&gt; Editar"
 PAGES.notas = {
     navcss: "btn5",
-    icon: "static/appico/Newspaper.svg",
+    icon: "static/appico/Notepad.svg",
     AccessControl: true,
-    Title: "Noticias",
+    Title: "Notas",
     edit: function (mid) {
       if (!checkRole("notas:edit")) {setUrlHash("notas");return}
       var nameh1 = safeuuid();
@@ -15,7 +15,7 @@ PAGES.notas = {
       var btn_borrar = safeuuid();
       var div_actions = safeuuid();
       container.innerHTML = `
-        <h1>Noticia <code id="${nameh1}"></code></h1>
+        <h1>Nota <code id="${nameh1}"></code></h1>
         <fieldset style="float: none; width: calc(100% - 40px);max-width: none;">
             <legend>Valores</legend>
             <div style="max-width: 400px;">
@@ -111,8 +111,8 @@ PAGES.notas = {
       const tablebody = safeuuid();
       var btn_new = safeuuid();
       container.innerHTML = `
-                <h1>Noticias</h1>
-                <button id="${btn_new}">Nueva noticia</button>
+                <h1>Notas</h1>
+                <button id="${btn_new}">Nueva nota</button>
                 <div id="cont"></div>
                 `;
       TS_IndexElement(
