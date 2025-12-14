@@ -803,47 +803,7 @@ function TS_IndexElement(
   // --- Optimized render function ---
   var lastSearchValue = "";
   var lastFilteredSorted = [];
-  function sorter(a, b) {
-    // 1. Fecha (ascending)
-    if (a.Fecha && b.Fecha && a.Fecha !== b.Fecha) {
-      return a.Fecha > b.Fecha ? -1 : 1;
-    }
-    // 2. Region (ascending, from SC_Personas if Persona exists)
-    const regionA =
-      a.Persona && SC_Personas[a.Persona]
-        ? SC_Personas[a.Persona].Region || ""
-        : a.Region || "";
-    const regionB =
-      b.Persona && SC_Personas[b.Persona]
-        ? SC_Personas[b.Persona].Region || ""
-        : b.Region || "";
-    if (regionA !== regionB) {
-      return regionA < regionB ? -1 : 1;
-    }
-    // 3. Persona (Nombre, ascending, from SC_Personas if Persona exists)
-    const nombrePersonaA =
-      a.Persona && SC_Personas[a.Persona]
-        ? SC_Personas[a.Persona].Nombre || ""
-        : "";
-    const nombrePersonaB =
-      b.Persona && SC_Personas[b.Persona]
-        ? SC_Personas[b.Persona].Nombre || ""
-        : "";
-    if (nombrePersonaA !== nombrePersonaB) {
-      return nombrePersonaA.toLowerCase() < nombrePersonaB.toLowerCase()
-        ? -1
-        : 1;
-    }
-    // 4. Nombre (ascending, from a.Nombre/b.Nombre)
-    if (a.Nombre && b.Nombre && a.Nombre !== b.Nombre) {
-      return a.Nombre.toLowerCase() < b.Nombre.toLowerCase() ? -1 : 1;
-    }
-    // 5. Asunto (ascending, from a.Asunto/b.Asunto)
-    if (a.Asunto && b.Asunto && a.Asunto !== b.Asunto) {
-      return a.Asunto.toLowerCase() < b.Asunto.toLowerCase() ? -1 : 1;
-    }
-    return 0;
-  }
+  
 
   function getFilteredSortedRows(searchValue) {
     // Only use cache if searchValue is not empty and cache is valid
@@ -857,7 +817,7 @@ function TS_IndexElement(
     const filtered = Object.entries(rows)
       .filter(([_, data]) => searchInData(data, searchValue, config))
       .map(([_, data]) => data)
-      .sort(sorter);
+      .sort(betterSorter);
     lastSearchValue = searchValue;
     lastFilteredSorted = filtered;
     return filtered;
