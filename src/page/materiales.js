@@ -1,29 +1,33 @@
-PERMS["materiales"] = "Materiales"
-PERMS["materiales:edit"] = "&gt; Editar"
+PERMS["materiales"] = "Almacén";
+PERMS["materiales:edit"] = "&gt; Editar";
 PAGES.materiales = {
   navcss: "btn2",
-  icon: "static/appico/App_Dropbox.svg",
+  icon: "static/appico/shelf.png",
   AccessControl: true,
-  Title: "Materiales",
+  Title: "Almacén",
   edit: function (mid) {
-    if (!checkRole("materiales:edit")) {setUrlHash("materiales");return}
+    if (!checkRole("materiales:edit")) {
+      setUrlHash("materiales");
+      return;
+    }
     var nameh1 = safeuuid();
     var field_nombre = safeuuid();
+    var field_revision = safeuuid();
     var field_cantidad = safeuuid();
     var field_unidad = safeuuid();
     var field_cantidad_min = safeuuid();
     var field_ubicacion = safeuuid();
-    var field_referencia = safeuuid();
     var field_notas = safeuuid();
     var btn_guardar = safeuuid();
     var btn_borrar = safeuuid();
+    var FECHA_ISO = new Date().toISOString().split("T")[0];
     container.innerHTML = `
       <h1>Material <code id="${nameh1}"></code></h1>
       ${BuildQR("materiales," + mid, "Este Material")}
       <fieldset>
         <label>
-          Referencia<br>
-          <input type="text" id="${field_referencia}" value="?"><br><br>
+          Fecha Revisión<br>
+          <input type="date" id="${field_revision}"> <a onclick='document.getElementById("${field_revision}").value = "${FECHA_ISO}";'>Hoy - Contado todas las existencias</a><br><br>
         </label>
         <label>
           Nombre<br>
@@ -61,15 +65,16 @@ PAGES.materiales = {
         function load_data(data, ENC = "") {
           document.getElementById(nameh1).innerText = key;
           document.getElementById(field_nombre).value = data["Nombre"] || "";
-          document.getElementById(field_unidad).value = data["Unidad"] || "unidad(es)";
+          document.getElementById(field_unidad).value =
+            data["Unidad"] || "unidad(es)";
           document.getElementById(field_cantidad).value =
             data["Cantidad"] || "";
           document.getElementById(field_cantidad_min).value =
             data["Cantidad_Minima"] || "";
           document.getElementById(field_ubicacion).value =
             data["Ubicacion"] || "-";
-          document.getElementById(field_referencia).value =
-            data["Referencia"] || "?";
+          document.getElementById(field_revision).value =
+            data["Revision"] || "-";
           document.getElementById(field_notas).value = data["Notas"] || "";
         }
         if (typeof data == "string") {
@@ -87,7 +92,7 @@ PAGES.materiales = {
         Cantidad: document.getElementById(field_cantidad).value,
         Cantidad_Minima: document.getElementById(field_cantidad_min).value,
         Ubicacion: document.getElementById(field_ubicacion).value,
-        Referencia: document.getElementById(field_referencia).value,
+        Revision: document.getElementById(field_revision).value,
         Notas: document.getElementById(field_notas).value,
       };
       var enc = TS_encrypt(data, SECRET, (encrypted) => {
@@ -111,12 +116,20 @@ PAGES.materiales = {
     };
   },
   index: function () {
-    if (!checkRole("materiales")) {setUrlHash("index");return}
+    if (!checkRole("materiales")) {
+      setUrlHash("index");
+      return;
+    }
     var btn_new = safeuuid();
     var select_ubicacion = safeuuid();
+    var check_lowstock = safeuuid();
     var tableContainer = safeuuid();
     container.innerHTML = `
-      <h1>Materiales</h1>
+      <h1>Materiales del Almacén</h1>
+      <label>
+        <b>Solo lo que falta:</b>
+        <input type="checkbox" id="${check_lowstock}" style="height: 25px;width: 25px;">
+      </label><br>
       <label>Filtrar por ubicación:
         <select id="${select_ubicacion}">
           <option value="">(Todas)</option>
@@ -127,62 +140,68 @@ PAGES.materiales = {
     `;
 
     const config = [
-      { key: "Referencia", label: "Referencia", type: "text", default: "?" },
-      { key: "Nombre", label: "Nombre", type: "text", default: "?" },
-      { key: "Ubicacion", label: "Ubicación", type: "text", default: "?" },
-      { 
-        key: "Cantidad", 
-        label: "Cantidad", 
+      { key: "Revision", label: "F. Revisión", type: "fecha", default: "" },
+      { key: "Nombre", label: "Nombre", type: "text", default: "" },
+      { key: "Ubicacion", label: "Ubicación", type: "text", default: "--" },
+      {
+        key: "Cantidad",
+        label: "Cantidad",
         type: "template",
         template: (data, element) => {
           const min = parseFloat(data.Cantidad_Minima);
           const act = parseFloat(data.Cantidad);
-          const style = act < min ? 'style="background-color: lightcoral;"' : '';
-          element.setAttribute("style", style);
-          element.innerHTML = `${data.Cantidad || "?"} ${data.Unidad || "?"} - (min. ${data.Cantidad_Minima || "?"})`;
+          const sma = act < min ? `<small>- min. ${data.Cantidad_Minima || "?"}</small>` : ""
+          element.innerHTML = `${data.Cantidad || "?"} ${
+            data.Unidad || "?"
+          } ${sma}`;
         },
-        default: "?" 
+        default: "?",
       },
-      { key: "Notas", label: "Notas", type: "text", default: "?" }
+      { key: "Notas", label: "Notas", type: "text", default: "" },
     ];
 
     // Obtener todas las ubicaciones únicas y poblar el <select>, desencriptando si es necesario
-    gun.get(TABLE).get("materiales").map().once((data, key) => {
-      try {
-        if (!data) return;
+    gun
+      .get(TABLE)
+      .get("materiales")
+      .map()
+      .once((data, key) => {
+        try {
+          if (!data) return;
 
-        function addUbicacion(d) {
-          const ubicacion = d.Ubicacion || "-";
-          const select = document.getElementById(select_ubicacion);
+          function addUbicacion(d) {
+            const ubicacion = d.Ubicacion || "-";
+            const select = document.getElementById(select_ubicacion);
 
-          if (!select) {
-            console.warn(`Element with ID "${select_ubicacion}" not found.`);
-            return;
-          }
-
-          const optionExists = Array.from(select.options).some(opt => opt.value === ubicacion);
-          if (!optionExists) {
-            const option = document.createElement("option");
-            option.value = ubicacion;
-            option.textContent = ubicacion;
-            select.appendChild(option);
-          }
-        }
-
-        if (typeof data === "string") {
-          TS_decrypt(data, SECRET, (dec) => {
-            if (dec && typeof dec === "object") {
-              addUbicacion(dec);
+            if (!select) {
+              console.warn(`Element with ID "${select_ubicacion}" not found.`);
+              return;
             }
-          });
-        } else {
-          addUbicacion(data);
-        }
-      } catch (error) {
-        console.warn("Error processing ubicacion:", error);
-      }
-    });
 
+            const optionExists = Array.from(select.options).some(
+              (opt) => opt.value === ubicacion
+            );
+            if (!optionExists) {
+              const option = document.createElement("option");
+              option.value = ubicacion;
+              option.textContent = ubicacion;
+              select.appendChild(option);
+            }
+          }
+
+          if (typeof data === "string") {
+            TS_decrypt(data, SECRET, (dec) => {
+              if (dec && typeof dec === "object") {
+                addUbicacion(dec);
+              }
+            });
+          } else {
+            addUbicacion(data);
+          }
+        } catch (error) {
+          console.warn("Error processing ubicacion:", error);
+        }
+      });
 
     // Función para renderizar la tabla filtrada
     function renderTable(filtroUbicacion) {
@@ -191,15 +210,29 @@ PAGES.materiales = {
         config,
         gun.get(TABLE).get("materiales"),
         document.getElementById(tableContainer),
-        function(data, new_tr) {
+        function (data, new_tr) {
           if (parseFloat(data.Cantidad) < parseFloat(data.Cantidad_Minima)) {
-            new_tr.style.background = "lightcoral"
+            new_tr.style.background = "#fcfcb0";
+          }
+          if (parseFloat(data.Cantidad) <= 0) {
+            new_tr.style.background = "#ffc0c0";
+          }
+          if ((data.Cantidad || "?") == "?") {
+            new_tr.style.background = "#d0d0ff";
+          }
+          if ((data.Revision || "?") == "?") {
+            new_tr.style.background = "#d0d0ff";
           }
         },
-        function(data) {
-          if (data.Ubicacion == filtroUbicacion) {return false}
-          if (filtroUbicacion == "") {return false}
-          return true
+        function (data) {
+          var is_low_stock =
+            !document.getElementById(check_lowstock).checked ||
+            parseFloat(data.Cantidad) < parseFloat(data.Cantidad_Minima);
+
+          var is_region =
+            filtroUbicacion === "" || data.Ubicacion === filtroUbicacion;
+          
+          return !(is_low_stock && is_region);
         }
       );
     }
@@ -211,9 +244,13 @@ PAGES.materiales = {
     document.getElementById(select_ubicacion).onchange = function () {
       renderTable(this.value);
     };
+    // Recargar al cambiar filtro
+    document.getElementById(check_lowstock).onchange = function () {
+      renderTable(document.getElementById(select_ubicacion).value);
+    };
 
     if (!checkRole("materiales:edit")) {
-      document.getElementById(btn_new).style.display = "none"
+      document.getElementById(btn_new).style.display = "none";
     } else {
       document.getElementById(btn_new).onclick = () => {
         setUrlHash("materiales," + safeuuid(""));

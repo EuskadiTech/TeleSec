@@ -2,7 +2,7 @@ PERMS["notas"] = "Notas"
 PERMS["notas:edit"] = "&gt; Editar"
 PAGES.notas = {
     navcss: "btn5",
-    icon: "static/appico/Notepad.svg",
+    icon: "static/appico/edit.png",
     AccessControl: true,
     Title: "Notas",
     edit: function (mid) {

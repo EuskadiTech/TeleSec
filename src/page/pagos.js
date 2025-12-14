@@ -2,7 +2,7 @@ PERMS["pagos"] = "Pagos";
 PERMS["pagos:edit"] = "&gt; Editar";
 PAGES.pagos = {
   navcss: "btn7",
-  icon: "static/appico/Database.svg",
+  icon: "static/appico/credit_cards.png",
   AccessControl: true,
   Title: "Pagos",
   

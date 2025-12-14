@@ -1131,7 +1131,7 @@ function SetPages() {
     a.href = "#" + key;
     label.innerText = PAGES[key].Title;
     label.className = "label";
-    img.src = PAGES[key].icon || "static/appico/File_Plugin.svg";
+    img.src = PAGES[key].icon || "static/appico/application_enterprise.png";
     a.append(img, label);
     document.getElementById("appendApps2").append(a);
   });
@@ -1142,7 +1142,7 @@ function SetPages() {
   a.href = "#index,qr";
   label.innerText = "Escanear QR";
   label.className = "label";
-  img.src = "static/appico/App_CodyCam.svg";
+  img.src = "static/appico/barcode.png";
   a.append(img, label);
   document.getElementById("appendApps2").append(a);
 }

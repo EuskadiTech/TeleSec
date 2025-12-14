@@ -1,10 +1,10 @@
-PERMS["supercafe"] = "SuperCafé";
+PERMS["supercafe"] = "Cafetería";
 PERMS["supercafe:edit"] = "&gt; Editar";
 PAGES.supercafe = {
   navcss: "btn4",
-  icon: "static/appico/Coffee.svg",
+  icon: "static/appico/cup.png",
   AccessControl: true,
-  Title: "SuperCafé",
+  Title: "Cafetería",
   edit: function (mid) {
     if (!checkRole("supercafe:edit")) {
       setUrlHash("supercafe");
@@ -17,10 +17,7 @@ PAGES.supercafe = {
     var field_notas = safeuuid();
     var field_estado = safeuuid();
     var div_actions = safeuuid();
-    var btn_pagos = safeuuid();
-    var btn_cocina = safeuuid();
     var btn_guardar = safeuuid();
-    var btn_guardar2 = safeuuid();
     var btn_borrar = safeuuid();
     container.innerHTML = `
       <h1>Comanda <code id="${nameh1}"></code></h1>
@@ -165,7 +162,7 @@ PAGES.supercafe = {
     var tts_check = safeuuid();
     var old = {};
     container.innerHTML = `
-      <h1>SuperCafé - Total: <span id="${totalprecio}">0</span>c</h1>
+      <h1>Cafetería - Total: <span id="${totalprecio}">0</span>c</h1>
       <button id="${btn_new}" style="${sc_nobtn};">Nueva comanda</button>
       <br>
       <label>

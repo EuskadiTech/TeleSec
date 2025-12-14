@@ -1,9 +1,9 @@
 PERMS["resumen_diario"] = "Resumen diario (Solo docentes!)";
 PAGES.resumen_diario = {
-  icon: "static/appico/Newspaper.svg",
+  icon: "static/appico/calendar.png",
   navcss: "btn3",
   AccessControl: true,
-  Title: "Resumen Diario",
+  Title: "Hoy y mañana",
   index: function () {
     var data_Comedor = safeuuid();
     var data_Tareas = safeuuid();

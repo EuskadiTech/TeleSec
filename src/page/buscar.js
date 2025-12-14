@@ -1,6 +1,6 @@
 PAGES.buscar = {
   navcss: "btn1",
-  icon: "static/appico/File_Plugin.svg",
+  icon: "static/appico/view.svg",
   Title: "Buscar",
   AccessControl: true,
   Esconder: true,

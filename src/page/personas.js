@@ -2,7 +2,7 @@ PERMS["personas"] = "Personas";
 PERMS["personas:edit"] = "&gt; Editar";
 PAGES.personas = {
   navcss: "btn3",
-  icon: "static/appico/File_Person.svg",
+  icon: "static/appico/users.png",
   AccessControl: true,
   Title: "Personas",
   edit: function (mid) {

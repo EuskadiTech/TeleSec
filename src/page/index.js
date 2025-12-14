@@ -1,10 +1,11 @@
 PAGES.index = {
   //navcss: "btn1",
   Title: "Inicio",
+  icon: "static/appico/house.png",
   index: function() {
     container.innerHTML = `
       <h1>¡Hola, ${SUB_LOGGED_IN_DETAILS.Nombre}!<br>Bienvenidx a %%TITLE%%</h1>
-      <h2>Tienes ${parseFloat(SUB_LOGGED_IN_DETAILS.Monedero_Balance).toString()} € en el monedero.</h2>
+      <h2>Tienes ${fixfloat(parseFloat(SUB_LOGGED_IN_DETAILS.Monedero_Balance)).toString()} € en el monedero.</h2>
       <em>Utiliza el menú superior para abrir un modulo</em>
       <br><br>
       <button class="btn1" onclick="LogOutTeleSec()">Cerrar sesión</button>

@@ -196,6 +196,7 @@ table {
 
 table tr th {
   line-break: auto;
+  padding: 2px 5px;
 }
 
 table tr td {
@@ -365,7 +366,7 @@ hr {
 
 .ribbon-panel {
   display: flex;
-  gap: 10px;
+  gap: 3px;
   background-color: #c8d4eb;
   border: 1px solid #a2a9b9;
   overflow-x: auto;
@@ -382,10 +383,15 @@ hr {
   white-space: nowrap;
   margin: 0;
   padding: 0;
+  border: 1px solid lightskyblue;
+  background: white;
+  padding: 4px;
+  display: inline-block;
+  border-radius: 10px;
 }
 
 .ribbon-button img {
-  height: 48px;
+  height: 60px;
   display: block;
   margin: auto;
 }

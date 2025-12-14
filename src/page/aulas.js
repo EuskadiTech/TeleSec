@@ -2,7 +2,7 @@ PERMS["aulas"] = "Aulas (Solo docentes!)";
 PAGES.aulas = {
   //navcss: "btn1",
   Title: "Gest-Aula",
-  icon: "static/appico/Classroom.svg",
+  icon: "static/appico/components.png",
   AccessControl: true,
   index: function () {
     if (!checkRole("aulas")) {

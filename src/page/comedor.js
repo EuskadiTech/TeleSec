@@ -1,10 +1,10 @@
-PERMS["comedor"] = "Menú comedor"
+PERMS["comedor"] = "Comedor"
 PERMS["comedor:edit"] = "&gt; Editar"
 PAGES.comedor = {
   navcss: "btn6",
-  icon: "static/appico/Meal.svg",
+  icon: "static/appico/apple.png",
   AccessControl: true,
-  Title: "Menú comedor",
+  Title: "Comedor",
   edit: function (mid) {
     if (!checkRole("comedor:edit")) {setUrlHash("comedor");return}
     var nameh1 = safeuuid();

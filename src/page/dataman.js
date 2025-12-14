@@ -1,6 +1,6 @@
 PAGES.dataman = {
   navcss: "btn1",
-  icon: "static/appico/Cogs.svg",
+  icon: "static/appico/gear_edit.png",
   AccessControl: true,
   Title: "Ajustes",
   edit: function (mid) {
