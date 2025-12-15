@@ -51,7 +51,7 @@ PAGES.pagos = {
     container.innerHTML = `
       <div style="max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
         <h1 style="color: white; text-align: center; margin-bottom: 20px;">
-          Terminal de pago %%TITLE%%
+          Terminal de pago TeleSec
         </h1>
         
         <div style="margin: 0 auto;max-width: 435px;background: white;padding: 20px;border-radius: 10px;margin-bottom: 20px;">
@@ -284,10 +284,36 @@ PAGES.pagos = {
           }
         }
         
-        // Paso 3
-        document.getElementById("step2").style.display = "none";
-        document.getElementById("step3").style.display = "block";
-        document.getElementById("stepIndicator").innerText = "3";
+        // Move to step 3 - confirmation
+        document.getElementById('step2').style.display = 'none';
+        document.getElementById('step3').style.display = 'block';
+        document.getElementById('stepIndicator').innerText = '3';
+        
+        var monto = parseFloat(document.getElementById(numpad_display).value);
+        document.getElementById('confirmAmount').innerText = monto.toFixed(2) + '€';
+        
+        // Populate confirmation data
+        var tipoText = document.getElementById(field_tipo).selectedOptions[0].text;
+        var metodoText = document.getElementById(field_metodo).selectedOptions[0].text;
+        var personaName = SC_Personas[personaId]?.Nombre || personaId;
+        var notas = document.getElementById(field_notas).value || "(sin notas)";
+        
+        document.getElementById('confirmTipo').innerText = tipoText;
+        document.getElementById('confirmMetodo').innerText = metodoText;
+        document.getElementById('confirmPersona').innerText = personaName;
+        document.getElementById('confirmNotas').innerText = notas;
+        
+        if (tipo === 'Transferencia') {
+          var personaDestinoId = document.getElementById(field_persona_destino).value;
+          var personaDestinoName = SC_Personas[personaDestinoId]?.Nombre || personaDestinoId;
+          document.getElementById('confirmPersonaDestinoName').innerText = personaDestinoName;
+          document.getElementById('confirmPersonaDestino').style.display = 'block';
+        }
+        
+        // Switch to final button layout
+        document.getElementById('buttonContainer').style.display = 'none';
+        document.getElementById('buttonContainerFinal').style.display = 'grid';
+        
         currentStep = 3;
       }
     };
