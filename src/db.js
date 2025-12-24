@@ -10,6 +10,20 @@ var DB = (function () {
   let changes = null;
   let callbacks = {}; // table -> [cb]
 
+  function ensureLocal() {
+    if (local) return;
+    try {
+      const localName = localStorage.getItem('TELESEC_COUCH_DBNAME') || 'telesec';
+      local = new PouchDB(localName);
+      if (changes) {
+        try { changes.cancel(); } catch (e) {}
+        changes = local.changes({ live: true, since: 'now', include_docs: true }).on('change', onChange);
+      }
+    } catch (e) {
+      console.warn('ensureLocal error', e);
+    }
+  }
+
   function makeId(table, id) {
     return table + ':' + id;
   }
@@ -47,6 +61,7 @@ var DB = (function () {
   }
 
   function replicateToRemote() {
+    ensureLocal();
     if (!local || !remote) return;
     PouchDB.replicate(local, remote, { live: true, retry: true }).on('error', function (err) {
       console.warn('Replication error', err);
@@ -67,6 +82,7 @@ var DB = (function () {
   }
 
   async function put(table, id, data) {
+    ensureLocal();
     const _id = makeId(table, id);
     try {
       const existing = await local.get(_id).catch(() => null);
@@ -89,6 +105,7 @@ var DB = (function () {
   }
 
   async function get(table, id) {
+    ensureLocal();
     const _id = makeId(table, id);
     try {
       const doc = await local.get(_id);
@@ -103,6 +120,7 @@ var DB = (function () {
   }
 
   async function list(table) {
+    ensureLocal();
     try {
       const res = await local.allDocs({ include_docs: true, startkey: table + ':', endkey: table + ':\uffff' });
       return res.rows.map(r => {
@@ -112,7 +130,62 @@ var DB = (function () {
     } catch (e) { return []; }
   }
 
+  // Convert data URL to Blob
+  function dataURLtoBlob(dataurl) {
+    const arr = dataurl.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], { type: mime });
+  }
+
+  async function putAttachment(table, id, name, dataUrlOrBlob, contentType) {
+    ensureLocal();
+    const _id = makeId(table, id);
+    try {
+      let doc = await local.get(_id).catch(() => null);
+      if (!doc) {
+        // create a minimal doc so attachments can be put
+        await local.put({ _id: _id, table: table, ts: new Date().toISOString(), data: {} });
+        doc = await local.get(_id);
+      }
+      let blob = dataUrlOrBlob;
+      if (typeof dataUrlOrBlob === 'string' && dataUrlOrBlob.indexOf('data:') === 0) {
+        blob = dataURLtoBlob(dataUrlOrBlob);
+      }
+      const type = contentType || (blob && blob.type) || 'application/octet-stream';
+      await local.putAttachment(_id, name, doc._rev, blob, type);
+      return true;
+    } catch (e) {
+      console.error('putAttachment error', e);
+      return false;
+    }
+  }
+
+  async function getAttachment(table, id, name) {
+    ensureLocal();
+    const _id = makeId(table, id);
+    try {
+      const blob = await local.getAttachment(_id, name);
+      if (!blob) return null;
+      // convert blob to data URL
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function (e) { resolve(e.target.result); };
+        reader.onerror = function (e) { reject(e); };
+        reader.readAsDataURL(blob);
+      });
+    } catch (e) {
+      return null;
+    }
+  }
+
   function map(table, cb) {
+    ensureLocal();
     callbacks[table] = callbacks[table] || [];
     callbacks[table].push(cb);
     // initial load
@@ -131,8 +204,27 @@ var DB = (function () {
     list,
     map,
     replicateToRemote,
+    putAttachment,
+    getAttachment,
     _internal: { local }
   };
 })();
 
 window.DB = DB;
+
+// Auto-initialize DB on startup using saved settings (non-blocking)
+(function autoInitDB() {
+  try {
+    const remoteServer = localStorage.getItem('TELESEC_COUCH_URL') || '';
+    const username = localStorage.getItem('TELESEC_COUCH_USER') || '';
+    const password = localStorage.getItem('TELESEC_COUCH_PASS') || '';
+    const dbname = localStorage.getItem('TELESEC_COUCH_DBNAME') || undefined;
+    const secret = localStorage.getItem('TELESEC_secret') || '';
+    // Call init but don't await; DB functions are safe-guarded with ensureLocal()
+    DB.init({ secret, remoteServer, username, password, dbname }).catch((e) => {
+      console.warn('DB.autoInit error', e);
+    });
+  } catch (e) {
+    console.warn('DB.autoInit unexpected error', e);
+  }
+})();

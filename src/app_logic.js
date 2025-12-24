@@ -9,10 +9,12 @@ function tableScroll(query) {
 var container = document.getElementById("container");
 
 function LinkAccount(LinkAccount_secret, refresh = false) {
-  // Store group id for backward compatibility and keep secret
-  localStorage.setItem("TELESEC_AUTO", "YES");
-  SECRET = LinkAccount_secret.toUpperCase();
-  localStorage.setItem("TELESEC_secret", SECRET);
+  // Group identifier (no encryption). Secret usage removed.
+  if (LinkAccount_secret) {
+    SECRET = String(LinkAccount_secret).toUpperCase();
+  } else {
+    SECRET = "";
+  }
 
   if (refresh == true) {
     location.reload();
@@ -29,17 +31,6 @@ function LinkAccount(LinkAccount_secret, refresh = false) {
   } catch (e) {
     console.warn('DB.init failed or not available yet', e);
   }
-}
-if (localStorage.getItem("TELESEC_AUTO") == "YES") {
-  LinkAccount(
-    localStorage.getItem("TELESEC_secret")
-  );
-}
-if (urlParams.get("login") != null) {
-  LinkAccount(
-    urlParams.get("enc_password"),
-  );
-  //location.search = "";
 }
 
 function open_page(params) {
@@ -153,11 +144,11 @@ function fixGunLocalStorage() {
 }
 
 // Heartbeat: store a small "last seen" doc locally and replicate to remote when available
-setInterval(() => {
-  if (typeof DB !== 'undefined') {
-    DB.put('heartbeat', getDBName() || 'heartbeat', 'heartbeat-' + CurrentISOTime());
-  }
-}, 5000);
+// setInterval(() => {
+//   if (typeof DB !== 'undefined') {
+//     DB.put('heartbeat', getDBName() || 'heartbeat', 'heartbeat-' + CurrentISOTime());
+//   }
+// }, 5000);
 
 
 function betterSorter(a, b) {

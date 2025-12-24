@@ -36,9 +36,9 @@ PAGES.comedor = {
           data["Platos"] || "";
       }
       if (typeof data == "string") {
-        TS_decrypt(data, SECRET, (data) => {
+        TS_decrypt(data, SECRET, (data, wasEncrypted) => {
           load_data(data, "%E");
-        });
+        }, 'comedor', mid);
       } else {
         load_data(data || {});
       }
@@ -55,16 +55,14 @@ PAGES.comedor = {
         DB.del('comedor', mid);
       }
       
-      var enc = TS_encrypt(data, SECRET, (encrypted) => {
-        document.getElementById("actionStatus").style.display = "block";
-        DB.put('comedor', newDate, encrypted).then(() => {
-          toastr.success("Guardado!");
-          setTimeout(() => {
-            document.getElementById("actionStatus").style.display = "none";
-            setUrlHash("comedor");
-          }, SAVE_WAIT);
-        });
-      });
+      document.getElementById("actionStatus").style.display = "block";
+      DB.put('comedor', newDate, data).then(() => {
+        toastr.success("Guardado!");
+        setTimeout(() => {
+          document.getElementById("actionStatus").style.display = "none";
+          setUrlHash("comedor");
+        }, SAVE_WAIT);
+      }).catch((e) => { console.warn('DB.put error', e); });
     };
     document.getElementById(btn_borrar).onclick = () => {
       if (confirm("¿Quieres borrar esta entrada?") == true) {

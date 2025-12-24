@@ -66,7 +66,7 @@ PAGES.personas = {
               <button type="button" id="${btn_ver_monedero}" class="btn5">Ver Transacciones del Monedero</button>
             </div>
           </details>
-          <details style="background: #e3fde3ff; border: 2px solid #21f328ff; border-radius: 8px; padding: 10px; margin: 15px 0;">
+          <details style="background: #e3fde3ff; border: 2px solid #21f328ff; border-radius: 8px; padding: 10px; margin: 15px 0; display: none;">
             <summary style="cursor: pointer; font-weight: bold; color: rgba(26, 141, 3, 1);">🔗 Generar enlaces</summary>
             <div style="padding: 15px;">
               <label>
@@ -110,9 +110,16 @@ PAGES.personas = {
         document.getElementById(field_nombre).value = data["Nombre"] || "";
         document.getElementById(field_zona).value = data["Region"] || "";
         document.getElementById(field_anilla).value = data["SC_Anilla"] || "";
-        document.getElementById(render_foto).src =
-          data["Foto"] || "static/ico/user_generic.png";
+        // set fallback image immediately
+        document.getElementById(render_foto).src = data["Foto"] || "static/ico/user_generic.png";
         resized = data["Foto"] || "static/ico/user_generic.png";
+        // try to load attachment 'foto' if present (preferred storage)
+        DB.getAttachment('personas', mid, 'foto').then((durl) => {
+          if (durl) {
+            document.getElementById(render_foto).src = durl;
+            resized = durl;
+          }
+        }).catch(() => {});
         document.getElementById(field_notas).value = data["markdown"] || "";
         document.getElementById(field_monedero_balance).value =
           data["Monedero_Balance"] || 0;
@@ -120,29 +127,25 @@ PAGES.personas = {
           data["Monedero_Notas"] || "";
       }
       if (typeof data == "string") {
-        TS_decrypt(data, SECRET, (data) => {
+        TS_decrypt(data, SECRET, (data, wasEncrypted) => {
           load_data(data, "%E");
-        });
+        }, 'personas', mid);
       } else {
         load_data(data || {});
       }
     });
-    document
-      .getElementById(field_foto)
-      .addEventListener("change", function (e) {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        resizeInputImage(
-          file,
-          function (url) {
-            document.getElementById(render_foto).src = url;
-            resized = url;
-          },
-          256,
-          0.7
-        );
-      });
+    document.getElementById(field_foto).addEventListener("change", function (e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      // Do NOT resize — keep original uploaded image
+      const reader = new FileReader();
+      reader.onload = function (ev) {
+        const url = ev.target.result;
+        document.getElementById(render_foto).src = url;
+        resized = url;
+      };
+      reader.readAsDataURL(file);
+    });
     document.getElementById(btn_guardar).onclick = () => {
       var dt = new FormData(pdel);
       var data = {
@@ -150,23 +153,28 @@ PAGES.personas = {
         Region: document.getElementById(field_zona).value,
         Roles: dt.getAll("perm").join(",") + ",",
         SC_Anilla: document.getElementById(field_anilla).value,
-        Foto: resized,
+        // Foto moved to PouchDB attachment named 'foto'
         markdown: document.getElementById(field_notas).value,
         Monedero_Balance:
           parseFloat(document.getElementById(field_monedero_balance).value) ||
           0,
         Monedero_Notas: document.getElementById(field_monedero_notas).value,
       };
-      var enc = TS_encrypt(data, SECRET, (encrypted) => {
-        document.getElementById("actionStatus").style.display = "block";
-        DB.put('personas', mid, encrypted).then(() => {
+      document.getElementById("actionStatus").style.display = "block";
+      DB.put('personas', mid, data).then(() => {
+        // if resized is a data URL (new/updated image), save as attachment
+        var attachPromise = Promise.resolve(true);
+        if (typeof resized === 'string' && resized.indexOf('data:') === 0) {
+          attachPromise = DB.putAttachment('personas', mid, 'foto', resized, 'image/png');
+        }
+        attachPromise.then(() => {
           toastr.success("Guardado!");
           setTimeout(() => {
             document.getElementById("actionStatus").style.display = "none";
             setUrlHash("personas");
           }, SAVE_WAIT);
-        });
-      });
+        }).catch((e) => { console.warn('putAttachment error', e); document.getElementById("actionStatus").style.display = "none"; });
+      }).catch((e) => { console.warn('DB.put error', e); document.getElementById("actionStatus").style.display = "none"; });
     };
     document.getElementById(btn_ver_monedero).onclick = () => {
       setUrlHash("pagos"); // Navigate to pagos and show transactions for this person

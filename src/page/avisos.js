@@ -114,9 +114,9 @@ PAGES.avisos = {
           );
         }
         if (typeof data == "string") {
-          TS_decrypt(data, SECRET, (data) => {
+          TS_decrypt(data, SECRET, (data, wasEncrypted) => {
             load_data(data, "%E");
-          });
+          }, 'notificaciones', mid);
         } else {
           load_data(data || {});
         }
@@ -141,16 +141,14 @@ PAGES.avisos = {
             .getElementById(field_estado)
             .value.replace("%%", "por_leer"),
         };
-        var enc = TS_encrypt(data, SECRET, (encrypted) => {
-          document.getElementById("actionStatus").style.display = "block";
-          DB.put('notificaciones', mid, encrypted).then(() => {
-            toastr.success("Guardado!");
-            setTimeout(() => {
-              document.getElementById("actionStatus").style.display = "none";
-              setUrlHash("avisos");
-            }, SAVE_WAIT);
-          });
-        });
+        document.getElementById("actionStatus").style.display = "block";
+        DB.put('notificaciones', mid, data).then(() => {
+          toastr.success("Guardado!");
+          setTimeout(() => {
+            document.getElementById("actionStatus").style.display = "none";
+            setUrlHash("avisos");
+          }, SAVE_WAIT);
+        }).catch((e) => { console.warn('DB.put error', e); });
       };
       document.getElementById(btn_borrar).onclick = () => {
         if (confirm("¿Quieres borrar esta notificación?") == true) {

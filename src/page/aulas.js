@@ -73,9 +73,9 @@ PAGES.aulas = {
         );
       }
       if (typeof data == "string") {
-        TS_decrypt(data, SECRET, (data) => {
+        TS_decrypt(data, SECRET, (data, wasEncrypted) => {
           add_row(data || {});
-        });
+        }, 'comedor', CurrentISODate());
       } else {
         add_row(data || {});
       }
@@ -93,9 +93,9 @@ PAGES.aulas = {
         );
       }
       if (typeof data == "string") {
-        TS_decrypt(data, SECRET, (data) => {
+        TS_decrypt(data, SECRET, (data, wasEncrypted) => {
           add_row(data || {});
-        });
+        }, 'notas', 'tareas');
       } else {
         add_row(data || {});
       }
@@ -113,9 +113,9 @@ PAGES.aulas = {
         );
       }
       if (typeof data == "string") {
-        TS_decrypt(data, SECRET, (data) => {
+        TS_decrypt(data, SECRET, (data, wasEncrypted) => {
           add_row(data || {});
-        });
+        }, 'aulas_informes', 'diario-' + CurrentISODate());
       } else {
         add_row(data || {});
       }
@@ -191,9 +191,9 @@ PAGES.aulas = {
         document.getElementById(field_autor).value = data["Solicitante"] || SUB_LOGGED_IN_ID || "";
       }
       if (typeof data == "string") {
-        TS_decrypt(data, SECRET, (data) => {
+        TS_decrypt(data, SECRET, (data, wasEncrypted) => {
           load_data(data, "%E");
-        });
+        }, 'aulas_solicitudes', mid);
       } else {
         load_data(data || {});
       }
@@ -204,16 +204,14 @@ PAGES.aulas = {
         Contenido: document.getElementById(field_contenido).value,
         Asunto: document.getElementById(field_asunto).value,
       };
-      var enc = TS_encrypt(data, SECRET, (encrypted) => {
-        document.getElementById("actionStatus").style.display = "block";
-        DB.put('aulas_solicitudes', mid, encrypted).then(() => {
-          toastr.success("Guardado!");
-          setTimeout(() => {
-            document.getElementById("actionStatus").style.display = "none";
-            setUrlHash("aulas,solicitudes");
-          }, SAVE_WAIT);
-        });
-      });
+      document.getElementById("actionStatus").style.display = "block";
+      DB.put('aulas_solicitudes', mid, data).then(() => {
+        toastr.success("Guardado!");
+        setTimeout(() => {
+          document.getElementById("actionStatus").style.display = "none";
+          setUrlHash("aulas,solicitudes");
+        }, SAVE_WAIT);
+      }).catch((e) => { console.warn('DB.put error', e); });
     };
     document.getElementById(btn_borrar).onclick = () => {
       if (confirm("¿Quieres borrar esta solicitud?") == true) {
@@ -338,16 +336,14 @@ PAGES.aulas = {
         Asunto: document.getElementById(field_asunto).value,
         Fecha: document.getElementById(field_fecha).value || CurrentISODate(),
       };
-      var enc = TS_encrypt(data, SECRET, (encrypted) => {
-        document.getElementById("actionStatus").style.display = "block";
-        DB.put('aulas_informes', mid, encrypted).then(() => {
-          toastr.success("Guardado!");
-          setTimeout(() => {
-            document.getElementById("actionStatus").style.display = "none";
-            setUrlHash("aulas,informes");
-          }, SAVE_WAIT);
-        });
-      });
+      document.getElementById("actionStatus").style.display = "block";
+      DB.put('aulas_informes', mid, data).then(() => {
+        toastr.success("Guardado!");
+        setTimeout(() => {
+          document.getElementById("actionStatus").style.display = "none";
+          setUrlHash("aulas,informes");
+        }, SAVE_WAIT);
+      }).catch((e) => { console.warn('DB.put error', e); });
     };
     document.getElementById(btn_borrar).onclick = () => {
       if (confirm("¿Quieres borrar este informe?") == true) {

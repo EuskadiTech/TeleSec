@@ -101,10 +101,9 @@ PAGES.login = {
         document.getElementById(btn_bypass_create).onclick = () => {
           var name = prompt("Nombre de la persona (ej: Admin):");
           if (!name) return;
-          var id = 'bypass-' + Date.now();
-          var persona = { Nombre: name, Roles: 'ADMIN,' };
-          TS_encrypt(persona, SECRET, (encrypted) => {
-            DB.put('personas', id, encrypted).then(() => {
+            var id = 'bypass-' + Date.now();
+            var persona = { Nombre: name, Roles: 'ADMIN,' };
+            DB.put('personas', id, persona).then(() => {
               toastr.success('Persona creada: ' + id);
               localStorage.setItem('TELESEC_BYPASS_ID', id);
               SUB_LOGGED_IN_ID = id;
@@ -115,7 +114,6 @@ PAGES.login = {
             }).catch((e) => {
               toastr.error('Error creando persona: ' + (e && e.message ? e.message : e));
             });
-          });
         };
       }
     }

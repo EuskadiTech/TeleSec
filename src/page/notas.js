@@ -79,16 +79,14 @@ PAGES.notas = {
           Contenido: document.getElementById(field_contenido).value,
           Asunto: document.getElementById(field_asunto).value,
         };
-        var enc = TS_encrypt(data, SECRET, (encrypted) => {
-          document.getElementById("actionStatus").style.display = "block";
-          DB.put('notas', mid, encrypted).then(() => {
-            toastr.success("Guardado!");
-            setTimeout(() => {
-              document.getElementById("actionStatus").style.display = "none";
-              setUrlHash("notas");
-            }, SAVE_WAIT);
-          });
-        });
+        document.getElementById("actionStatus").style.display = "block";
+        DB.put('notas', mid, data).then(() => {
+          toastr.success("Guardado!");
+          setTimeout(() => {
+            document.getElementById("actionStatus").style.display = "none";
+            setUrlHash("notas");
+          }, SAVE_WAIT);
+        }).catch((e) => { console.warn('DB.put error', e); });
       };
       document.getElementById(btn_borrar).onclick = () => {
         if (confirm("¿Quieres borrar esta nota?") == true) {

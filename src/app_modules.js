@@ -313,6 +313,15 @@ function addCategory_Personas(
       btn.append(br2);
       var img = document.createElement("img");
       img.src = value.Foto || "static/ico/user_generic.png";
+      // Prefer attachment 'foto' for this persona
+      try {
+        const personaKey = key;
+        if (personaKey) {
+          DB.getAttachment('personas', personaKey, 'foto').then((durl) => {
+            if (durl) img.src = durl;
+          }).catch(() => {});
+        }
+      } catch (e) {}
       img.style.height = "60px";
       img.style.padding = "5px";
       img.style.backgroundColor = "white";
@@ -330,7 +339,16 @@ function addCategory_Personas(
         defaultval = key;
         span_0.innerText = "";
         var img_5 = document.createElement("img");
-        img_5.src = value.Foto;
+        img_5.src = value.Foto || "static/ico/user_generic.png";
+        // Prefer attachment 'foto' when available
+        try {
+          const personaKey2 = key;
+          if (personaKey2) {
+            DB.getAttachment('personas', personaKey2, 'foto').then((durl) => {
+              if (durl) img_5.src = durl;
+            }).catch(() => {});
+          }
+        } catch (e) {}
         img_5.style.height = "30px";
         span_0.append(img_5, value.Nombre);
         change_cb(defaultval);
@@ -537,29 +555,62 @@ const SC_actions = {
   ],
 };
 // Listado precargado de personas:
-function TS_decrypt(input, secret, callback) {
-  // Only support AES-based encrypted payloads in the format: RSA{<ciphertext>} or plain objects/strings
-  if (typeof input != "string") {
-    callback(input);
-  } else if (input.startsWith("RSA{") && input.endsWith("}")) {
-    var data = input.slice(4, -1);
-    var decrypted = CryptoJS.AES.decrypt(data, secret).toString(CryptoJS.enc.Utf8);
-    try {
-      callback(JSON.parse(decrypted));
-    } catch (e) {
-      console.error('TS_decrypt: invalid JSON', e);
-      callback(null);
-    }
-  } else {
-    // plain string (settings, etc.)
-    callback(input);
+function TS_decrypt(input, secret, callback, table, id) {
+  // Accept objects or plaintext strings. Also support legacy RSA{...} AES-encrypted entries.
+  if (typeof input !== "string") {
+    try { callback(input, false); } catch (e) { console.error(e); }
+    return;
   }
-}
+
+  // Legacy encrypted format: RSA{...}
+  if (input.startsWith("RSA{") && input.endsWith("}") && typeof CryptoJS !== 'undefined') {
+    try {
+      var data = input.slice(4, -1);
+      var words = CryptoJS.AES.decrypt(data, secret);
+      var decryptedUtf8 = null;
+      try {
+        decryptedUtf8 = words.toString(CryptoJS.enc.Utf8);
+      } catch (utfErr) {
+        // Malformed UTF-8 — try Latin1 fallback
+        try {
+          decryptedUtf8 = words.toString(CryptoJS.enc.Latin1);
+        } catch (latinErr) {
+          console.warn('TS_decrypt: failed to decode decrypted bytes', utfErr, latinErr);
+          try { callback(input, false); } catch (ee) { }
+          return;
+        }
+      }
+      var parsed = null;
+      try { parsed = JSON.parse(decryptedUtf8); } catch (pe) { parsed = decryptedUtf8; }
+      try { callback(parsed, true); } catch (e) { console.error(e); }
+      // Migrate to plaintext in DB if table/id provided
+      if (table && id && window.DB && DB.put && typeof parsed !== 'string') {
+        DB.put(table, id, parsed).catch(() => {});
+      }
+      return;
+    } catch (e) {
+      console.error('TS_decrypt: invalid encrypted payload', e);
+      try { callback(input, false); } catch (ee) { }
+      return;
+    }
+  }
+
+  // Try to parse JSON strings and migrate to object
+  try {
+    var parsed = JSON.parse(input);
+    try { callback(parsed, false); } catch (e) { console.error(e); }
+    if (table && id && window.DB && DB.put) {
+      DB.put(table, id, parsed).catch(() => {});
+    }
+  } catch (e) {
+    // Not JSON, return raw string
+    try { callback(input, false); } catch (err) { console.error(err); }
+  }
+} 
 function TS_encrypt(input, secret, callback, mode = "RSA") {
-  // Use AES symmetric encryption (RSA{} envelope for backwards compatibility)
-  var encrypted = CryptoJS.AES.encrypt(JSON.stringify(input), secret).toString();
-  callback("RSA{" + encrypted + "}");
-}
+  // Encryption removed: store plaintext objects directly
+  try { callback(input); } catch (e) { console.error(e); }
+} 
 // Populate SC_Personas from DB (PouchDB)
 DB.map('personas', (data, key) => {
   function add_row(data, key) {
@@ -571,9 +622,9 @@ DB.map('personas', (data, key) => {
     }
   }
   if (typeof data == "string") {
-    TS_decrypt(data, SECRET, (data) => {
+    TS_decrypt(data, SECRET, (data, wasEncrypted) => {
       add_row(data, key);
-    });
+    }, 'personas', key);
   } else {
     add_row(data, key);
   }
@@ -903,21 +954,19 @@ function TS_IndexElement(
                 event.preventDefault();
                 event.stopPropagation();
                 data.Estado = state;
-                TS_encrypt(data, SECRET, (encrypted) => {
-                  if (typeof ref === 'string') {
-                    DB.put(ref, data._key, encrypted).then(() => {
-                      toastr.success("Guardado!");
-                    });
-                  } else {
-                    try {
-                      // legacy
-                      ref.get(data._key).put(encrypted);
-                      toastr.success("Guardado!");
-                    } catch (e) {
-                      console.warn('Could not save item', e);
-                    }
+                if (typeof ref === 'string') {
+                  DB.put(ref, data._key, data).then(() => {
+                    toastr.success("Guardado!");
+                  }).catch((e) => { console.warn('DB.put error', e); });
+                } else {
+                  try {
+                    // legacy
+                    ref.get(data._key).put(data);
+                    toastr.success("Guardado!");
+                  } catch (e) {
+                    console.warn('Could not save item', e);
                   }
-                });
+                }
                 return false;
               };
               return button;
@@ -992,6 +1041,17 @@ function TS_IndexElement(
             infoSpan.style.color = "black";
             const img = document.createElement("img");
             img.src = persona.Foto || "static/ico/user_generic.png";
+            // Prefer attachment 'foto' stored in PouchDB if available
+            try {
+              const personaId = key.self === true ? (data._key || data._id || data.id) : data[key.key];
+              if (personaId) {
+                DB.getAttachment('personas', personaId, 'foto').then((durl) => {
+                  if (durl) img.src = durl;
+                }).catch(() => {});
+              }
+            } catch (e) {
+              // ignore
+            }
             img.height = 70;
             infoSpan.appendChild(img);
             infoSpan.appendChild(document.createElement("br"));
@@ -1033,9 +1093,9 @@ function TS_IndexElement(
         debounce(debounce_load, render, 300, [rows]);
       }
       if (typeof data == "string") {
-        TS_decrypt(data, SECRET, (data) => {
+        TS_decrypt(data, SECRET, (data, wasEncrypted) => {
           add_row(data, key);
-        });
+        }, ref, key);
       } else {
         add_row(data, key);
       }
@@ -1054,9 +1114,9 @@ function TS_IndexElement(
           debounce(debounce_load, render, 300, [rows]);
         }
         if (typeof data == "string") {
-          TS_decrypt(data, SECRET, (data) => {
+          TS_decrypt(data, SECRET, (data, wasEncrypted) => {
             add_row(data, key);
-          });
+          }, undefined, undefined);
         } else {
           add_row(data, key);
         }
@@ -1127,7 +1187,7 @@ function SetPages() {
   document.getElementById("appendApps2").append(a);
 }
 var Booted = false;
-var TimeoutBoot = 6;
+var TimeoutBoot = 3; // in loops of 750ms
 var BootLoops = 0;
 
 function getPeers() {
@@ -1220,12 +1280,10 @@ var BootIntervalID = setInterval(() => {
               }
               if (!data) {
                 const persona = { Nombre: 'Admin (bypass)', Roles: 'ADMIN,' };
-                TS_encrypt(persona, SECRET, (encrypted) => {
-                  DB.put('personas', bypassId, encrypted).then(() => finish(persona, bypassId)).catch((e) => { console.warn('AC_BYPASS create error', e); open_page('login'); });
-                });
+                DB.put('personas', bypassId, persona).then(() => finish(persona, bypassId)).catch((e) => { console.warn('AC_BYPASS create error', e); open_page('login'); });
               } else {
                 if (typeof data === 'string') {
-                  TS_decrypt(data, SECRET, (pdata) => finish(pdata, bypassId));
+                  TS_decrypt(data, SECRET, (pdata) => finish(pdata, bypassId), 'personas', bypassId);
                 } else {
                   finish(data, bypassId);
                 }

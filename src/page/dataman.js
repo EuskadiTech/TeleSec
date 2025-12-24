@@ -75,9 +75,9 @@ PAGES.dataman = {
           const value = entry.data;
           if (value != null) {
             if (typeof value == 'string') {
-              TS_decrypt(value, SECRET, (data) => {
+              TS_decrypt(value, SECRET, (data, wasEncrypted) => {
                 output.materiales[key] = data;
-              });
+              }, 'materiales', key);
             } else {
               output.materiales[key] = value;
             }
@@ -89,9 +89,9 @@ PAGES.dataman = {
           const value = entry.data;
           if (value != null) {
             if (typeof value == 'string') {
-              TS_decrypt(value, SECRET, (data) => {
+              TS_decrypt(value, SECRET, (data, wasEncrypted) => {
                 output.personas[key] = data;
-              });
+              }, 'personas', key);
             } else {
               output.personas[key] = value;
             }
@@ -168,12 +168,18 @@ PAGES.dataman = {
       var sel = document.getElementById(select_type).value;
       if (sel == "%telesec") {
         // legacy import, store entire payload as-is
-        DB.put('%telesec', 'export_' + Date.now(), JSON.parse(val));
+        // for each top-level key, store their items in DB
+        var parsed = JSON.parse(val);
+        Object.entries(parsed).forEach((section) => {
+          const sectionName = section[0];
+          const sectionData = section[1];
+          Object.entries(sectionData).forEach((entry) => {
+            DB.put(sectionName, entry[0], entry[1]).catch((e) => { console.warn('DB.put error', e); });
+          });
+        });
       } else {
         Object.entries(JSON.parse(val)["data"]).forEach((entry) => {
-          var enc = TS_encrypt(entry[1], SECRET, (encrypted) => {
-            DB.put(sel, entry[0], encrypted);
-          });
+          DB.put(sel, entry[0], entry[1]).catch((e) => { console.warn('DB.put error', e); });
         });
       }
       setTimeout(() => {

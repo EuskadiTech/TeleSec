@@ -51,9 +51,9 @@ PAGES.resumen_diario = {
         );
       }
       if (typeof data == "string") {
-        TS_decrypt(data, SECRET, (data) => {
+        TS_decrypt(data, SECRET, (data, wasEncrypted) => {
           add_row(data || {});
-        });
+        }, 'comedor', CurrentISODate());
       } else {
         add_row(data || {});
       }
@@ -71,9 +71,9 @@ PAGES.resumen_diario = {
         );
       }
       if (typeof data == "string") {
-        TS_decrypt(data, SECRET, (data) => {
+        TS_decrypt(data, SECRET, (data, wasEncrypted) => {
           add_row(data || {});
-        });
+        }, 'notas', 'tareas');
       } else {
         add_row(data || {});
       }
@@ -91,9 +91,9 @@ PAGES.resumen_diario = {
         );
       }
       if (typeof data == "string") {
-        TS_decrypt(data, SECRET, (data) => {
+        TS_decrypt(data, SECRET, (data, wasEncrypted) => {
           add_row(data || {});
-        });
+        }, 'aulas_informes', 'diario-' + CurrentISODate());
       } else {
         add_row(data || {});
       }

@@ -476,37 +476,32 @@ PAGES.pagos = {
       }
       
       persona.Monedero_Balance = fixfloat(newBalance);
-      
-      TS_encrypt(persona, SECRET, (encrypted) => {
-        DB.put('personas', personaId, encrypted).then(() => {
-          if (callback) callback();
-        });
-      });
+      DB.put('personas', personaId, persona).then(() => {
+        if (callback) callback();
+      }).catch((e) => { console.warn('DB.put error', e); if (callback) callback(); });
     }
     
     function saveTransaction(ticketId, data) {
-      TS_encrypt(data, SECRET, (encrypted) => {
-        document.getElementById("actionStatus").style.display = "block";
-        DB.put('pagos', ticketId, encrypted).then(() => {
-          // If this is from SuperCafé, update the order
-          if (data.Origen === "SuperCafé" && data.OrigenID) {
-            handleSuperCafePayment(data);
-          }
+      document.getElementById("actionStatus").style.display = "block";
+      DB.put('pagos', ticketId, data).then(() => {
+        // If this is from SuperCafé, update the order
+        if (data.Origen === "SuperCafé" && data.OrigenID) {
+          handleSuperCafePayment(data);
+        }
 
-          // Check for promotional bonus on Ingreso transactions (Efectivo only)
-          if (data.Tipo === "Ingreso" && data.Metodo === "Efectivo") {
-            var bonusAmount = calculatePromoBonus(data.Monto);
-            if (bonusAmount > 0) {
-              createPromoBonusTransaction(data.Persona, bonusAmount, data.Monto);
-            }
+        // Check for promotional bonus on Ingreso transactions (Efectivo only)
+        if (data.Tipo === "Ingreso" && data.Metodo === "Efectivo") {
+          var bonusAmount = calculatePromoBonus(data.Monto);
+          if (bonusAmount > 0) {
+            createPromoBonusTransaction(data.Persona, bonusAmount, data.Monto);
           }
+        }
 
-          toastr.success("¡Transacción completada!");
-          setTimeout(() => {
-            document.getElementById("actionStatus").style.display = "none";
-            setUrlHash("pagos," + ticketId);
-          }, SAVE_WAIT);
-        });
+        toastr.success("¡Transacción completada!");
+        setTimeout(() => {
+          document.getElementById("actionStatus").style.display = "none";
+          setUrlHash("pagos," + ticketId);
+        }, SAVE_WAIT);
       });
     }
     
@@ -555,16 +550,11 @@ PAGES.pagos = {
         var currentBalance = parseFloat(persona.Monedero_Balance || 0);
         var newBalance = currentBalance + bonusAmount;
         persona.Monedero_Balance = fixfloat(newBalance);
-        
-        TS_encrypt(persona, SECRET, (encrypted) => {
-          DB.put('personas', personaId, encrypted);
-        });
+        DB.put('personas', personaId, persona).catch((e) => { console.warn('DB.put error', e); });
       }
       
       // Save bonus transaction
-      TS_encrypt(bonusData, SECRET, (encrypted) => {
-        DB.put('pagos', bonusTicketId, encrypted);
-      });
+      DB.put('pagos', bonusTicketId, bonusData).catch((e) => { console.warn('DB.put error', e); });
       
       toastr.success(
         "🎉 ¡Promo Bono aplicado! +" + bonusAmount.toFixed(2) + "€ extra"
@@ -580,9 +570,7 @@ PAGES.pagos = {
       var persona = SC_Personas[transactionData.Persona];
       if (!persona) return;
       
-      TS_encrypt(persona, SECRET, (encrypted) => {
-        DB.put('personas', transactionData.Persona, encrypted);
-      });
+      DB.put('personas', transactionData.Persona, persona).catch((e) => { console.warn('DB.put error', e); });
     }
     
     // Pre-fill if data provided
@@ -847,12 +835,9 @@ PAGES.pagos = {
             }
             
             persona.Monedero_Balance = fixfloat(newBalance);
-            
-            TS_encrypt(persona, SECRET, (encrypted) => {
-              DB.put('personas', personaId, encrypted).then(() => {
-                if (callback) callback();
-              });
-            });
+            DB.put('personas', personaId, persona).then(() => {
+              if (callback) callback();
+            }).catch((e) => { console.warn('DB.put error', e); if (callback) callback(); });
           }
           
           function deleteTransaction(transactionKey) {
@@ -1383,16 +1368,14 @@ PAGES.pagos = {
         delete updatedData.PersonaDestino;
       }
       
-      TS_encrypt(updatedData, SECRET, (encrypted) => {
-        document.getElementById("actionStatus").style.display = "block";
-        DB.put('pagos', transactionId, encrypted).then(() => {
-          toastr.success("¡Transacción actualizada!");
-          setTimeout(() => {
-            document.getElementById("actionStatus").style.display = "none";
-            setUrlHash("pagos," + transactionId);
-          }, SAVE_WAIT);
-        });
-      });
+      document.getElementById("actionStatus").style.display = "block";
+      DB.put('pagos', transactionId, updatedData).then(() => {
+        toastr.success("¡Transacción actualizada!");
+        setTimeout(() => {
+          document.getElementById("actionStatus").style.display = "none";
+          setUrlHash("pagos," + transactionId);
+        }, SAVE_WAIT);
+      }).catch((e) => { console.warn('DB.put error', e); });
     };
     
     // Cancel button

@@ -91,9 +91,9 @@ PAGES.supercafe = {
         loadActions();
       }
       if (typeof data == "string") {
-        TS_decrypt(data, SECRET, (data) => {
+        TS_decrypt(data, SECRET, (data, wasEncrypted) => {
           load_data(data, "%E");
-        });
+        }, 'supercafe', mid);
       } else {
         load_data(data || {});
       }
@@ -112,16 +112,14 @@ PAGES.supercafe = {
           .getElementById(field_estado)
           .value.replace("%%", "Pedido"),
       };
-      var enc = TS_encrypt(data, SECRET, (encrypted) => {
-        document.getElementById("actionStatus").style.display = "block";
-        DB.put('supercafe', mid, encrypted).then(() => {
-          toastr.success("Guardado!");
-          setTimeout(() => {
-            document.getElementById("actionStatus").style.display = "none";
-            setUrlHash("supercafe");
-          }, SAVE_WAIT);
-        });
-      });
+      document.getElementById("actionStatus").style.display = "block";
+      DB.put('supercafe', mid, data).then(() => {
+        toastr.success("Guardado!");
+        setTimeout(() => {
+          document.getElementById("actionStatus").style.display = "none";
+          setUrlHash("supercafe");
+        }, SAVE_WAIT);
+      }).catch((e) => { console.warn('DB.put error', e); });
     };
     document.getElementById(btn_borrar).onclick = () => {
       if (

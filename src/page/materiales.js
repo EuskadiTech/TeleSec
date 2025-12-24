@@ -74,9 +74,9 @@ PAGES.materiales = {
         document.getElementById(field_notas).value = data["Notas"] || "";
       }
       if (typeof data == "string") {
-        TS_decrypt(data, SECRET, (data) => {
+        TS_decrypt(data, SECRET, (data, wasEncrypted) => {
           load_data(data, "%E");
-        });
+        }, 'materiales', mid);
       } else {
         load_data(data || {});
       }
@@ -91,16 +91,14 @@ PAGES.materiales = {
         Revision: document.getElementById(field_revision).value,
         Notas: document.getElementById(field_notas).value,
       };
-      var enc = TS_encrypt(data, SECRET, (encrypted) => {
-        document.getElementById("actionStatus").style.display = "block";
-        DB.put('materiales', mid, encrypted).then(() => {
-          toastr.success("Guardado!");
-          setTimeout(() => {
-            document.getElementById("actionStatus").style.display = "none";
-            setUrlHash("materiales");
-          }, SAVE_WAIT);
-        });
-      });
+      document.getElementById("actionStatus").style.display = "block";
+      DB.put('materiales', mid, data).then(() => {
+        toastr.success("Guardado!");
+        setTimeout(() => {
+          document.getElementById("actionStatus").style.display = "none";
+          setUrlHash("materiales");
+        }, SAVE_WAIT);
+      }).catch((e) => { console.warn('DB.put error', e); });
     };
     document.getElementById(btn_borrar).onclick = () => {
       if (confirm("¿Quieres borrar este material?") == true) {
@@ -184,11 +182,11 @@ PAGES.materiales = {
         }
 
         if (typeof data === "string") {
-          TS_decrypt(data, SECRET, (dec) => {
+          TS_decrypt(data, SECRET, (dec, wasEncrypted) => {
             if (dec && typeof dec === "object") {
               addUbicacion(dec);
             }
-          });
+          }, 'materiales', key);
         } else {
           addUbicacion(data);
         }
