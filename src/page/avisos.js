@@ -80,53 +80,47 @@ PAGES.avisos = {
         },
         "Destino"
       );
-      gun
-        .get(TABLE)
-        .get("notificaciones")
-        .get(mid)
-        .once((data, key) => {
-          function load_data(data, ENC = "") {
-            document.getElementById(nameh1).innerText = key;
-            document.getElementById(field_fecha).value = data["Fecha"] || CurrentISODate() || "";
-            document.getElementById(field_asunto).value = data["Asunto"] || "";
-            document.getElementById(field_mensaje).value =
-              data["Mensaje"] || "";
-            document.getElementById(field_origen).value = data["Origen"] || SUB_LOGGED_IN_ID || "";
-            document.getElementById(field_destino).value =
-              data["Destino"] || "";
-            document.getElementById(field_estado).value = data["Estado"] || "%%" || "";
-            document.getElementById(field_respuesta).value =
-              data["Respuesta"] || "";
+      (async () => {
+        const data = await DB.get('notificaciones', mid);
+        function load_data(data, ENC = "") {
+          document.getElementById(nameh1).innerText = mid;
+          document.getElementById(field_fecha).value = data["Fecha"] || CurrentISODate() || "";
+          document.getElementById(field_asunto).value = data["Asunto"] || "";
+          document.getElementById(field_mensaje).value = data["Mensaje"] || "";
+          document.getElementById(field_origen).value = data["Origen"] || SUB_LOGGED_IN_ID || "";
+          document.getElementById(field_destino).value = data["Destino"] || "";
+          document.getElementById(field_estado).value = data["Estado"] || "%%" || "";
+          document.getElementById(field_respuesta).value = data["Respuesta"] || "";
 
-            // Persona select
-            divact.innerHTML = "";
-            addCategory_Personas(
-              divact,
-              SC_Personas,
-              data["Origen"] || "",
-              (value) => {
-                document.getElementById(field_origen).value = value;
-              },
-              "Origen"
-            );
-            addCategory_Personas(
-              divact,
-              SC_Personas,
-              data["Destino"] || "",
-              (value) => {
-                document.getElementById(field_destino).value = value;
-              },
-              "Destino"
-            );
-          }
-          if (typeof data == "string") {
-            TS_decrypt(data, SECRET, (data) => {
-              load_data(data, "%E");
-            });
-          } else {
-            load_data(data || {});
-          }
-        });
+          // Persona select
+          divact.innerHTML = "";
+          addCategory_Personas(
+            divact,
+            SC_Personas,
+            data["Origen"] || "",
+            (value) => {
+              document.getElementById(field_origen).value = value;
+            },
+            "Origen"
+          );
+          addCategory_Personas(
+            divact,
+            SC_Personas,
+            data["Destino"] || "",
+            (value) => {
+              document.getElementById(field_destino).value = value;
+            },
+            "Destino"
+          );
+        }
+        if (typeof data == "string") {
+          TS_decrypt(data, SECRET, (data) => {
+            load_data(data, "%E");
+          });
+        } else {
+          load_data(data || {});
+        }
+      })();
       document.getElementById(btn_guardar).onclick = () => {
         if (document.getElementById(field_origen).value == "") {
           alert("¡Hay que elegir una persona de origen!");
@@ -149,24 +143,23 @@ PAGES.avisos = {
         };
         var enc = TS_encrypt(data, SECRET, (encrypted) => {
           document.getElementById("actionStatus").style.display = "block";
-          betterGunPut(
-            gun.get(TABLE).get("notificaciones").get(mid),
-            encrypted
-          );
-          toastr.success("Guardado!");
-          setTimeout(() => {
-            document.getElementById("actionStatus").style.display = "none";
-            setUrlHash("avisos");
-          }, SAVE_WAIT);
+          DB.put('notificaciones', mid, encrypted).then(() => {
+            toastr.success("Guardado!");
+            setTimeout(() => {
+              document.getElementById("actionStatus").style.display = "none";
+              setUrlHash("avisos");
+            }, SAVE_WAIT);
+          });
         });
       };
       document.getElementById(btn_borrar).onclick = () => {
         if (confirm("¿Quieres borrar esta notificación?") == true) {
-          betterGunPut(gun.get(TABLE).get("notificaciones").get(mid), null);
-          toastr.error("Borrado!");
-          setTimeout(() => {
-            setUrlHash("avisos");
-          }, SAVE_WAIT);
+          DB.del('notificaciones', mid).then(() => {
+            toastr.error("Borrado!");
+            setTimeout(() => {
+              setUrlHash("avisos");
+            }, SAVE_WAIT);
+          });
         }
       };
     },
@@ -207,7 +200,7 @@ PAGES.avisos = {
             label: "Estado",
           },
         ],
-        gun.get(TABLE).get("notificaciones"),
+        "notificaciones",
         document.querySelector("#cont"),
         (data, new_tr) => {
           new_tr.style.backgroundColor = "#FFCCCB";

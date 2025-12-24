@@ -6,49 +6,54 @@ function tableScroll(query) {
   $(query).doubleScroll();
 }
 //var secretTokenEl = document.getElementById("secretToken");
-var groupIdEl = document.getElementById("LinkAccount_group");
 var container = document.getElementById("container");
 
-function LinkAccount(LinkAccount_group, LinkAccount_secret, refresh = false) {
-  GROUPID = LinkAccount_group.toUpperCase();
-  SECRET = LinkAccount_secret.toUpperCase();
-  
+function LinkAccount(LinkAccount_secret, refresh = false) {
+  // Store group id for backward compatibility and keep secret
   localStorage.setItem("TELESEC_AUTO", "YES");
-  localStorage.setItem("TELESEC_groupid", GROUPID);
+  SECRET = LinkAccount_secret.toUpperCase();
   localStorage.setItem("TELESEC_secret", SECRET);
-  
-  TABLE = GROUPID + ":telesec.tech.eus";
-  //secretTokenEl.innerText = SECRET;
-  groupIdEl.value = GROUPID;
+
   if (refresh == true) {
     location.reload();
+  }
+
+  // Initialize local DB and start replication if DB is available
+  try {
+    if (typeof DB !== 'undefined') {
+      const remoteServer = localStorage.getItem('TELESEC_COUCH_URL') || '';
+      const username = localStorage.getItem('TELESEC_COUCH_USER') || '';
+      const password = localStorage.getItem('TELESEC_COUCH_PASS') || '';
+      DB.init({ secret: SECRET, remoteServer, username, password, dbname: localStorage.getItem('TELESEC_COUCH_DBNAME') || undefined });
+    }
+  } catch (e) {
+    console.warn('DB.init failed or not available yet', e);
   }
 }
 if (localStorage.getItem("TELESEC_AUTO") == "YES") {
   LinkAccount(
-    localStorage.getItem("TELESEC_groupid"),
     localStorage.getItem("TELESEC_secret")
   );
 }
 if (urlParams.get("login") != null) {
   LinkAccount(
-    urlParams.get("login").split(":")[0],
-    urlParams.get("login").split(":")[1]
+    urlParams.get("enc_password"),
   );
   //location.search = "";
 }
 
 function open_page(params) {
-  EventListeners.GunJS.forEach(ev => ev.off());
-  EventListeners.GunJS = []
+  // Clear stored event listeners and timers
+  EventListeners.GunJS = [];
   EventListeners.Timeout.forEach(ev => clearTimeout(ev));
-  EventListeners.Timeout = []
+  EventListeners.Timeout = [];
   EventListeners.Interval.forEach(ev => clearInterval(ev));
-  EventListeners.Interval = []
+  EventListeners.Interval = [];
   EventListeners.QRScanner.forEach(ev => ev.clear());
-  EventListeners.QRScanner = []
+  EventListeners.QRScanner = [];
   EventListeners.Custom.forEach(ev => ev());
-  EventListeners.Custom = []
+  EventListeners.Custom = [];
+
   if (SUB_LOGGED_IN != true && params != "login,setup") {
     PAGES["login"].index();
     return;
@@ -147,35 +152,13 @@ function fixGunLocalStorage() {
   location.reload();
 }
 
-function betterGunPut(ref, data) {
-  ref.put(data, (ack) => {
-    if (ack.err) {
-      console.error("Ack failure", ack)
-      toastr.error(
-        ack.err + "<br>Pulsa aqui para reiniciar la app",
-        "Error al guardar", { onclick: () => fixGunLocalStorage() }
-      );
-    } else {
-      console.debug("Guardado correctamente");
-    }
-  });
-  setTimeout(() => {
-    ref.put(data);
-  }, 250);
-  setTimeout(() => {
-    ref.put(data);
-  }, 500);
-}
+// Heartbeat: store a small "last seen" doc locally and replicate to remote when available
 setInterval(() => {
-  betterGunPut(
-    gun.get(TABLE).get("heartbeat"),
-    "heartbeat-" + CurrentISOTime()
-  );
-  gun.get(TABLE).get("heartbeat").load(console.debug);
+  if (typeof DB !== 'undefined') {
+    DB.put('heartbeat', getDBName() || 'heartbeat', 'heartbeat-' + CurrentISOTime());
+  }
 }, 5000);
-gun.get(TABLE).on((data) => {
-  var e = true;
-});
+
 
 function betterSorter(a, b) {
     // 1. Fecha (ascending)

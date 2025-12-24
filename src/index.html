@@ -48,15 +48,12 @@
         <div class="ribbon-panel">
           <div>
             
-            <input type="text" id="LinkAccount_group" placeholder="Usuario..." />
+            <input type="password" id="LinkAccount_secret" placeholder="Contraseña / Token..." />
             <br />
-            <input type="text" id="LinkAccount_secret" placeholder="Contraseña..." />
-            <br />
-            <button type="button" onclick='LinkAccount(document.getElementById("LinkAccount_group").value, document.getElementById("LinkAccount_secret").value, true)'>
+            <button type="button" onclick='LinkAccount(document.getElementById("LinkAccount_secret").value, true)'>
               Iniciar sesión
             </button><br>
-            <b>Conectado a <span id="peerCount">?</span>
-              nodos.</b>
+            <b>Estado de sincronización: <span id="peerCount">Desconocido</span></b>
           </div>
         </div>
       </details>
@@ -67,8 +64,8 @@
   <img id="loading" src="load.gif" style="display: block; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: calc(100% - 50px); max-width: 400px;" />
   <details class="supermesh-indicator">
     <summary>
-      <b>SuperMesh</b><br />
-      <br /><small id="peerPID" style="font-family: monospace">PID ??????????</small>
+      <b>Sincronización</b><br />
+      <br /><small id="peerPID" style="font-family: monospace">Estado: local</small>
     </summary>
     <ul id="peerList"></ul>
     <i>Todos los datos están encriptados.</i>
@@ -93,17 +90,7 @@
   <script src="static/qrcode/html5-qrcode.min.js"></script>
   <script src="static/qrcode/barcode.js"></script>
   <script src="static/jquery.js"></script>
-  <script src="static/gun.js"></script>
-  <script src="static/webrtc.js"></script>
-  <script src="static/sea.js"></script>
-  <script src="static/yson.js"></script>
-  <script src="static/radix.js"></script>
-  <script src="static/radisk.js"></script>
-  <script src="static/store.js"></script>
-  <script src="static/rindexed.js"></script>
-  <script src="static/path.js"></script>
-  <script src="static/open.js"></script>
-  <script src="static/load.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pouchdb@7.3.1/dist/pouchdb.min.js"></script>
   <!--<script src="static/synchronous.js"></script>-->
   <!--<script src="static/axe.js"></script>-->
   <script src="static/toastr.min.js"></script>
@@ -111,7 +98,7 @@
   <!--<script src="static/simplemde.min.js"></script>-->
   <script src="pwa.js"></script>
   <script src="config.js"></script>
-  <script src="gun_init.js"></script>
+  <script src="db.js"></script>
   <script src="app_logic.js"></script>
   <script src="app_modules.js"></script>
   <script src="page/login.js"></script>

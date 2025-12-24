@@ -28,25 +28,21 @@ PAGES.comedor = {
         <button class="rojo" id="${btn_borrar}">Borrar</button>
       </fieldset>
       `;
-    gun
-      .get(TABLE)
-      .get("comedor")
-      .get(mid)
-      .once((data, key) => {
-        function load_data(data, ENC = "") {
-          document.getElementById(nameh1).innerText = key;
-          document.getElementById(field_fecha).value = data["Fecha"] || mid || CurrentISODate();
-          document.getElementById(field_platos).value =
-            data["Platos"] || "";
-        }
-        if (typeof data == "string") {
-          TS_decrypt(data, SECRET, (data) => {
-            load_data(data, "%E");
-          });
-        } else {
-          load_data(data || {});
-        }
-      });
+    DB.get('comedor', mid).then((data) => {
+      function load_data(data, ENC = "") {
+        document.getElementById(nameh1).innerText = mid;
+        document.getElementById(field_fecha).value = data["Fecha"] || mid || CurrentISODate();
+        document.getElementById(field_platos).value =
+          data["Platos"] || "";
+      }
+      if (typeof data == "string") {
+        TS_decrypt(data, SECRET, (data) => {
+          load_data(data, "%E");
+        });
+      } else {
+        load_data(data || {});
+      }
+    });
     document.getElementById(btn_guardar).onclick = () => {
       const newDate = document.getElementById(field_fecha).value;
       var data = {
@@ -56,26 +52,28 @@ PAGES.comedor = {
       
       // If the date has changed, we need to delete the old entry
       if (mid !== newDate && mid !== "") {
-        betterGunPut(gun.get(TABLE).get("comedor").get(mid), null);
+        DB.del('comedor', mid);
       }
       
       var enc = TS_encrypt(data, SECRET, (encrypted) => {
         document.getElementById("actionStatus").style.display = "block";
-        betterGunPut(gun.get(TABLE).get("comedor").get(newDate), encrypted);
-        toastr.success("Guardado!");
-        setTimeout(() => {
-          document.getElementById("actionStatus").style.display = "none";
-          setUrlHash("comedor");
-        }, SAVE_WAIT);
+        DB.put('comedor', newDate, encrypted).then(() => {
+          toastr.success("Guardado!");
+          setTimeout(() => {
+            document.getElementById("actionStatus").style.display = "none";
+            setUrlHash("comedor");
+          }, SAVE_WAIT);
+        });
       });
     };
     document.getElementById(btn_borrar).onclick = () => {
       if (confirm("¿Quieres borrar esta entrada?") == true) {
-        betterGunPut(gun.get(TABLE).get("comedor").get(mid), null);
-        toastr.error("Borrado!");
-        setTimeout(() => {
-          setUrlHash("comedor");
-        }, SAVE_WAIT);
+        DB.del('comedor', mid).then(() => {
+          toastr.error("Borrado!");
+          setTimeout(() => {
+            setUrlHash("comedor");
+          }, SAVE_WAIT);
+        });
       }
     };
   },
@@ -104,7 +102,7 @@ PAGES.comedor = {
           label: "Platos",
         }
       ],
-      gun.get(TABLE).get("comedor"),
+      "comedor",
       document.getElementById(cont),
       (data, new_tr) => {
         // new_tr.style.backgroundColor = "#FFCCCB";

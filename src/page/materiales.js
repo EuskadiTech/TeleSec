@@ -57,34 +57,30 @@ PAGES.materiales = {
         <button class="rojo" id="${btn_borrar}">Borrar</button>
       </fieldset>
     `;
-    gun
-      .get(TABLE)
-      .get("materiales")
-      .get(mid)
-      .once((data, key) => {
-        function load_data(data, ENC = "") {
-          document.getElementById(nameh1).innerText = key;
-          document.getElementById(field_nombre).value = data["Nombre"] || "";
-          document.getElementById(field_unidad).value =
-            data["Unidad"] || "unidad(es)";
-          document.getElementById(field_cantidad).value =
-            data["Cantidad"] || "";
-          document.getElementById(field_cantidad_min).value =
-            data["Cantidad_Minima"] || "";
-          document.getElementById(field_ubicacion).value =
-            data["Ubicacion"] || "-";
-          document.getElementById(field_revision).value =
-            data["Revision"] || "-";
-          document.getElementById(field_notas).value = data["Notas"] || "";
-        }
-        if (typeof data == "string") {
-          TS_decrypt(data, SECRET, (data) => {
-            load_data(data, "%E");
-          });
-        } else {
-          load_data(data || {});
-        }
-      });
+    DB.get('materiales', mid).then((data) => {
+      function load_data(data, ENC = "") {
+        document.getElementById(nameh1).innerText = mid;
+        document.getElementById(field_nombre).value = data["Nombre"] || "";
+        document.getElementById(field_unidad).value =
+          data["Unidad"] || "unidad(es)";
+        document.getElementById(field_cantidad).value =
+          data["Cantidad"] || "";
+        document.getElementById(field_cantidad_min).value =
+          data["Cantidad_Minima"] || "";
+        document.getElementById(field_ubicacion).value =
+          data["Ubicacion"] || "-";
+        document.getElementById(field_revision).value =
+          data["Revision"] || "-";
+        document.getElementById(field_notas).value = data["Notas"] || "";
+      }
+      if (typeof data == "string") {
+        TS_decrypt(data, SECRET, (data) => {
+          load_data(data, "%E");
+        });
+      } else {
+        load_data(data || {});
+      }
+    });
     document.getElementById(btn_guardar).onclick = () => {
       var data = {
         Nombre: document.getElementById(field_nombre).value,
@@ -97,21 +93,23 @@ PAGES.materiales = {
       };
       var enc = TS_encrypt(data, SECRET, (encrypted) => {
         document.getElementById("actionStatus").style.display = "block";
-        betterGunPut(gun.get(TABLE).get("materiales").get(mid), encrypted);
-        toastr.success("Guardado!");
-        setTimeout(() => {
-          document.getElementById("actionStatus").style.display = "none";
-          setUrlHash("materiales");
-        }, SAVE_WAIT);
+        DB.put('materiales', mid, encrypted).then(() => {
+          toastr.success("Guardado!");
+          setTimeout(() => {
+            document.getElementById("actionStatus").style.display = "none";
+            setUrlHash("materiales");
+          }, SAVE_WAIT);
+        });
       });
     };
     document.getElementById(btn_borrar).onclick = () => {
       if (confirm("¿Quieres borrar este material?") == true) {
-        betterGunPut(gun.get(TABLE).get("materiales").get(mid), null);
-        toastr.error("Borrado!");
-        setTimeout(() => {
-          setUrlHash("materiales");
-        }, SAVE_WAIT);
+        DB.del('materiales', mid).then(() => {
+          toastr.error("Borrado!");
+          setTimeout(() => {
+            setUrlHash("materiales");
+          }, SAVE_WAIT);
+        });
       }
     };
   },
@@ -161,54 +159,50 @@ PAGES.materiales = {
     ];
 
     // Obtener todas las ubicaciones únicas y poblar el <select>, desencriptando si es necesario
-    gun
-      .get(TABLE)
-      .get("materiales")
-      .map()
-      .once((data, key) => {
-        try {
-          if (!data) return;
+    DB.map("materiales", (data, key) => {
+      try {
+        if (!data) return;
 
-          function addUbicacion(d) {
-            const ubicacion = d.Ubicacion || "-";
-            const select = document.getElementById(select_ubicacion);
+        function addUbicacion(d) {
+          const ubicacion = d.Ubicacion || "-";
+          const select = document.getElementById(select_ubicacion);
 
-            if (!select) {
-              console.warn(`Element with ID "${select_ubicacion}" not found.`);
-              return;
-            }
-
-            const optionExists = Array.from(select.options).some(
-              (opt) => opt.value === ubicacion
-            );
-            if (!optionExists) {
-              const option = document.createElement("option");
-              option.value = ubicacion;
-              option.textContent = ubicacion;
-              select.appendChild(option);
-            }
+          if (!select) {
+            console.warn(`Element with ID "${select_ubicacion}" not found.`);
+            return;
           }
 
-          if (typeof data === "string") {
-            TS_decrypt(data, SECRET, (dec) => {
-              if (dec && typeof dec === "object") {
-                addUbicacion(dec);
-              }
-            });
-          } else {
-            addUbicacion(data);
+          const optionExists = Array.from(select.options).some(
+            (opt) => opt.value === ubicacion
+          );
+          if (!optionExists) {
+            const option = document.createElement("option");
+            option.value = ubicacion;
+            option.textContent = ubicacion;
+            select.appendChild(option);
           }
-        } catch (error) {
-          console.warn("Error processing ubicacion:", error);
         }
-      });
+
+        if (typeof data === "string") {
+          TS_decrypt(data, SECRET, (dec) => {
+            if (dec && typeof dec === "object") {
+              addUbicacion(dec);
+            }
+          });
+        } else {
+          addUbicacion(data);
+        }
+      } catch (error) {
+        console.warn("Error processing ubicacion:", error);
+      }
+    });
 
     // Función para renderizar la tabla filtrada
     function renderTable(filtroUbicacion) {
       TS_IndexElement(
         "materiales",
         config,
-        gun.get(TABLE).get("materiales"),
+        "materiales",
         document.getElementById(tableContainer),
         function (data, new_tr) {
           if (parseFloat(data.Cantidad) < parseFloat(data.Cantidad_Minima)) {

@@ -76,32 +76,28 @@ PAGES.supercafe = {
       });
     }
     loadActions();
-    gun
-      .get(TABLE)
-      .get("supercafe")
-      .get(mid)
-      .once((data, key) => {
-        function load_data(data, ENC = "") {
-          document.getElementById(nameh1).innerText = key;
-          document.getElementById(field_fecha).value = data["Fecha"] || CurrentISODate();
-          document.getElementById(field_persona).value = data["Persona"] || "";
-          currentPersonaID = data["Persona"] || "";
-          document.getElementById(field_comanda).value =
-            SC_parse(JSON.parse(data["Comanda"] || "{}")) || "";
-          document.getElementById(field_notas).value = data["Notas"] || "";
-          document.getElementById(field_estado).value = data["Estado"] || "%%";
-          currentData = JSON.parse(data["Comanda"] || "{}");
+    DB.get('supercafe', mid).then((data) => {
+      function load_data(data, ENC = "") {
+        document.getElementById(nameh1).innerText = mid;
+        document.getElementById(field_fecha).value = data["Fecha"] || CurrentISODate();
+        document.getElementById(field_persona).value = data["Persona"] || "";
+        currentPersonaID = data["Persona"] || "";
+        document.getElementById(field_comanda).value =
+          SC_parse(JSON.parse(data["Comanda"] || "{}")) || "";
+        document.getElementById(field_notas).value = data["Notas"] || "";
+        document.getElementById(field_estado).value = data["Estado"] || "%%";
+        currentData = JSON.parse(data["Comanda"] || "{}");
 
-          loadActions();
-        }
-        if (typeof data == "string") {
-          TS_decrypt(data, SECRET, (data) => {
-            load_data(data, "%E");
-          });
-        } else {
-          load_data(data || {});
-        }
-      });
+        loadActions();
+      }
+      if (typeof data == "string") {
+        TS_decrypt(data, SECRET, (data) => {
+          load_data(data, "%E");
+        });
+      } else {
+        load_data(data || {});
+      }
+    });
     document.getElementById(btn_guardar).onclick = () => {
       if (document.getElementById(field_persona).value == "") {
         alert("¡Hay que elegir una persona!");
@@ -118,12 +114,13 @@ PAGES.supercafe = {
       };
       var enc = TS_encrypt(data, SECRET, (encrypted) => {
         document.getElementById("actionStatus").style.display = "block";
-        betterGunPut(gun.get(TABLE).get("supercafe").get(mid), encrypted);
-        toastr.success("Guardado!");
-        setTimeout(() => {
-          document.getElementById("actionStatus").style.display = "none";
-          setUrlHash("supercafe");
-        }, SAVE_WAIT);
+        DB.put('supercafe', mid, encrypted).then(() => {
+          toastr.success("Guardado!");
+          setTimeout(() => {
+            document.getElementById("actionStatus").style.display = "none";
+            setUrlHash("supercafe");
+          }, SAVE_WAIT);
+        });
       });
     };
     document.getElementById(btn_borrar).onclick = () => {
@@ -132,10 +129,11 @@ PAGES.supercafe = {
           "¿Quieres borrar esta comanda? - NO se actualizará el monedero de la persona asignada."
         ) == true
       ) {
-        betterGunPut(gun.get(TABLE).get("supercafe").get(mid), null);
-        setTimeout(() => {
-          setUrlHash("supercafe");
-        }, SAVE_WAIT);
+        DB.del('supercafe', mid).then(() => {
+          setTimeout(() => {
+            setUrlHash("supercafe");
+          }, SAVE_WAIT);
+        });
       }
     };
   },
@@ -229,7 +227,7 @@ PAGES.supercafe = {
     TS_IndexElement(
       "supercafe",
       config,
-      gun.get(TABLE).get("supercafe"),
+      "supercafe",
       document.querySelector("#cont1"),
       (data, new_tr) => {
         // new_tr.style.backgroundColor = "#FFCCCB";
@@ -278,7 +276,7 @@ PAGES.supercafe = {
     TS_IndexElement(
       "supercafe",
       config,
-      gun.get(TABLE).get("supercafe"),
+      "supercafe",
       document.querySelector("#cont2"),
       (data, new_tr) => {
         // new_tr.style.backgroundColor = "#FFCCCB";

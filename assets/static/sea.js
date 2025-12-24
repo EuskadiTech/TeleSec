@@ -1,6 +1,6 @@
-;(function(){
+// assets/static/sea.js - Deprecated. Replaced by CryptoJS AES usage in app_modules.js.
+console.warn('assets/static/sea.js is deprecated and unused.');
 
-  /* UNBUILD */
   function USE(arg, req){
     return req? require(arg) : arg.slice? USE[R(arg)] : function(mod, path){
       arg(mod = {exports: {}});

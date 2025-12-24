@@ -59,7 +59,7 @@ PAGES.dataman = {
         <button id="${button_export_local}" type="button">Exportar sin cifrar</button>
         <button id="${button_export_safe}" type="button">Exportar con cifrado</button>
         <button id="${button_export_safe_cloud}" style="display: none;" type="button">Exportar a EuskadiTech - cifrado</button>
-        <!--<br><br><em>Para descargar envia un correo a telesec@tech.eus con el asunto "TSBK %${GROUPID}".</em>-->
+        <!--<br><br><em>Para descargar envia un correo a telesec@tech.eus con el asunto "TSBK %${getDBName()}".</em>-->
       </fieldset>
       `;
     document.getElementById(button_export_local).onclick = () => {
@@ -68,47 +68,61 @@ PAGES.dataman = {
         materiales: {},
         personas: {},
       };
-      var download_data = (DATA) => {
-        Object.keys(DATA).forEach((modul) => {
-          Object.entries(DATA[modul] || {}).forEach((entry) => {
-            var key = entry[0];
-            var value = entry[1];
-            if (value != null) {
-              if (typeof value == "string") {
-                TS_decrypt(value, SECRET, (data) => {
-                  output[modul][key] = data;
-                });
-              } else {
-                output[modul][key] = value;
-              }
+      (async () => {
+        const materiales = await DB.list('materiales');
+        materiales.forEach(entry => {
+          const key = entry.id;
+          const value = entry.data;
+          if (value != null) {
+            if (typeof value == 'string') {
+              TS_decrypt(value, SECRET, (data) => {
+                output.materiales[key] = data;
+              });
+            } else {
+              output.materiales[key] = value;
             }
-          });
-          toastr.success("Exportado todo, descargando!");
-          download(
-            `Export %%TITLE%% ${GROUPID}.json.txt`,
-            JSON.stringify(output)
-          );
-          //setUrlHash(sel);
-        }, 2500);
-      };
-      gun.get(TABLE).load(download_data);
+          }
+        });
+        const personas = await DB.list('personas');
+        personas.forEach(entry => {
+          const key = entry.id;
+          const value = entry.data;
+          if (value != null) {
+            if (typeof value == 'string') {
+              TS_decrypt(value, SECRET, (data) => {
+                output.personas[key] = data;
+              });
+            } else {
+              output.personas[key] = value;
+            }
+          }
+        });
+        toastr.success("Exportado todo, descargando!");
+        download(
+          `Export %%TITLE%% ${getDBName()}.json.txt`,
+          JSON.stringify(output)
+        );
+      })();
     };
     document.getElementById(button_export_safe).onclick = () => {
-      var download_data = (DATA) => {
+      (async () => {
+        const result = { materiales: {}, personas: {} };
+        const materiales = await DB.list('materiales');
+        materiales.forEach(entry => { result.materiales[entry.id] = entry.data; });
+        const personas = await DB.list('personas');
+        personas.forEach(entry => { result.personas[entry.id] = entry.data; });
         toastr.success("Exportado todo, descargado!");
         download(
-          `Export %%TITLE%% Encriptado ${GROUPID}.json.txt`,
-          JSON.stringify(DATA)
+          `Export %%TITLE%% Encriptado ${getDBName()}.json.txt`,
+          JSON.stringify(result)
         );
-        //setUrlHash(sel);
-      };
-      gun.get(TABLE).load(download_data);
+      })();
     };
     // document.getElementById(button_export_safe_cloud).onclick = () => {
     //   var download_data = (DATA) => {
     //     toastr.info("Exportado todo, subiendo!");
     //     fetch(
-    //       "https://telesec-sync.tech.eus/upload_backup.php?table=" + GROUPID,
+    //       "https://telesec-sync.tech.eus/upload_backup.php?table=" + getDBName(),
     //       {
     //         method: "POST",
     //         body: JSON.stringify(DATA),
@@ -153,13 +167,12 @@ PAGES.dataman = {
       var val = document.getElementById(textarea_content).value;
       var sel = document.getElementById(select_type).value;
       if (sel == "%telesec") {
-        gun.get(TABLE).put(JSON.parse(val), (ack) => {
-          toastr.info("Importado " + entry[0] + ".");
-        });
+        // legacy import, store entire payload as-is
+        DB.put('%telesec', 'export_' + Date.now(), JSON.parse(val));
       } else {
         Object.entries(JSON.parse(val)["data"]).forEach((entry) => {
           var enc = TS_encrypt(entry[1], SECRET, (encrypted) => {
-            betterGunPut(gun.get(TABLE).get(sel).get(entry[0]), encrypted);
+            DB.put(sel, entry[0], encrypted);
           });
         });
       }
@@ -183,21 +196,17 @@ PAGES.dataman = {
       <div id="${div_materiales}"></div>
       <br><br>`;
     div_materiales = document.getElementById(div_materiales);
-    gun
-      .get(TABLE)
-      .get("materiales")
-      .map()
-      .once((data, key) => {
-        function add_row(data, key) {
-          if (data != null) {
-            div_materiales.innerHTML += BuildQR(
-              "materiales," + key,
-              data["Nombre"] || key
-            );
-          }
+    DB.map('materiales', (data, key) => {
+      function add_row(data, key) {
+        if (data != null) {
+          div_materiales.innerHTML += BuildQR(
+            "materiales," + key,
+            data["Nombre"] || key
+          );
         }
-        if (typeof data == "string") {
-          TS_decrypt(data, SECRET, (data) => {
+      }
+      if (typeof data == "string") {
+        TS_decrypt(data, SECRET, (data) => {
             add_row(data, key);
           });
         } else {

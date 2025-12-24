@@ -538,57 +538,46 @@ const SC_actions = {
 };
 // Listado precargado de personas:
 function TS_decrypt(input, secret, callback) {
-  // if input starts with "SEA{" and ends with "}", then it's encrypted with SEA
-  // if not, it is encrypted with RSA
+  // Only support AES-based encrypted payloads in the format: RSA{<ciphertext>} or plain objects/strings
   if (typeof input != "string") {
     callback(input);
-  } else if (input.startsWith("SEA{") && input.endsWith("}")) {
-    Gun.SEA.decrypt(input, secret).then((decrypted) => {
-      callback(decrypted);
-    });
   } else if (input.startsWith("RSA{") && input.endsWith("}")) {
-    // ignore RSA{}
     var data = input.slice(4, -1);
-    var decrypted = CryptoJS.AES.decrypt(data, secret).toString(
-      CryptoJS.enc.Utf8
-    );
-    callback(JSON.parse(decrypted));
+    var decrypted = CryptoJS.AES.decrypt(data, secret).toString(CryptoJS.enc.Utf8);
+    try {
+      callback(JSON.parse(decrypted));
+    } catch (e) {
+      console.error('TS_decrypt: invalid JSON', e);
+      callback(null);
+    }
+  } else {
+    // plain string (settings, etc.)
+    callback(input);
   }
 }
 function TS_encrypt(input, secret, callback, mode = "RSA") {
-  if (mode == "SEA") {
-    Gun.TS_encrypt(input, secret).then((encrypted) => {
-      callback(encrypted);
-    });
-  } else if (mode == "RSA") {
-    var encrypted = CryptoJS.AES.encrypt(
-      JSON.stringify(input),
-      secret
-    ).toString();
-    callback("RSA{" + encrypted + "}");
-  }
+  // Use AES symmetric encryption (RSA{} envelope for backwards compatibility)
+  var encrypted = CryptoJS.AES.encrypt(JSON.stringify(input), secret).toString();
+  callback("RSA{" + encrypted + "}");
 }
-gun
-  .get(TABLE)
-  .get("personas")
-  .map()
-  .on((data, key, _msg, _ev) => {
-    function add_row(data, key) {
-      if (data != null) {
-        data["_key"] = key;
-        SC_Personas[key] = data;
-      } else {
-        delete SC_Personas[key];
-      }
-    }
-    if (typeof data == "string") {
-      TS_decrypt(data, SECRET, (data) => {
-        add_row(data, key);
-      });
+// Populate SC_Personas from DB (PouchDB)
+DB.map('personas', (data, key) => {
+  function add_row(data, key) {
+    if (data != null) {
+      data["_key"] = key;
+      SC_Personas[key] = data;
     } else {
-      add_row(data, key);
+      delete SC_Personas[key];
     }
-  });
+  }
+  if (typeof data == "string") {
+    TS_decrypt(data, SECRET, (data) => {
+      add_row(data, key);
+    });
+  } else {
+    add_row(data, key);
+  }
+});
 
 function SC_parse(json) {
   var out = "";
@@ -915,8 +904,19 @@ function TS_IndexElement(
                 event.stopPropagation();
                 data.Estado = state;
                 TS_encrypt(data, SECRET, (encrypted) => {
-                  betterGunPut(ref.get(data._key), encrypted);
-                  toastr.success("Guardado!");
+                  if (typeof ref === 'string') {
+                    DB.put(ref, data._key, encrypted).then(() => {
+                      toastr.success("Guardado!");
+                    });
+                  } else {
+                    try {
+                      // legacy
+                      ref.get(data._key).put(encrypted);
+                      toastr.success("Guardado!");
+                    } catch (e) {
+                      console.warn('Could not save item', e);
+                    }
+                  }
                 });
                 return false;
               };
@@ -1020,25 +1020,51 @@ function TS_IndexElement(
     tablebody_EL.innerHTML = "";
     tablebody_EL.appendChild(fragment);
   }
-  ref.map().on((data, key, _msg, _ev) => {
-    EventListeners.GunJS.push(_ev);
-    function add_row(data, key) {
-      if (data != null) {
-        data["_key"] = key;
-        rows[key] = data;
-      } else {
-        delete rows[key];
+  // Subscribe to dataset updates using DB.map (PouchDB) when `ref` is a table name string
+  if (typeof ref === 'string') {
+    DB.map(ref, (data, key) => {
+      function add_row(data, key) {
+        if (data != null) {
+          data["_key"] = key;
+          rows[key] = data;
+        } else {
+          delete rows[key];
+        }
+        debounce(debounce_load, render, 300, [rows]);
       }
-      debounce(debounce_load, render, 300, [rows]);
-    }
-    if (typeof data == "string") {
-      TS_decrypt(data, SECRET, (data) => {
+      if (typeof data == "string") {
+        TS_decrypt(data, SECRET, (data) => {
+          add_row(data, key);
+        });
+      } else {
         add_row(data, key);
+      }
+    });
+  } else if (ref && typeof ref.map === 'function') {
+    // Legacy: try to use ref.map().on if available (for backwards compatibility)
+    try {
+      ref.map().on((data, key, _msg, _ev) => {
+        function add_row(data, key) {
+          if (data != null) {
+            data["_key"] = key;
+            rows[key] = data;
+          } else {
+            delete rows[key];
+          }
+          debounce(debounce_load, render, 300, [rows]);
+        }
+        if (typeof data == "string") {
+          TS_decrypt(data, SECRET, (data) => {
+            add_row(data, key);
+          });
+        } else {
+          add_row(data, key);
+        }
       });
-    } else {
-      add_row(data, key);
+    } catch (e) {
+      console.warn('TS_IndexElement: cannot subscribe to ref', e);
     }
-  });
+  }
 }
 
 function BuildQR(mid, label) {
@@ -1103,6 +1129,50 @@ function SetPages() {
 var Booted = false;
 var TimeoutBoot = 6;
 var BootLoops = 0;
+
+function getPeers() {
+  const peerCountEl = document.getElementById("peerCount");
+  const peerListEl = document.getElementById("peerList");
+  const pidEl = document.getElementById("peerPID");
+  const statusImg = document.getElementById("connectStatus");
+
+  // Default status based on navigator
+  if (window.navigator && window.navigator.onLine === false) {
+    peerCountEl.innerText = "offline";
+    if (statusImg) statusImg.src = "static/ico/offline.svg";
+  } else {
+    peerCountEl.innerText = "local";
+    if (statusImg) statusImg.src = "static/ico/connect_ok.svg";
+  }
+
+  // Clear previous list
+  if (peerListEl) peerListEl.innerHTML = "";
+
+  // Show local DB stats if available
+  if (window.DB && DB._internal && DB._internal.local) {
+    DB._internal.local
+      .info()
+      .then((info) => {
+        if (peerListEl) {
+          const li = document.createElement("li");
+          li.innerText = `Local DB: ${info.db_name || "telesec"} (docs: ${info.doc_count || 0})`;
+          peerListEl.appendChild(li);
+        }
+        if (pidEl) pidEl.innerText = `DB: ${info.db_name || "telesec"}`;
+      })
+      .catch(() => {
+        if (peerListEl) {
+          const li = document.createElement("li");
+          li.innerText = "Local DB: unavailable";
+          peerListEl.appendChild(li);
+        }
+        if (pidEl) pidEl.innerText = "DB: local";
+      });
+  } else {
+    if (pidEl) pidEl.innerText = "DB: none";
+  }
+}
+
 getPeers();
 setInterval(() => {
   getPeers();
@@ -1111,34 +1181,73 @@ setInterval(() => {
 var BootIntervalID = setInterval(() => {
   BootLoops += 1;
   getPeers();
-  if (
-    (BootLoops >= TimeoutBoot || window.navigator.onLine == false) &&
-    !Booted
-  ) {
-    Booted = true;
-    document.getElementById("loading").style.display = "none";
-    toastr.error(
-      "Sin conexion! Los cambios se sincronizarán cuando te vuelvas a conectar."
-    );
-    if (!SUB_LOGGED_IN) {
-      open_page("login");
-    } else {
-      SetPages();
-      open_page(location.hash.replace("#", ""));
+
+  const isOnline = window.navigator ? window.navigator.onLine !== false : true;
+
+  // Check if local DB is initialized and responsive
+  const checkLocalDB = () => {
+    if (window.DB && DB._internal && DB._internal.local) {
+      return DB._internal.local.info().then(() => true).catch(() => false);
     }
-    clearInterval(BootIntervalID);
-  }
-  if (ConnectionStarted && !Booted) {
-    Booted = true;
-    document.getElementById("loading").style.display = "none";
-    if (!SUB_LOGGED_IN) {
-      open_page("login");
-      return;
+    return Promise.resolve(false);
+  };
+
+  checkLocalDB().then((dbReady) => {
+    // If offline, or DB ready, or we've waited long enough, proceed to boot the UI
+    if ((dbReady || !isOnline || BootLoops >= TimeoutBoot) && !Booted) {
+      Booted = true;
+      document.getElementById("loading").style.display = "none";
+
+      if (!isOnline) {
+        toastr.error(
+          "Sin conexión! Los cambios se sincronizarán cuando vuelvas a estar en línea."
+        );
+      }
+
+      if (!SUB_LOGGED_IN) {
+        if (AC_BYPASS) {
+          // Auto-create or load a bypass persona and log in automatically
+          const bypassId = localStorage.getItem('TELESEC_BYPASS_ID') || 'bypass-admin';
+          if (window.DB && DB.get) {
+            DB.get('personas', bypassId).then((data) => {
+              function finish(pdata, id) {
+                SUB_LOGGED_IN_ID = id || bypassId;
+                SUB_LOGGED_IN_DETAILS = pdata || {};
+                SUB_LOGGED_IN = true;
+                localStorage.setItem('TELESEC_BYPASS_ID', SUB_LOGGED_IN_ID);
+                SetPages();
+                open_page(location.hash.replace("#", ""));
+              }
+              if (!data) {
+                const persona = { Nombre: 'Admin (bypass)', Roles: 'ADMIN,' };
+                TS_encrypt(persona, SECRET, (encrypted) => {
+                  DB.put('personas', bypassId, encrypted).then(() => finish(persona, bypassId)).catch((e) => { console.warn('AC_BYPASS create error', e); open_page('login'); });
+                });
+              } else {
+                if (typeof data === 'string') {
+                  TS_decrypt(data, SECRET, (pdata) => finish(pdata, bypassId));
+                } else {
+                  finish(data, bypassId);
+                }
+              }
+            }).catch((e) => {
+              console.warn('AC_BYPASS persona check error', e);
+              open_page('login');
+            });
+          } else {
+            // DB not ready, fallback to login page
+            open_page('login');
+          }
+        } else {
+          open_page("login");
+        }
+      } else {
+        SetPages();
+        open_page(location.hash.replace("#", ""));
+      }
+      clearInterval(BootIntervalID);
     }
-    SetPages();
-    open_page(location.hash.replace("#", ""));
-    clearInterval(BootIntervalID);
-  }
+  });
 }, 750);
 
 const tabs = document.querySelectorAll(".ribbon-tab");
@@ -1238,20 +1347,16 @@ function GlobalSearch() {
   function loadAllData() {
     searchableModules.forEach((module) => {
       searchData[module.key] = {};
-      gun
-        .get(TABLE)
-        .get(module.key)
-        .map()
-        .on((data, key) => {
-          if (!data) return;
+      DB.map(module.key, (data, key) => {
+        if (!data) return;
 
-          function processData(processedData) {
-            if (processedData && typeof processedData === "object") {
-              searchData[module.key][key] = {
-                _key: key,
-                _module: module.key,
-                _title: module.title,
-                _icon: module.icon,
+        function processData(processedData) {
+          if (processedData && typeof processedData === "object") {
+            searchData[module.key][key] = {
+              _key: key,
+              _module: module.key,
+              _title: module.title,
+              _icon: module.icon,
                 ...processedData,
               };
             }

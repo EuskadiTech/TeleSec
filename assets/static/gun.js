@@ -1,6 +1,6 @@
-;(function(){
+// assets/static/gun.js - Deprecated. Replaced by PouchDB (DB module).
+console.warn('assets/static/gun.js is deprecated and unused.');
 
-  /* UNBUILD */
   function USE(arg, req){
     return req? require(arg) : arg.slice? USE[R(arg)] : function(mod, path){
       arg(mod = {exports: {}});

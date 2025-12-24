@@ -2,12 +2,47 @@ PAGES.login = {
     Esconder: true,
     Title: "Login",
     edit: function (mid) {
+      // Setup form to configure CouchDB remote and initial group/secret
+      var field_couch = safeuuid();
+      var field_couch_dbname = safeuuid();
+      var field_couch_user = safeuuid();
+      var field_couch_pass = safeuuid();
+      var btn_save = safeuuid();
       container.innerHTML = `
-        <h1>Empezar desde cero - No disponible</h1>
-        <h2>Paso 1: Rellena los credenciales</h2>
-        <h2>Paso 2: Crea una cuenta administrativa</h2>
-        <h2>Y ya está!</h2>
-      `
+        <h1>Configuración del servidor CouchDB</h1>
+        <fieldset>
+          <label>Servidor CouchDB (ej: https://couch.example.com)
+            <input type="text" id="${field_couch}" value="${localStorage.getItem('TELESEC_COUCH_URL') || ''}"><br><br>
+          </label>
+          <label>Nombre de la base (opcional, por defecto usa telesec-<grupo>)
+            <input type="text" id="${field_couch_dbname}" value="${localStorage.getItem('TELESEC_COUCH_DBNAME') || ''}"><br><br>
+          </label>
+          <label>Usuario
+            <input type="text" id="${field_couch_user}" value="${localStorage.getItem('TELESEC_COUCH_USER') || ''}"><br><br>
+          </label>
+          <label>Contraseña
+            <input type="password" id="${field_couch_pass}" value="${localStorage.getItem('TELESEC_COUCH_PASS') || ''}"><br><br>
+          </label>
+          <button id="${btn_save}" class="btn5">Guardar y Conectar</button>
+        </fieldset>
+        <p>Después de guardar, el navegador intentará sincronizar en segundo plano con el servidor.</p>
+      `;
+      document.getElementById(btn_save).onclick = () => {
+        var url = document.getElementById(field_couch).value.trim();
+        var dbname = document.getElementById(field_couch_dbname).value.trim();
+        var user = document.getElementById(field_couch_user).value.trim();
+        var pass = document.getElementById(field_couch_pass).value;
+        localStorage.setItem('TELESEC_COUCH_URL', url);
+        localStorage.setItem('TELESEC_COUCH_DBNAME', dbname);
+        localStorage.setItem('TELESEC_COUCH_USER', user);
+        localStorage.setItem('TELESEC_COUCH_PASS', pass);
+        try {
+          DB.init({ secret: SECRET, remoteServer: url, username: user, password: pass, dbname: dbname || undefined });
+          toastr.success('Iniciando sincronización con CouchDB');
+        } catch (e) {
+          toastr.error('Error al iniciar sincronización: ' + e.message);
+        }
+      };
     },
     index: function (mid) {
       var field_persona = safeuuid();
@@ -23,7 +58,8 @@ PAGES.login = {
             <button class="btn5" id="${btn_guardar}">Acceder</button>
             <button class="btn1" id="${btn_reload}">Recargar lista</button>
         </fieldset>
-        <a href="#login,setup">Empezar desde cero</a>
+        <a href="#login,setup">Configurar servidor CouchDB / Empezar desde cero</a>
+        <div style="margin-top:10px; font-size:90%">Servidor CouchDB: <b>${localStorage.getItem('TELESEC_COUCH_URL') || '(no configurado)'} </b></div>
         `;
       var divact = document.getElementById(div_actions);
       addCategory_Personas(
@@ -57,6 +93,30 @@ PAGES.login = {
       document.getElementById(btn_reload).onclick = () => {
         open_page("login")
       };
-      
-    },
+
+      // AC_BYPASS: allow creating a local persona from the login screen
+      if (AC_BYPASS) {
+        var btn_bypass_create = safeuuid();
+        divact.innerHTML += `<button id="${btn_bypass_create}" class="btn2" style="margin-left:10px;">Crear persona local (bypass)</button>`;
+        document.getElementById(btn_bypass_create).onclick = () => {
+          var name = prompt("Nombre de la persona (ej: Admin):");
+          if (!name) return;
+          var id = 'bypass-' + Date.now();
+          var persona = { Nombre: name, Roles: 'ADMIN,' };
+          TS_encrypt(persona, SECRET, (encrypted) => {
+            DB.put('personas', id, encrypted).then(() => {
+              toastr.success('Persona creada: ' + id);
+              localStorage.setItem('TELESEC_BYPASS_ID', id);
+              SUB_LOGGED_IN_ID = id;
+              SUB_LOGGED_IN_DETAILS = persona;
+              SUB_LOGGED_IN = true;
+              SetPages();
+              open_page('index');
+            }).catch((e) => {
+              toastr.error('Error creando persona: ' + (e && e.message ? e.message : e));
+            });
+          });
+        };
+      }
+    }
   }
