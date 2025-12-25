@@ -56,10 +56,9 @@ PAGES.login = {
             <input type="hidden" id="${field_persona}">
             <div id="${div_actions}"></div>
             <button class="btn5" id="${btn_guardar}">Acceder</button>
-            <button class="btn1" id="${btn_reload}">Recargar lista</button>
+            <button class="btn3" id="${btn_reload}">Recargar lista</button>
+            <a class="button btn1" href="#login,setup">Configurar base de datos</a>
         </fieldset>
-        <a href="#login,setup">Configurar servidor CouchDB / Empezar desde cero</a>
-        <div style="margin-top:10px; font-size:90%">Servidor CouchDB: <b>${localStorage.getItem('TELESEC_COUCH_URL') || '(no configurado)'} </b></div>
         `;
       var divact = document.getElementById(div_actions);
       addCategory_Personas(
@@ -71,7 +70,7 @@ PAGES.login = {
         },
         "¿Quién eres?",
         true,
-        "- Pulsa recargar o rellena los credenciales arriba, si quieres crear un nuevo grupo, pulsa el boton 'Desde cero' -"
+        "- Pulsa recargar o rellena los credenciales abajo, si quieres crear un nuevo grupo, pulsa el boton 'Desde cero' -"
       );
       document.getElementById(btn_guardar).onclick = () => {
         if (document.getElementById(field_persona).value == "") {

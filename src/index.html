@@ -14,7 +14,7 @@
 
 <body>
   <div class="ribbon no_print" id="header_hide_query">
-    <img class="ribbon-orb" id="connectStatus">
+    <img class="ribbon-orb" id="connectStatus" src="static/logo.jpg" />
     
     <div class="ribbon-content">
       <div class="ribbon-tabs">
@@ -42,22 +42,7 @@
         </div>
       </details>
       
-      <!-- Tab: Admin -->
-      <details id="tab-credenciales">
-        <summary hidden>Credenciales</summary>
-        <div class="ribbon-panel">
-          <div>
-            
-            <input type="password" id="LinkAccount_secret" placeholder="Contraseña / Token..." />
-            <br />
-            <button type="button" onclick='LinkAccount(document.getElementById("LinkAccount_secret").value, true)'>
-              Iniciar sesión
-            </button><br>
-            <b>Estado de sincronización: <span id="peerCount">Desconocido</span></b>
-          </div>
-        </div>
-      </details>
-      
+        <small style="margin-top:10px;">Base de datos: <b id="peerLink">(no configurado)</b></small>
     </div>
   </div>
   

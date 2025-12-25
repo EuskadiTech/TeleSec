@@ -1190,19 +1190,30 @@ var Booted = false;
 var TimeoutBoot = 3; // in loops of 750ms
 var BootLoops = 0;
 
+// Get URL host for peer link display
+var couchDatabase = localStorage.getItem("TELESEC_COUCH_DBNAME") || "telesec";
+var couchUrl = localStorage.getItem("TELESEC_COUCH_URL") || null;
+var couchHost = "";
+try {
+  var urlObj = new URL(couchUrl);
+  couchHost = urlObj.host;
+} catch (e) {
+  couchHost = couchUrl;
+}
+if (couchHost) {
+  document.getElementById("peerLink").innerText = couchDatabase + "@" + couchHost;
+}
+
 function getPeers() {
-  const peerCountEl = document.getElementById("peerCount");
   const peerListEl = document.getElementById("peerList");
   const pidEl = document.getElementById("peerPID");
   const statusImg = document.getElementById("connectStatus");
 
   // Default status based on navigator
   if (window.navigator && window.navigator.onLine === false) {
-    peerCountEl.innerText = "offline";
     if (statusImg) statusImg.src = "static/ico/offline.svg";
   } else {
-    peerCountEl.innerText = "local";
-    if (statusImg) statusImg.src = "static/ico/connect_ok.svg";
+    if (statusImg) statusImg.src = "static/logo.jpg";
   }
 
   // Clear previous list
@@ -1312,7 +1323,6 @@ const tabs = document.querySelectorAll(".ribbon-tab");
 const detailTabs = {
   modulos: document.getElementById("tab-modulos"),
   buscar: document.getElementById("tab-buscar"),
-  credenciales: document.getElementById("tab-credenciales"),
 };
 
 tabs.forEach((tab) => {

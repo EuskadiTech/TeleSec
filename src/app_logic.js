@@ -8,31 +8,6 @@ function tableScroll(query) {
 //var secretTokenEl = document.getElementById("secretToken");
 var container = document.getElementById("container");
 
-function LinkAccount(LinkAccount_secret, refresh = false) {
-  // Group identifier (no encryption). Secret usage removed.
-  if (LinkAccount_secret) {
-    SECRET = String(LinkAccount_secret).toUpperCase();
-  } else {
-    SECRET = "";
-  }
-
-  if (refresh == true) {
-    location.reload();
-  }
-
-  // Initialize local DB and start replication if DB is available
-  try {
-    if (typeof DB !== 'undefined') {
-      const remoteServer = localStorage.getItem('TELESEC_COUCH_URL') || '';
-      const username = localStorage.getItem('TELESEC_COUCH_USER') || '';
-      const password = localStorage.getItem('TELESEC_COUCH_PASS') || '';
-      DB.init({ secret: SECRET, remoteServer, username, password, dbname: localStorage.getItem('TELESEC_COUCH_DBNAME') || undefined });
-    }
-  } catch (e) {
-    console.warn('DB.init failed or not available yet', e);
-  }
-}
-
 function open_page(params) {
   // Clear stored event listeners and timers
   EventListeners.GunJS = [];
