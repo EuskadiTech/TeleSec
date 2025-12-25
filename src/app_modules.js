@@ -896,6 +896,37 @@ function TS_IndexElement(
             new_tr.appendChild(tdFechaISO);
             break;
           }
+          case "fecha-diff": {
+            const tdFechaISO = document.createElement("td");
+            if (data[key.key]) {
+              const fecha = new Date(data[key.key]);
+              const now = new Date();
+              const diffTime = Math.abs(now - fecha);
+              const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+              const diffMonths = Math.floor(diffDays / 30);
+              const diffYears = Math.floor(diffDays / 365);
+              let diffString = "";
+              if (diffYears > 0) {
+                diffString += diffYears + " año" + (diffYears > 1 ? "s " : " ");
+              }
+              if (diffMonths % 12 > 0) {
+                diffString +=
+                  (diffMonths % 12) +
+                  " mes" +
+                  (diffMonths % 12 > 1 ? "es " : " ");
+              }
+              
+              // if more than 3 months, show rgb(255, 192, 192) as background
+              if (diffMonths >= 3) {
+                tdFechaISO.style.backgroundColor = "rgb(255, 192, 192)";
+              } else if (diffMonths >= 1) {
+                tdFechaISO.style.backgroundColor = "rgb(252, 252, 176)";
+              }
+              tdFechaISO.innerText = diffString.trim();
+            }
+            new_tr.appendChild(tdFechaISO);
+            break;
+          }
           case "template": {
             const tdCustomTemplate = document.createElement("td");
             new_tr.appendChild(tdCustomTemplate);

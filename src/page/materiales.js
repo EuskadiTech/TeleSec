@@ -136,7 +136,7 @@ PAGES.materiales = {
     `;
 
     const config = [
-      { key: "Revision", label: "F. Revisión", type: "fecha", default: "" },
+      { key: "Revision", label: "Ult. Revisión", type: "fecha-diff", default: "" },
       { key: "Nombre", label: "Nombre", type: "text", default: "" },
       { key: "Ubicacion", label: "Ubicación", type: "text", default: "--" },
       {
