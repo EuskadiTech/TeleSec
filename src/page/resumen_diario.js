@@ -3,7 +3,7 @@ PAGES.resumen_diario = {
   icon: "static/appico/calendar.png",
   navcss: "btn3",
   AccessControl: true,
-  Title: "Hoy y mañana",
+  Title: "Resumen Diario",
   index: function () {
     var data_Comedor = safeuuid();
     var data_Tareas = safeuuid();

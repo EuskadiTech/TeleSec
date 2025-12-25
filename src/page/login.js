@@ -11,8 +11,8 @@ PAGES.login = {
       container.innerHTML = `
         <h1>Configuración del servidor CouchDB</h1>
         <fieldset>
-          <label>Servidor CouchDB (ej: https://couch.example.com)
-            <input type="text" id="${field_couch}" value="${localStorage.getItem('TELESEC_COUCH_URL') || ''}"><br><br>
+          <label>Servidor CouchDB (ej: couch.example.com)
+            <input type="text" id="${field_couch}" value="${(localStorage.getItem('TELESEC_COUCH_URL') || '').replace(/^https?:\/\//, '')}"><br><br>
           </label>
           <label>Nombre de la base (opcional, por defecto usa telesec-<grupo>)
             <input type="text" id="${field_couch_dbname}" value="${localStorage.getItem('TELESEC_COUCH_DBNAME') || ''}"><br><br>
@@ -32,12 +32,12 @@ PAGES.login = {
         var dbname = document.getElementById(field_couch_dbname).value.trim();
         var user = document.getElementById(field_couch_user).value.trim();
         var pass = document.getElementById(field_couch_pass).value;
-        localStorage.setItem('TELESEC_COUCH_URL', url);
+        localStorage.setItem('TELESEC_COUCH_URL', "https://" + url);
         localStorage.setItem('TELESEC_COUCH_DBNAME', dbname);
         localStorage.setItem('TELESEC_COUCH_USER', user);
         localStorage.setItem('TELESEC_COUCH_PASS', pass);
         try {
-          DB.init({ secret: SECRET, remoteServer: url, username: user, password: pass, dbname: dbname || undefined });
+          DB.init({ secret: SECRET, remoteServer: "https://" + url, username: user, password: pass, dbname: dbname || undefined });
           toastr.success('Iniciando sincronización con CouchDB');
           location.hash = "#login";
           location.reload();

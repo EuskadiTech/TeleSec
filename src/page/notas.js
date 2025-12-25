@@ -113,7 +113,7 @@ PAGES.notas = {
         [
           {
             key: "Autor",
-            type: "persona",
+            type: "persona-nombre",
             default: "",
             label: "Autor",
           },

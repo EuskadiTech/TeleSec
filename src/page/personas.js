@@ -203,11 +203,16 @@ PAGES.personas = {
       `;
 
     const config = [
-      {
-        label: "Persona",
-        type: "persona",
-        self: true,
-      },
+      // {
+      //   label: "Persona",
+      //   type: "persona",
+      //   self: true,
+      // },
+      { key: "Foto", label: "Foto", type: "attachment-persona", default: "", self: true },
+      { key: "Nombre", label: "Nombre", type: "text", default: "" },
+      { key: "Region", label: "Zona", type: "text", default: "" },
+      { key: "Monedero_Balance", label: "Saldo Monedero", type: "moneda" },
+      //{ key: "markdown", label: "Notas", type: "markdown", default: "" },
       //{ key: "Roles", label: "Permisos", type: "text", default: "" }
     ];
 

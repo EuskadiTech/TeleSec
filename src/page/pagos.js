@@ -716,6 +716,7 @@ PAGES.pagos = {
     (async () => {
       const data = await DB.get('pagos', tid);
       function load_data(data) {
+        console.log("Transaction data:", data);
         document.getElementById(nameh1).innerText = tid;
         document.getElementById(field_ticket).value = data.Ticket || tid;
         
@@ -754,7 +755,7 @@ PAGES.pagos = {
           
           // Edit button - navigate to edit mode
           document.getElementById(btn_edit).onclick = () => {
-            setUrlHash("pagos,edit_transaction," + key);
+            setUrlHash("pagos,edit_transaction," + tid);
           };
           
           // Delete button
@@ -769,7 +770,7 @@ PAGES.pagos = {
                 "¿Estás seguro de que quieres ELIMINAR esta transacción?\n\nEsta acción NO se puede deshacer y los cambios en los monederos NO se revertirán automáticamente.\n\nPara revertir los cambios en los monederos, usa el botón 'Revertir Transacción' en su lugar."
               )
             ) {
-              DB.del('pagos', key).then(() => {
+              DB.del('pagos', tid).then(() => {
                 toastr.success("Transacción eliminada");
                 setTimeout(() => {
                   setUrlHash("pagos");
@@ -801,17 +802,17 @@ PAGES.pagos = {
               
               if (tipo === "Ingreso") {
                 revertWalletBalance(personaId, "Gasto", monto, () => {
-                  deleteTransaction(key);
+                  deleteTransaction(tid);
                 });
               } else if (tipo === "Gasto") {
                 revertWalletBalance(personaId, "Ingreso", monto, () => {
-                  deleteTransaction(key);
+                  deleteTransaction(tid);
                 });
               } else if (tipo === "Transferencia") {
                 var destinoId = data.PersonaDestino;
                 revertWalletBalance(personaId, "Ingreso", monto, () => {
                   revertWalletBalance(destinoId, "Gasto", monto, () => {
-                    deleteTransaction(key);
+                    deleteTransaction(tid);
                   });
                 });
               }
@@ -855,7 +856,7 @@ PAGES.pagos = {
         } else {
           load_data(data || {});
         }
-      });
+      })();
   },
   
   // Main index view with transaction log
@@ -951,7 +952,7 @@ PAGES.pagos = {
     {
       key: "Persona",
       label: "Monedero",
-      type: "persona",
+      type: "persona-nombre",
       default: "",
     },
     {
@@ -1257,7 +1258,7 @@ PAGES.pagos = {
         } else {
           loadTransactionData(data || {});
         }
-      });
+      })();
     
     // Tipo change handler
     document.getElementById(field_tipo).addEventListener("change", function() {

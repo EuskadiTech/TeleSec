@@ -807,6 +807,7 @@ function TS_IndexElement(
           }
           break;
         case "persona":
+        case "persona-nombre":
           var persona = SC_Personas[value] || { Nombre: "", Region: "" };
           if (field.self == true) {
             persona = data || { Nombre: "", Region: "" };
@@ -883,6 +884,17 @@ function TS_IndexElement(
             ).replace(/\n/g, "<br>");
             tdRaw.innerHTML = rawContent;
             new_tr.appendChild(tdRaw);
+            break;
+          }
+          case "moneda": {
+            const tdMoneda = document.createElement("td");
+            const valor = parseFloat(data[key.key]);
+            if (!isNaN(valor)) {
+              tdMoneda.innerText = valor.toFixed(2) + " €";
+            } else {
+              tdMoneda.innerText = key.default || "";
+            }
+            new_tr.appendChild(tdMoneda);
             break;
           }
           case "fecha":
@@ -1096,6 +1108,39 @@ function TS_IndexElement(
             }
             tdPersona.appendChild(infoSpan);
             new_tr.appendChild(tdPersona);
+            break;
+          }
+          case "persona-nombre": {
+            let persona =
+              key.self === true ? data : SC_Personas[data[key.key]] || {};
+            const tdPersonaNombre = document.createElement("td");
+            tdPersonaNombre.style.textAlign = "center";
+            tdPersonaNombre.style.fontSize = "20px";
+            tdPersonaNombre.textContent = persona.Nombre || "";
+            new_tr.appendChild(tdPersonaNombre);
+            break;
+          }
+          case "attachment-persona": {
+            const tdAttachment = document.createElement("td");
+            const img = document.createElement("img");
+            img.src =
+              data[key.key] ||
+              "static/ico/user_generic.png";
+            img.style.maxHeight = "80px";
+            img.style.maxWidth = "80px";
+            tdAttachment.appendChild(img);
+            new_tr.appendChild(tdAttachment);
+            // Prefer attachment 'foto' stored in PouchDB if available
+            try {
+              const personaId = key.self === true ? (data._key || data._id || data.id) : data[key.key];
+              if (personaId) {
+                DB.getAttachment('personas', personaId, 'foto').then((durl) => {
+                  if (durl) img.src = durl;
+                }).catch(() => {});
+              }
+            } catch (e) {
+              // ignore
+            }
             break;
           }
           default:

@@ -8,17 +8,19 @@ var DB = (function () {
   let secret = null;
   let remote = null;
   let changes = null;
+  let repPush = null;
+  let repPull = null;
   let callbacks = {}; // table -> [cb]
 
   function ensureLocal() {
     if (local) return;
     try {
-      const localName = localStorage.getItem('TELESEC_COUCH_DBNAME') || 'telesec';
+      const localName = 'telesec';
       local = new PouchDB(localName);
       if (changes) {
         try { changes.cancel(); } catch (e) {}
-        changes = local.changes({ live: true, since: 'now', include_docs: true }).on('change', onChange);
       }
+      changes = local.changes({ live: true, since: 'now', include_docs: true }).on('change', onChange);
     } catch (e) {
       console.warn('ensureLocal error', e);
     }
@@ -31,7 +33,7 @@ var DB = (function () {
   function init(opts) {
     // opts: { secret, remoteServer, username, password, dbname }
     secret = opts.secret || '';
-    const localName = opts.dbname || localStorage.getItem('TELESEC_COUCH_DBNAME') || 'telesec';
+    const localName =   'telesec';
     local = new PouchDB(localName);
 
     if (opts.remoteServer) {
@@ -63,11 +65,24 @@ var DB = (function () {
   function replicateToRemote() {
     ensureLocal();
     if (!local || !remote) return;
-    PouchDB.replicate(local, remote, { live: true, retry: true }).on('error', function (err) {
-      console.warn('Replication error', err);
-    });
-    PouchDB.replicate(remote, local, { live: true, retry: true }).on('error', function (err) {
-      console.warn('Replication error', err);
+    // Cancel previous replications if any
+    try { if (repPush && repPush.cancel) repPush.cancel(); } catch (e) {}
+    try { if (repPull && repPull.cancel) repPull.cancel(); } catch (e) {}
+
+    repPush = PouchDB.replicate(local, remote, { live: true, retry: true })
+      .on('error', function (err) {
+        console.warn('Replication push error', err);
+      });
+    repPull = PouchDB.replicate(remote, local, { live: true, retry: true })
+      .on('error', function (err) {
+        console.warn('Replication pull error', err);
+      });
+  }
+
+  // Retry replication when network is restored
+  if (typeof window !== 'undefined' && window.addEventListener) {
+    window.addEventListener('online', function () {
+      try { setTimeout(replicateToRemote, 1000); } catch (e) {}
     });
   }
 
