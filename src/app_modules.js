@@ -554,15 +554,14 @@ const SC_actions = {
     },
   ],
 };
-// Listado precargado de personas:
 function TS_decrypt(input, secret, callback, table, id) {
-  // Accept objects or plaintext strings. Also support legacy RSA{...} AES-encrypted entries.
+  // Accept objects or plaintext strings. Support AES-encrypted entries wrapped as RSA{...}.
   if (typeof input !== "string") {
     try { callback(input, false); } catch (e) { console.error(e); }
     return;
   }
 
-  // Legacy encrypted format: RSA{...}
+  // Encrypted format marker: RSA{<ciphertext>} where <ciphertext> is CryptoJS AES output
   if (input.startsWith("RSA{") && input.endsWith("}") && typeof CryptoJS !== 'undefined') {
     try {
       var data = input.slice(4, -1);
@@ -571,7 +570,6 @@ function TS_decrypt(input, secret, callback, table, id) {
       try {
         decryptedUtf8 = words.toString(CryptoJS.enc.Utf8);
       } catch (utfErr) {
-        // Malformed UTF-8 — try Latin1 fallback
         try {
           decryptedUtf8 = words.toString(CryptoJS.enc.Latin1);
         } catch (latinErr) {
@@ -583,9 +581,9 @@ function TS_decrypt(input, secret, callback, table, id) {
       var parsed = null;
       try { parsed = JSON.parse(decryptedUtf8); } catch (pe) { parsed = decryptedUtf8; }
       try { callback(parsed, true); } catch (e) { console.error(e); }
-      // Migrate to plaintext in DB if table/id provided
-      if (table && id && window.DB && DB.put && typeof parsed !== 'string') {
-        DB.put(table, id, parsed).catch(() => {});
+      // Keep encrypted at-rest: if table/id provided, ensure DB stores encrypted payload (input)
+      if (table && id && window.DB && DB.put) {
+        DB.put(table, id, input).catch(() => {});
       }
       return;
     } catch (e) {
@@ -595,12 +593,14 @@ function TS_decrypt(input, secret, callback, table, id) {
     }
   }
 
-  // Try to parse JSON strings and migrate to object
+  // Plain JSON stored as text -> parse and return, then re-encrypt in DB for at-rest protection
   try {
     var parsed = JSON.parse(input);
     try { callback(parsed, false); } catch (e) { console.error(e); }
-    if (table && id && window.DB && DB.put) {
-      DB.put(table, id, parsed).catch(() => {});
+    if (table && id && window.DB && DB.put && typeof SECRET !== 'undefined') {
+      TS_encrypt(parsed, SECRET, function (enc) {
+        DB.put(table, id, enc).catch(() => {});
+      });
     }
   } catch (e) {
     // Not JSON, return raw string
@@ -608,10 +608,27 @@ function TS_decrypt(input, secret, callback, table, id) {
   }
 } 
 function TS_encrypt(input, secret, callback, mode = "RSA") {
-  // Encryption removed: store plaintext objects directly
-  try { callback(input); } catch (e) { console.error(e); }
+  // Encrypt given value for at-rest storage using CryptoJS AES.
+  // Always return string of form RSA{<ciphertext>} via callback.
+  try {
+    if (typeof CryptoJS === 'undefined') {
+      // CryptoJS not available — return plaintext
+      try { callback(input); } catch (e) { console.error(e); }
+      return;
+    }
+    var payload = input;
+    if (typeof input !== 'string') {
+      try { payload = JSON.stringify(input); } catch (e) { payload = String(input); }
+    }
+    var encrypted = CryptoJS.AES.encrypt(payload, secret).toString();
+    var out = 'RSA{' + encrypted + '}';
+    try { callback(out); } catch (e) { console.error(e); }
+  } catch (e) {
+    console.error('TS_encrypt: encryption failed', e);
+    try { callback(input); } catch (err) { console.error(err); }
+  }
 } 
-// Populate SC_Personas from DB (PouchDB)
+// Listado precargado de personas:
 DB.map('personas', (data, key) => {
   function add_row(data, key) {
     if (data != null) {
@@ -771,7 +788,7 @@ function TS_IndexElement(
   var tablebody_EL = document.getElementById(tablebody);
   var rows = {};
   config.forEach((key) => {
-    tablehead_EL.innerHTML += `<th>${key.label}</th>`;
+    tablehead_EL.innerHTML += `<th>${key.label || ""}</th>`;
   });
   // Add search functionality
   const searchKeyEl = document.getElementById(searchKeyInput);
@@ -874,6 +891,14 @@ function TS_IndexElement(
       }
       config.forEach((key) => {
         switch (key.type) {
+          case "_encrypted": {
+            const tdEncrypted = document.createElement("td");
+            tdEncrypted.innerText = data["_encrypted__"]
+              ? "🔒"
+              : "";
+            new_tr.appendChild(tdEncrypted);
+            break;
+          }
           case "raw":
           case "text": {
             const tdRaw = document.createElement("td");
@@ -1170,9 +1195,11 @@ function TS_IndexElement(
       }
       if (typeof data == "string") {
         TS_decrypt(data, SECRET, (data, wasEncrypted) => {
+          data["_encrypted__"] = wasEncrypted;
           add_row(data, key);
         }, ref, key);
       } else {
+        data["_encrypted__"] = false;
         add_row(data, key);
       }
     });
@@ -1191,9 +1218,11 @@ function TS_IndexElement(
         }
         if (typeof data == "string") {
           TS_decrypt(data, SECRET, (data, wasEncrypted) => {
+            data["_encrypted__"] = wasEncrypted;
             add_row(data, key);
           }, undefined, undefined);
         } else {
+          data["_encrypted__"] = false;
           add_row(data, key);
         }
       });

@@ -111,6 +111,7 @@ PAGES.notas = {
       TS_IndexElement(
         "notas",
         [
+          {"type": "_encrypted"},
           {
             key: "Autor",
             type: "persona-nombre",

@@ -5,7 +5,6 @@
 
 var DB = (function () {
   let local = null;
-  let secret = null;
   let remote = null;
   let changes = null;
   let repPush = null;
@@ -31,9 +30,15 @@ var DB = (function () {
   }
 
   function init(opts) {
-    // opts: { secret, remoteServer, username, password, dbname }
-    secret = opts.secret || '';
+    // opts: { remoteServer, username, password, dbname }
     const localName =   'telesec';
+    // Allow passing encryption secret via opts
+    try {
+      if (opts && opts.secret) {
+        SECRET = opts.secret;
+        try { localStorage.setItem('TELESEC_SECRET', SECRET); } catch (e) {}
+      }
+    } catch (e) {}
     local = new PouchDB(localName);
 
     if (opts.remoteServer) {
@@ -109,7 +114,21 @@ var DB = (function () {
         return;
       }
       const doc = existing || { _id: _id };
-      doc.data = data;
+      // If TS_encrypt is available and a SECRET is configured, encrypt non-encrypted payloads
+      var toStore = data;
+      try {
+        var isEncryptedString = (typeof data === 'string' && data.startsWith('RSA{') && data.endsWith('}'));
+        if (!isEncryptedString && typeof TS_encrypt === 'function' && typeof SECRET !== 'undefined' && SECRET) {
+          toStore = await new Promise((resolve) => {
+            try {
+              TS_encrypt(data, SECRET, function (enc) {
+                resolve(enc);
+              });
+            } catch (e) { resolve(data); }
+          });
+        }
+      } catch (e) { toStore = data; }
+      doc.data = toStore;
       doc.table = table;
       doc.ts = new Date().toISOString();
       if (existing) doc._rev = existing._rev;
@@ -234,9 +253,10 @@ window.DB = DB;
     const username = localStorage.getItem('TELESEC_COUCH_USER') || '';
     const password = localStorage.getItem('TELESEC_COUCH_PASS') || '';
     const dbname = localStorage.getItem('TELESEC_COUCH_DBNAME') || undefined;
-    const secret = localStorage.getItem('TELESEC_secret') || '';
+    // Load saved secret into global SECRET for encryption/decryption
+    try { SECRET = localStorage.getItem('TELESEC_SECRET') || ''; } catch (e) { SECRET = ''; }
     // Call init but don't await; DB functions are safe-guarded with ensureLocal()
-    DB.init({ secret, remoteServer, username, password, dbname }).catch((e) => {
+    DB.init({ remoteServer, username, password, dbname }).catch((e) => {
       console.warn('DB.autoInit error', e);
     });
   } catch (e) {

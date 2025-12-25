@@ -203,6 +203,7 @@ PAGES.personas = {
       `;
 
     const config = [
+      {"type": "_encrypted"},
       // {
       //   label: "Persona",
       //   type: "persona",

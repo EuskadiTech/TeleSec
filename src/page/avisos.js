@@ -173,6 +173,7 @@ PAGES.avisos = {
       TS_IndexElement(
         "avisos",
         [
+          {"type": "_encrypted"},
           {
             key: "Origen",
             type: "persona",

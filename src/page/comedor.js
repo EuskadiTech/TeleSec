@@ -87,6 +87,7 @@ PAGES.comedor = {
     TS_IndexElement(
       "comedor",
       [
+        {"type": "_encrypted"},
         {
           key: "Fecha",
           type: "raw",

@@ -900,6 +900,7 @@ PAGES.pagos = {
     var totals = { ingresos: 0, gastos: 0 };
     
     const config = [
+    {"type": "_encrypted"},
     {
       key: "Fecha",
       label: "Fecha/Hora",

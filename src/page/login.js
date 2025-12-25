@@ -7,6 +7,7 @@ PAGES.login = {
       var field_couch_dbname = safeuuid();
       var field_couch_user = safeuuid();
       var field_couch_pass = safeuuid();
+      var field_secret = safeuuid();
       var btn_save = safeuuid();
       container.innerHTML = `
         <h1>Configuración del servidor CouchDB</h1>
@@ -23,6 +24,9 @@ PAGES.login = {
           <label>Contraseña
             <input type="password" id="${field_couch_pass}" value="${localStorage.getItem('TELESEC_COUCH_PASS') || ''}"><br><br>
           </label>
+          <label>Clave de encriptación (opcional) - usada para cifrar datos en reposo
+            <input type="password" id="${field_secret}" value="${localStorage.getItem('TELESEC_SECRET') || ''}"><br><br>
+          </label>
           <button id="${btn_save}" class="btn5">Guardar y Conectar</button>
         </fieldset>
         <p>Después de guardar, el navegador intentará sincronizar en segundo plano con el servidor.</p>
@@ -32,10 +36,13 @@ PAGES.login = {
         var dbname = document.getElementById(field_couch_dbname).value.trim();
         var user = document.getElementById(field_couch_user).value.trim();
         var pass = document.getElementById(field_couch_pass).value;
+        var secret = document.getElementById(field_secret).value || '';
         localStorage.setItem('TELESEC_COUCH_URL', "https://" + url);
         localStorage.setItem('TELESEC_COUCH_DBNAME', dbname);
         localStorage.setItem('TELESEC_COUCH_USER', user);
         localStorage.setItem('TELESEC_COUCH_PASS', pass);
+        localStorage.setItem('TELESEC_SECRET', secret);
+        SECRET = secret;
         try {
           DB.init({ secret: SECRET, remoteServer: "https://" + url, username: user, password: pass, dbname: dbname || undefined });
           toastr.success('Iniciando sincronización con CouchDB');
