@@ -574,21 +574,27 @@ function TS_decrypt(input, secret, callback, table, id) {
           decryptedUtf8 = words.toString(CryptoJS.enc.Latin1);
         } catch (latinErr) {
           console.warn('TS_decrypt: failed to decode decrypted bytes', utfErr, latinErr);
-          try { callback(input, false); } catch (ee) { }
+          try { callback(input, "error"); } catch (ee) { }
           return;
         }
       }
       var parsed = null;
-      try { parsed = JSON.parse(decryptedUtf8); } catch (pe) { parsed = decryptedUtf8; }
+        try { 
+          parsed = JSON.parse(decryptedUtf8); 
+        } catch (pe) { 
+          parsed = decryptedUtf8; 
+          try { callback(parsed, "error2"); } catch (ee) { console.error(ee); }
+          return; 
+        }
       try { callback(parsed, true); } catch (e) { console.error(e); }
       // Keep encrypted at-rest: if table/id provided, ensure DB stores encrypted payload (input)
-      if (table && id && window.DB && DB.put) {
-        DB.put(table, id, input).catch(() => {});
-      }
+      // if (table && id && window.DB && DB.put) {
+      //   DB.put(table, id, input).catch(() => {});
+      // }
       return;
     } catch (e) {
       console.error('TS_decrypt: invalid encrypted payload', e);
-      try { callback(input, false); } catch (ee) { }
+        try { callback(input, "error"); } catch (ee) { }
       return;
     }
   }
@@ -893,9 +899,13 @@ function TS_IndexElement(
         switch (key.type) {
           case "_encrypted": {
             const tdEncrypted = document.createElement("td");
-            tdEncrypted.innerText = data["_encrypted__"]
-              ? "🔒"
-              : "";
+            if (data["_encrypted__"] === true) {
+            tdEncrypted.innerText = "🔒"
+            } else if (data["_encrypted__"] === "error" || data["_encrypted__"] === "error2" || data["_encrypted__"] === undefined) {
+              tdEncrypted.innerText = "⚠️ Error";
+            } else {
+              tdEncrypted.innerText = "";
+            }
             new_tr.appendChild(tdEncrypted);
             break;
           }

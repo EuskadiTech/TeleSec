@@ -41,8 +41,8 @@ PAGES.login = {
         localStorage.setItem('TELESEC_COUCH_DBNAME', dbname);
         localStorage.setItem('TELESEC_COUCH_USER', user);
         localStorage.setItem('TELESEC_COUCH_PASS', pass);
-        localStorage.setItem('TELESEC_SECRET', secret);
-        SECRET = secret;
+        localStorage.setItem('TELESEC_SECRET', secret.toUpperCase());
+        SECRET = secret.toUpperCase();
         try {
           DB.init({ secret: SECRET, remoteServer: "https://" + url, username: user, password: pass, dbname: dbname || undefined });
           toastr.success('Iniciando sincronización con CouchDB');
