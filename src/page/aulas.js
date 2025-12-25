@@ -45,96 +45,81 @@ PAGES.aulas = {
 
 
     //#region Cargar Clima
-    // Get location from gun.get("settings").get("weather_location"), if missing ask user and save it
+    // Get location from DB settings.weather_location; if missing ask user and save it
     // url format: https://wttr.in/<loc>?F0m
-    gun
-      .get("settings")
-      .get("weather_location")
-      .once((loc) => {
-        if (!loc) {
-          loc = prompt("Introduce tu ubicación para el clima (ciudad, país):", "Madrid, Spain");
-          if (loc) {
-            betterGunPut(gun.get("settings").get("weather_location"), loc);
-          }
-        }
+    DB.get('settings','weather_location').then((loc) => {
+      if (!loc) {
+        loc = prompt("Introduce tu ubicación para el clima (ciudad, país):", "Madrid, Spain");
         if (loc) {
-          document.getElementById(data_Weather).src = "https://wttr.in/" + encodeURIComponent(loc) + "_IF0m_background=FFFFFF.png";
-        } else {
-          document.getElementById(data_Weather).src = "https://wttr.in/_IF0m_background=FFFFFF.png";
+          DB.put('settings','weather_location', loc);
         }
-      });
+      }
+      if (loc) {
+        document.getElementById(data_Weather).src = "https://wttr.in/" + encodeURIComponent(loc) + "_IF0m_background=FFFFFF.png";
+      } else {
+        document.getElementById(data_Weather).src = "https://wttr.in/_IF0m_background=FFFFFF.png";
+      }
+    });
     //#endregion Cargar Clima
     //#region Cargar Comedor
-    gun
-      .get(TABLE)
-      .get("comedor")
-      .get(CurrentISODate())
-      .once((data, key) => {
-        function add_row(data) {
-          // Fix newlines
-          data.Platos = data.Platos || "No hay platos registrados para hoy.";
-          // Display platos
-          document.getElementById(data_Comedor).innerHTML = data.Platos.replace(
-            /\n/g,
-            "<br>"
-          );
-        }
-        if (typeof data == "string") {
-          TS_decrypt(data, SECRET, (data) => {
-            add_row(data || {});
-          });
-        } else {
+    DB.get('comedor', CurrentISODate()).then((data) => {
+      function add_row(data) {
+        // Fix newlines
+        data.Platos = data.Platos || "No hay platos registrados para hoy.";
+        // Display platos
+        document.getElementById(data_Comedor).innerHTML = data.Platos.replace(
+          /\n/g,
+          "<br>"
+        );
+      }
+      if (typeof data == "string") {
+        TS_decrypt(data, SECRET, (data, wasEncrypted) => {
           add_row(data || {});
-        }
-      });
+        }, 'comedor', CurrentISODate());
+      } else {
+        add_row(data || {});
+      }
+    });
     //#endregion Cargar Comedor
     //#region Cargar Tareas
-    gun
-      .get(TABLE)
-      .get("notas")
-      .get("tareas")
-      .once((data, key) => {
-        function add_row(data) {
-          // Fix newlines
-          data.Contenido = data.Contenido || "No hay tareas.";
-          // Display platos
-          document.getElementById(data_Tareas).innerHTML = data.Contenido.replace(
-            /\n/g,
-            "<br>"
-          );
-        }
-        if (typeof data == "string") {
-          TS_decrypt(data, SECRET, (data) => {
-            add_row(data || {});
-          });
-        } else {
+    DB.get('notas', 'tareas').then((data) => {
+      function add_row(data) {
+        // Fix newlines
+        data.Contenido = data.Contenido || "No hay tareas.";
+        // Display platos
+        document.getElementById(data_Tareas).innerHTML = data.Contenido.replace(
+          /\n/g,
+          "<br>"
+        );
+      }
+      if (typeof data == "string") {
+        TS_decrypt(data, SECRET, (data, wasEncrypted) => {
           add_row(data || {});
-        }
-      });
+        }, 'notas', 'tareas');
+      } else {
+        add_row(data || {});
+      }
+    });
     //#endregion Cargar Tareas
     //#region Cargar Diario
-    gun
-      .get(TABLE)
-      .get("aulas_informes")
-      .get("diario-" + CurrentISODate())
-      .once((data, key) => {
-        function add_row(data) {
-          // Fix newlines
-          data.Contenido = data.Contenido || "No hay un diario.";
-          // Display platos
-          document.getElementById(data_Diario).innerHTML = data.Contenido.replace(
-            /\n/g,
-            "<br>"
-          );
-        }
-        if (typeof data == "string") {
-          TS_decrypt(data, SECRET, (data) => {
-            add_row(data || {});
-          });
-        } else {
+    DB.get('aulas_informes', 'diario-' + CurrentISODate()).then((data) => {
+      function add_row(data) {
+        // Fix newlines
+        data.Contenido = data.Contenido || "No hay un diario.";
+        // Display platos
+        document.getElementById(data_Diario).innerHTML = data.Contenido.replace(
+          /\n/g,
+          "<br>"
+        );
+      }
+      if (typeof data == "string") {
+        TS_decrypt(data, SECRET, (data, wasEncrypted) => {
           add_row(data || {});
-        }
-      });
+        }, 'aulas_informes', 'diario-' + CurrentISODate());
+      } else {
+        add_row(data || {});
+      }
+    });
     //#endregion Cargar Diario
   },
   _solicitudes: function () {
@@ -162,7 +147,7 @@ PAGES.aulas = {
           label: "Asunto",
         },
       ],
-      gun.get(TABLE).get("aulas_solicitudes"),
+      "aulas_solicitudes",
       document.querySelector("#cont")
     );
     document.getElementById(btn_new).onclick = () => {
@@ -197,49 +182,45 @@ PAGES.aulas = {
             <button class="rojo" id="${btn_borrar}">Borrar</button>
         </fieldset>
         `;
-    gun
-      .get(TABLE)
-      .get("aulas_solicitudes")
-      .get(mid)
-      .once((data, key) => {
-        function load_data(data, ENC = "") {
-          document.getElementById(nameh1).innerText = key;
-          document.getElementById(field_asunto).value = data["Asunto"] || "";
-          document.getElementById(field_contenido).value =
-            data["Contenido"] || "";
-          document.getElementById(field_autor).value = data["Solicitante"] || SUB_LOGGED_IN_ID || "";
-        }
-        if (typeof data == "string") {
-          TS_decrypt(data, SECRET, (data) => {
-            load_data(data, "%E");
-          });
-        } else {
-          load_data(data || {});
-        }
-      });
+    (async () => {
+      const data = await DB.get('aulas_solicitudes', mid);
+      function load_data(data, ENC = "") {
+        document.getElementById(nameh1).innerText = mid;
+        document.getElementById(field_asunto).value = data["Asunto"] || "";
+        document.getElementById(field_contenido).value = data["Contenido"] || "";
+        document.getElementById(field_autor).value = data["Solicitante"] || SUB_LOGGED_IN_ID || "";
+      }
+      if (typeof data == "string") {
+        TS_decrypt(data, SECRET, (data, wasEncrypted) => {
+          load_data(data, "%E");
+        }, 'aulas_solicitudes', mid);
+      } else {
+        load_data(data || {});
+      }
+    })();
     document.getElementById(btn_guardar).onclick = () => {
       var data = {
         Solicitante: document.getElementById(field_autor).value,
         Contenido: document.getElementById(field_contenido).value,
         Asunto: document.getElementById(field_asunto).value,
       };
-      var enc = TS_encrypt(data, SECRET, (encrypted) => {
-        document.getElementById("actionStatus").style.display = "block";
-        betterGunPut(gun.get(TABLE).get("aulas_solicitudes").get(mid), encrypted);
+      document.getElementById("actionStatus").style.display = "block";
+      DB.put('aulas_solicitudes', mid, data).then(() => {
         toastr.success("Guardado!");
         setTimeout(() => {
           document.getElementById("actionStatus").style.display = "none";
           setUrlHash("aulas,solicitudes");
         }, SAVE_WAIT);
-      });
+      }).catch((e) => { console.warn('DB.put error', e); });
     };
     document.getElementById(btn_borrar).onclick = () => {
       if (confirm("¿Quieres borrar esta solicitud?") == true) {
-        betterGunPut(gun.get(TABLE).get("aulas_solicitudes").get(mid), null);
-        toastr.error("Borrado!");
-        setTimeout(() => {
-          setUrlHash("aulas,solicitudes");
-        }, SAVE_WAIT);
+        DB.del('aulas_solicitudes', mid).then(() => {
+          toastr.error("Borrado!");
+          setTimeout(() => {
+            setUrlHash("aulas,solicitudes");
+          }, SAVE_WAIT);
+        });
       }
     };
   },
@@ -281,7 +262,7 @@ PAGES.aulas = {
           label: "Asunto",
         },
       ],
-      gun.get(TABLE).get("aulas_informes"),
+      "aulas_informes",
       document.querySelector("#cont")
     );
     document.getElementById(btn_new).onclick = () => {
@@ -331,27 +312,23 @@ PAGES.aulas = {
           <button class="rojo" id="${btn_borrar}">Borrar</button>
       </fieldset>
       `;
-    gun
-      .get(TABLE)
-      .get("aulas_informes")
-      .get(mid)
-      .once((data, key) => {
-        function load_data(data, ENC = "") {
-          document.getElementById(nameh1).innerText = key;
-          document.getElementById(field_asunto).value = data["Asunto"] || title || "";
-          document.getElementById(field_contenido).value =
-            data["Contenido"] || "";
-          document.getElementById(field_autor).value = data["Autor"] || SUB_LOGGED_IN_ID || "";
-          document.getElementById(field_fecha).value = data["Fecha"] || mid.startsWith("diario-") ? mid.replace("diario-", "") : CurrentISODate();
-        }
-        if (typeof data == "string") {
-          TS_decrypt(data, SECRET, (data) => {
-            load_data(data, "%E");
-          });
-        } else {
-          load_data(data || {});
-        }
-      });
+    (async () => {
+      const data = await DB.get('aulas_informes', mid);
+      function load_data(data, ENC = "") {
+        document.getElementById(nameh1).innerText = mid;
+        document.getElementById(field_asunto).value = data["Asunto"] || title || "";
+        document.getElementById(field_contenido).value = data["Contenido"] || "";
+        document.getElementById(field_autor).value = data["Autor"] || SUB_LOGGED_IN_ID || "";
+        document.getElementById(field_fecha).value = data["Fecha"] || mid.startsWith("diario-") ? mid.replace("diario-", "") : CurrentISODate();
+      }
+      if (typeof data == "string") {
+        TS_decrypt(data, SECRET, (data) => {
+          load_data(data, "%E");
+        });
+      } else {
+        load_data(data || {});
+      }
+    })();
     document.getElementById(btn_guardar).onclick = () => {
       var data = {
         Autor: document.getElementById(field_autor).value,
@@ -359,23 +336,23 @@ PAGES.aulas = {
         Asunto: document.getElementById(field_asunto).value,
         Fecha: document.getElementById(field_fecha).value || CurrentISODate(),
       };
-      var enc = TS_encrypt(data, SECRET, (encrypted) => {
-        document.getElementById("actionStatus").style.display = "block";
-        betterGunPut(gun.get(TABLE).get("aulas_informes").get(mid), encrypted);
+      document.getElementById("actionStatus").style.display = "block";
+      DB.put('aulas_informes', mid, data).then(() => {
         toastr.success("Guardado!");
         setTimeout(() => {
           document.getElementById("actionStatus").style.display = "none";
           setUrlHash("aulas,informes");
         }, SAVE_WAIT);
-      });
+      }).catch((e) => { console.warn('DB.put error', e); });
     };
     document.getElementById(btn_borrar).onclick = () => {
       if (confirm("¿Quieres borrar este informe?") == true) {
-        betterGunPut(gun.get(TABLE).get("aulas_informes").get(mid), null);
-        toastr.error("Borrado!");
-        setTimeout(() => {
-          setUrlHash("aulas,informes");
-        }, SAVE_WAIT);
+        DB.del('aulas_informes', mid).then(() => {
+          toastr.error("Borrado!");
+          setTimeout(() => {
+            setUrlHash("aulas,informes");
+          }, SAVE_WAIT);
+        });
       }
     };
   },

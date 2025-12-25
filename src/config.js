@@ -5,6 +5,10 @@ var EventListeners = {
   QRScanner: [],
   Custom: [],
 };
+
+function safeuuid(prefix = "AXLUID_") {
+  return prefix + crypto.randomUUID().split("-")[4];
+}
 var urlParams = new URLSearchParams(location.search);
 var AC_BYPASS = false;
 if (urlParams.get("ac_bypass") == "yes") {
@@ -13,28 +17,17 @@ if (urlParams.get("ac_bypass") == "yes") {
 if (urlParams.get("hidenav") != undefined) {
   document.getElementById("header_hide_query").style.display = "none";
 }
-var GROUPID = "";
+// getDBName: prefer explicit CouchDB dbname from settings. Single-group model: default to 'telesec'
+function getDBName() {
+  const dbname = localStorage.getItem('TELESEC_COUCH_DBNAME') || '';
+  if (dbname && dbname.trim() !== '') return dbname.trim();
+  return 'telesec';
+}
 // const PUBLIC_KEY = "~cppGiuA4UFUPGTDoC-4r2izVC3F7MfpaCmF3iZdESN4.vntmjgbAVUpF_zfinYY6EKVFuuTYxh5xOrL4KmtdTmc"
-var TABLE = GROUPID + ":telesec.tech.eus";
-const RELAYS = [
-  "https://gun-es01.tech.eus/gun",
-  // Desactivado por alto consumo electrico:
-  // "https://gun-es02.tech.eus/gun",
-  // "https://gun-es03.tech.eus/gun",
-  // "https://gun-es04.tech.eus/gun",
-  // "https://gun-es05.tech.eus/gun",
-  // "https://gun-es06.tech.eus/gun",
-  // "https://gun-es07.tech.eus/gun", // No he podido instalar el nodo.
-
-  // Desactivado por fallos:
-  // "https://gun-manhattan.herokuapp.com/gun",
-  // "https://peer.wallie.io/gun",
-  // "https://gundb-relay-mlccl.ondigitalocean.app/gun",
-  // "https://plankton-app-6qfp3.ondigitalocean.app/",
-  // "https://gun.defucc.me/gun",
-  // "https://gun.o8.is/gun",
-  // "https://shogun-relay.scobrudot.dev/gun",
-];
+// `TABLE` variable removed. The CouchDB database name should be configured via the login/setup form
+// and passed to `DB.init({ dbname: '<your-db>' })` so it becomes the app's primary DB.
+// Legacy relay list removed (migrated to CouchDB/PouchDB)
+const RELAYS = [];
 var SECRET = "";
 var SUB_LOGGED_IN = false;
 var SUB_LOGGED_IN_DETAILS = false;

@@ -23,96 +23,81 @@ PAGES.resumen_diario = {
     `;
 
     //#region Cargar Clima
-    // Get location from gun.get("settings").get("weather_location"), if missing ask user and save it
+    // Get location from DB settings.weather_location; if missing ask user and save it
     // url format: https://wttr.in/<loc>?F0m
-    gun
-      .get("settings")
-      .get("weather_location")
-      .once((loc) => {
-        if (!loc) {
-          loc = prompt("Introduce tu ubicación para el clima (ciudad, país):", "Madrid, Spain");
-          if (loc) {
-            betterGunPut(gun.get("settings").get("weather_location"), loc);
-          }
-        }
+    DB.get('settings','weather_location').then((loc) => {
+      if (!loc) {
+        loc = prompt("Introduce tu ubicación para el clima (ciudad, país):", "Madrid, Spain");
         if (loc) {
-          document.getElementById(data_Weather).src = "https://wttr.in/" + encodeURIComponent(loc) + "_IF0m_background=FFFFFF.png";
-        } else {
-          document.getElementById(data_Weather).src = "https://wttr.in/_IF0m_background=FFFFFF.png";
+          DB.put('settings','weather_location', loc);
         }
-      });
+      }
+      if (loc) {
+        document.getElementById(data_Weather).src = "https://wttr.in/" + encodeURIComponent(loc) + "_IF0m_background=FFFFFF.png";
+      } else {
+        document.getElementById(data_Weather).src = "https://wttr.in/_IF0m_background=FFFFFF.png";
+      }
+    });
     //#endregion Cargar Clima
     //#region Cargar Comedor
-    gun
-      .get(TABLE)
-      .get("comedor")
-      .get(CurrentISODate())
-      .once((data, key) => {
-        function add_row(data) {
-          // Fix newlines
-          data.Platos = data.Platos || "No hay platos registrados para hoy.";
-          // Display platos
-          document.getElementById(data_Comedor).innerHTML = data.Platos.replace(
-            /\n/g,
-            "<br>"
-          );
-        }
-        if (typeof data == "string") {
-          TS_decrypt(data, SECRET, (data) => {
-            add_row(data || {});
-          });
-        } else {
+    DB.get('comedor', CurrentISODate()).then((data) => {
+      function add_row(data) {
+        // Fix newlines
+        data.Platos = data.Platos || "No hay platos registrados para hoy.";
+        // Display platos
+        document.getElementById(data_Comedor).innerHTML = data.Platos.replace(
+          /\n/g,
+          "<br>"
+        );
+      }
+      if (typeof data == "string") {
+        TS_decrypt(data, SECRET, (data, wasEncrypted) => {
           add_row(data || {});
-        }
-      });
+        }, 'comedor', CurrentISODate());
+      } else {
+        add_row(data || {});
+      }
+    });
     //#endregion Cargar Comedor
     //#region Cargar Tareas
-    gun
-      .get(TABLE)
-      .get("notas")
-      .get("tareas")
-      .once((data, key) => {
-        function add_row(data) {
-          // Fix newlines
-          data.Contenido = data.Contenido || "No hay tareas.";
-          // Display platos
-          document.getElementById(data_Tareas).innerHTML = data.Contenido.replace(
-            /\n/g,
-            "<br>"
-          );
-        }
-        if (typeof data == "string") {
-          TS_decrypt(data, SECRET, (data) => {
-            add_row(data || {});
-          });
-        } else {
+    DB.get('notas', 'tareas').then((data) => {
+      function add_row(data) {
+        // Fix newlines
+        data.Contenido = data.Contenido || "No hay tareas.";
+        // Display platos
+        document.getElementById(data_Tareas).innerHTML = data.Contenido.replace(
+          /\n/g,
+          "<br>"
+        );
+      }
+      if (typeof data == "string") {
+        TS_decrypt(data, SECRET, (data, wasEncrypted) => {
           add_row(data || {});
-        }
-      });
+        }, 'notas', 'tareas');
+      } else {
+        add_row(data || {});
+      }
+    });
     //#endregion Cargar Tareas
     //#region Cargar Diario
-    gun
-      .get(TABLE)
-      .get("aulas_informes")
-      .get("diario-" + CurrentISODate())
-      .once((data, key) => {
-        function add_row(data) {
-          // Fix newlines
-          data.Contenido = data.Contenido || "No hay un diario.";
-          // Display platos
-          document.getElementById(data_Diario).innerHTML = data.Contenido.replace(
-            /\n/g,
-            "<br>"
-          );
-        }
-        if (typeof data == "string") {
-          TS_decrypt(data, SECRET, (data) => {
-            add_row(data || {});
-          });
-        } else {
+    DB.get('aulas_informes', 'diario-' + CurrentISODate()).then((data) => {
+      function add_row(data) {
+        // Fix newlines
+        data.Contenido = data.Contenido || "No hay un diario.";
+        // Display platos
+        document.getElementById(data_Diario).innerHTML = data.Contenido.replace(
+          /\n/g,
+          "<br>"
+        );
+      }
+      if (typeof data == "string") {
+        TS_decrypt(data, SECRET, (data, wasEncrypted) => {
           add_row(data || {});
-        }
-      });
+        }, 'aulas_informes', 'diario-' + CurrentISODate());
+      } else {
+        add_row(data || {});
+      }
+    });
     //#endregion Cargar Diario
   },
 };

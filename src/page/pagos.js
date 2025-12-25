@@ -476,23 +476,19 @@ PAGES.pagos = {
       }
       
       persona.Monedero_Balance = fixfloat(newBalance);
-      
-      TS_encrypt(persona, SECRET, (encrypted) => {
-        betterGunPut(gun.get(TABLE).get("personas").get(personaId), encrypted);
+      DB.put('personas', personaId, persona).then(() => {
         if (callback) callback();
-      });
+      }).catch((e) => { console.warn('DB.put error', e); if (callback) callback(); });
     }
     
     function saveTransaction(ticketId, data) {
-      TS_encrypt(data, SECRET, (encrypted) => {
-        document.getElementById("actionStatus").style.display = "block";
-        betterGunPut(gun.get(TABLE).get("pagos").get(ticketId), encrypted);
-        
+      document.getElementById("actionStatus").style.display = "block";
+      DB.put('pagos', ticketId, data).then(() => {
         // If this is from SuperCafé, update the order
         if (data.Origen === "SuperCafé" && data.OrigenID) {
           handleSuperCafePayment(data);
         }
-        
+
         // Check for promotional bonus on Ingreso transactions (Efectivo only)
         if (data.Tipo === "Ingreso" && data.Metodo === "Efectivo") {
           var bonusAmount = calculatePromoBonus(data.Monto);
@@ -500,7 +496,7 @@ PAGES.pagos = {
             createPromoBonusTransaction(data.Persona, bonusAmount, data.Monto);
           }
         }
-        
+
         toastr.success("¡Transacción completada!");
         setTimeout(() => {
           document.getElementById("actionStatus").style.display = "none";
@@ -554,19 +550,11 @@ PAGES.pagos = {
         var currentBalance = parseFloat(persona.Monedero_Balance || 0);
         var newBalance = currentBalance + bonusAmount;
         persona.Monedero_Balance = fixfloat(newBalance);
-        
-        TS_encrypt(persona, SECRET, (encrypted) => {
-          betterGunPut(
-            gun.get(TABLE).get("personas").get(personaId),
-            encrypted
-          );
-        });
+        DB.put('personas', personaId, persona).catch((e) => { console.warn('DB.put error', e); });
       }
       
       // Save bonus transaction
-      TS_encrypt(bonusData, SECRET, (encrypted) => {
-        betterGunPut(gun.get(TABLE).get("pagos").get(bonusTicketId), encrypted);
-      });
+      DB.put('pagos', bonusTicketId, bonusData).catch((e) => { console.warn('DB.put error', e); });
       
       toastr.success(
         "🎉 ¡Promo Bono aplicado! +" + bonusAmount.toFixed(2) + "€ extra"
@@ -575,21 +563,14 @@ PAGES.pagos = {
     
     function handleSuperCafePayment(transactionData) {
       // Mark the SuperCafé order as paid and delete it
-      betterGunPut(
-        gun.get(TABLE).get("supercafe").get(transactionData.OrigenID),
-        null
-      );
+      DB.del('supercafe', transactionData.OrigenID).then(() => {});
+
       
       // Update persona points
       var persona = SC_Personas[transactionData.Persona];
       if (!persona) return;
       
-      TS_encrypt(persona, SECRET, (encrypted) => {
-        betterGunPut(
-          gun.get(TABLE).get("personas").get(transactionData.Persona),
-          encrypted
-        );
-      });
+      DB.put('personas', transactionData.Persona, persona).catch((e) => { console.warn('DB.put error', e); });
     }
     
     // Pre-fill if data provided
@@ -732,39 +713,36 @@ PAGES.pagos = {
       setUrlHash("supercafe");
     };
     
-    gun
-      .get(TABLE)
-      .get("pagos")
-      .get(tid)
-      .once((data, key) => {
-        function load_data(data) {
-          document.getElementById(nameh1).innerText = key;
-          document.getElementById(field_ticket).value = data.Ticket || key;
-          
-          var fecha = data.Fecha || "";
-          if (fecha) {
-            var d = new Date(fecha);
-            document.getElementById(field_fecha).value =
-              d.toLocaleString("es-ES");
-          }
-          
-          document.getElementById(field_tipo).value = data.Tipo || "";
-          document.getElementById(field_monto).value =
-            (data.Monto || 0).toFixed(2) + "€";
-          
-          var persona = SC_Personas[data.Persona] || {};
-          document.getElementById(field_persona).value =
-            persona.Nombre || data.Persona || "";
-          
-          if (data.PersonaDestino) {
-            var personaDestino = SC_Personas[data.PersonaDestino] || {};
-            document.getElementById(field_persona_destino).value =
-              personaDestino.Nombre || data.PersonaDestino || "";
-            document.getElementById(div_persona_destino).style.display =
-              "block";
-          }
-          
-          document.getElementById(field_metodo).value = data.Metodo || "";
+    (async () => {
+      const data = await DB.get('pagos', tid);
+      function load_data(data) {
+        document.getElementById(nameh1).innerText = tid;
+        document.getElementById(field_ticket).value = data.Ticket || tid;
+        
+        var fecha = data.Fecha || "";
+        if (fecha) {
+          var d = new Date(fecha);
+          document.getElementById(field_fecha).value =
+            d.toLocaleString("es-ES");
+        }
+        
+        document.getElementById(field_tipo).value = data.Tipo || "";
+        document.getElementById(field_monto).value =
+          (data.Monto || 0).toFixed(2) + "€";
+        
+        var persona = SC_Personas[data.Persona] || {};
+        document.getElementById(field_persona).value =
+          persona.Nombre || data.Persona || "";
+        
+        if (data.PersonaDestino) {
+          var personaDestino = SC_Personas[data.PersonaDestino] || {};
+          document.getElementById(field_persona_destino).value =
+            personaDestino.Nombre || data.PersonaDestino || "";
+          document.getElementById(div_persona_destino).style.display =
+            "block";
+        }
+        
+        document.getElementById(field_metodo).value = data.Metodo || "";
           document.getElementById(field_estado).value = data.Estado || "";
           document.getElementById(field_notas).value = data.Notas || "";
           
@@ -791,11 +769,12 @@ PAGES.pagos = {
                 "¿Estás seguro de que quieres ELIMINAR esta transacción?\n\nEsta acción NO se puede deshacer y los cambios en los monederos NO se revertirán automáticamente.\n\nPara revertir los cambios en los monederos, usa el botón 'Revertir Transacción' en su lugar."
               )
             ) {
-              betterGunPut(gun.get(TABLE).get("pagos").get(key), null);
-              toastr.success("Transacción eliminada");
-              setTimeout(() => {
-                setUrlHash("pagos");
-              }, 1000);
+              DB.del('pagos', key).then(() => {
+                toastr.success("Transacción eliminada");
+                setTimeout(() => {
+                  setUrlHash("pagos");
+                }, 1000);
+              });
             }
           };
           
@@ -856,22 +835,18 @@ PAGES.pagos = {
             }
             
             persona.Monedero_Balance = fixfloat(newBalance);
-            
-            TS_encrypt(persona, SECRET, (encrypted) => {
-              betterGunPut(
-                gun.get(TABLE).get("personas").get(personaId),
-                encrypted
-              );
+            DB.put('personas', personaId, persona).then(() => {
               if (callback) callback();
-            });
+            }).catch((e) => { console.warn('DB.put error', e); if (callback) callback(); });
           }
           
           function deleteTransaction(transactionKey) {
-            betterGunPut(gun.get(TABLE).get("pagos").get(transactionKey), null);
-            toastr.success("Transacción revertida y eliminada");
-            setTimeout(() => {
-              setUrlHash("pagos");
-            }, 1000);
+            DB.del('pagos', transactionKey).then(() => {
+              toastr.success("Transacción revertida y eliminada");
+              setTimeout(() => {
+                setUrlHash("pagos");
+              }, 1000);
+            });
           }
         }
         
@@ -1016,7 +991,7 @@ PAGES.pagos = {
     TS_IndexElement(
       "pagos",
       config,
-      gun.get(TABLE).get("pagos"),
+      'pagos',
       document.getElementById("tableContainer"),
       (data, new_tr) => {
         var id = data._key;
@@ -1252,32 +1227,29 @@ PAGES.pagos = {
     `;
     
     // Load transaction data
-    gun
-      .get(TABLE)
-      .get("pagos")
-      .get(transactionId)
-      .once((data, key) => {
-        function loadTransactionData(data) {
-          originalData = data;
-          
-          document.getElementById(field_tipo).value = data.Tipo || "Ingreso";
-          document.getElementById(field_metodo).value =
-            data.Metodo || "Efectivo";
-          document.getElementById(field_monto).value = data.Monto || 0;
-          document.getElementById(field_estado).value =
-            data.Estado || "Completado";
-          document.getElementById(field_notas).value = data.Notas || "";
-          
-          selectedPersona = data.Persona || "";
-          selectedPersonaDestino = data.PersonaDestino || "";
-          
-          loadPersonaSelector();
-          
-          if (data.Tipo === "Transferencia") {
-            document.getElementById(div_persona_destino).style.display =
-              "block";
-            loadPersonaDestinoSelector();
-          }
+    (async () => {
+      const data = await DB.get('pagos', transactionId);
+      function loadTransactionData(data) {
+        originalData = data;
+        
+        document.getElementById(field_tipo).value = data.Tipo || "Ingreso";
+        document.getElementById(field_metodo).value =
+          data.Metodo || "Efectivo";
+        document.getElementById(field_monto).value = data.Monto || 0;
+        document.getElementById(field_estado).value =
+          data.Estado || "Completado";
+        document.getElementById(field_notas).value = data.Notas || "";
+        
+        selectedPersona = data.Persona || "";
+        selectedPersonaDestino = data.PersonaDestino || "";
+        
+        loadPersonaSelector();
+        
+        if (data.Tipo === "Transferencia") {
+          document.getElementById(div_persona_destino).style.display =
+            "block";
+          loadPersonaDestinoSelector();
+        }
         }
         
         if (typeof data == "string") {
@@ -1396,15 +1368,14 @@ PAGES.pagos = {
         delete updatedData.PersonaDestino;
       }
       
-      TS_encrypt(updatedData, SECRET, (encrypted) => {
-        document.getElementById("actionStatus").style.display = "block";
-        betterGunPut(gun.get(TABLE).get("pagos").get(transactionId), encrypted);
+      document.getElementById("actionStatus").style.display = "block";
+      DB.put('pagos', transactionId, updatedData).then(() => {
         toastr.success("¡Transacción actualizada!");
         setTimeout(() => {
           document.getElementById("actionStatus").style.display = "none";
           setUrlHash("pagos," + transactionId);
         }, SAVE_WAIT);
-      });
+      }).catch((e) => { console.warn('DB.put error', e); });
     };
     
     // Cancel button

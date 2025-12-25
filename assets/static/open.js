@@ -1,4 +1,6 @@
-var Gun = (typeof window !== "undefined")? window.Gun : require('../gun');
+// assets/static/open.js - Deprecated. Part of Gun library, not used after migration to PouchDB.
+console.warn('assets/static/open.js is deprecated and unused.');
+var Gun = (typeof window !== "undefined")? window.Gun || {} : {};
 
 Gun.chain.open = function(cb, opt, at, depth){ // this is a recursive function, BEWARE!
 	depth = depth || 1;

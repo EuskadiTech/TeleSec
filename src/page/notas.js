@@ -45,64 +45,57 @@ PAGES.notas = {
         },
         "Autor"
       );
-      gun
-        .get(TABLE)
-        .get("notas")
-        .get(mid)
-        .once((data, key) => {
-          function load_data(data, ENC = "") {
-            document.getElementById(nameh1).innerText = key;
-            document.getElementById(field_asunto).value = data["Asunto"] || "";
-            document.getElementById(field_contenido).value =
-              data["Contenido"] || "";
-            document.getElementById(field_autor).value = data["Autor"] || SUB_LOGGED_IN_ID || "";
+      DB.get('notas', mid).then((data) => {
+        function load_data(data, ENC = "") {
+          document.getElementById(nameh1).innerText = mid;
+          document.getElementById(field_asunto).value = data["Asunto"] || "";
+          document.getElementById(field_contenido).value =
+            data["Contenido"] || "";
+          document.getElementById(field_autor).value = data["Autor"] || SUB_LOGGED_IN_ID || "";
 
-            // Persona select
-            divact.innerHTML = "";
-            addCategory_Personas(
-              divact,
-              SC_Personas,
-              data["Autor"] || SUB_LOGGED_IN_ID || "",
-              (value) => {
-                document.getElementById(field_autor).value = value;
-              },
-              "Autor"
-            );
-          }
-          if (typeof data == "string") {
-            TS_decrypt(data, SECRET, (data) => {
-              load_data(data, "%E");
-            });
-          } else {
-            load_data(data || {});
-          }
-        });
+          // Persona select
+          divact.innerHTML = "";
+          addCategory_Personas(
+            divact,
+            SC_Personas,
+            data["Autor"] || SUB_LOGGED_IN_ID || "",
+            (value) => {
+              document.getElementById(field_autor).value = value;
+            },
+            "Autor"
+          );
+        }
+        if (typeof data == "string") {
+          TS_decrypt(data, SECRET, (data) => {
+            load_data(data, "%E");
+          });
+        } else {
+          load_data(data || {});
+        }
+      });
       document.getElementById(btn_guardar).onclick = () => {
         var data = {
           Autor: document.getElementById(field_autor).value,
           Contenido: document.getElementById(field_contenido).value,
           Asunto: document.getElementById(field_asunto).value,
         };
-        var enc = TS_encrypt(data, SECRET, (encrypted) => {
-          document.getElementById("actionStatus").style.display = "block";
-          betterGunPut(
-            gun.get(TABLE).get("notas").get(mid),
-            encrypted
-          );
+        document.getElementById("actionStatus").style.display = "block";
+        DB.put('notas', mid, data).then(() => {
           toastr.success("Guardado!");
           setTimeout(() => {
             document.getElementById("actionStatus").style.display = "none";
             setUrlHash("notas");
           }, SAVE_WAIT);
-        });
+        }).catch((e) => { console.warn('DB.put error', e); });
       };
       document.getElementById(btn_borrar).onclick = () => {
         if (confirm("¿Quieres borrar esta nota?") == true) {
-          betterGunPut(gun.get(TABLE).get("notas").get(mid), null);
-          toastr.error("Borrado!");
-          setTimeout(() => {
-            setUrlHash("notas");
-          }, SAVE_WAIT);
+          DB.del('notas', mid).then(() => {
+            toastr.error("Borrado!");
+            setTimeout(() => {
+              setUrlHash("notas");
+            }, SAVE_WAIT);
+          });
         }
       };
     },
@@ -131,7 +124,7 @@ PAGES.notas = {
             label: "Asunto",
           },
         ],
-        gun.get(TABLE).get("notas"),
+        "notas",
         document.querySelector("#cont"),
       );
       if (!checkRole("notas:edit")) {

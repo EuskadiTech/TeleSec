@@ -66,16 +66,16 @@ PAGES.personas = {
               <button type="button" id="${btn_ver_monedero}" class="btn5">Ver Transacciones del Monedero</button>
             </div>
           </details>
-          <details style="background: #e3fde3ff; border: 2px solid #21f328ff; border-radius: 8px; padding: 10px; margin: 15px 0;">
+          <details style="background: #e3fde3ff; border: 2px solid #21f328ff; border-radius: 8px; padding: 10px; margin: 15px 0; display: none;">
             <summary style="cursor: pointer; font-weight: bold; color: rgba(26, 141, 3, 1);">🔗 Generar enlaces</summary>
             <div style="padding: 15px;">
               <label>
                   Este servidor<br>
-                  <input type="url" value="${location.protocol}//${location.hostname}:${location.port}${location.pathname}?login=${GROUPID}:${SECRET}&sublogin=${mid}" style="font-size: 10px; font-weight: bold; color: #000;"><br>
+                  <input type="url" value="${location.protocol}//${location.hostname}:${location.port}${location.pathname}?login=${getDBName()}:${SECRET}&sublogin=${mid}" style="font-size: 10px; font-weight: bold; color: #000;"><br>
               </label>
               <label>
                   Cualquier Servidor<br>
-                  <input type="url" value="https://tech.eus/ts/?login=${GROUPID}:${SECRET}&sublogin=${mid}" style="font-size: 10px; font-weight: bold; color: #000;"><br>
+                  <input type="url" value="https://tech.eus/ts/?login=${getDBName()}:${SECRET}&sublogin=${mid}" style="font-size: 10px; font-weight: bold; color: #000;"><br>
               </label>
             </div>
           </details>
@@ -90,63 +90,62 @@ PAGES.personas = {
       `;
     var resized = "";
     var pdel = document.getElementById(permisosdet);
-    gun
-      .get(TABLE)
-      .get("personas")
-      .get(mid)
-      .once((data, key) => {
-        function load_data(data, ENC = "") {
-          document.getElementById(nameh1).innerText = key;
-          var pot = "<ul>";
-          Object.entries(PERMS).forEach((page) => {
-            var c = "";
-            if ((data["Roles"] || ",").split(",").includes(page[0])) {
-              c = "checked";
-            }
-            pot += `
-              <li><label>
-                <input name="perm" value="${page[0]}" type="checkbox" ${c}>
-                ${page[1]}
-              </label></li>
-            `;
-          });
-          pdel.innerHTML = pot + "</ul>";
-          document.getElementById(field_nombre).value = data["Nombre"] || "";
-          document.getElementById(field_zona).value = data["Region"] || "";
-          document.getElementById(field_anilla).value = data["SC_Anilla"] || "";
-          document.getElementById(render_foto).src =
-            data["Foto"] || "static/ico/user_generic.png";
-          resized = data["Foto"] || "static/ico/user_generic.png";
-          document.getElementById(field_notas).value = data["markdown"] || "";
-          document.getElementById(field_monedero_balance).value =
-            data["Monedero_Balance"] || 0;
-          document.getElementById(field_monedero_notas).value =
-            data["Monedero_Notas"] || "";
-        }
-        if (typeof data == "string") {
-          TS_decrypt(data, SECRET, (data) => {
-            load_data(data, "%E");
-          });
-        } else {
-          load_data(data || {});
-        }
-      });
-    document
-      .getElementById(field_foto)
-      .addEventListener("change", function (e) {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        resizeInputImage(
-          file,
-          function (url) {
-            document.getElementById(render_foto).src = url;
-            resized = url;
-          },
-          256,
-          0.7
-        );
-      });
+    DB.get('personas', mid).then((data) => {
+      function load_data(data, ENC = "") {
+        document.getElementById(nameh1).innerText = mid;
+        var pot = "<ul>";
+        Object.entries(PERMS).forEach((page) => {
+          var c = "";
+          if ((data["Roles"] || ",").split(",").includes(page[0])) {
+            c = "checked";
+          }
+          pot += `
+            <li><label>
+              <input name="perm" value="${page[0]}" type="checkbox" ${c}>
+              ${page[1]}
+            </label></li>
+          `;
+        });
+        pdel.innerHTML = pot + "</ul>";
+        document.getElementById(field_nombre).value = data["Nombre"] || "";
+        document.getElementById(field_zona).value = data["Region"] || "";
+        document.getElementById(field_anilla).value = data["SC_Anilla"] || "";
+        // set fallback image immediately
+        document.getElementById(render_foto).src = data["Foto"] || "static/ico/user_generic.png";
+        resized = data["Foto"] || "static/ico/user_generic.png";
+        // try to load attachment 'foto' if present (preferred storage)
+        DB.getAttachment('personas', mid, 'foto').then((durl) => {
+          if (durl) {
+            document.getElementById(render_foto).src = durl;
+            resized = durl;
+          }
+        }).catch(() => {});
+        document.getElementById(field_notas).value = data["markdown"] || "";
+        document.getElementById(field_monedero_balance).value =
+          data["Monedero_Balance"] || 0;
+        document.getElementById(field_monedero_notas).value =
+          data["Monedero_Notas"] || "";
+      }
+      if (typeof data == "string") {
+        TS_decrypt(data, SECRET, (data, wasEncrypted) => {
+          load_data(data, "%E");
+        }, 'personas', mid);
+      } else {
+        load_data(data || {});
+      }
+    });
+    document.getElementById(field_foto).addEventListener("change", function (e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      // Do NOT resize — keep original uploaded image
+      const reader = new FileReader();
+      reader.onload = function (ev) {
+        const url = ev.target.result;
+        document.getElementById(render_foto).src = url;
+        resized = url;
+      };
+      reader.readAsDataURL(file);
+    });
     document.getElementById(btn_guardar).onclick = () => {
       var dt = new FormData(pdel);
       var data = {
@@ -154,33 +153,40 @@ PAGES.personas = {
         Region: document.getElementById(field_zona).value,
         Roles: dt.getAll("perm").join(",") + ",",
         SC_Anilla: document.getElementById(field_anilla).value,
-        Foto: resized,
+        // Foto moved to PouchDB attachment named 'foto'
         markdown: document.getElementById(field_notas).value,
         Monedero_Balance:
           parseFloat(document.getElementById(field_monedero_balance).value) ||
           0,
         Monedero_Notas: document.getElementById(field_monedero_notas).value,
       };
-      var enc = TS_encrypt(data, SECRET, (encrypted) => {
-        document.getElementById("actionStatus").style.display = "block";
-        betterGunPut(gun.get(TABLE).get("personas").get(mid), encrypted);
-        toastr.success("Guardado!");
-        setTimeout(() => {
-          document.getElementById("actionStatus").style.display = "none";
-          setUrlHash("personas");
-        }, SAVE_WAIT);
-      });
+      document.getElementById("actionStatus").style.display = "block";
+      DB.put('personas', mid, data).then(() => {
+        // if resized is a data URL (new/updated image), save as attachment
+        var attachPromise = Promise.resolve(true);
+        if (typeof resized === 'string' && resized.indexOf('data:') === 0) {
+          attachPromise = DB.putAttachment('personas', mid, 'foto', resized, 'image/png');
+        }
+        attachPromise.then(() => {
+          toastr.success("Guardado!");
+          setTimeout(() => {
+            document.getElementById("actionStatus").style.display = "none";
+            setUrlHash("personas");
+          }, SAVE_WAIT);
+        }).catch((e) => { console.warn('putAttachment error', e); document.getElementById("actionStatus").style.display = "none"; });
+      }).catch((e) => { console.warn('DB.put error', e); document.getElementById("actionStatus").style.display = "none"; });
     };
     document.getElementById(btn_ver_monedero).onclick = () => {
       setUrlHash("pagos"); // Navigate to pagos and show transactions for this person
     };
     document.getElementById(btn_borrar).onclick = () => {
       if (confirm("¿Quieres borrar esta persona?") == true) {
-        betterGunPut(gun.get(TABLE).get("personas").get(mid), null);
-        toastr.error("Borrado!");
-        setTimeout(() => {
-          setUrlHash("personas");
-        }, SAVE_WAIT);
+        DB.del('personas', mid).then(() => {
+          toastr.error("Borrado!");
+          setTimeout(() => {
+            setUrlHash("personas");
+          }, SAVE_WAIT);
+        });
       }
     };
   },
@@ -208,7 +214,7 @@ PAGES.personas = {
     TS_IndexElement(
       "personas",
       config,
-      gun.get(TABLE).get("personas"),
+      "personas",
       document.getElementById("tableContainer"),
       undefined,
       undefined,

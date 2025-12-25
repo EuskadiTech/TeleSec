@@ -1,6 +1,6 @@
 # TeleSec - Secure Distributed Communication Application
 
-TeleSec is a Spanish Progressive Web Application (PWA) built with vanilla JavaScript, HTML, and CSS that provides secure group communication using GunDB for distributed peer-to-peer networking. The application allows users to join encrypted communication groups using group codes and secret keys.
+TeleSec is a Spanish Progressive Web Application (PWA) built with vanilla JavaScript, HTML, and CSS that provides secure group communication using a local-first PouchDB datastore with optional CouchDB replication for syncing. The application allows users to join encrypted communication groups using group codes and secret keys.
 
 **ALWAYS reference these instructions first and fallback to search or bash commands only when you encounter unexpected information that does not match the info here.**
 
@@ -75,8 +75,8 @@ TeleSec is a Spanish Progressive Web Application (PWA) built with vanilla JavaSc
 │   ├── index.html             # Main application HTML with %%PREFETCH%% variables
 │   ├── app_logic.js           # Core application logic and authentication
 │   ├── app_modules.js         # Application modules and utilities
-│   ├── config.js              # Configuration and relay servers
-│   ├── gun_init.js            # GunDB initialization
+│   ├── config.js              # Configuration and CouchDB setup
+│   ├── db.js                  # PouchDB wrapper and replication
 │   ├── pwa.js                 # Progressive Web App functionality
 │   ├── sw.js                  # Service Worker with cache configuration
 │   └── page/                  # Individual page modules
@@ -94,8 +94,7 @@ TeleSec is a Spanish Progressive Web Application (PWA) built with vanilla JavaSc
     ├── manifest.json          # PWA manifest
     ├── *.png, *.jpg           # Icons and images
     ├── static/                # JavaScript libraries and CSS
-    │   ├── gun.js             # GunDB library
-    │   ├── sea.js             # GunDB encryption
+│   │   ├── pouchdb (via CDN)  # PouchDB is used for local storage and replication
     │   ├── webrtc.js          # WebRTC functionality
     │   ├── euskaditech-css/   # CSS framework
     │   └── ico/               # Application icons
@@ -116,18 +115,14 @@ The `build.py` script performs these operations:
 
 ### Technology Stack
 - **Frontend:** Vanilla JavaScript, HTML5, CSS3
-- **Data Layer:** GunDB - distributed, decentralized database
-- **Networking:** WebRTC for peer-to-peer connections
+- **Data Layer:** PouchDB (local-first) with optional CouchDB replication
+- **Networking:** WebRTC for peer-to-peer connections (where applicable)
 - **Authentication:** Group codes + secret keys (converted to uppercase)
-- **Storage:** Browser LocalStorage + GunDB distributed storage
+- **Storage:** Browser LocalStorage + PouchDB local datastore
 - **PWA Features:** Service Worker, Web App Manifest
 
-### GunDB Relay Servers
-The application connects to multiple relay servers:
-- gun-es01.tech.eus through gun-es06.tech.eus
-- gun-manhattan.herokuapp.com
-- peer.wallie.io
-- gun.defucc.me
+### Remote Sync (Optional)
+The application can optionally replicate to a remote CouchDB server for cloud backup and multi-device syncing. Configure the CouchDB server, database name, and credentials in the login/setup form in the application.
 
 ### Application Modules
 - **Login/Authentication:** Group-based access with secret keys
@@ -154,8 +149,8 @@ The application connects to multiple relay servers:
 4. Rebuild and test complete user workflows
 
 ### Debugging Common Issues
-- **Login Issues:** Check browser console for GunDB connection logs
-- **Network Connectivity:** Verify relay servers are accessible
+- **Login Issues:** Check browser console for replication/auth errors and DB initialization logs
+- **Network Connectivity:** Verify remote CouchDB server is reachable and replication is active
 - **Build Issues:** Check Python syntax in build.py
 - **Performance:** Monitor browser DevTools Network tab for asset loading
 
@@ -177,12 +172,12 @@ After making any changes, ALWAYS test this complete scenario:
    - Enter group code: "TEST"
    - Enter secret key: "SECRET123"
    - Click "Iniciar sesión"
-   - Verify header shows: "TeleSec - TEST - (X nodos)" where X > 0
+   - Verify header shows: "TeleSec - TEST" and that the login is accepted
 
 3. **Network Connectivity Test:**
    - Confirm green connection indicator appears (bottom right)
-   - Check browser console shows GunDB peer connections
-   - Verify heartbeat messages appear in console logs
+- Check browser console shows PouchDB replication logs when a remote is configured
+- Verify heartbeat/last-seen docs are being updated in the local DB
 
 4. **PWA Functionality Test:**
    - Check Service Worker registers successfully
