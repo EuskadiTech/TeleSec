@@ -10,6 +10,7 @@ var DB = (function () {
   let repPush = null;
   let repPull = null;
   let callbacks = {}; // table -> [cb]
+  let docCache = {}; // _id -> last data snapshot (stringified)
 
   function ensureLocal() {
     if (local) return;
@@ -95,6 +96,12 @@ var DB = (function () {
     const doc = change.doc;
     if (!doc || !doc._id) return;
     const [table, id] = doc._id.split(':');
+    try {
+      const prev = docCache[doc._id];
+      const now = typeof doc.data === 'string' ? doc.data : JSON.stringify(doc.data);
+      if (prev === now) return; // no meaningful change
+      docCache[doc._id] = now;
+    } catch (e) { /* ignore cache errors */ }
     if (!callbacks[table]) return;
     callbacks[table].forEach((cb) => {
       try { cb(doc.data, id); } catch (e) { console.error(e); }
@@ -133,6 +140,7 @@ var DB = (function () {
       doc.ts = new Date().toISOString();
       if (existing) doc._rev = existing._rev;
       await local.put(doc);
+      try { docCache[_id] = typeof doc.data === 'string' ? doc.data : JSON.stringify(doc.data); } catch (e) {}
     } catch (e) {
       console.error('DB.put error', e);
     }
@@ -159,6 +167,7 @@ var DB = (function () {
       const res = await local.allDocs({ include_docs: true, startkey: table + ':', endkey: table + ':\uffff' });
       return res.rows.map(r => {
         const id = r.id.split(':')[1];
+        try { docCache[r.id] = typeof r.doc.data === 'string' ? r.doc.data : JSON.stringify(r.doc.data); } catch (e) {}
         return { id: id, data: r.doc.data };
       });
     } catch (e) { return []; }
