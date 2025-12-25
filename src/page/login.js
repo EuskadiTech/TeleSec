@@ -39,6 +39,8 @@ PAGES.login = {
         try {
           DB.init({ secret: SECRET, remoteServer: url, username: user, password: pass, dbname: dbname || undefined });
           toastr.success('Iniciando sincronización con CouchDB');
+          location.hash = "#login";
+          location.reload();
         } catch (e) {
           toastr.error('Error al iniciar sincronización: ' + e.message);
         }
