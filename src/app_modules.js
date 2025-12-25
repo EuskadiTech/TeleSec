@@ -14,22 +14,18 @@ const debounce = (id, callback, wait, args) => {
   }
   if (!debounce.timers[id]) {
     // No lock, run immediately
-    debounce.args[id] = Array.isArray(args) ? args : [args];
-    // Spread syntax requires ...iterable[Symbol.iterator] to be a function
-    callback(...debounce.args[id]);
+    // Do not schedule a trailing call unless further calls arrive
+    callback(...(Array.isArray(args) ? args : [args]));
+    debounce.args[id] = null;
     debounce.timers[id] = setTimeout(() => {
       if (debounce.args[id]) {
         callback(...debounce.args[id]);
         debounce.args[id] = null;
-        debounce.timers[id] = setTimeout(() => {
-          debounce.timers[id] = null;
-        }, wait);
-      } else {
-        debounce.timers[id] = null;
       }
+      debounce.timers[id] = null;
     }, wait);
   } else {
-    // Lock active, save latest args
+    // Lock active, save latest args for a single trailing invocation
     debounce.args[id] = Array.isArray(args) ? args : [args];
   }
   return id;
@@ -802,7 +798,7 @@ function TS_IndexElement(
   // Add search functionality
   const searchKeyEl = document.getElementById(searchKeyInput);
   searchKeyEl.addEventListener("input", () =>
-    debounce(debounce_search, render, 300, [rows])
+    debounce(debounce_search, render, 200, [rows])
   );
 
   function searchInData(data, searchValue, config) {
@@ -1204,7 +1200,7 @@ function TS_IndexElement(
         } else {
           delete rows[key];
         }
-        debounce(debounce_load, render, 300, [rows]);
+        debounce(debounce_load, render, 200, [rows]);
       }
       if (typeof data == "string") {
         TS_decrypt(data, SECRET, (data, wasEncrypted) => {
@@ -1227,7 +1223,7 @@ function TS_IndexElement(
           } else {
             delete rows[key];
           }
-          debounce(debounce_load, render, 300, [rows]);
+          debounce(debounce_load, render, 200, [rows]);
         }
         if (typeof data == "string") {
           TS_decrypt(data, SECRET, (data, wasEncrypted) => {
