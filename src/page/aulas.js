@@ -134,7 +134,6 @@ PAGES.aulas = {
     TS_IndexElement(
       "aulas,solicitudes",
       [
-        {"type": "_encrypted"},
         {
           key: "Solicitante",
           type: "persona",
@@ -244,7 +243,6 @@ PAGES.aulas = {
     TS_IndexElement(
       "aulas,informes",
       [
-        {"type": "_encrypted"},
         {
           key: "Autor",
           type: "persona",

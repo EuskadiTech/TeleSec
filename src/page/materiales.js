@@ -136,7 +136,6 @@ PAGES.materiales = {
     `;
 
     const config = [
-      {"type": "_encrypted"},
       { key: "Revision", label: "Ult. Revisión", type: "fecha-diff", default: "" },
       { key: "Nombre", label: "Nombre", type: "text", default: "" },
       { key: "Ubicacion", label: "Ubicación", type: "text", default: "--" },
