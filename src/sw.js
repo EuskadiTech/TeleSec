@@ -9,9 +9,18 @@ self.addEventListener("message", (event) => {
   }
 });
 
+// workbox.routing.registerRoute(
+//   new RegExp("/*"),
+//   new workbox.strategies.StaleWhileRevalidate({
+//     cacheName: CACHE,
+//   })
+// );
+
+// All but couchdb
 workbox.routing.registerRoute(
-  new RegExp("/*"),
-  new workbox.strategies.StaleWhileRevalidate({
+  ({ url }) =>
+    !url.pathname.startsWith("/_couchdb/") && url.origin === self.location.origin,
+  new workbox.strategies.NetworkFirst({
     cacheName: CACHE,
   })
 );

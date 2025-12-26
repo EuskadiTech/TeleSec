@@ -227,6 +227,68 @@ var DB = (function () {
     }
   }
 
+  // List all attachments for a document returning array of { name, dataUrl, content_type }
+  async function listAttachments(table, id) {
+    ensureLocal();
+    const _id = makeId(table, id);
+    try {
+      const doc = await local.get(_id, { attachments: true });
+      if (!doc || !doc._attachments) return [];
+      const out = [];
+      for (const name of Object.keys(doc._attachments)) {
+        try {
+          const att = doc._attachments[name];
+          if (att && att.data) {
+            const content_type = att.content_type || 'application/octet-stream';
+            const durl = 'data:' + content_type + ';base64,' + att.data;
+            out.push({ name: name, dataUrl: durl, content_type: content_type });
+            continue;
+          }
+        } catch (e) {}
+        // fallback: convert blob to dataURL using getAttachment
+        try {
+          const durl = await getAttachment(table, id, name);
+          out.push({ name: name, dataUrl: durl, content_type: null });
+        } catch (e) {
+          out.push({ name: name, dataUrl: null, content_type: null });
+        }
+      }
+      return out;
+    } catch (e) {
+      // if attachments:true not supported or error, try to get doc without attachments and then getAttachment for names
+      try {
+        const doc = await local.get(_id).catch(() => null);
+        if (!doc || !doc._attachments) return [];
+        const out = [];
+        for (const name of Object.keys(doc._attachments)) {
+          try {
+            const durl = await getAttachment(table, id, name);
+            out.push({ name: name, dataUrl: durl, content_type: null });
+          } catch (e) { out.push({ name: name, dataUrl: null, content_type: null }); }
+        }
+        return out;
+      } catch (e2) {
+        return [];
+      }
+    }
+  }
+
+  // Delete attachment metadata from the document (removes _attachments entry)
+  async function deleteAttachment(table, id, name) {
+    ensureLocal();
+    const _id = makeId(table, id);
+    try {
+      const doc = await local.get(_id);
+      if (!doc || !doc._attachments || !doc._attachments[name]) return false;
+      delete doc._attachments[name];
+      await local.put(doc);
+      return true;
+    } catch (e) {
+      console.error('deleteAttachment error', e);
+      return false;
+    }
+  }
+
   function map(table, cb) {
     ensureLocal();
     callbacks[table] = callbacks[table] || [];
@@ -247,6 +309,8 @@ var DB = (function () {
     list,
     map,
     replicateToRemote,
+    listAttachments,
+    deleteAttachment,
     putAttachment,
     getAttachment,
     _internal: { local }
