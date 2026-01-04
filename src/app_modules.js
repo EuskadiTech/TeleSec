@@ -611,8 +611,8 @@ function TS_decrypt(input, secret, callback, table, id) {
 } 
 function TS_encrypt(input, secret, callback, mode = "RSA") {
   // Skip encryption 
-  callback(input);
-  return;
+  //callback(input);
+  //return;
   // Encrypt given value for at-rest storage using CryptoJS AES.
   // Always return string of form RSA{<ciphertext>} via callback.
   try {
