@@ -8,9 +8,17 @@ PAGES.login = {
       var field_couch_user = safeuuid();
       var field_couch_pass = safeuuid();
       var field_secret = safeuuid();
+        var btn_import_json = safeuuid();
+        var div_import_area = safeuuid();
+        var field_json = safeuuid();
+        var field_file = safeuuid();
+        var btn_parse_json = safeuuid();
+        var btn_start_scan = safeuuid();
+        var div_scan = safeuuid();
       var btn_save = safeuuid();
       container.innerHTML = `
         <h1>Configuración del servidor CouchDB</h1>
+        <b>Aviso: Después de guardar, la aplicación intentará sincronizar con el servidor CouchDB en segundo plano. Puede que falten registros hasta que se termine. Tenga paciencia.</b>
         <fieldset>
           <label>Servidor CouchDB (ej: couch.example.com)
             <input type="text" id="${field_couch}" value="${(localStorage.getItem('TELESEC_COUCH_URL') || '').replace(/^https?:\/\//, '')}"><br><br>
@@ -27,10 +35,137 @@ PAGES.login = {
           <label>Clave de encriptación (opcional) - usada para cifrar datos en reposo
             <input type="password" id="${field_secret}" value="${localStorage.getItem('TELESEC_SECRET') || ''}"><br><br>
           </label>
+            <div style="margin-top:8px;">
+              <button id="${btn_import_json}" class="btn4">Importar desde JSON / QR</button>
+            </div>
+            <div id="${div_import_area}" style="display:none;margin-top:10px;border:1px solid #eee;padding:8px;">
+              <label>Pegar JSON de configuración (o usar archivo / QR):</label><br>
+              <textarea id="${field_json}" style="width:100%;height:120px;margin-top:6px;" placeholder='{"server":"couch.example.com","dbname":"telesec-test","username":"user","password":"pass","secret":"SECRET123"}'></textarea>
+              <div style="margin-top:6px;">
+                <input type="file" id="${field_file}" accept="application/json"> 
+                <button id="${btn_parse_json}" class="btn5">Aplicar JSON</button>
+                <button id="${btn_start_scan}" class="btn3">Escanear QR (si disponible)</button>
+              </div>
+              <div id="${div_scan}" style="margin-top:8px;"></div>
+            </div>
           <button id="${btn_save}" class="btn5">Guardar y Conectar</button>
         </fieldset>
         <p>Después de guardar, el navegador intentará sincronizar en segundo plano con el servidor.</p>
       `;
+        // Helper: normalize and apply config object
+        function applyConfig(cfg) {
+          try {
+            if (!cfg) throw new Error('JSON vacío');
+            var url = cfg.server || cfg.couch || cfg.url || cfg.host || cfg.hostname || cfg.server_url;
+            var dbname = cfg.dbname || cfg.database || cfg.db || cfg.name;
+            var user = cfg.username || cfg.user || cfg.u;
+            var pass = cfg.password || cfg.pass || cfg.p;
+            var secret = (cfg.secret || cfg.key || cfg.secretKey || cfg.SECRET || '').toString();
+            if (!url) throw new Error('Falta campo "server" en JSON');
+            localStorage.setItem('TELESEC_COUCH_URL', 'https://' + url.replace(/^https?:\/\//, ''));
+            if (dbname) localStorage.setItem('TELESEC_COUCH_DBNAME', dbname);
+            if (user) localStorage.setItem('TELESEC_COUCH_USER', user);
+            if (pass) localStorage.setItem('TELESEC_COUCH_PASS', pass);
+            if (secret) {
+              localStorage.setItem('TELESEC_SECRET', secret.toUpperCase());
+              SECRET = secret.toUpperCase();
+            }
+            DB.init({ secret: SECRET, remoteServer: 'https://' + url.replace(/^https?:\/\//, ''), username: user, password: pass, dbname: dbname || undefined });
+            toastr.success('Configuración aplicada e iniciando sincronización');
+            location.hash = '#login';
+            setTimeout(function(){ location.reload(); }, 400);
+          } catch (e) {
+            toastr.error('Error aplicando configuración: ' + (e && e.message ? e.message : e));
+          }
+        }
+
+        // Toggle import area
+        document.getElementById(btn_import_json).onclick = function () {
+          var el = document.getElementById(div_import_area);
+          el.style.display = (el.style.display === 'none') ? 'block' : 'none';
+        };
+
+        // Parse textarea JSON
+        document.getElementById(btn_parse_json).onclick = function () {
+          var txt = document.getElementById(field_json).value.trim();
+          if (!txt) { toastr.error('JSON vacío'); return; }
+          try {
+            var obj = JSON.parse(txt);
+            applyConfig(obj);
+          } catch (e) {
+            toastr.error('JSON inválido: ' + e.message);
+          }
+        };
+
+        // File input: read JSON file and apply
+        document.getElementById(field_file).addEventListener('change', function (ev) {
+          var f = ev.target.files && ev.target.files[0];
+          if (!f) return;
+          var r = new FileReader();
+          r.onload = function (e) {
+            try {
+              var txt = e.target.result;
+              document.getElementById(field_json).value = txt;
+              var obj = JSON.parse(txt);
+              applyConfig(obj);
+            } catch (err) {
+              toastr.error('Error leyendo archivo JSON: ' + (err && err.message ? err.message : err));
+            }
+          };
+          r.readAsText(f);
+        });
+
+        // QR scanning (if html5-qrcode available)
+        document.getElementById(btn_start_scan).onclick = function () {
+          var scanDiv = document.getElementById(div_scan);
+          scanDiv.innerHTML = '';
+          if (window.Html5QrcodeScanner || window.Html5Qrcode) {
+            try {
+              var targetId = div_scan + '-cam';
+              scanDiv.innerHTML = '<div id="' + targetId + '"></div><div style="margin-top:6px;"><button id="' + targetId + '-stop" class="btn3">Detener</button></div>';
+              var html5Qr;
+              if (window.Html5Qrcode) {
+                html5Qr = new Html5Qrcode(targetId);
+                Html5Qrcode.getCameras().then(function(cameras){
+                  var camId = (cameras && cameras[0] && cameras[0].id) ? cameras[0].id : undefined;
+                  html5Qr.start({ facingMode: 'environment' }, { fps: 10, qrbox: 250 }, function(decodedText){
+                    try {
+                      var obj = JSON.parse(decodedText);
+                      html5Qr.stop();
+                      applyConfig(obj);
+                    } catch (e) {
+                      toastr.error('QR no contiene JSON válido');
+                    }
+                  }, function(err){ /* ignore scan errors */ }).catch(function(err){ toastr.error('Error iniciando cámara: ' + err); });
+                }).catch(function(){
+                  // fallback: start without camera list
+                  html5Qr.start({ facingMode: 'environment' }, { fps: 10, qrbox: 250 }, function(decodedText){
+                    try { applyConfig(JSON.parse(decodedText)); } catch(e){ toastr.error('QR no contiene JSON válido'); }
+                  }, function(){}).catch(function(err){
+                    toastr.error('Error iniciando cámara: ' + (err && err.message ? err.message : err));
+                  });
+                });
+              } else {
+                // Html5QrcodeScanner fallback
+                var scanner = new Html5QrcodeScanner(targetId, { fps: 10, qrbox: 250 });
+                scanner.render(function(decodedText){
+                  try { applyConfig(JSON.parse(decodedText)); scanner.clear(); } catch(e){ toastr.error('QR no contiene JSON válido'); }
+                });
+              }
+              // stop button
+              document.getElementById(targetId + '-stop').onclick = function () {
+                if (html5Qr && html5Qr.getState && html5Qr.getState() === Html5Qrcode.ScanStatus.SCANNING) {
+                  html5Qr.stop().catch(function(){});
+                }
+                scanDiv.innerHTML = '';
+              };
+            } catch (e) {
+              toastr.error('Error al iniciar escáner: ' + (e && e.message ? e.message : e));
+            }
+          } else {
+            scanDiv.innerHTML = '<p>Escáner no disponible. Copia/pega el JSON o sube un archivo.</p>';
+          }
+        };
       document.getElementById(btn_save).onclick = () => {
         var url = document.getElementById(field_couch).value.trim();
         var dbname = document.getElementById(field_couch_dbname).value.trim();

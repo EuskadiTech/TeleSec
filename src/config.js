@@ -7,6 +7,11 @@ var EventListeners = {
 };
 
 function safeuuid(prefix = "AXLUID_") {
+  if (!crypto.randomUUID) {
+    // Fallback for environments without crypto.randomUUID()
+    const randomPart = Math.random().toString(36).substring(2, 10);
+    return prefix + randomPart;
+  }
   return prefix + crypto.randomUUID().split("-")[4];
 }
 var urlParams = new URLSearchParams(location.search);
