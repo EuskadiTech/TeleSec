@@ -31,9 +31,7 @@ var DB = (function () {
   }
 
   function init(opts) {
-    // opts: { remoteServer, username, password, dbname }
-    const localName =   'telesec';
-    // Allow passing encryption secret via opts
+    const localName = 'telesec';
     try {
       if (opts && opts.secret) {
         SECRET = opts.secret;
@@ -47,16 +45,10 @@ var DB = (function () {
         const server = opts.remoteServer.replace(/\/$/, '');
         const dbname = encodeURIComponent((opts.dbname || localName));
         let authPart = '';
-        if (opts.username) {
-          authPart = opts.username + ':' + (opts.password || '') + '@';
-        }
+        if (opts.username) authPart = opts.username + ':' + (opts.password || '') + '@';
         const remoteUrl = server.replace(/https?:\/\//, (m) => m) + '/' + dbname;
-        // to keep things simple, embed credentials if provided
-        if (opts.username) {
-          remote = new PouchDB(remoteUrl.replace(/:\/\//, '://' + authPart));
-        } else {
-          remote = new PouchDB(remoteUrl);
-        }
+        if (opts.username) remote = new PouchDB(remoteUrl.replace(/:\/\//, '://' + authPart));
+        else remote = new PouchDB(remoteUrl);
         replicateToRemote();
       } catch (e) {
         console.warn('Remote DB init error', e);
@@ -71,21 +63,15 @@ var DB = (function () {
   function replicateToRemote() {
     ensureLocal();
     if (!local || !remote) return;
-    // Cancel previous replications if any
     try { if (repPush && repPush.cancel) repPush.cancel(); } catch (e) {}
     try { if (repPull && repPull.cancel) repPull.cancel(); } catch (e) {}
 
     repPush = PouchDB.replicate(local, remote, { live: true, retry: true })
-      .on('error', function (err) {
-        console.warn('Replication push error', err);
-      });
+      .on('error', function (err) { console.warn('Replication push error', err); });
     repPull = PouchDB.replicate(remote, local, { live: true, retry: true })
-      .on('error', function (err) {
-        console.warn('Replication pull error', err);
-      });
+      .on('error', function (err) { console.warn('Replication pull error', err); });
   }
 
-  // Retry replication when network is restored
   if (typeof window !== 'undefined' && window.addEventListener) {
     window.addEventListener('online', function () {
       try { setTimeout(replicateToRemote, 1000); } catch (e) {}
@@ -96,16 +82,31 @@ var DB = (function () {
     const doc = change.doc;
     if (!doc || !doc._id) return;
     const [table, id] = doc._id.split(':');
+
+    // handle deletes
+    if (change.deleted || doc._deleted) {
+      delete docCache[doc._id];
+      if (callbacks[table]) {
+        callbacks[table].forEach(cb => {
+          try { cb(null, id); } catch (e) { console.error(e); }
+        });
+      }
+      return;
+    }
+
+    // handle insert/update
     try {
-      const prev = docCache[doc._id];
       const now = typeof doc.data === 'string' ? doc.data : JSON.stringify(doc.data);
+      const prev = docCache[doc._id];
       if (prev === now) return; // no meaningful change
       docCache[doc._id] = now;
     } catch (e) { /* ignore cache errors */ }
-    if (!callbacks[table]) return;
-    callbacks[table].forEach((cb) => {
-      try { cb(doc.data, id); } catch (e) { console.error(e); }
-    });
+
+    if (callbacks[table]) {
+      callbacks[table].forEach(cb => {
+        try { cb(doc.data, id); } catch (e) { console.error(e); }
+      });
+    }
   }
 
   async function put(table, id, data) {
@@ -114,24 +115,16 @@ var DB = (function () {
     try {
       const existing = await local.get(_id).catch(() => null);
       if (data === null) {
-        // delete
-        if (existing) {
-          await local.remove(existing);
-        }
+        if (existing) await local.remove(existing);
         return;
       }
       const doc = existing || { _id: _id };
-      // If TS_encrypt is available and a SECRET is configured, encrypt non-encrypted payloads
       var toStore = data;
       try {
         var isEncryptedString = (typeof data === 'string' && data.startsWith('RSA{') && data.endsWith('}'));
         if (!isEncryptedString && typeof TS_encrypt === 'function' && typeof SECRET !== 'undefined' && SECRET) {
-          toStore = await new Promise((resolve) => {
-            try {
-              TS_encrypt(data, SECRET, function (enc) {
-                resolve(enc);
-              });
-            } catch (e) { resolve(data); }
+          toStore = await new Promise(resolve => {
+            try { TS_encrypt(data, SECRET, enc => resolve(enc)); } catch (e) { resolve(data); }
           });
         }
       } catch (e) { toStore = data; }
@@ -140,7 +133,12 @@ var DB = (function () {
       doc.ts = new Date().toISOString();
       if (existing) doc._rev = existing._rev;
       await local.put(doc);
+
       try { docCache[_id] = typeof doc.data === 'string' ? doc.data : JSON.stringify(doc.data); } catch (e) {}
+
+      // FIX: manually trigger map() callbacks for local update
+      onChange({ doc: doc });
+
     } catch (e) {
       console.error('DB.put error', e);
     }
@@ -152,14 +150,10 @@ var DB = (function () {
     try {
       const doc = await local.get(_id);
       return doc.data;
-    } catch (e) {
-      return null;
-    }
+    } catch (e) { return null; }
   }
 
-  async function del(table, id) {
-    return put(table, id, null);
-  }
+  async function del(table, id) { return put(table, id, null); }
 
   async function list(table) {
     ensureLocal();
@@ -173,16 +167,13 @@ var DB = (function () {
     } catch (e) { return []; }
   }
 
-  // Convert data URL to Blob
   function dataURLtoBlob(dataurl) {
     const arr = dataurl.split(',');
     const mime = arr[0].match(/:(.*?);/)[1];
     const bstr = atob(arr[1]);
     let n = bstr.length;
     const u8arr = new Uint8Array(n);
-    while (n--) {
-      u8arr[n] = bstr.charCodeAt(n);
-    }
+    while (n--) u8arr[n] = bstr.charCodeAt(n);
     return new Blob([u8arr], { type: mime });
   }
 
@@ -192,21 +183,15 @@ var DB = (function () {
     try {
       let doc = await local.get(_id).catch(() => null);
       if (!doc) {
-        // create a minimal doc so attachments can be put
         await local.put({ _id: _id, table: table, ts: new Date().toISOString(), data: {} });
         doc = await local.get(_id);
       }
       let blob = dataUrlOrBlob;
-      if (typeof dataUrlOrBlob === 'string' && dataUrlOrBlob.indexOf('data:') === 0) {
-        blob = dataURLtoBlob(dataUrlOrBlob);
-      }
+      if (typeof dataUrlOrBlob === 'string' && dataUrlOrBlob.indexOf('data:') === 0) blob = dataURLtoBlob(dataUrlOrBlob);
       const type = contentType || (blob && blob.type) || 'application/octet-stream';
       await local.putAttachment(_id, name, doc._rev, blob, type);
       return true;
-    } catch (e) {
-      console.error('putAttachment error', e);
-      return false;
-    }
+    } catch (e) { console.error('putAttachment error', e); return false; }
   }
 
   async function getAttachment(table, id, name) {
@@ -215,19 +200,15 @@ var DB = (function () {
     try {
       const blob = await local.getAttachment(_id, name);
       if (!blob) return null;
-      // convert blob to data URL
       return await new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = function (e) { resolve(e.target.result); };
-        reader.onerror = function (e) { reject(e); };
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = e => reject(e);
         reader.readAsDataURL(blob);
       });
-    } catch (e) {
-      return null;
-    }
+    } catch (e) { return null; }
   }
 
-  // List all attachments for a document returning array of { name, dataUrl, content_type }
   async function listAttachments(table, id) {
     ensureLocal();
     const _id = makeId(table, id);
@@ -245,7 +226,6 @@ var DB = (function () {
             continue;
           }
         } catch (e) {}
-        // fallback: convert blob to dataURL using getAttachment
         try {
           const durl = await getAttachment(table, id, name);
           out.push({ name: name, dataUrl: durl, content_type: null });
@@ -255,7 +235,6 @@ var DB = (function () {
       }
       return out;
     } catch (e) {
-      // if attachments:true not supported or error, try to get doc without attachments and then getAttachment for names
       try {
         const doc = await local.get(_id).catch(() => null);
         if (!doc || !doc._attachments) return [];
@@ -267,13 +246,10 @@ var DB = (function () {
           } catch (e) { out.push({ name: name, dataUrl: null, content_type: null }); }
         }
         return out;
-      } catch (e2) {
-        return [];
-      }
+      } catch (e2) { return []; }
     }
   }
 
-  // Delete attachment metadata from the document (removes _attachments entry)
   async function deleteAttachment(table, id, name) {
     ensureLocal();
     const _id = makeId(table, id);
@@ -283,22 +259,15 @@ var DB = (function () {
       delete doc._attachments[name];
       await local.put(doc);
       return true;
-    } catch (e) {
-      console.error('deleteAttachment error', e);
-      return false;
-    }
+    } catch (e) { console.error('deleteAttachment error', e); return false; }
   }
 
   function map(table, cb) {
     ensureLocal();
     callbacks[table] = callbacks[table] || [];
     callbacks[table].push(cb);
-    // initial load
     list(table).then(rows => rows.forEach(r => cb(r.data, r.id)));
-    // return unsubscribe
-    return () => {
-      callbacks[table] = callbacks[table].filter(x => x !== cb);
-    }
+    return () => { callbacks[table] = callbacks[table].filter(x => x !== cb); }
   }
 
   return {
@@ -326,13 +295,7 @@ window.DB = DB;
     const username = localStorage.getItem('TELESEC_COUCH_USER') || '';
     const password = localStorage.getItem('TELESEC_COUCH_PASS') || '';
     const dbname = localStorage.getItem('TELESEC_COUCH_DBNAME') || undefined;
-    // Load saved secret into global SECRET for encryption/decryption
     try { SECRET = localStorage.getItem('TELESEC_SECRET') || ''; } catch (e) { SECRET = ''; }
-    // Call init but don't await; DB functions are safe-guarded with ensureLocal()
-    DB.init({ remoteServer, username, password, dbname }).catch((e) => {
-      console.warn('DB.autoInit error', e);
-    });
-  } catch (e) {
-    console.warn('DB.autoInit unexpected error', e);
-  }
+    DB.init({ remoteServer, username, password, dbname }).catch(e => console.warn('DB.autoInit error', e));
+  } catch (e) { console.warn('DB.autoInit unexpected error', e); }
 })();
