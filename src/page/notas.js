@@ -192,12 +192,14 @@ PAGES.notas = {
             document.getElementById("actionStatus").style.display = "none";
             guardarBtn.disabled = false;
             guardarBtn.style.opacity = "1";
+            toastr.error("Error al guardar los adjuntos");
           });
         }).catch((e) => { 
           console.warn('DB.put error', e); 
           document.getElementById("actionStatus").style.display = "none";
           guardarBtn.disabled = false;
           guardarBtn.style.opacity = "1";
+          toastr.error("Error al guardar la nota");
         });
       };
       document.getElementById(btn_borrar).onclick = () => {

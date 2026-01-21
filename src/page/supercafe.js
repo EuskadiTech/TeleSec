@@ -134,6 +134,7 @@ PAGES.supercafe = {
         guardarBtn.disabled = false;
         guardarBtn.style.opacity = "1";
         document.getElementById("actionStatus").style.display = "none";
+        toastr.error("Error al guardar la comanda");
       });
     };
     document.getElementById(btn_borrar).onclick = () => {

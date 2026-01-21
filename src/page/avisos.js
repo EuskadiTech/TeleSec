@@ -163,6 +163,7 @@ PAGES.avisos = {
           guardarBtn.disabled = false;
           guardarBtn.style.opacity = "1";
           document.getElementById("actionStatus").style.display = "none";
+          toastr.error("Error al guardar la notificación");
         });
       };
       document.getElementById(btn_borrar).onclick = () => {

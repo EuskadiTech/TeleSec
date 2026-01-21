@@ -223,6 +223,7 @@ PAGES.aulas = {
         guardarBtn.disabled = false;
         guardarBtn.style.opacity = "1";
         document.getElementById("actionStatus").style.display = "none";
+        toastr.error("Error al guardar la solicitud");
       });
     };
     document.getElementById(btn_borrar).onclick = () => {
@@ -367,6 +368,7 @@ PAGES.aulas = {
         guardarBtn.disabled = false;
         guardarBtn.style.opacity = "1";
         document.getElementById("actionStatus").style.display = "none";
+        toastr.error("Error al guardar el informe");
       });
     };
     document.getElementById(btn_borrar).onclick = () => {
