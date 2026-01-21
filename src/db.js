@@ -134,9 +134,8 @@ var DB = (function () {
       if (existing) doc._rev = existing._rev;
       await local.put(doc);
 
-      try { docCache[_id] = typeof doc.data === 'string' ? doc.data : JSON.stringify(doc.data); } catch (e) {}
-
       // FIX: manually trigger map() callbacks for local update
+      // onChange will update docCache and notify all subscribers
       onChange({ doc: doc });
 
     } catch (e) {
