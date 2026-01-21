@@ -1398,7 +1398,14 @@ PAGES.pagos = {
           document.getElementById("actionStatus").style.display = "none";
           setUrlHash("pagos," + transactionId);
         }, SAVE_WAIT);
-      }).catch((e) => { console.warn('DB.put error', e); });
+      }).catch((e) => { 
+        console.warn('DB.put error', e);
+        // Re-enable save button on error
+        saveBtn.disabled = false;
+        saveBtn.style.opacity = "1";
+        document.getElementById("actionStatus").style.display = "none";
+        toastr.error("Error al actualizar la transacción");
+      });
     };
     
     // Cancel button
