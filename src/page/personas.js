@@ -185,12 +185,14 @@ PAGES.personas = {
           document.getElementById("actionStatus").style.display = "none";
           guardarBtn.disabled = false;
           guardarBtn.style.opacity = "1";
+          toastr.error("Error al guardar la foto");
         });
       }).catch((e) => { 
         console.warn('DB.put error', e); 
         document.getElementById("actionStatus").style.display = "none";
         guardarBtn.disabled = false;
         guardarBtn.style.opacity = "1";
+        toastr.error("Error al guardar la persona");
       });
     };
     document.getElementById(btn_ver_monedero).onclick = () => {
