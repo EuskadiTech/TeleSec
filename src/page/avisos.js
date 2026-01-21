@@ -122,10 +122,11 @@ PAGES.avisos = {
         }
       })();
       document.getElementById(btn_guardar).onclick = () => {
-        // Disable button to prevent double-clicking
+        // Check if button is already disabled to prevent double-clicking
         var guardarBtn = document.getElementById(btn_guardar);
         if (guardarBtn.disabled) return;
         
+        // Validate before disabling button
         if (document.getElementById(field_origen).value == "") {
           alert("¡Hay que elegir una persona de origen!");
           return;
@@ -135,6 +136,7 @@ PAGES.avisos = {
           return;
         }
         
+        // Disable button after validation passes
         guardarBtn.disabled = true;
         guardarBtn.style.opacity = "0.5";
         
