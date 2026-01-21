@@ -134,10 +134,11 @@ var DB = (function () {
       if (existing) doc._rev = existing._rev;
       await local.put(doc);
 
-      try { docCache[_id] = typeof doc.data === 'string' ? doc.data : JSON.stringify(doc.data); } catch (e) {}
-
       // FIX: manually trigger map() callbacks for local update
+      // Call onChange BEFORE updating docCache so that onChange can detect the change
       onChange({ doc: doc });
+
+      try { docCache[_id] = typeof doc.data === 'string' ? doc.data : JSON.stringify(doc.data); } catch (e) {}
 
     } catch (e) {
       console.error('DB.put error', e);
