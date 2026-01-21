@@ -199,6 +199,13 @@ PAGES.aulas = {
       }
     })();
     document.getElementById(btn_guardar).onclick = () => {
+      // Disable button to prevent double-clicking
+      var guardarBtn = document.getElementById(btn_guardar);
+      if (guardarBtn.disabled) return;
+      
+      guardarBtn.disabled = true;
+      guardarBtn.style.opacity = "0.5";
+      
       var data = {
         Solicitante: document.getElementById(field_autor).value,
         Contenido: document.getElementById(field_contenido).value,
@@ -211,7 +218,12 @@ PAGES.aulas = {
           document.getElementById("actionStatus").style.display = "none";
           setUrlHash("aulas,solicitudes");
         }, SAVE_WAIT);
-      }).catch((e) => { console.warn('DB.put error', e); });
+      }).catch((e) => { 
+        console.warn('DB.put error', e);
+        guardarBtn.disabled = false;
+        guardarBtn.style.opacity = "1";
+        document.getElementById("actionStatus").style.display = "none";
+      });
     };
     document.getElementById(btn_borrar).onclick = () => {
       if (confirm("¿Quieres borrar esta solicitud?") == true) {
@@ -330,6 +342,13 @@ PAGES.aulas = {
       }
     })();
     document.getElementById(btn_guardar).onclick = () => {
+      // Disable button to prevent double-clicking
+      var guardarBtn = document.getElementById(btn_guardar);
+      if (guardarBtn.disabled) return;
+      
+      guardarBtn.disabled = true;
+      guardarBtn.style.opacity = "0.5";
+      
       var data = {
         Autor: document.getElementById(field_autor).value,
         Contenido: document.getElementById(field_contenido).value,
@@ -343,7 +362,12 @@ PAGES.aulas = {
           document.getElementById("actionStatus").style.display = "none";
           setUrlHash("aulas,informes");
         }, SAVE_WAIT);
-      }).catch((e) => { console.warn('DB.put error', e); });
+      }).catch((e) => { 
+        console.warn('DB.put error', e);
+        guardarBtn.disabled = false;
+        guardarBtn.style.opacity = "1";
+        document.getElementById("actionStatus").style.display = "none";
+      });
     };
     document.getElementById(btn_borrar).onclick = () => {
       if (confirm("¿Quieres borrar este informe?") == true) {

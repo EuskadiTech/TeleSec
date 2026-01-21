@@ -320,6 +320,11 @@ PAGES.pagos = {
     
     // Confirm final transaction button
     document.getElementById(btn_confirm + "2").onclick = () => {
+      // Disable button to prevent double-clicking
+      var confirmBtn = document.getElementById(btn_confirm + "2");
+      if (confirmBtn.disabled) return;
+      confirmBtn.disabled = true;
+      confirmBtn.style.opacity = "0.5";
       processTransaction();
     };
     
@@ -1311,6 +1316,10 @@ PAGES.pagos = {
     
     // Save button
     document.getElementById(btn_save).onclick = () => {
+      // Disable button to prevent double-clicking
+      var saveBtn = document.getElementById(btn_save);
+      if (saveBtn.disabled) return;
+      
       var tipo = document.getElementById(field_tipo).value;
       var monto = parseFloat(document.getElementById(field_monto).value);
       var personaId = document.getElementById(field_persona).value;
@@ -1349,6 +1358,9 @@ PAGES.pagos = {
       ) {
         return;
       }
+      
+      saveBtn.disabled = true;
+      saveBtn.style.opacity = "0.5";
       
       // Update transaction data
       var updatedData = {

@@ -99,10 +99,18 @@ PAGES.supercafe = {
       }
     });
     document.getElementById(btn_guardar).onclick = () => {
+      // Disable button to prevent double-clicking
+      var guardarBtn = document.getElementById(btn_guardar);
+      if (guardarBtn.disabled) return;
+      
       if (document.getElementById(field_persona).value == "") {
         alert("¡Hay que elegir una persona!");
         return;
       }
+      
+      guardarBtn.disabled = true;
+      guardarBtn.style.opacity = "0.5";
+      
       var data = {
         Fecha: document.getElementById(field_fecha).value,
         Persona: document.getElementById(field_persona).value,
@@ -119,7 +127,12 @@ PAGES.supercafe = {
           document.getElementById("actionStatus").style.display = "none";
           setUrlHash("supercafe");
         }, SAVE_WAIT);
-      }).catch((e) => { console.warn('DB.put error', e); });
+      }).catch((e) => { 
+        console.warn('DB.put error', e); 
+        guardarBtn.disabled = false;
+        guardarBtn.style.opacity = "1";
+        document.getElementById("actionStatus").style.display = "none";
+      });
     };
     document.getElementById(btn_borrar).onclick = () => {
       if (

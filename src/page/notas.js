@@ -136,6 +136,13 @@ PAGES.notas = {
         e.target.value = '';
       });
       document.getElementById(btn_guardar).onclick = () => {
+        // Disable button to prevent double-clicking
+        var guardarBtn = document.getElementById(btn_guardar);
+        if (guardarBtn.disabled) return;
+        
+        guardarBtn.disabled = true;
+        guardarBtn.style.opacity = "0.5";
+        
         var data = {
           Autor: document.getElementById(field_autor).value,
           Contenido: document.getElementById(field_contenido).value,
@@ -180,8 +187,18 @@ PAGES.notas = {
               document.getElementById("actionStatus").style.display = "none";
               setUrlHash("notas");
             }, SAVE_WAIT);
-          }).catch((e) => { console.warn('Attachment upload error', e); document.getElementById("actionStatus").style.display = "none"; });
-        }).catch((e) => { console.warn('DB.put error', e); document.getElementById("actionStatus").style.display = "none"; });
+          }).catch((e) => { 
+            console.warn('Attachment upload error', e); 
+            document.getElementById("actionStatus").style.display = "none";
+            guardarBtn.disabled = false;
+            guardarBtn.style.opacity = "1";
+          });
+        }).catch((e) => { 
+          console.warn('DB.put error', e); 
+          document.getElementById("actionStatus").style.display = "none";
+          guardarBtn.disabled = false;
+          guardarBtn.style.opacity = "1";
+        });
       };
       document.getElementById(btn_borrar).onclick = () => {
         if (confirm("¿Quieres borrar esta nota?") == true) {

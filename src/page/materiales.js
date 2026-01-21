@@ -82,6 +82,13 @@ PAGES.materiales = {
       }
     });
     document.getElementById(btn_guardar).onclick = () => {
+      // Disable button to prevent double-clicking
+      var guardarBtn = document.getElementById(btn_guardar);
+      if (guardarBtn.disabled) return;
+      
+      guardarBtn.disabled = true;
+      guardarBtn.style.opacity = "0.5";
+      
       var data = {
         Nombre: document.getElementById(field_nombre).value,
         Unidad: document.getElementById(field_unidad).value,
@@ -98,7 +105,12 @@ PAGES.materiales = {
           document.getElementById("actionStatus").style.display = "none";
           setUrlHash("materiales");
         }, SAVE_WAIT);
-      }).catch((e) => { console.warn('DB.put error', e); });
+      }).catch((e) => { 
+        console.warn('DB.put error', e);
+        guardarBtn.disabled = false;
+        guardarBtn.style.opacity = "1";
+        document.getElementById("actionStatus").style.display = "none";
+      });
     };
     document.getElementById(btn_borrar).onclick = () => {
       if (confirm("¿Quieres borrar este material?") == true) {
