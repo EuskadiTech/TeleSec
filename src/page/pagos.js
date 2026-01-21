@@ -507,6 +507,16 @@ PAGES.pagos = {
           document.getElementById("actionStatus").style.display = "none";
           setUrlHash("pagos," + ticketId);
         }, SAVE_WAIT);
+      }).catch((e) => {
+        console.warn('DB.put error', e);
+        // Re-enable confirm button on error
+        var confirmBtn = document.getElementById(btn_confirm + "2");
+        if (confirmBtn) {
+          confirmBtn.disabled = false;
+          confirmBtn.style.opacity = "1";
+        }
+        document.getElementById("actionStatus").style.display = "none";
+        toastr.error("Error al guardar la transacción");
       });
     }
     
