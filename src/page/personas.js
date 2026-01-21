@@ -147,6 +147,13 @@ PAGES.personas = {
       reader.readAsDataURL(file);
     });
     document.getElementById(btn_guardar).onclick = () => {
+      // Disable button to prevent double-clicking
+      var guardarBtn = document.getElementById(btn_guardar);
+      if (guardarBtn.disabled) return;
+      
+      guardarBtn.disabled = true;
+      guardarBtn.style.opacity = "0.5";
+      
       var dt = new FormData(pdel);
       var data = {
         Nombre: document.getElementById(field_nombre).value,
@@ -173,8 +180,20 @@ PAGES.personas = {
             document.getElementById("actionStatus").style.display = "none";
             setUrlHash("personas");
           }, SAVE_WAIT);
-        }).catch((e) => { console.warn('putAttachment error', e); document.getElementById("actionStatus").style.display = "none"; });
-      }).catch((e) => { console.warn('DB.put error', e); document.getElementById("actionStatus").style.display = "none"; });
+        }).catch((e) => { 
+          console.warn('putAttachment error', e); 
+          document.getElementById("actionStatus").style.display = "none";
+          guardarBtn.disabled = false;
+          guardarBtn.style.opacity = "1";
+          toastr.error("Error al guardar la foto");
+        });
+      }).catch((e) => { 
+        console.warn('DB.put error', e); 
+        document.getElementById("actionStatus").style.display = "none";
+        guardarBtn.disabled = false;
+        guardarBtn.style.opacity = "1";
+        toastr.error("Error al guardar la persona");
+      });
     };
     document.getElementById(btn_ver_monedero).onclick = () => {
       setUrlHash("pagos"); // Navigate to pagos and show transactions for this person

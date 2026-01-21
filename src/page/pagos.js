@@ -320,6 +320,11 @@ PAGES.pagos = {
     
     // Confirm final transaction button
     document.getElementById(btn_confirm + "2").onclick = () => {
+      // Disable button to prevent double-clicking
+      var confirmBtn = document.getElementById(btn_confirm + "2");
+      if (confirmBtn.disabled) return;
+      confirmBtn.disabled = true;
+      confirmBtn.style.opacity = "0.5";
       processTransaction();
     };
     
@@ -502,6 +507,16 @@ PAGES.pagos = {
           document.getElementById("actionStatus").style.display = "none";
           setUrlHash("pagos," + ticketId);
         }, SAVE_WAIT);
+      }).catch((e) => {
+        console.warn('DB.put error', e);
+        // Re-enable confirm button on error
+        var confirmBtn = document.getElementById(btn_confirm + "2");
+        if (confirmBtn) {
+          confirmBtn.disabled = false;
+          confirmBtn.style.opacity = "1";
+        }
+        document.getElementById("actionStatus").style.display = "none";
+        toastr.error("Error al guardar la transacción");
       });
     }
     
@@ -1311,6 +1326,10 @@ PAGES.pagos = {
     
     // Save button
     document.getElementById(btn_save).onclick = () => {
+      // Disable button to prevent double-clicking
+      var saveBtn = document.getElementById(btn_save);
+      if (saveBtn.disabled) return;
+      
       var tipo = document.getElementById(field_tipo).value;
       var monto = parseFloat(document.getElementById(field_monto).value);
       var personaId = document.getElementById(field_persona).value;
@@ -1350,6 +1369,9 @@ PAGES.pagos = {
         return;
       }
       
+      saveBtn.disabled = true;
+      saveBtn.style.opacity = "0.5";
+      
       // Update transaction data
       var updatedData = {
         ...originalData,
@@ -1376,7 +1398,14 @@ PAGES.pagos = {
           document.getElementById("actionStatus").style.display = "none";
           setUrlHash("pagos," + transactionId);
         }, SAVE_WAIT);
-      }).catch((e) => { console.warn('DB.put error', e); });
+      }).catch((e) => { 
+        console.warn('DB.put error', e);
+        // Re-enable save button on error
+        saveBtn.disabled = false;
+        saveBtn.style.opacity = "1";
+        document.getElementById("actionStatus").style.display = "none";
+        toastr.error("Error al actualizar la transacción");
+      });
     };
     
     // Cancel button

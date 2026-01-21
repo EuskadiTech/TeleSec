@@ -122,6 +122,11 @@ PAGES.avisos = {
         }
       })();
       document.getElementById(btn_guardar).onclick = () => {
+        // Check if button is already disabled to prevent double-clicking
+        var guardarBtn = document.getElementById(btn_guardar);
+        if (guardarBtn.disabled) return;
+        
+        // Validate before disabling button
         if (document.getElementById(field_origen).value == "") {
           alert("¡Hay que elegir una persona de origen!");
           return;
@@ -130,6 +135,11 @@ PAGES.avisos = {
           alert("¡Hay que elegir una persona de origen!");
           return;
         }
+        
+        // Disable button after validation passes
+        guardarBtn.disabled = true;
+        guardarBtn.style.opacity = "0.5";
+        
         var data = {
           Fecha: document.getElementById(field_fecha).value,
           Origen: document.getElementById(field_origen).value,
@@ -148,7 +158,13 @@ PAGES.avisos = {
             document.getElementById("actionStatus").style.display = "none";
             setUrlHash("avisos");
           }, SAVE_WAIT);
-        }).catch((e) => { console.warn('DB.put error', e); });
+        }).catch((e) => { 
+          console.warn('DB.put error', e);
+          guardarBtn.disabled = false;
+          guardarBtn.style.opacity = "1";
+          document.getElementById("actionStatus").style.display = "none";
+          toastr.error("Error al guardar la notificación");
+        });
       };
       document.getElementById(btn_borrar).onclick = () => {
         if (confirm("¿Quieres borrar esta notificación?") == true) {

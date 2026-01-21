@@ -99,10 +99,20 @@ PAGES.supercafe = {
       }
     });
     document.getElementById(btn_guardar).onclick = () => {
+      // Check if button is already disabled to prevent double-clicking
+      var guardarBtn = document.getElementById(btn_guardar);
+      if (guardarBtn.disabled) return;
+      
+      // Validate before disabling button
       if (document.getElementById(field_persona).value == "") {
         alert("¡Hay que elegir una persona!");
         return;
       }
+      
+      // Disable button after validation passes
+      guardarBtn.disabled = true;
+      guardarBtn.style.opacity = "0.5";
+      
       var data = {
         Fecha: document.getElementById(field_fecha).value,
         Persona: document.getElementById(field_persona).value,
@@ -119,7 +129,13 @@ PAGES.supercafe = {
           document.getElementById("actionStatus").style.display = "none";
           setUrlHash("supercafe");
         }, SAVE_WAIT);
-      }).catch((e) => { console.warn('DB.put error', e); });
+      }).catch((e) => { 
+        console.warn('DB.put error', e); 
+        guardarBtn.disabled = false;
+        guardarBtn.style.opacity = "1";
+        document.getElementById("actionStatus").style.display = "none";
+        toastr.error("Error al guardar la comanda");
+      });
     };
     document.getElementById(btn_borrar).onclick = () => {
       if (
