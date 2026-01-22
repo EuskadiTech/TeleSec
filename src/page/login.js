@@ -60,7 +60,8 @@ PAGES.login = {
         
         document.getElementById(btn_skip).onclick = () => {
           // Continue to persona creation without server config
-          location.hash = '#login,onboarding-persona';
+          open_page('login,onboarding-persona');
+          setUrlHash('login,onboarding-persona');
         };
         
         document.getElementById(btn_skip + '-save').onclick = () => {
@@ -89,7 +90,8 @@ PAGES.login = {
             toastr.success('Servidor configurado correctamente');
             // Continue to persona creation
             setTimeout(() => {
-              location.hash = '#login,onboarding-persona';
+              open_page('login,onboarding-persona');
+              setUrlHash('login,onboarding-persona');
             }, 500);
           } catch (e) {
             toastr.error('Error al configurar el servidor: ' + (e.message || e));
@@ -357,7 +359,8 @@ PAGES.login = {
       
       // If no personas exist and onboarding not complete, redirect to onboarding
       if (!hasPersonas && !onboardingComplete && !AC_BYPASS) {
-        location.hash = '#login,onboarding-config';
+        open_page('login,onboarding-config');
+        setUrlHash('login,onboarding-config');
         return;
       }
       
