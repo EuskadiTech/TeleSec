@@ -123,7 +123,7 @@ PAGES.login = {
           
           // Create persona with all admin permissions from PERMS object
           var allPerms = Object.keys(PERMS).join(',') + ',';
-          var personaId = 'admin-' + Date.now();
+          var personaId = safeuuid('admin-');
           var persona = {
             Nombre: nombre,
             Roles: allPerms,
@@ -144,9 +144,9 @@ PAGES.login = {
             SetPages();
             
             setTimeout(() => {
-              location.hash = '#index';
-              location.reload();
-            }, 800);
+              open_page('index');
+              setUrlHash('index');
+            }, 500);
           }).catch((e) => {
             toastr.error('Error creando cuenta: ' + (e.message || e));
           });
