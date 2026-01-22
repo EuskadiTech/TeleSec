@@ -2,36 +2,72 @@ PAGES.login = {
     Esconder: true,
     Title: "Login",
     edit: function (mid) {
-      // Setup form to configure CouchDB remote and initial group/secret
+      // Setup form to configure backend (PouchDB or remoteStorage) and credentials
+      var field_backend = safeuuid();
       var field_couch = safeuuid();
       var field_couch_dbname = safeuuid();
       var field_couch_user = safeuuid();
       var field_couch_pass = safeuuid();
+      var field_rs_user = safeuuid();
+      var field_rs_token = safeuuid();
       var field_secret = safeuuid();
-        var btn_import_json = safeuuid();
-        var div_import_area = safeuuid();
-        var field_json = safeuuid();
-        var field_file = safeuuid();
-        var btn_parse_json = safeuuid();
-        var btn_start_scan = safeuuid();
-        var div_scan = safeuuid();
+      var btn_import_json = safeuuid();
+      var div_import_area = safeuuid();
+      var field_json = safeuuid();
+      var field_file = safeuuid();
+      var btn_parse_json = safeuuid();
+      var btn_start_scan = safeuuid();
+      var div_scan = safeuuid();
+      var div_pouchdb_fields = safeuuid();
+      var div_remotestorage_fields = safeuuid();
       var btn_save = safeuuid();
+      
+      var savedBackend = localStorage.getItem('TELESEC_BACKEND') || 'pouchdb';
+      
       container.innerHTML = `
-        <h1>Configuración del servidor CouchDB</h1>
-        <b>Aviso: Después de guardar, la aplicación intentará sincronizar con el servidor CouchDB en segundo plano. Puede que falten registros hasta que se termine. Tenga paciencia.</b>
+        <h1>Configuración de almacenamiento</h1>
+        <b>Aviso: Después de guardar, la aplicación intentará sincronizar en segundo plano. Tenga paciencia.</b>
         <fieldset>
-          <label>Servidor CouchDB (ej: couch.example.com)
-            <input type="text" id="${field_couch}" value="${(localStorage.getItem('TELESEC_COUCH_URL') || '').replace(/^https?:\/\//, '')}"><br><br>
-          </label>
-          <label>Nombre de la base (opcional, por defecto usa telesec-<grupo>)
-            <input type="text" id="${field_couch_dbname}" value="${localStorage.getItem('TELESEC_COUCH_DBNAME') || ''}"><br><br>
-          </label>
-          <label>Usuario
-            <input type="text" id="${field_couch_user}" value="${localStorage.getItem('TELESEC_COUCH_USER') || ''}"><br><br>
-          </label>
-          <label>Contraseña
-            <input type="password" id="${field_couch_pass}" value="${localStorage.getItem('TELESEC_COUCH_PASS') || ''}"><br><br>
-          </label>
+          <legend>Tipo de almacenamiento</legend>
+          <label>
+            <input type="radio" name="${field_backend}" value="pouchdb" ${savedBackend === 'pouchdb' ? 'checked' : ''}> 
+            PouchDB + CouchDB (sincronización con servidor CouchDB)
+          </label><br>
+          <label>
+            <input type="radio" name="${field_backend}" value="remotestorage" ${savedBackend === 'remotestorage' ? 'checked' : ''}> 
+            remoteStorage (sincronización con servidor remoteStorage)
+          </label><br><br>
+
+          <div id="${div_pouchdb_fields}" style="display:${savedBackend === 'pouchdb' ? 'block' : 'none'};">
+            <fieldset>
+              <legend>Configuración CouchDB</legend>
+              <label>Servidor CouchDB (ej: couch.example.com)
+                <input type="text" id="${field_couch}" value="${(localStorage.getItem('TELESEC_COUCH_URL') || '').replace(/^https?:\/\//, '')}"><br><br>
+              </label>
+              <label>Nombre de la base (opcional, por defecto usa telesec)
+                <input type="text" id="${field_couch_dbname}" value="${localStorage.getItem('TELESEC_COUCH_DBNAME') || ''}"><br><br>
+              </label>
+              <label>Usuario
+                <input type="text" id="${field_couch_user}" value="${localStorage.getItem('TELESEC_COUCH_USER') || ''}"><br><br>
+              </label>
+              <label>Contraseña
+                <input type="password" id="${field_couch_pass}" value="${localStorage.getItem('TELESEC_COUCH_PASS') || ''}"><br><br>
+              </label>
+            </fieldset>
+          </div>
+
+          <div id="${div_remotestorage_fields}" style="display:${savedBackend === 'remotestorage' ? 'block' : 'none'};">
+            <fieldset>
+              <legend>Configuración remoteStorage</legend>
+              <label>Dirección de usuario (ej: user@5apps.com o user@example.com)
+                <input type="text" id="${field_rs_user}" value="${localStorage.getItem('TELESEC_RS_USER') || ''}"><br><br>
+              </label>
+              <label>Token de acceso (opcional, se pedirá al conectar si no se proporciona)
+                <input type="password" id="${field_rs_token}" value="${localStorage.getItem('TELESEC_RS_TOKEN') || ''}"><br><br>
+              </label>
+            </fieldset>
+          </div>
+
           <label>Clave de encriptación (opcional) - usada para cifrar datos en reposo
             <input type="password" id="${field_secret}" value="${localStorage.getItem('TELESEC_SECRET') || ''}"><br><br>
           </label>
@@ -40,7 +76,7 @@ PAGES.login = {
             </div>
             <div id="${div_import_area}" style="display:none;margin-top:10px;border:1px solid #eee;padding:8px;">
               <label>Pegar JSON de configuración (o usar archivo / QR):</label><br>
-              <textarea id="${field_json}" style="width:100%;height:120px;margin-top:6px;" placeholder='{"server":"couch.example.com","dbname":"telesec-test","username":"user","password":"pass","secret":"SECRET123"}'></textarea>
+              <textarea id="${field_json}" style="width:100%;height:120px;margin-top:6px;" placeholder='{"backend":"pouchdb","server":"couch.example.com","dbname":"telesec-test","username":"user","password":"pass","secret":"SECRET123"}'></textarea>
               <div style="margin-top:6px;">
                 <input type="file" id="${field_file}" accept="application/json"> 
                 <button id="${btn_parse_json}" class="btn5">Aplicar JSON</button>
@@ -52,25 +88,54 @@ PAGES.login = {
         </fieldset>
         <p>Después de guardar, el navegador intentará sincronizar en segundo plano con el servidor.</p>
       `;
+      
+      // Toggle fields based on backend selection
+      var radios = document.getElementsByName(field_backend);
+      for (var i = 0; i < radios.length; i++) {
+        radios[i].addEventListener('change', function() {
+          var selectedBackend = document.querySelector('input[name="' + field_backend + '"]:checked').value;
+          document.getElementById(div_pouchdb_fields).style.display = selectedBackend === 'pouchdb' ? 'block' : 'none';
+          document.getElementById(div_remotestorage_fields).style.display = selectedBackend === 'remotestorage' ? 'block' : 'none';
+        });
+      }
         // Helper: normalize and apply config object
         function applyConfig(cfg) {
           try {
             if (!cfg) throw new Error('JSON vacío');
-            var url = cfg.server || cfg.couch || cfg.url || cfg.host || cfg.hostname || cfg.server_url;
-            var dbname = cfg.dbname || cfg.database || cfg.db || cfg.name;
-            var user = cfg.username || cfg.user || cfg.u;
-            var pass = cfg.password || cfg.pass || cfg.p;
+            
+            var backend = cfg.backend || 'pouchdb';
             var secret = (cfg.secret || cfg.key || cfg.secretKey || cfg.SECRET || '').toString();
-            if (!url) throw new Error('Falta campo "server" en JSON');
-            localStorage.setItem('TELESEC_COUCH_URL', 'https://' + url.replace(/^https?:\/\//, ''));
-            if (dbname) localStorage.setItem('TELESEC_COUCH_DBNAME', dbname);
-            if (user) localStorage.setItem('TELESEC_COUCH_USER', user);
-            if (pass) localStorage.setItem('TELESEC_COUCH_PASS', pass);
-            if (secret) {
-              localStorage.setItem('TELESEC_SECRET', secret.toUpperCase());
-              SECRET = secret.toUpperCase();
+            
+            localStorage.setItem('TELESEC_BACKEND', backend);
+            
+            if (backend === 'remotestorage') {
+              var rsUser = cfg.rsUserAddress || cfg.rsUser || cfg.rs_user || cfg.user || '';
+              var rsToken = cfg.rsToken || cfg.rs_token || cfg.token || '';
+              if (!rsUser) throw new Error('Falta campo "rsUserAddress" o "user" en JSON para remoteStorage');
+              localStorage.setItem('TELESEC_RS_USER', rsUser);
+              if (rsToken) localStorage.setItem('TELESEC_RS_TOKEN', rsToken);
+              if (secret) {
+                localStorage.setItem('TELESEC_SECRET', secret.toUpperCase());
+                SECRET = secret.toUpperCase();
+              }
+              DB.init({ backend: 'remotestorage', secret: SECRET, rsUserAddress: rsUser, rsToken: rsToken });
+            } else {
+              var url = cfg.server || cfg.couch || cfg.url || cfg.host || cfg.hostname || cfg.server_url;
+              var dbname = cfg.dbname || cfg.database || cfg.db || cfg.name;
+              var user = cfg.username || cfg.user || cfg.u;
+              var pass = cfg.password || cfg.pass || cfg.p;
+              if (!url) throw new Error('Falta campo "server" en JSON para PouchDB');
+              localStorage.setItem('TELESEC_COUCH_URL', 'https://' + url.replace(/^https?:\/\//, ''));
+              if (dbname) localStorage.setItem('TELESEC_COUCH_DBNAME', dbname);
+              if (user) localStorage.setItem('TELESEC_COUCH_USER', user);
+              if (pass) localStorage.setItem('TELESEC_COUCH_PASS', pass);
+              if (secret) {
+                localStorage.setItem('TELESEC_SECRET', secret.toUpperCase());
+                SECRET = secret.toUpperCase();
+              }
+              DB.init({ backend: 'pouchdb', secret: SECRET, remoteServer: 'https://' + url.replace(/^https?:\/\//, ''), username: user, password: pass, dbname: dbname || undefined });
             }
-            DB.init({ secret: SECRET, remoteServer: 'https://' + url.replace(/^https?:\/\//, ''), username: user, password: pass, dbname: dbname || undefined });
+            
             toastr.success('Configuración aplicada e iniciando sincronización');
             location.hash = '#login';
             setTimeout(function(){ location.reload(); }, 400);
@@ -167,20 +232,38 @@ PAGES.login = {
           }
         };
       document.getElementById(btn_save).onclick = () => {
-        var url = document.getElementById(field_couch).value.trim();
-        var dbname = document.getElementById(field_couch_dbname).value.trim();
-        var user = document.getElementById(field_couch_user).value.trim();
-        var pass = document.getElementById(field_couch_pass).value;
+        var backend = document.querySelector('input[name="' + field_backend + '"]:checked').value;
         var secret = document.getElementById(field_secret).value || '';
-        localStorage.setItem('TELESEC_COUCH_URL', "https://" + url);
-        localStorage.setItem('TELESEC_COUCH_DBNAME', dbname);
-        localStorage.setItem('TELESEC_COUCH_USER', user);
-        localStorage.setItem('TELESEC_COUCH_PASS', pass);
+        
+        localStorage.setItem('TELESEC_BACKEND', backend);
         localStorage.setItem('TELESEC_SECRET', secret.toUpperCase());
         SECRET = secret.toUpperCase();
+        
         try {
-          DB.init({ secret: SECRET, remoteServer: "https://" + url, username: user, password: pass, dbname: dbname || undefined });
-          toastr.success('Iniciando sincronización con CouchDB');
+          if (backend === 'remotestorage') {
+            var rsUser = document.getElementById(field_rs_user).value.trim();
+            var rsToken = document.getElementById(field_rs_token).value || '';
+            if (!rsUser) {
+              toastr.error('Debe proporcionar una dirección de usuario remoteStorage');
+              return;
+            }
+            localStorage.setItem('TELESEC_RS_USER', rsUser);
+            localStorage.setItem('TELESEC_RS_TOKEN', rsToken);
+            DB.init({ backend: 'remotestorage', secret: SECRET, rsUserAddress: rsUser, rsToken: rsToken });
+            toastr.success('Iniciando sincronización con remoteStorage');
+          } else {
+            var url = document.getElementById(field_couch).value.trim();
+            var dbname = document.getElementById(field_couch_dbname).value.trim();
+            var user = document.getElementById(field_couch_user).value.trim();
+            var pass = document.getElementById(field_couch_pass).value;
+            localStorage.setItem('TELESEC_COUCH_URL', "https://" + url);
+            localStorage.setItem('TELESEC_COUCH_DBNAME', dbname);
+            localStorage.setItem('TELESEC_COUCH_USER', user);
+            localStorage.setItem('TELESEC_COUCH_PASS', pass);
+            DB.init({ backend: 'pouchdb', secret: SECRET, remoteServer: "https://" + url, username: user, password: pass, dbname: dbname || undefined });
+            toastr.success('Iniciando sincronización con CouchDB');
+          }
+          
           location.hash = "#login";
           location.reload();
         } catch (e) {
