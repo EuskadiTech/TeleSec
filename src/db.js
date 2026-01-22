@@ -4,6 +4,10 @@
 // - Stores records as docs with _id = "<table>:<id>" and field `data` containing either plain object or encrypted string
 
 var DB = (function () {
+  // Constants
+  const ENCRYPTED_PREFIX = 'RSA{';
+  const ENCRYPTED_SUFFIX = '}';
+  
   let backend = null; // 'pouchdb' or 'remotestorage'
   let callbacks = {}; // table -> [cb]
   let docCache = {}; // _id -> last data snapshot (stringified)
@@ -120,7 +124,7 @@ var DB = (function () {
       const doc = existing || { _id: _id };
       var toStore = data;
       try {
-        var isEncryptedString = (typeof data === 'string' && data.startsWith('RSA{') && data.endsWith('}'));
+        var isEncryptedString = (typeof data === 'string' && data.startsWith(ENCRYPTED_PREFIX) && data.endsWith(ENCRYPTED_SUFFIX));
         if (!isEncryptedString && typeof TS_encrypt === 'function' && typeof SECRET !== 'undefined' && SECRET) {
           toStore = await new Promise(resolve => {
             try { TS_encrypt(data, SECRET, enc => resolve(enc)); } catch (e) { resolve(data); }
@@ -360,7 +364,7 @@ var DB = (function () {
 
       var toStore = data;
       try {
-        var isEncryptedString = (typeof data === 'string' && data.startsWith('RSA{') && data.endsWith('}'));
+        var isEncryptedString = (typeof data === 'string' && data.startsWith(ENCRYPTED_PREFIX) && data.endsWith(ENCRYPTED_SUFFIX));
         if (!isEncryptedString && typeof TS_encrypt === 'function' && typeof SECRET !== 'undefined' && SECRET) {
           toStore = await new Promise(resolve => {
             try { TS_encrypt(data, SECRET, enc => resolve(enc)); } catch (e) { resolve(data); }
@@ -395,7 +399,8 @@ var DB = (function () {
       
       const results = [];
       for (const filename of Object.keys(listing)) {
-        const id = filename.replace(/\/$/, '');
+        // Remove trailing slash if present, otherwise use as-is
+        const id = filename.endsWith('/') ? filename.slice(0, -1) : filename;
         try {
           const data = await rsGet(table, id);
           if (data !== null) {
@@ -463,7 +468,8 @@ var DB = (function () {
       
       const results = [];
       for (const filename of Object.keys(listing)) {
-        const name = filename.replace(/\/$/, '');
+        // Remove trailing slash if present, otherwise use as-is
+        const name = filename.endsWith('/') ? filename.slice(0, -1) : filename;
         try {
           const att = await rsGetAttachment(table, id, name);
           results.push({ name: name, dataUrl: att, content_type: null });
