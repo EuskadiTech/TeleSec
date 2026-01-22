@@ -76,7 +76,13 @@ PAGES.login = {
             return;
           }
           
-          localStorage.setItem('TELESEC_COUCH_URL', 'https://' + url);
+          // Normalize URL: add https:// if no protocol specified
+          var normalizedUrl = url;
+          if (!/^https?:\/\//i.test(url)) {
+            normalizedUrl = 'https://' + url;
+          }
+          
+          localStorage.setItem('TELESEC_COUCH_URL', normalizedUrl);
           localStorage.setItem('TELESEC_COUCH_DBNAME', dbname);
           localStorage.setItem('TELESEC_COUCH_USER', user);
           localStorage.setItem('TELESEC_COUCH_PASS', pass);
@@ -86,7 +92,7 @@ PAGES.login = {
           }
           
           try {
-            DB.init({ secret: SECRET, remoteServer: 'https://' + url, username: user, password: pass, dbname: dbname || undefined });
+            DB.init({ secret: SECRET, remoteServer: normalizedUrl, username: user, password: pass, dbname: dbname || undefined });
             toastr.success('Servidor configurado correctamente');
             // Continue to persona creation
             setTimeout(() => {
