@@ -725,26 +725,26 @@ function SC_priceCalc(json) {
     json["Tamaño"] == "Pequeño" &&
     ["de Vaca", "Sin lactosa", "Vegetal", "Almendras"].includes(json["Leche"])
   ) {
-    precio += 10;
-    valores += "Leche pequeña = 10c\n";
+    precio += 15;
+    valores += "Leche pequeña = 15c\n";
   }
   // Leche grande = 20c
   if (
     json["Tamaño"] == "Grande" &&
     ["de Vaca", "Sin lactosa", "Vegetal", "Almendras"].includes(json["Leche"])
   ) {
-    precio += 20;
-    valores += "Leche grande = 20c\n";
+    precio += 25;
+    valores += "Leche grande = 25c\n";
   }
   // Café = 20c
   if (["Café con leche", "Solo café (sin leche)"].includes(json["Selección"])) {
-    precio += 20;
-    valores += "Café = 20c\n";
+    precio += 25;
+    valores += "Café = 25c\n";
   }
   // ColaCao = 20c
   if (json["Selección"] == "ColaCao con leche") {
-    precio += 20;
-    valores += "ColaCao = 20c\n";
+    precio += 25;
+    valores += "ColaCao = 25c\n";
   }
   valores += "<hr>Total: " + precio + "c\n";
   return [precio, valores];
