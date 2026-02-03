@@ -81,6 +81,23 @@ var DB = (function () {
   function onChange(change) {
     const doc = change.doc;
     if (!doc || !doc._id) return;
+    try {
+      window.TELESEC_LAST_SYNC = Date.now();
+      // derive a stable color from the last record's data hash
+      let payload = '';
+      try {
+        payload = (typeof doc.data === 'string') ? doc.data : JSON.stringify(doc.data || {});
+      } catch (e) {
+        payload = String(doc._id || '');
+      }
+      let hash = 0;
+      for (let i = 0; i < payload.length; i++) {
+        hash = (hash * 31 + payload.charCodeAt(i)) >>> 0;
+      }
+      const hue = hash % 360;
+      window.TELESEC_LAST_SYNC_COLOR = `hsl(${hue}, 70%, 50%)`;
+      updateStatusOrb();
+    } catch (e) {}
     const [table, id] = doc._id.split(':');
 
     // handle deletes

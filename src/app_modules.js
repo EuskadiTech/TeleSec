@@ -1319,54 +1319,39 @@ if (couchHost) {
   document.getElementById("peerLink").innerText = couchDatabase + "@" + couchHost;
 }
 
-function getPeers() {
-  const peerListEl = document.getElementById("peerList");
-  const pidEl = document.getElementById("peerPID");
-  const statusImg = document.getElementById("connectStatus");
-
-  // Default status based on navigator
-  if (window.navigator && window.navigator.onLine === false) {
-    if (statusImg) statusImg.src = "static/ico/offline.svg";
-  } else {
-    if (statusImg) statusImg.src = "static/logo.jpg";
+const statusImg = document.getElementById("connectStatus");
+function updateStatusOrb() {
+  const now = Date.now();
+  const recentSync = window.TELESEC_LAST_SYNC && (now - window.TELESEC_LAST_SYNC <= 3000);
+  if (recentSync) {
+    if (statusImg) {
+      const syncColor = window.TELESEC_LAST_SYNC_COLOR || "hsl(200, 70%, 50%)";
+      // Semicircle on the right side
+      statusImg.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB2aWV3Qm94PSIwIDAgMjQgMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEyIDIyYzUuNTIyIDAgMTAtNC40NzggMTAtMTBTMTcuNTIyIDIgMTIgMnMtdjJoLTJWM2gtMnYyaC0ydjJoLTJWM2gtMnYyaC0ydjJoLTJWM2gtMnYyaC0ydi0yaDJWM2gydjJoMnYyaDJ2MmgyVjNoMmwyIDJ2Mmgydi0yaDJ2MmgyVjNoMnYyYzAgNS41MjIgNC40NzggMTAgMTAgMTB6IiBmaWxsPSIjRkZGIi8+PC9zdmc+";
+      statusImg.style.backgroundColor = syncColor;
+      statusImg.style.borderRadius = "50%";
+    }
+    return;
   }
-
-  // Clear previous list
-  if (peerListEl) peerListEl.innerHTML = "";
-
-  // Show local DB stats if available
-  if (window.DB && DB._internal && DB._internal.local) {
-    DB._internal.local
-      .info()
-      .then((info) => {
-        if (peerListEl) {
-          const li = document.createElement("li");
-          li.innerText = `Local DB: ${info.db_name || "telesec"} (docs: ${info.doc_count || 0})`;
-          peerListEl.appendChild(li);
-        }
-        if (pidEl) pidEl.innerText = `DB: ${info.db_name || "telesec"}`;
-      })
-      .catch(() => {
-        if (peerListEl) {
-          const li = document.createElement("li");
-          li.innerText = "Local DB: unavailable";
-          peerListEl.appendChild(li);
-        }
-        if (pidEl) pidEl.innerText = "DB: local";
-      });
+  if (window.navigator && window.navigator.onLine === false) {
+    if (statusImg) {
+      statusImg.src = "static/ico/offline.svg";
+      statusImg.style.backgroundColor = "";
+      statusImg.style.borderRadius = "";
+    }
   } else {
-    if (pidEl) pidEl.innerText = "DB: none";
+    if (statusImg) {
+      // statusImg.src = "static/logo.jpg";
+      // statusImg.style.backgroundColor = "";
+      // statusImg.style.borderRadius = "";
+    }
   }
 }
-
-getPeers();
-setInterval(() => {
-  getPeers();
-}, PeerConnectionInterval);
+updateStatusOrb();
+setInterval(updateStatusOrb, 250);
 
 var BootIntervalID = setInterval(() => {
   BootLoops += 1;
-  getPeers();
 
   const isOnline = window.navigator ? window.navigator.onLine !== false : true;
 
