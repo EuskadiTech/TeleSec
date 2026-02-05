@@ -41,8 +41,8 @@ PAGES.login = {
               <label>Contraseña
                 <input type="password" id="${field_couch_pass}" value="${localStorage.getItem('TELESEC_COUCH_PASS') || ''}"><br><br>
               </label>
-              <label>Clave de encriptación (opcional)
-                <input type="password" id="${field_secret}" value="${localStorage.getItem('TELESEC_SECRET') || ''}"><br><br>
+              <label>Clave de encriptación <span style="color: red;">*</span>
+                <input type="password" id="${field_secret}" value="${localStorage.getItem('TELESEC_SECRET') || ''}" required><br><br>
               </label>
               <button id="${btn_skip}-save" class="btn5">Guardar y Continuar</button>
             </fieldset>
@@ -60,8 +60,17 @@ PAGES.login = {
         
         document.getElementById(btn_skip).onclick = () => {
           // Continue to persona creation without server config
-          open_page('login,onboarding-persona');
-          setUrlHash('login,onboarding-persona');
+          // Check if personas already exist (shouldn't happen but safety check)
+          var hasPersonas = Object.keys(SC_Personas).length > 0;
+          if (hasPersonas) {
+            toastr.info('Ya existen personas. Saltando creación de cuenta.');
+            localStorage.setItem('TELESEC_ONBOARDING_COMPLETE', 'true');
+            open_page('login');
+            setUrlHash('login');
+          } else {
+            open_page('login,onboarding-persona');
+            setUrlHash('login,onboarding-persona');
+          }
         };
         
         document.getElementById(btn_skip + '-save').onclick = () => {
@@ -69,10 +78,15 @@ PAGES.login = {
           var dbname = document.getElementById(field_couch_dbname).value.trim();
           var user = document.getElementById(field_couch_user).value.trim();
           var pass = document.getElementById(field_couch_pass).value;
-          var secret = document.getElementById(field_secret).value || '';
+          var secret = document.getElementById(field_secret).value.trim();
           
           if (!url) {
             toastr.error('Por favor ingresa un servidor CouchDB');
+            return;
+          }
+          
+          if (!secret) {
+            toastr.error('La clave de encriptación es obligatoria');
             return;
           }
           
@@ -86,19 +100,30 @@ PAGES.login = {
           localStorage.setItem('TELESEC_COUCH_DBNAME', dbname);
           localStorage.setItem('TELESEC_COUCH_USER', user);
           localStorage.setItem('TELESEC_COUCH_PASS', pass);
-          if (secret) {
-            localStorage.setItem('TELESEC_SECRET', secret.toUpperCase());
-            SECRET = secret.toUpperCase();
-          }
+          localStorage.setItem('TELESEC_SECRET', secret.toUpperCase());
+          SECRET = secret.toUpperCase();
           
           try {
             DB.init({ secret: SECRET, remoteServer: normalizedUrl, username: user, password: pass, dbname: dbname || undefined });
             toastr.success('Servidor configurado correctamente');
-            // Continue to persona creation
+            
+            // Wait a moment for initial replication to pull personas
             setTimeout(() => {
-              open_page('login,onboarding-persona');
-              setUrlHash('login,onboarding-persona');
-            }, 500);
+              // Check if personas were replicated from server
+              var hasPersonas = Object.keys(SC_Personas).length > 0;
+              
+              if (hasPersonas) {
+                // Personas found from server, skip persona creation step
+                toastr.info('Se encontraron personas en el servidor. Saltando creación de cuenta.');
+                localStorage.setItem('TELESEC_ONBOARDING_COMPLETE', 'true');
+                open_page('login');
+                setUrlHash('login');
+              } else {
+                // No personas found, continue to persona creation
+                open_page('login,onboarding-persona');
+                setUrlHash('login,onboarding-persona');
+              }
+            }, 2000);
           } catch (e) {
             toastr.error('Error al configurar el servidor: ' + (e.message || e));
           }
@@ -108,6 +133,16 @@ PAGES.login = {
         // Step 2: "Crea una persona"
         var field_nombre = safeuuid();
         var btn_crear = safeuuid();
+        
+        // Check if personas already exist
+        var hasPersonas = Object.keys(SC_Personas).length > 0;
+        if (hasPersonas) {
+          toastr.info('Se detectaron personas existentes. Redirigiendo al login.');
+          localStorage.setItem('TELESEC_ONBOARDING_COMPLETE', 'true');
+          open_page('login');
+          setUrlHash('login');
+          return;
+        }
         
         container.innerHTML = `
           <h1>¡Bienvenido a TeleSec! 🎉</h1>
@@ -128,6 +163,12 @@ PAGES.login = {
             toastr.error('Por favor ingresa tu nombre');
             return;
           }
+          
+          // Disable button to prevent duplicate creation
+          var btnElement = document.getElementById(btn_crear);
+          btnElement.disabled = true;
+          btnElement.style.opacity = '0.5';
+          btnElement.innerText = 'Creando...';
           
           // Create persona with all admin permissions from PERMS object
           var allPerms = Object.keys(PERMS).join(',') + ',';
@@ -157,6 +198,10 @@ PAGES.login = {
             }, 500);
           }).catch((e) => {
             toastr.error('Error creando cuenta: ' + (e.message || e));
+            // Re-enable button on error
+            btnElement.disabled = false;
+            btnElement.style.opacity = '1';
+            btnElement.innerText = 'Crear cuenta y empezar';
           });
         };
       }
