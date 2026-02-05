@@ -12,6 +12,7 @@ PAGES.login = {
         var field_couch_user = safeuuid();
         var field_couch_pass = safeuuid();
         var field_secret = safeuuid();
+        var field_server_preset = safeuuid();
         var btn_existing_server = safeuuid();
         var btn_new_server = safeuuid();
         var btn_skip = safeuuid();
@@ -29,6 +30,13 @@ PAGES.login = {
           <div id="${div_server_config}" style="display:none;margin-top:20px;">
             <h3>Configuración del servidor CouchDB</h3>
             <fieldset>
+              <label>Servidor predefinido (opcional)
+                <select id="${field_server_preset}" style="width:100%;padding:8px;margin-bottom:10px;">
+                  <option value="">-- Selecciona un servidor o introduce uno manualmente --</option>
+                  <option value="b.tech.eus">b.tech.eus - EuskadiTech B1</option>
+                  <option value="c.tech.eus">c.tech.eus - EuskadiTech C1</option>
+                </select>
+              </label>
               <label>Servidor CouchDB (ej: couch.example.com)
                 <input type="text" id="${field_couch}" value="${(localStorage.getItem('TELESEC_COUCH_URL') || '').replace(/^https?:\/\//, '')}"><br><br>
               </label>
@@ -51,6 +59,14 @@ PAGES.login = {
         
         document.getElementById(btn_existing_server).onclick = () => {
           document.getElementById(div_server_config).style.display = 'block';
+        };
+        
+        // Server preset selector handler
+        document.getElementById(field_server_preset).onchange = (e) => {
+          var preset = e.target.value;
+          if (preset) {
+            document.getElementById(field_couch).value = preset;
+          }
         };
         
         document.getElementById(btn_new_server).onclick = () => {
