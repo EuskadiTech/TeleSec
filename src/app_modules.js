@@ -1276,11 +1276,21 @@ function TS_IndexElement(
 }
 
 function BuildQR(mid, label) {
+  var svgNode = QRCode({
+    msg: mid,
+    dim: 150,
+    pad: 0,
+    mtx: -1,
+    ecl: 'L',
+    ecb: 0,
+    pal: ['#000000', '#ffffff'],
+    vrb: 0,
+  });
   return `
-  <span style="border: 2px dashed black; padding: 10px; display: inline-block; background: white; border-radius: 7px; text-align: center; margin: 10px;">
+  <span style="border: 2px dashed black; padding: 10px; display: inline-block; background: white; border-radius: 7px; text-align: center; margin: 5px;">
       <b>QR %%TITLE%%</b>
-      <br>${toHtml(quickresponse(mid), [6, 6])}<br>
-      <small>${label}</small>
+      <br>${svgNode.outerHTML}<br>
+      <small>${label || mid}</small>
   </span>
   `;
 }

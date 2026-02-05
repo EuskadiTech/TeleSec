@@ -23,13 +23,15 @@ PAGES.materiales = {
     var FECHA_ISO = new Date().toISOString().split('T')[0];
     container.innerHTML = html`
       <h1>Material <code id="${nameh1}"></code></h1>
-      ${BuildQR('materiales,' + mid, 'Este Material')}
+      ${BuildQR('materiales,' + mid)}
       <fieldset>
         <label>
           Fecha Revisión<br />
           <input type="date" id="${field_revision}" />
-          <a onclick='document.getElementById("${field_revision}").value = "${FECHA_ISO}";'
-            >Hoy - Contado todas las existencias</a
+          <a
+            onclick='document.getElementById("${field_revision}").value = "${FECHA_ISO}";'
+            style="color: blue;cursor: pointer;font-size: 0.9em;"
+            >Hoy - Contado todas las existencias </a
           ><br /><br />
         </label>
         <label>
@@ -38,7 +40,17 @@ PAGES.materiales = {
         </label>
         <label>
           Unidad<br />
-          <input type="text" id="${field_unidad}" /><br /><br />
+          <select id="${field_unidad}">
+            <option value="unidad(es)">unidad(es)</option>
+            <option value="paquete(s)">paquete(s)</option>
+            <option value="caja(s)">caja(s)</option>
+            <option value="rollo(s)">rollo(s)</option>
+            <option value="bote(s)">bote(s)</option>
+
+            <option value="metro(s)">metro(s)</option>
+            <option value="litro(s)">litro(s)</option>
+            <option value="kg">kg</option></select
+          ><br /><br />
         </label>
         <label>
           Cantidad Actual<br />
@@ -50,7 +62,14 @@ PAGES.materiales = {
         </label>
         <label>
           Ubicación<br />
-          <input type="text" id="${field_ubicacion}" value="-" /><br /><br />
+          <input
+            type="text"
+            id="${field_ubicacion}"
+            value="-"
+            list="${field_ubicacion}_list"
+          /><br /><br />
+          <!-- Autocompletar con ubicaciones existentes -->
+          <datalist id="${field_ubicacion}_list"></datalist>
         </label>
         <label>
           Notas<br />
@@ -61,6 +80,41 @@ PAGES.materiales = {
         <button class="rojo" id="${btn_borrar}">Borrar</button>
       </fieldset>
     `;
+    // Cargar ubicaciones existentes para autocompletar
+    DB.map('materiales', (data) => {
+      if (!data) return;
+      function addUbicacion(d) {
+        const ubicacion = d.Ubicacion || '-';
+        const datalist = document.getElementById(`${field_ubicacion}_list`);
+        if (!datalist) {
+          console.warn(`Element with ID "${field_ubicacion}_list" not found.`);
+          return;
+        }
+        const optionExists = Array.from(datalist.options).some((opt) => opt.value === ubicacion);
+        if (!optionExists) {
+          const option = document.createElement('option');
+          option.value = ubicacion;
+          datalist.appendChild(option);
+        }
+      }
+      if (typeof data === 'string') {
+        TS_decrypt(
+          data,
+          SECRET,
+          (data, wasEncrypted) => {
+            if (data && typeof data === 'object') {
+              addUbicacion(data);
+            }
+          },
+          'materiales',
+          mid
+        );
+      } else {
+        addUbicacion(data);
+      }
+    });
+
+    // Cargar datos del material
     DB.get('materiales', mid).then((data) => {
       function load_data(data, ENC = '') {
         document.getElementById(nameh1).innerText = mid;

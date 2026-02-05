@@ -43,12 +43,8 @@ PAGES.dataman = {
     };
   },
   __export: function () {
-    var select_type = safeuuid();
-    var textarea_content = safeuuid();
     var button_export_local = safeuuid();
     var button_export_safe = safeuuid();
-    var button_export_safe_cloud = safeuuid();
-    var button_clear = safeuuid();
     container.innerHTML = html`
       <h1>Exportar Datos</h1>
       <fieldset>
@@ -58,10 +54,6 @@ PAGES.dataman = {
         <br />
         <button id="${button_export_local}" type="button">Exportar sin cifrar</button>
         <button id="${button_export_safe}" type="button">Exportar con cifrado</button>
-        <button id="${button_export_safe_cloud}" style="display: none;" type="button">
-          Exportar a EuskadiTech - cifrado
-        </button>
-        <!--<br><br><em>Para descargar envia un correo a telesec@tech.eus con el asunto "TSBK %${getDBName()}".</em>-->
       </fieldset>
     `;
     document.getElementById(button_export_local).onclick = () => {
@@ -130,25 +122,6 @@ PAGES.dataman = {
         download(`Export %%TITLE%% Encriptado ${getDBName()}.json.txt`, JSON.stringify(result));
       })();
     };
-    // document.getElementById(button_export_safe_cloud).onclick = () => {
-    //   var download_data = (DATA) => {
-    //     toastr.info("Exportado todo, subiendo!");
-    //     fetch(
-    //       "https://telesec-sync.tech.eus/upload_backup.php?table=" + getDBName(),
-    //       {
-    //         method: "POST",
-    //         body: JSON.stringify(DATA),
-    //       }
-    //     )
-    //       .then(() => {
-    //         toastr.success("Subido correctamente!");
-    //       })
-    //       .catch(() => {
-    //         toastr.error("Ha ocurrido un error en la subida.");
-    //       });
-    //   };
-    //   gun.get(TABLE).load(download_data);
-    // };
   },
   __import: function () {
     var select_type = safeuuid();
