@@ -1,7 +1,238 @@
 PAGES.login = {
     Esconder: true,
     Title: "Login",
+    onboarding: function (step) {
+      // Multi-step onboarding flow
+      step = step || 'config';
+      
+      if (step === 'config') {
+        // Step 1: "Configuración de datos"
+        var field_couch = safeuuid();
+        var field_couch_dbname = safeuuid();
+        var field_couch_user = safeuuid();
+        var field_couch_pass = safeuuid();
+        var field_secret = safeuuid();
+        var field_server_preset = safeuuid();
+        var btn_existing_server = safeuuid();
+        var btn_new_server = safeuuid();
+        var btn_skip = safeuuid();
+        var div_server_config = safeuuid();
+        
+        container.innerHTML = `
+          <h1>¡Bienvenido a TeleSec! 🎉</h1>
+          <h2>Paso 1: Configuración de datos</h2>
+          <p>Para comenzar, elige cómo quieres configurar tu base de datos:</p>
+          <fieldset>
+            <button id="${btn_existing_server}" class="btn5" style="margin:10px;padding:15px;">📡 Conectar a un servidor CouchDB existente</button>
+            <button id="${btn_new_server}" class="btn2" style="margin:10px;padding:15px;">🆕 Crear un nuevo servidor (registro externo)</button>
+            <button id="${btn_skip}" class="btn3" style="margin:10px;padding:15px;">⏭️ Saltar (usar solo local)</button>
+          </fieldset>
+          <div id="${div_server_config}" style="display:none;margin-top:20px;">
+            <h3>Configuración del servidor CouchDB</h3>
+            <fieldset>
+              <label>Servidor predefinido (opcional)
+                <select id="${field_server_preset}" style="width:100%;padding:8px;margin-bottom:10px;">
+                  <option value="">-- Selecciona un servidor o introduce uno manualmente --</option>
+                  <option value="b.tech.eus">b.tech.eus - EuskadiTech B1</option>
+                  <option value="c.tech.eus">c.tech.eus - EuskadiTech C1</option>
+                </select>
+              </label>
+              <label>Servidor CouchDB (ej: couch.example.com)
+                <input type="text" id="${field_couch}" value="${(localStorage.getItem('TELESEC_COUCH_URL') || '').replace(/^https?:\/\//, '')}"><br><br>
+              </label>
+              <label>Nombre de la base (opcional)
+                <input type="text" id="${field_couch_dbname}" value="${localStorage.getItem('TELESEC_COUCH_DBNAME') || ''}"><br><br>
+              </label>
+              <label>Usuario
+                <input type="text" id="${field_couch_user}" value="${localStorage.getItem('TELESEC_COUCH_USER') || ''}"><br><br>
+              </label>
+              <label>Contraseña
+                <input type="password" id="${field_couch_pass}" value="${localStorage.getItem('TELESEC_COUCH_PASS') || ''}"><br><br>
+              </label>
+              <label>Clave de encriptación <span style="color: red;">*</span>
+                <input type="password" id="${field_secret}" value="${localStorage.getItem('TELESEC_SECRET') || ''}" required><br><br>
+              </label>
+              <button id="${btn_skip}-save" class="btn5">Guardar y Continuar</button>
+            </fieldset>
+          </div>
+        `;
+        
+        document.getElementById(btn_existing_server).onclick = () => {
+          document.getElementById(div_server_config).style.display = 'block';
+        };
+        
+        // Server preset selector handler
+        document.getElementById(field_server_preset).onchange = (e) => {
+          var preset = e.target.value;
+          if (preset) {
+            document.getElementById(field_couch).value = preset;
+          }
+        };
+        
+        document.getElementById(btn_new_server).onclick = () => {
+          window.open('https://tech.eus/telesec-signup.php', '_blank');
+          toastr.info('Una vez creado el servidor, vuelve aquí y conéctate usando el botón "Conectar a un servidor existente"');
+        };
+        
+        document.getElementById(btn_skip).onclick = () => {
+          // Continue to persona creation without server config
+          // Check if personas already exist (shouldn't happen but safety check)
+          var hasPersonas = Object.keys(SC_Personas).length > 0;
+          if (hasPersonas) {
+            toastr.info('Ya existen personas. Saltando creación de cuenta.');
+            localStorage.setItem('TELESEC_ONBOARDING_COMPLETE', 'true');
+            open_page('login');
+            setUrlHash('login');
+          } else {
+            open_page('login,onboarding-persona');
+            setUrlHash('login,onboarding-persona');
+          }
+        };
+        
+        document.getElementById(btn_skip + '-save').onclick = () => {
+          var url = document.getElementById(field_couch).value.trim();
+          var dbname = document.getElementById(field_couch_dbname).value.trim();
+          var user = document.getElementById(field_couch_user).value.trim();
+          var pass = document.getElementById(field_couch_pass).value;
+          var secret = document.getElementById(field_secret).value.trim();
+          
+          if (!url) {
+            toastr.error('Por favor ingresa un servidor CouchDB');
+            return;
+          }
+          
+          if (!secret) {
+            toastr.error('La clave de encriptación es obligatoria');
+            return;
+          }
+          
+          // Normalize URL: add https:// if no protocol specified
+          var normalizedUrl = url;
+          if (!/^https?:\/\//i.test(url)) {
+            normalizedUrl = 'https://' + url;
+          }
+          
+          localStorage.setItem('TELESEC_COUCH_URL', normalizedUrl);
+          localStorage.setItem('TELESEC_COUCH_DBNAME', dbname);
+          localStorage.setItem('TELESEC_COUCH_USER', user);
+          localStorage.setItem('TELESEC_COUCH_PASS', pass);
+          localStorage.setItem('TELESEC_SECRET', secret.toUpperCase());
+          SECRET = secret.toUpperCase();
+          
+          try {
+            DB.init({ secret: SECRET, remoteServer: normalizedUrl, username: user, password: pass, dbname: dbname || undefined });
+            toastr.success('Servidor configurado correctamente');
+            
+            // Wait a moment for initial replication to pull personas
+            setTimeout(() => {
+              // Check if personas were replicated from server
+              var hasPersonas = Object.keys(SC_Personas).length > 0;
+              
+              if (hasPersonas) {
+                // Personas found from server, skip persona creation step
+                toastr.info('Se encontraron personas en el servidor. Saltando creación de cuenta.');
+                localStorage.setItem('TELESEC_ONBOARDING_COMPLETE', 'true');
+                open_page('login');
+                setUrlHash('login');
+              } else {
+                // No personas found, continue to persona creation
+                open_page('login,onboarding-persona');
+                setUrlHash('login,onboarding-persona');
+              }
+            }, 2000);
+          } catch (e) {
+            toastr.error('Error al configurar el servidor: ' + (e.message || e));
+          }
+        };
+        
+      } else if (step === 'persona') {
+        // Step 2: "Crea una persona"
+        var field_nombre = safeuuid();
+        var btn_crear = safeuuid();
+        
+        // Check if personas already exist
+        var hasPersonas = Object.keys(SC_Personas).length > 0;
+        if (hasPersonas) {
+          toastr.info('Se detectaron personas existentes. Redirigiendo al login.');
+          localStorage.setItem('TELESEC_ONBOARDING_COMPLETE', 'true');
+          open_page('login');
+          setUrlHash('login');
+          return;
+        }
+        
+        container.innerHTML = `
+          <h1>¡Bienvenido a TeleSec! 🎉</h1>
+          <h2>Paso 2: Crea tu cuenta de administrador</h2>
+          <p>Para continuar, necesitas crear una cuenta personal con permisos de administrador.</p>
+          <fieldset>
+            <label>Tu nombre:
+              <input type="text" id="${field_nombre}" placeholder="Ej: Juan Pérez" autofocus><br><br>
+            </label>
+            <p><small>ℹ️ Esta cuenta tendrá todos los permisos de administrador y podrás gestionar la aplicación completamente.</small></p>
+            <button id="${btn_crear}" class="btn5">Crear cuenta y empezar</button>
+          </fieldset>
+        `;
+        
+        document.getElementById(btn_crear).onclick = () => {
+          var nombre = document.getElementById(field_nombre).value.trim();
+          if (!nombre) {
+            toastr.error('Por favor ingresa tu nombre');
+            return;
+          }
+          
+          // Disable button to prevent duplicate creation
+          var btnElement = document.getElementById(btn_crear);
+          btnElement.disabled = true;
+          btnElement.style.opacity = '0.5';
+          btnElement.innerText = 'Creando...';
+          
+          // Create persona with all admin permissions from PERMS object
+          var allPerms = Object.keys(PERMS).join(',') + ',';
+          var personaId = safeuuid('admin-');
+          var persona = {
+            Nombre: nombre,
+            Roles: allPerms,
+            Region: '',
+            Monedero_Balance: 0,
+            markdown: 'Cuenta de administrador creada durante el onboarding'
+          };
+          
+          DB.put('personas', personaId, persona).then(() => {
+            toastr.success('¡Cuenta creada exitosamente! 🎉');
+            localStorage.setItem('TELESEC_ONBOARDING_COMPLETE', 'true');
+            localStorage.setItem('TELESEC_ADMIN_ID', personaId);
+            
+            // Auto-login
+            SUB_LOGGED_IN_ID = personaId;
+            SUB_LOGGED_IN_DETAILS = persona;
+            SUB_LOGGED_IN = true;
+            SetPages();
+            
+            setTimeout(() => {
+              open_page('index');
+              setUrlHash('index');
+            }, 500);
+          }).catch((e) => {
+            toastr.error('Error creando cuenta: ' + (e.message || e));
+            // Re-enable button on error
+            btnElement.disabled = false;
+            btnElement.style.opacity = '1';
+            btnElement.innerText = 'Crear cuenta y empezar';
+          });
+        };
+      }
+    },
     edit: function (mid) {
+      // Handle onboarding routes
+      if (mid === 'onboarding-config') {
+        PAGES.login.onboarding('config');
+        return;
+      }
+      if (mid === 'onboarding-persona') {
+        PAGES.login.onboarding('persona');
+        return;
+      }
+      
       // Setup form to configure CouchDB remote and initial group/secret
       var field_couch = safeuuid();
       var field_couch_dbname = safeuuid();
@@ -189,6 +420,17 @@ PAGES.login = {
       };
     },
     index: function (mid) {
+      // Check if onboarding is needed
+      var onboardingComplete = localStorage.getItem('TELESEC_ONBOARDING_COMPLETE');
+      var hasPersonas = Object.keys(SC_Personas).length > 0;
+      
+      // If no personas exist and onboarding not complete, redirect to onboarding
+      if (!hasPersonas && !onboardingComplete && !AC_BYPASS) {
+        open_page('login,onboarding-config');
+        setUrlHash('login,onboarding-config');
+        return;
+      }
+      
       var field_persona = safeuuid();
       var btn_guardar = safeuuid();
       var btn_reload = safeuuid();
