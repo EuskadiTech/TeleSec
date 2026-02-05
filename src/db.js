@@ -18,9 +18,13 @@ var DB = (function () {
       const localName = 'telesec';
       local = new PouchDB(localName);
       if (changes) {
-        try { changes.cancel(); } catch (e) {}
+        try {
+          changes.cancel();
+        } catch (e) {}
       }
-      changes = local.changes({ live: true, since: 'now', include_docs: true }).on('change', onChange);
+      changes = local
+        .changes({ live: true, since: 'now', include_docs: true })
+        .on('change', onChange);
     } catch (e) {
       console.warn('ensureLocal error', e);
     }
@@ -35,7 +39,9 @@ var DB = (function () {
     try {
       if (opts && opts.secret) {
         SECRET = opts.secret;
-        try { localStorage.setItem('TELESEC_SECRET', SECRET); } catch (e) {}
+        try {
+          localStorage.setItem('TELESEC_SECRET', SECRET);
+        } catch (e) {}
       }
     } catch (e) {}
     local = new PouchDB(localName);
@@ -43,7 +49,7 @@ var DB = (function () {
     if (opts.remoteServer) {
       try {
         const server = opts.remoteServer.replace(/\/$/, '');
-        const dbname = encodeURIComponent((opts.dbname || localName));
+        const dbname = encodeURIComponent(opts.dbname || localName);
         let authPart = '';
         if (opts.username) authPart = opts.username + ':' + (opts.password || '') + '@';
         const remoteUrl = server.replace(/https?:\/\//, (m) => m) + '/' + dbname;
@@ -56,25 +62,41 @@ var DB = (function () {
     }
 
     if (changes) changes.cancel();
-    changes = local.changes({ live: true, since: 'now', include_docs: true }).on('change', onChange);
+    changes = local
+      .changes({ live: true, since: 'now', include_docs: true })
+      .on('change', onChange);
     return Promise.resolve();
   }
 
   function replicateToRemote() {
     ensureLocal();
     if (!local || !remote) return;
-    try { if (repPush && repPush.cancel) repPush.cancel(); } catch (e) {}
-    try { if (repPull && repPull.cancel) repPull.cancel(); } catch (e) {}
+    try {
+      if (repPush && repPush.cancel) repPush.cancel();
+    } catch (e) {}
+    try {
+      if (repPull && repPull.cancel) repPull.cancel();
+    } catch (e) {}
 
-    repPush = PouchDB.replicate(local, remote, { live: true, retry: true })
-      .on('error', function (err) { console.warn('Replication push error', err); });
-    repPull = PouchDB.replicate(remote, local, { live: true, retry: true })
-      .on('error', function (err) { console.warn('Replication pull error', err); });
+    repPush = PouchDB.replicate(local, remote, { live: true, retry: true }).on(
+      'error',
+      function (err) {
+        console.warn('Replication push error', err);
+      }
+    );
+    repPull = PouchDB.replicate(remote, local, { live: true, retry: true }).on(
+      'error',
+      function (err) {
+        console.warn('Replication pull error', err);
+      }
+    );
   }
 
   if (typeof window !== 'undefined' && window.addEventListener) {
     window.addEventListener('online', function () {
-      try { setTimeout(replicateToRemote, 1000); } catch (e) {}
+      try {
+        setTimeout(replicateToRemote, 1000);
+      } catch (e) {}
     });
   }
 
@@ -86,7 +108,7 @@ var DB = (function () {
       // derive a stable color from the last record's data hash
       let payload = '';
       try {
-        payload = (typeof doc.data === 'string') ? doc.data : JSON.stringify(doc.data || {});
+        payload = typeof doc.data === 'string' ? doc.data : JSON.stringify(doc.data || {});
       } catch (e) {
         payload = String(doc._id || '');
       }
@@ -104,8 +126,12 @@ var DB = (function () {
     if (change.deleted || doc._deleted) {
       delete docCache[doc._id];
       if (callbacks[table]) {
-        callbacks[table].forEach(cb => {
-          try { cb(null, id); } catch (e) { console.error(e); }
+        callbacks[table].forEach((cb) => {
+          try {
+            cb(null, id);
+          } catch (e) {
+            console.error(e);
+          }
         });
       }
       return;
@@ -117,11 +143,17 @@ var DB = (function () {
       const prev = docCache[doc._id];
       if (prev === now) return; // no meaningful change
       docCache[doc._id] = now;
-    } catch (e) { /* ignore cache errors */ }
+    } catch (e) {
+      /* ignore cache errors */
+    }
 
     if (callbacks[table]) {
-      callbacks[table].forEach(cb => {
-        try { cb(doc.data, id); } catch (e) { console.error(e); }
+      callbacks[table].forEach((cb) => {
+        try {
+          cb(doc.data, id);
+        } catch (e) {
+          console.error(e);
+        }
       });
     }
   }
@@ -138,13 +170,25 @@ var DB = (function () {
       const doc = existing || { _id: _id };
       var toStore = data;
       try {
-        var isEncryptedString = (typeof data === 'string' && data.startsWith('RSA{') && data.endsWith('}'));
-        if (!isEncryptedString && typeof TS_encrypt === 'function' && typeof SECRET !== 'undefined' && SECRET) {
-          toStore = await new Promise(resolve => {
-            try { TS_encrypt(data, SECRET, enc => resolve(enc)); } catch (e) { resolve(data); }
+        var isEncryptedString =
+          typeof data === 'string' && data.startsWith('RSA{') && data.endsWith('}');
+        if (
+          !isEncryptedString &&
+          typeof TS_encrypt === 'function' &&
+          typeof SECRET !== 'undefined' &&
+          SECRET
+        ) {
+          toStore = await new Promise((resolve) => {
+            try {
+              TS_encrypt(data, SECRET, (enc) => resolve(enc));
+            } catch (e) {
+              resolve(data);
+            }
           });
         }
-      } catch (e) { toStore = data; }
+      } catch (e) {
+        toStore = data;
+      }
       doc.data = toStore;
       doc.table = table;
       doc.ts = new Date().toISOString();
@@ -154,7 +198,6 @@ var DB = (function () {
       // FIX: manually trigger map() callbacks for local update
       // onChange will update docCache and notify all subscribers
       onChange({ doc: doc });
-
     } catch (e) {
       console.error('DB.put error', e);
     }
@@ -166,21 +209,33 @@ var DB = (function () {
     try {
       const doc = await local.get(_id);
       return doc.data;
-    } catch (e) { return null; }
+    } catch (e) {
+      return null;
+    }
   }
 
-  async function del(table, id) { return put(table, id, null); }
+  async function del(table, id) {
+    return put(table, id, null);
+  }
 
   async function list(table) {
     ensureLocal();
     try {
-      const res = await local.allDocs({ include_docs: true, startkey: table + ':', endkey: table + ':\uffff' });
-      return res.rows.map(r => {
+      const res = await local.allDocs({
+        include_docs: true,
+        startkey: table + ':',
+        endkey: table + ':\uffff',
+      });
+      return res.rows.map((r) => {
         const id = r.id.split(':')[1];
-        try { docCache[r.id] = typeof r.doc.data === 'string' ? r.doc.data : JSON.stringify(r.doc.data); } catch (e) {}
+        try {
+          docCache[r.id] = typeof r.doc.data === 'string' ? r.doc.data : JSON.stringify(r.doc.data);
+        } catch (e) {}
         return { id: id, data: r.doc.data };
       });
-    } catch (e) { return []; }
+    } catch (e) {
+      return [];
+    }
   }
 
   function dataURLtoBlob(dataurl) {
@@ -203,11 +258,15 @@ var DB = (function () {
         doc = await local.get(_id);
       }
       let blob = dataUrlOrBlob;
-      if (typeof dataUrlOrBlob === 'string' && dataUrlOrBlob.indexOf('data:') === 0) blob = dataURLtoBlob(dataUrlOrBlob);
+      if (typeof dataUrlOrBlob === 'string' && dataUrlOrBlob.indexOf('data:') === 0)
+        blob = dataURLtoBlob(dataUrlOrBlob);
       const type = contentType || (blob && blob.type) || 'application/octet-stream';
       await local.putAttachment(_id, name, doc._rev, blob, type);
       return true;
-    } catch (e) { console.error('putAttachment error', e); return false; }
+    } catch (e) {
+      console.error('putAttachment error', e);
+      return false;
+    }
   }
 
   async function getAttachment(table, id, name) {
@@ -218,11 +277,13 @@ var DB = (function () {
       if (!blob) return null;
       return await new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = e => resolve(e.target.result);
-        reader.onerror = e => reject(e);
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = (e) => reject(e);
         reader.readAsDataURL(blob);
       });
-    } catch (e) { return null; }
+    } catch (e) {
+      return null;
+    }
   }
 
   async function listAttachments(table, id) {
@@ -259,10 +320,14 @@ var DB = (function () {
           try {
             const durl = await getAttachment(table, id, name);
             out.push({ name: name, dataUrl: durl, content_type: null });
-          } catch (e) { out.push({ name: name, dataUrl: null, content_type: null }); }
+          } catch (e) {
+            out.push({ name: name, dataUrl: null, content_type: null });
+          }
         }
         return out;
-      } catch (e2) { return []; }
+      } catch (e2) {
+        return [];
+      }
     }
   }
 
@@ -275,15 +340,20 @@ var DB = (function () {
       delete doc._attachments[name];
       await local.put(doc);
       return true;
-    } catch (e) { console.error('deleteAttachment error', e); return false; }
+    } catch (e) {
+      console.error('deleteAttachment error', e);
+      return false;
+    }
   }
 
   function map(table, cb) {
     ensureLocal();
     callbacks[table] = callbacks[table] || [];
     callbacks[table].push(cb);
-    list(table).then(rows => rows.forEach(r => cb(r.data, r.id)));
-    return () => { callbacks[table] = callbacks[table].filter(x => x !== cb); }
+    list(table).then((rows) => rows.forEach((r) => cb(r.data, r.id)));
+    return () => {
+      callbacks[table] = callbacks[table].filter((x) => x !== cb);
+    };
   }
 
   return {
@@ -298,7 +368,7 @@ var DB = (function () {
     deleteAttachment,
     putAttachment,
     getAttachment,
-    _internal: { local }
+    _internal: { local },
   };
 })();
 
@@ -311,7 +381,15 @@ window.DB = DB;
     const username = localStorage.getItem('TELESEC_COUCH_USER') || '';
     const password = localStorage.getItem('TELESEC_COUCH_PASS') || '';
     const dbname = localStorage.getItem('TELESEC_COUCH_DBNAME') || undefined;
-    try { SECRET = localStorage.getItem('TELESEC_SECRET') || ''; } catch (e) { SECRET = ''; }
-    DB.init({ remoteServer, username, password, dbname }).catch(e => console.warn('DB.autoInit error', e));
-  } catch (e) { console.warn('DB.autoInit unexpected error', e); }
+    try {
+      SECRET = localStorage.getItem('TELESEC_SECRET') || '';
+    } catch (e) {
+      SECRET = '';
+    }
+    DB.init({ remoteServer, username, password, dbname }).catch((e) =>
+      console.warn('DB.autoInit error', e)
+    );
+  } catch (e) {
+    console.warn('DB.autoInit unexpected error', e);
+  }
 })();

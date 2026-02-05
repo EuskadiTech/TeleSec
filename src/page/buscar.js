@@ -1,7 +1,7 @@
 PAGES.buscar = {
-  navcss: "btn1",
-  icon: "static/appico/view.svg",
-  Title: "Buscar",
+  navcss: 'btn1',
+  icon: 'static/appico/view.svg',
+  Title: 'Buscar',
   AccessControl: true,
   Esconder: true,
 
@@ -12,32 +12,33 @@ PAGES.buscar = {
     const recentSearches = safeuuid();
     const moduleFilter = safeuuid();
 
-    container.innerHTML = `
+    container.innerHTML = html`
       <h1>🔍 Búsqueda Global</h1>
       <p>Busca en todos los módulos: personas, materiales, café, comedor, notas y avisos</p>
-      
+
       <fieldset>
         <legend>Opciones de búsqueda</legend>
-        <input type="text" id="${searchInput}" 
-               placeholder="Escribe aquí para buscar..." 
-               onkeypress="if(event.key==='Enter') document.getElementById('${searchButton}').click()">
+        <input
+          type="text"
+          id="${searchInput}"
+          placeholder="Escribe aquí para buscar..."
+          onkeypress="if(event.key==='Enter') document.getElementById('${searchButton}').click()"
+        />
         <select id="${moduleFilter}">
           <option value="">Todos los módulos</option>
           <!-- Options will be populated dynamically based on user permissions -->
         </select>
-        <button id="${searchButton}" class="btn5">
-          Buscar
-        </button>
+        <button id="${searchButton}" class="btn5">Buscar</button>
       </fieldset>
-      
+
       <div id="${recentSearches}"></div>
-      
+
       <div id="${resultsContainer}">
         <fieldset>
           <legend>Resultados</legend>
           <div>🔍 Introduce un término de búsqueda para comenzar</div>
           <p>Puedes buscar por nombres, referencias, fechas, ubicaciones...</p>
-          
+
           <details>
             <summary>💡 Consejos de búsqueda</summary>
             <ul>
@@ -72,7 +73,7 @@ PAGES.buscar = {
 
       // Add only accessible modules
       accessibleModules.forEach((module) => {
-        const option = document.createElement("option");
+        const option = document.createElement('option');
         option.value = module.key;
         option.textContent = `${getModuleIcon(module.key)} ${module.title}`;
         moduleFilterEl.appendChild(option);
@@ -82,24 +83,22 @@ PAGES.buscar = {
     // Helper function to get module icons (fallback for older module mappings)
     function getModuleIcon(moduleKey) {
       const iconMap = {
-        personas: "👤",
-        materiales: "📦",
-        supercafe: "☕",
-        comedor: "🍽️",
-        avisos: "🔔",
-        aulas: "🏫",
-        resumen_diario: "📊",
+        personas: '👤',
+        materiales: '📦',
+        supercafe: '☕',
+        comedor: '🍽️',
+        avisos: '🔔',
+        aulas: '🏫',
+        resumen_diario: '📊',
       };
-      return iconMap[moduleKey] || "📋";
+      return iconMap[moduleKey] || '📋';
     }
 
     // Load recent searches from localStorage
     function loadRecentSearches() {
-      const recent = JSON.parse(
-        localStorage.getItem("telesec_recent_searches") || "[]"
-      );
+      const recent = JSON.parse(localStorage.getItem('telesec_recent_searches') || '[]');
       if (recent.length > 0) {
-        recentSearchesEl.innerHTML = `
+        recentSearchesEl.innerHTML = html`
           <fieldset>
             <legend>Búsquedas recientes</legend>
             ${recent
@@ -110,8 +109,11 @@ PAGES.buscar = {
               </button>
             `
               )
-              .join("")}
-            <button onclick="localStorage.removeItem('telesec_recent_searches'); this.parentElement.style.display='none';" class="rojo">
+              .join('')}
+            <button
+              onclick="localStorage.removeItem('telesec_recent_searches'); this.parentElement.style.display='none';"
+              class="rojo"
+            >
               Limpiar
             </button>
           </fieldset>
@@ -126,14 +128,12 @@ PAGES.buscar = {
     function saveToRecent(term) {
       if (!term || term.length < 2) return;
 
-      let recent = JSON.parse(
-        localStorage.getItem("telesec_recent_searches") || "[]"
-      );
+      let recent = JSON.parse(localStorage.getItem('telesec_recent_searches') || '[]');
       recent = recent.filter((t) => t !== term); // Remove if exists
       recent.unshift(term); // Add to beginning
       recent = recent.slice(0, 5); // Keep only 5 most recent
 
-      localStorage.setItem("telesec_recent_searches", JSON.stringify(recent));
+      localStorage.setItem('telesec_recent_searches', JSON.stringify(recent));
       loadRecentSearches();
     }
 
@@ -143,7 +143,7 @@ PAGES.buscar = {
       const selectedModule = moduleFilterEl.value;
 
       if (searchTerm.length < 2) {
-        resultsEl.innerHTML = `
+        resultsEl.innerHTML = html`
           <fieldset>
             <legend>Error</legend>
             <div>⚠️ Por favor, introduce al menos 2 caracteres para buscar</div>
@@ -153,7 +153,7 @@ PAGES.buscar = {
       }
 
       // Show loading
-      resultsEl.innerHTML = `
+      resultsEl.innerHTML = html`
         <fieldset>
           <legend>Buscando...</legend>
           <div>⏳ Procesando búsqueda...</div>
@@ -166,9 +166,7 @@ PAGES.buscar = {
 
         // Filter by module if selected
         if (selectedModule) {
-          results = results.filter(
-            (result) => result._module === selectedModule
-          );
+          results = results.filter((result) => result._module === selectedModule);
         }
 
         globalSearch.renderResults(results, resultsEl);
@@ -176,16 +174,17 @@ PAGES.buscar = {
 
         // Add stats
         if (results.length > 0) {
-          const statsDiv = document.createElement("fieldset");
-          const legend = document.createElement("legend");
-          legend.textContent = "Estadísticas";
+          const statsDiv = document.createElement('fieldset');
+          const legend = document.createElement('legend');
+          legend.textContent = 'Estadísticas';
           statsDiv.appendChild(legend);
 
           let filterText = selectedModule
             ? ` en ${moduleFilterEl.options[moduleFilterEl.selectedIndex].text}`
-            : "";
-          const content = document.createElement("div");
-          content.innerHTML = `📊 Se encontraron <strong>${results.length}</strong> resultados para "<strong>${searchTerm}</strong>"${filterText}`;
+            : '';
+          const content = document.createElement('div');
+          content.innerHTML = html`📊 Se encontraron <strong>${results.length}</strong> resultados
+            para "<strong>${searchTerm}</strong>"${filterText}`;
           statsDiv.appendChild(content);
 
           resultsEl.insertBefore(statsDiv, resultsEl.firstChild);
@@ -218,24 +217,24 @@ PAGES.buscar = {
     searchInputEl.focus();
 
     // Add keyboard shortcuts
-    document.addEventListener("keydown", function (e) {
+    document.addEventListener('keydown', function (e) {
       // Ctrl+F or Cmd+F to focus search
-      if ((e.ctrlKey || e.metaKey) && e.key === "f") {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
         e.preventDefault();
         searchInputEl.focus();
         searchInputEl.select();
       }
 
       // Escape to clear search
-      if (e.key === "Escape") {
-        searchInputEl.value = "";
+      if (e.key === 'Escape') {
+        searchInputEl.value = '';
         searchInputEl.focus();
-        resultsEl.innerHTML = `
+        resultsEl.innerHTML = html`
           <fieldset>
             <legend>Resultados</legend>
             <div>🔍 Introduce un término de búsqueda para comenzar</div>
             <p>Puedes buscar por nombres, referencias, fechas, ubicaciones...</p>
-            
+
             <details>
               <summary>💡 Consejos de búsqueda</summary>
               <ul>
@@ -252,10 +251,10 @@ PAGES.buscar = {
     });
 
     // Check for quick search term from header
-    const quickSearchTerm = sessionStorage.getItem("telesec_quick_search");
+    const quickSearchTerm = sessionStorage.getItem('telesec_quick_search');
     if (quickSearchTerm) {
       searchInputEl.value = quickSearchTerm;
-      sessionStorage.removeItem("telesec_quick_search");
+      sessionStorage.removeItem('telesec_quick_search');
       // Perform search automatically
       setTimeout(performSearch, 100);
     }

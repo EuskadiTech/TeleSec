@@ -1,28 +1,28 @@
 let newWorker;
 
 function showUpdateBar() {
-  let snackbar = document.getElementById("snackbar");
-  snackbar.className = "show";
+  let snackbar = document.getElementById('snackbar');
+  snackbar.className = 'show';
 }
 
 // The click event on the pop up notification
-document.getElementById("reload").addEventListener("click", function () {
+document.getElementById('reload').addEventListener('click', function () {
   setTimeout(() => {
     removeCache();
   }, 1000);
-  newWorker.postMessage({ action: "skipWaiting" });
+  newWorker.postMessage({ action: 'skipWaiting' });
 });
 
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js").then((reg) => {
-    reg.addEventListener("updatefound", () => {
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').then((reg) => {
+    reg.addEventListener('updatefound', () => {
       // A wild service worker has appeared in reg.installing!
       newWorker = reg.installing;
 
-      newWorker.addEventListener("statechange", () => {
+      newWorker.addEventListener('statechange', () => {
         // Has network.state changed?
         switch (newWorker.state) {
-          case "installed":
+          case 'installed':
             if (navigator.serviceWorker.controller) {
               // new update available
               showUpdateBar();
@@ -35,7 +35,7 @@ if ("serviceWorker" in navigator) {
   });
 
   let refreshing;
-  navigator.serviceWorker.addEventListener("controllerchange", function () {
+  navigator.serviceWorker.addEventListener('controllerchange', function () {
     if (refreshing) return;
     window.location.reload();
     refreshing = true;

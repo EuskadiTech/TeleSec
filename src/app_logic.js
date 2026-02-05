@@ -1,33 +1,33 @@
 function fixfloat(number) {
-    return (parseFloat(number).toPrecision(8));
+  return parseFloat(number).toPrecision(8);
 }
 
 function tableScroll(query) {
   $(query).doubleScroll();
 }
 //var secretTokenEl = document.getElementById("secretToken");
-var container = document.getElementById("container");
+var container = document.getElementById('container');
 
 function open_page(params) {
   // Clear stored event listeners and timers
   EventListeners.GunJS = [];
-  EventListeners.Timeout.forEach(ev => clearTimeout(ev));
+  EventListeners.Timeout.forEach((ev) => clearTimeout(ev));
   EventListeners.Timeout = [];
-  EventListeners.Interval.forEach(ev => clearInterval(ev));
+  EventListeners.Interval.forEach((ev) => clearInterval(ev));
   EventListeners.Interval = [];
-  EventListeners.QRScanner.forEach(ev => ev.clear());
+  EventListeners.QRScanner.forEach((ev) => ev.clear());
   EventListeners.QRScanner = [];
-  EventListeners.Custom.forEach(ev => ev());
+  EventListeners.Custom.forEach((ev) => ev());
   EventListeners.Custom = [];
 
-  if (SUB_LOGGED_IN != true && params != "login,setup" && !params.startsWith("login,onboarding")) {
-    PAGES["login"].index();
+  if (SUB_LOGGED_IN != true && params != 'login,setup' && !params.startsWith('login,onboarding')) {
+    PAGES['login'].index();
     return;
   }
-  if (params == "") {
-    params = "index";
+  if (params == '') {
+    params = 'index';
   }
-  var path = params.split(",");
+  var path = params.split(',');
   var app = path[0];
   if (path[1] == undefined) {
     PAGES[app].index();
@@ -37,8 +37,8 @@ function open_page(params) {
 }
 
 function setUrlHash(hash) {
-  location.hash = "#" + hash;
-  
+  location.hash = '#' + hash;
+
   // Handle quick search transfer
   if (hash === 'buscar') {
     const quickSearchInput = document.getElementById('quickSearchInput');
@@ -50,62 +50,57 @@ function setUrlHash(hash) {
   }
 }
 window.onhashchange = () => {
-  open_page(location.hash.replace("#", ""));
+  open_page(location.hash.replace('#', ''));
 };
 
 function download(filename, text) {
-  var element = document.createElement("a");
+  var element = document.createElement('a');
   element.setAttribute(
-    "href",
-    "data:application/octet-stream;charset=utf-8," + encodeURIComponent(text)
+    'href',
+    'data:application/octet-stream;charset=utf-8,' + encodeURIComponent(text)
   );
-  element.setAttribute("download", filename);
-  
-  element.style.display = "none";
+  element.setAttribute('download', filename);
+
+  element.style.display = 'none';
   document.body.appendChild(element);
-  
+
   element.click();
-  
+
   document.body.removeChild(element);
 }
 
-function resizeInputImage(
-  file,
-  callback,
-  targetHeight = 256,
-  targetQuality = 0.75
-) {
+function resizeInputImage(file, callback, targetHeight = 256, targetQuality = 0.75) {
   const reader = new FileReader();
-  
-  reader.onload = function(event) {
+
+  reader.onload = function (event) {
     const img = new Image();
-    img.onload = function() {
+    img.onload = function () {
       const aspectRatio = img.width / img.height;
       const targetWidth = targetHeight * aspectRatio;
-      
-      const canvas = document.createElement("canvas");
+
+      const canvas = document.createElement('canvas');
       canvas.width = targetWidth;
       canvas.height = targetHeight;
-      
-      const ctx = canvas.getContext("2d");
-      
-      ctx.fillStyle = "#ffffff";
+
+      const ctx = canvas.getContext('2d');
+
+      ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
+
       ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
-      
+
       // Get resized image as Blob
-      const dataURL = canvas.toDataURL("image/jpeg", targetQuality);
+      const dataURL = canvas.toDataURL('image/jpeg', targetQuality);
       callback(dataURL);
     };
     img.src = event.target.result;
   };
-  
+
   reader.readAsDataURL(file);
 }
 
 function CurrentISODate() {
-  return new Date().toISOString().split("T")[0].replace("T", " ");
+  return new Date().toISOString().split('T')[0].replace('T', ' ');
 }
 
 function CurrentISOTime() {
@@ -113,7 +108,7 @@ function CurrentISOTime() {
 }
 
 function fixGunLocalStorage() {
-  localStorage.removeItem("radata");
+  localStorage.removeItem('radata');
   removeCache();
   location.reload();
 }
@@ -125,45 +120,34 @@ function fixGunLocalStorage() {
 //   }
 // }, 5000);
 
-
 function betterSorter(a, b) {
-    // 1. Fecha (ascending)
-    if (a.Fecha && b.Fecha && a.Fecha !== b.Fecha) {
-      return a.Fecha > b.Fecha ? -1 : 1;
-    }
-    // 2. Region (ascending, from SC_Personas if Persona exists)
-    const regionA =
-      a.Persona && SC_Personas[a.Persona]
-        ? SC_Personas[a.Persona].Region || ""
-        : a.Region || "";
-    const regionB =
-      b.Persona && SC_Personas[b.Persona]
-        ? SC_Personas[b.Persona].Region || ""
-        : b.Region || "";
-    if (regionA !== regionB) {
-      return regionA.toLowerCase() < regionB.toLowerCase() ? -1 : 1;
-    }
-    // 3. Persona (Nombre, ascending, from SC_Personas if Persona exists)
-    const nombrePersonaA =
-      a.Persona && SC_Personas[a.Persona]
-        ? SC_Personas[a.Persona].Nombre || ""
-        : "";
-    const nombrePersonaB =
-      b.Persona && SC_Personas[b.Persona]
-        ? SC_Personas[b.Persona].Nombre || ""
-        : "";
-    if (nombrePersonaA !== nombrePersonaB) {
-      return nombrePersonaA.toLowerCase() < nombrePersonaB.toLowerCase()
-        ? -1
-        : 1;
-    }
-    // 4. Nombre (ascending, from a.Nombre/b.Nombre)
-    if (a.Nombre && b.Nombre && a.Nombre !== b.Nombre) {
-      return a.Nombre.toLowerCase() < b.Nombre.toLowerCase() ? -1 : 1;
-    }
-    // 5. Asunto (ascending, from a.Asunto/b.Asunto)
-    if (a.Asunto && b.Asunto && a.Asunto !== b.Asunto) {
-      return a.Asunto.toLowerCase() < b.Asunto.toLowerCase() ? -1 : 1;
-    }
-    return 0;
+  // 1. Fecha (ascending)
+  if (a.Fecha && b.Fecha && a.Fecha !== b.Fecha) {
+    return a.Fecha > b.Fecha ? -1 : 1;
   }
+  // 2. Region (ascending, from SC_Personas if Persona exists)
+  const regionA =
+    a.Persona && SC_Personas[a.Persona] ? SC_Personas[a.Persona].Region || '' : a.Region || '';
+  const regionB =
+    b.Persona && SC_Personas[b.Persona] ? SC_Personas[b.Persona].Region || '' : b.Region || '';
+  if (regionA !== regionB) {
+    return regionA.toLowerCase() < regionB.toLowerCase() ? -1 : 1;
+  }
+  // 3. Persona (Nombre, ascending, from SC_Personas if Persona exists)
+  const nombrePersonaA =
+    a.Persona && SC_Personas[a.Persona] ? SC_Personas[a.Persona].Nombre || '' : '';
+  const nombrePersonaB =
+    b.Persona && SC_Personas[b.Persona] ? SC_Personas[b.Persona].Nombre || '' : '';
+  if (nombrePersonaA !== nombrePersonaB) {
+    return nombrePersonaA.toLowerCase() < nombrePersonaB.toLowerCase() ? -1 : 1;
+  }
+  // 4. Nombre (ascending, from a.Nombre/b.Nombre)
+  if (a.Nombre && b.Nombre && a.Nombre !== b.Nombre) {
+    return a.Nombre.toLowerCase() < b.Nombre.toLowerCase() ? -1 : 1;
+  }
+  // 5. Asunto (ascending, from a.Asunto/b.Asunto)
+  if (a.Asunto && b.Asunto && a.Asunto !== b.Asunto) {
+    return a.Asunto.toLowerCase() < b.Asunto.toLowerCase() ? -1 : 1;
+  }
+  return 0;
+}

@@ -14,7 +14,7 @@ def get_all_files(directory):
     return files
 
 PREFETCH = ""
-VERSIONCO = "2025-08"
+VERSIONCO = "2026-02"
 HANDLEPARSE = get_all_files("src")
 TITLE = os.environ.get("TELESEC_TITLE", "TeleSec")
 HOSTER = os.environ.get("TELESEC_HOSTER", "EuskadiTech")
@@ -35,7 +35,7 @@ shutil.copytree("assets","dist", dirs_exist_ok=True)
 def replace_handles(string):
     string = string.replace("%%PREFETCH%%", PREFETCH)
     string = string.replace("%%VERSIONCO%%", VERSIONCO)
-    string = string.replace("%%TITLE%%", "TeleSec")
+    string = string.replace("%%TITLE%%", TITLE)
     string = string.replace("%%HOSTER%%", HOSTER)
     string = string.replace("%%ASSETSJSON%%", json.dumps(ASSETS, ensure_ascii=False))
     return string

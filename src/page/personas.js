@@ -1,13 +1,13 @@
-PERMS["personas"] = "Personas";
-PERMS["personas:edit"] = "&gt; Editar";
+PERMS['personas'] = 'Personas';
+PERMS['personas:edit'] = '&gt; Editar';
 PAGES.personas = {
-  navcss: "btn3",
-  icon: "static/appico/users.png",
+  navcss: 'btn3',
+  icon: 'static/appico/users.png',
   AccessControl: true,
-  Title: "Personas",
+  Title: 'Personas',
   edit: function (mid) {
-    if (!checkRole("personas:edit")) {
-      setUrlHash("personas");
+    if (!checkRole('personas:edit')) {
+      setUrlHash('personas');
       return;
     }
     var nameh1 = safeuuid();
@@ -23,9 +23,9 @@ PAGES.personas = {
     var btn_guardar = safeuuid();
     var btn_borrar = safeuuid();
     var btn_ver_monedero = safeuuid();
-    container.innerHTML = `
+    container.innerHTML = html`
       <h1>Persona <code id="${nameh1}"></code></h1>
-      ${BuildQR("personas," + mid, "Esta Persona")}
+      ${BuildQR('personas,' + mid, 'Esta Persona')}
       <fieldset>
           <label>
               Nombre<br>
@@ -88,16 +88,16 @@ PAGES.personas = {
           <button class="rojo" id="${btn_borrar}">Borrar</button>
       </fieldset>
       `;
-    var resized = "";
+    var resized = '';
     var pdel = document.getElementById(permisosdet);
     DB.get('personas', mid).then((data) => {
-      function load_data(data, ENC = "") {
+      function load_data(data, ENC = '') {
         document.getElementById(nameh1).innerText = mid;
-        var pot = "<ul>";
+        var pot = '<ul>';
         Object.entries(PERMS).forEach((page) => {
-          var c = "";
-          if ((data["Roles"] || ",").split(",").includes(page[0])) {
-            c = "checked";
+          var c = '';
+          if ((data['Roles'] || ',').split(',').includes(page[0])) {
+            c = 'checked';
           }
           pot += `
             <li><label>
@@ -106,35 +106,41 @@ PAGES.personas = {
             </label></li>
           `;
         });
-        pdel.innerHTML = pot + "</ul>";
-        document.getElementById(field_nombre).value = data["Nombre"] || "";
-        document.getElementById(field_zona).value = data["Region"] || "";
-        document.getElementById(field_anilla).value = data["SC_Anilla"] || "";
+        pdel.innerHTML = pot + '</ul>';
+        document.getElementById(field_nombre).value = data['Nombre'] || '';
+        document.getElementById(field_zona).value = data['Region'] || '';
+        document.getElementById(field_anilla).value = data['SC_Anilla'] || '';
         // set fallback image immediately
-        document.getElementById(render_foto).src = data["Foto"] || "static/ico/user_generic.png";
-        resized = data["Foto"] || "static/ico/user_generic.png";
+        document.getElementById(render_foto).src = data['Foto'] || 'static/ico/user_generic.png';
+        resized = data['Foto'] || 'static/ico/user_generic.png';
         // try to load attachment 'foto' if present (preferred storage)
-        DB.getAttachment('personas', mid, 'foto').then((durl) => {
-          if (durl) {
-            document.getElementById(render_foto).src = durl;
-            resized = durl;
-          }
-        }).catch(() => {});
-        document.getElementById(field_notas).value = data["markdown"] || "";
-        document.getElementById(field_monedero_balance).value =
-          data["Monedero_Balance"] || 0;
-        document.getElementById(field_monedero_notas).value =
-          data["Monedero_Notas"] || "";
+        DB.getAttachment('personas', mid, 'foto')
+          .then((durl) => {
+            if (durl) {
+              document.getElementById(render_foto).src = durl;
+              resized = durl;
+            }
+          })
+          .catch(() => {});
+        document.getElementById(field_notas).value = data['markdown'] || '';
+        document.getElementById(field_monedero_balance).value = data['Monedero_Balance'] || 0;
+        document.getElementById(field_monedero_notas).value = data['Monedero_Notas'] || '';
       }
-      if (typeof data == "string") {
-        TS_decrypt(data, SECRET, (data, wasEncrypted) => {
-          load_data(data, "%E");
-        }, 'personas', mid);
+      if (typeof data == 'string') {
+        TS_decrypt(
+          data,
+          SECRET,
+          (data, wasEncrypted) => {
+            load_data(data, '%E');
+          },
+          'personas',
+          mid
+        );
       } else {
         load_data(data || {});
       }
     });
-    document.getElementById(field_foto).addEventListener("change", function (e) {
+    document.getElementById(field_foto).addEventListener('change', function (e) {
       const file = e.target.files[0];
       if (!file) return;
       // Do NOT resize — keep original uploaded image
@@ -150,76 +156,78 @@ PAGES.personas = {
       // Disable button to prevent double-clicking
       var guardarBtn = document.getElementById(btn_guardar);
       if (guardarBtn.disabled) return;
-      
+
       guardarBtn.disabled = true;
-      guardarBtn.style.opacity = "0.5";
-      
+      guardarBtn.style.opacity = '0.5';
+
       var dt = new FormData(pdel);
       var data = {
         Nombre: document.getElementById(field_nombre).value,
         Region: document.getElementById(field_zona).value,
-        Roles: dt.getAll("perm").join(",") + ",",
+        Roles: dt.getAll('perm').join(',') + ',',
         SC_Anilla: document.getElementById(field_anilla).value,
         // Foto moved to PouchDB attachment named 'foto'
         markdown: document.getElementById(field_notas).value,
-        Monedero_Balance:
-          parseFloat(document.getElementById(field_monedero_balance).value) ||
-          0,
+        Monedero_Balance: parseFloat(document.getElementById(field_monedero_balance).value) || 0,
         Monedero_Notas: document.getElementById(field_monedero_notas).value,
       };
-      document.getElementById("actionStatus").style.display = "block";
-      DB.put('personas', mid, data).then(() => {
-        // if resized is a data URL (new/updated image), save as attachment
-        var attachPromise = Promise.resolve(true);
-        if (typeof resized === 'string' && resized.indexOf('data:') === 0) {
-          attachPromise = DB.putAttachment('personas', mid, 'foto', resized, 'image/png');
-        }
-        attachPromise.then(() => {
-          toastr.success("Guardado!");
-          setTimeout(() => {
-            document.getElementById("actionStatus").style.display = "none";
-            setUrlHash("personas");
-          }, SAVE_WAIT);
-        }).catch((e) => { 
-          console.warn('putAttachment error', e); 
-          document.getElementById("actionStatus").style.display = "none";
+      document.getElementById('actionStatus').style.display = 'block';
+      DB.put('personas', mid, data)
+        .then(() => {
+          // if resized is a data URL (new/updated image), save as attachment
+          var attachPromise = Promise.resolve(true);
+          if (typeof resized === 'string' && resized.indexOf('data:') === 0) {
+            attachPromise = DB.putAttachment('personas', mid, 'foto', resized, 'image/png');
+          }
+          attachPromise
+            .then(() => {
+              toastr.success('Guardado!');
+              setTimeout(() => {
+                document.getElementById('actionStatus').style.display = 'none';
+                setUrlHash('personas');
+              }, SAVE_WAIT);
+            })
+            .catch((e) => {
+              console.warn('putAttachment error', e);
+              document.getElementById('actionStatus').style.display = 'none';
+              guardarBtn.disabled = false;
+              guardarBtn.style.opacity = '1';
+              toastr.error('Error al guardar la foto');
+            });
+        })
+        .catch((e) => {
+          console.warn('DB.put error', e);
+          document.getElementById('actionStatus').style.display = 'none';
           guardarBtn.disabled = false;
-          guardarBtn.style.opacity = "1";
-          toastr.error("Error al guardar la foto");
+          guardarBtn.style.opacity = '1';
+          toastr.error('Error al guardar la persona');
         });
-      }).catch((e) => { 
-        console.warn('DB.put error', e); 
-        document.getElementById("actionStatus").style.display = "none";
-        guardarBtn.disabled = false;
-        guardarBtn.style.opacity = "1";
-        toastr.error("Error al guardar la persona");
-      });
     };
     document.getElementById(btn_ver_monedero).onclick = () => {
-      setUrlHash("pagos"); // Navigate to pagos and show transactions for this person
+      setUrlHash('pagos'); // Navigate to pagos and show transactions for this person
     };
     document.getElementById(btn_borrar).onclick = () => {
-      if (confirm("¿Quieres borrar esta persona?") == true) {
+      if (confirm('¿Quieres borrar esta persona?') == true) {
         DB.del('personas', mid).then(() => {
-          toastr.error("Borrado!");
+          toastr.error('Borrado!');
           setTimeout(() => {
-            setUrlHash("personas");
+            setUrlHash('personas');
           }, SAVE_WAIT);
         });
       }
     };
   },
   index: function () {
-    if (!checkRole("personas")) {
-      setUrlHash("index");
+    if (!checkRole('personas')) {
+      setUrlHash('index');
       return;
     }
     var btn_new = safeuuid();
-    container.innerHTML = `
+    container.innerHTML = html`
       <h1>Personas</h1>
       <button id="${btn_new}">Nueva Persona</button>
       <div id="tableContainer"></div>
-      `;
+    `;
 
     const config = [
       // {
@@ -227,28 +235,28 @@ PAGES.personas = {
       //   type: "persona",
       //   self: true,
       // },
-      { key: "Foto", label: "Foto", type: "attachment-persona", default: "", self: true },
-      { key: "Nombre", label: "Nombre", type: "text", default: "" },
-      { key: "Region", label: "Zona", type: "text", default: "" },
-      { key: "Monedero_Balance", label: "Saldo Monedero", type: "moneda" },
+      { key: 'Foto', label: 'Foto', type: 'attachment-persona', default: '', self: true },
+      { key: 'Nombre', label: 'Nombre', type: 'text', default: '' },
+      { key: 'Region', label: 'Zona', type: 'text', default: '' },
+      { key: 'Monedero_Balance', label: 'Saldo Monedero', type: 'moneda' },
       //{ key: "markdown", label: "Notas", type: "markdown", default: "" },
       //{ key: "Roles", label: "Permisos", type: "text", default: "" }
     ];
 
     TS_IndexElement(
-      "personas",
+      'personas',
       config,
-      "personas",
-      document.getElementById("tableContainer"),
+      'personas',
+      document.getElementById('tableContainer'),
       undefined,
       undefined,
       true // Enable global search bar
     );
-    if (!checkRole("personas:edit")) {
-      document.getElementById(btn_new).style.display = "none";
+    if (!checkRole('personas:edit')) {
+      document.getElementById(btn_new).style.display = 'none';
     } else {
       document.getElementById(btn_new).onclick = () => {
-        setUrlHash("personas," + safeuuid(""));
+        setUrlHash('personas,' + safeuuid(''));
       };
     }
   },

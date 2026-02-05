@@ -94,8 +94,6 @@ TeleSec is a Spanish Progressive Web Application (PWA) built with vanilla JavaSc
     ├── manifest.json          # PWA manifest
     ├── *.png, *.jpg           # Icons and images
     ├── static/                # JavaScript libraries and CSS
-│   │   ├── pouchdb (via CDN)  # PouchDB is used for local storage and replication
-    │   ├── webrtc.js          # WebRTC functionality
     │   ├── euskaditech-css/   # CSS framework
     │   └── ico/               # Application icons
     └── page/                   # Page-specific assets (empty placeholder)
