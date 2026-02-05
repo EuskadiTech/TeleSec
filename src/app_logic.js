@@ -20,7 +20,7 @@ function open_page(params) {
   EventListeners.Custom.forEach(ev => ev());
   EventListeners.Custom = [];
 
-  if (SUB_LOGGED_IN != true && params != "login,setup") {
+  if (SUB_LOGGED_IN != true && params != "login,setup" && !params.startsWith("login,onboarding")) {
     PAGES["login"].index();
     return;
   }
