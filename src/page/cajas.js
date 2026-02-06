@@ -22,6 +22,11 @@ PAGES.cajas = {
     var render_foto = safeuuid();
     var btn_volver = safeuuid();
     var btn_borrar = safeuuid();
+    var btn_editar = safeuuid();
+    var btn_guardar = safeuuid();
+    var btn_cancelar = safeuuid();
+    var div_buttons = safeuuid();
+    var isEditMode = false;
 
     container.innerHTML = html`
       <h1>Movimiento de Caja</h1>
@@ -44,22 +49,33 @@ PAGES.cajas = {
         </label>
         <label>
           Foto del Ticket<br>
-          <img id="${render_foto}" height="200px" style="border: 3px solid #ddd; display: none; margin: 10px 0;">
+          <img id="${render_foto}" height="200px" style="border: 3px solid #ddd; display: none; margin: 10px 0; cursor: pointer;">
+          <input type="file" accept="image/*" id="${field_foto}" style="display: none;">
         </label>
         <label>
           Notas<br>
           <textarea id="${field_notas}" disabled rows="4"></textarea><br><br>
         </label>
         <hr>
-        <button class="btn5" id="${btn_volver}">Volver a Caja</button>
-        <button class="rojo" id="${btn_borrar}" style="display: none;">Borrar</button>
+        <div id="${div_buttons}">
+          <button class="btn5" id="${btn_volver}">Volver a Caja</button>
+          <button class="btn5" id="${btn_editar}" style="display: none;">Editar</button>
+          <button class="btn5" id="${btn_guardar}" style="display: none;">Guardar</button>
+          <button class="rojo" id="${btn_cancelar}" style="display: none;">Cancelar</button>
+          <button class="rojo" id="${btn_borrar}" style="display: none;">Borrar</button>
+        </div>
       </fieldset>
     `;
 
     // Load transaction data
+    var movimientoData = null;
+    var resized = '';
+
     DB.get('cajas_movimientos', movimientoId).then((data) => {
       function load_data(data) {
         if (!data) return;
+        
+        movimientoData = data;
         
         // Format datetime for datetime-local input
         var fechaValue = data['Fecha'] || '';
@@ -82,17 +98,25 @@ PAGES.cajas = {
         document.getElementById(field_notas).value = data['Notas'] || '';
 
         // Load photo attachment if present
-        DB.getAttachment('cajas_movimientos', movimientoId, 'foto')
-          .then((durl) => {
-            if (durl) {
-              document.getElementById(render_foto).src = durl;
-            } else {
-              document.getElementById(render_foto).style.display = 'none';
-            }
-          })
-          .catch(() => {
-            document.getElementById(render_foto).style.display = 'none';
-          });
+        if (DB.getAttachment) {
+          DB.getAttachment('cajas_movimientos', movimientoId, 'foto')
+            .then((durl) => {
+              try {
+                if (durl) {
+                  var fotoElement = document.getElementById(render_foto);
+                  if (fotoElement) {
+                    fotoElement.src = durl;
+                    fotoElement.style.display = 'block';
+                  }
+                }
+              } catch (e) {
+                console.warn('Error setting foto:', e);
+              }
+            })
+            .catch((e) => {
+              console.warn('Error loading foto:', e);
+            });
+        }
       }
 
       if (typeof data === 'string') {
@@ -110,24 +134,190 @@ PAGES.cajas = {
       }
     });
 
+    // Enable edit mode
+    function enableEditMode() {
+      isEditMode = true;
+      document.getElementById(field_fecha).disabled = false;
+      document.getElementById(field_tipo).disabled = false;
+      document.getElementById(field_monto).disabled = false;
+      document.getElementById(field_persona).disabled = false;
+      document.getElementById(field_notas).disabled = false;
+      document.getElementById(render_foto).style.cursor = 'pointer';
+      
+      document.getElementById(btn_editar).style.display = 'none';
+      document.getElementById(btn_volver).style.display = 'none';
+      document.getElementById(btn_guardar).style.display = 'inline-block';
+      document.getElementById(btn_cancelar).style.display = 'inline-block';
+      document.getElementById(btn_borrar).style.display = 'none';
+    }
+
+    // Disable edit mode
+    function disableEditMode() {
+      isEditMode = false;
+      document.getElementById(field_fecha).disabled = true;
+      document.getElementById(field_tipo).disabled = true;
+      document.getElementById(field_monto).disabled = true;
+      document.getElementById(field_persona).disabled = true;
+      document.getElementById(field_notas).disabled = true;
+      document.getElementById(render_foto).style.cursor = 'default';
+      
+      document.getElementById(btn_editar).style.display = checkRole('cajas:edit') ? 'inline-block' : 'none';
+      document.getElementById(btn_volver).style.display = 'inline-block';
+      document.getElementById(btn_guardar).style.display = 'none';
+      document.getElementById(btn_cancelar).style.display = 'none';
+      document.getElementById(btn_borrar).style.display = checkRole('cajas:edit') ? 'inline-block' : 'none';
+    }
+
+    // Button handlers
     document.getElementById(btn_volver).onclick = () => {
       setUrlHash('cajas,' + cajaId);
     };
 
-    // Show delete button only if user has edit permission
-    if (checkRole('cajas:edit')) {
-      document.getElementById(btn_borrar).style.display = 'inline-block';
-      document.getElementById(btn_borrar).onclick = () => {
-        if (confirm('¿Quieres borrar este movimiento?')) {
-          DB.del('cajas_movimientos', movimientoId).then(() => {
-            toastr.success('Movimiento borrado!');
-            setTimeout(() => {
-              setUrlHash('cajas,' + cajaId);
-            }, SAVE_WAIT);
-          });
+    document.getElementById(btn_editar).onclick = () => {
+      enableEditMode();
+    };
+
+    document.getElementById(btn_cancelar).onclick = () => {
+      disableEditMode();
+      // Reload data to discard changes
+      DB.get('cajas_movimientos', movimientoId).then((data) => {
+        if (typeof data === 'string') {
+          TS_decrypt(data, SECRET, (d) => { load_data(d); }, 'cajas_movimientos', movimientoId);
+        } else {
+          load_data(data || {});
         }
+      });
+    };
+
+    // Photo click handler
+    document.getElementById(render_foto).onclick = () => {
+      if (isEditMode) {
+        // In edit mode: upload new photo
+        document.getElementById(field_foto).click();
+      } else {
+        // In read mode: open photo in new tab
+        var fotoElement = document.getElementById(render_foto);
+        if (fotoElement && fotoElement.src) {
+          window.open(fotoElement.src, '_blank');
+        }
+      }
+    };
+
+    document.getElementById(field_foto).addEventListener('change', function (e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (ev) {
+        const url = ev.target.result;
+        document.getElementById(render_foto).src = url;
+        resized = url;
       };
+      reader.readAsDataURL(file);
+    });
+
+    // Save handler
+    document.getElementById(btn_guardar).onclick = () => {
+      var guardarBtn = document.getElementById(btn_guardar);
+      if (guardarBtn.disabled) return;
+
+      var tipo = document.getElementById(field_tipo).value;
+      var monto = parseFloat(document.getElementById(field_monto).value);
+      var fecha = document.getElementById(field_fecha).value;
+      var notas = document.getElementById(field_notas).value;
+
+      // Validation
+      if (!tipo) {
+        alert('Por favor selecciona el tipo de movimiento');
+        return;
+      }
+      if (!monto || monto <= 0) {
+        alert('Por favor ingresa un monto válido');
+        return;
+      }
+      if (!fecha) {
+        alert('Por favor selecciona una fecha');
+        return;
+      }
+
+      guardarBtn.disabled = true;
+      guardarBtn.style.opacity = '0.5';
+
+      var fechaISO = new Date(fecha).toISOString();
+
+      var data = {
+        Caja: movimientoData.Caja,
+        Fecha: fechaISO,
+        Tipo: tipo,
+        Monto: monto,
+        Persona: movimientoData.Persona,
+        Notas: notas,
+      };
+
+      // Preserve transfer destination if applicable
+      if (movimientoData.CajaDestino) {
+        data.CajaDestino = movimientoData.CajaDestino;
+      }
+
+      document.getElementById('actionStatus').style.display = 'block';
+      DB.put('cajas_movimientos', movimientoId, data)
+        .then(() => {
+          // Save photo attachment if a new one was provided
+          var attachPromise = Promise.resolve(true);
+          if (resized && resized.indexOf('data:') === 0) {
+            attachPromise = DB.putAttachment(
+              'cajas_movimientos',
+              movimientoId,
+              'foto',
+              resized,
+              'image/png'
+            );
+          }
+
+          attachPromise
+            .then(() => {
+              toastr.success('Movimiento actualizado!');
+              disableEditMode();
+              document.getElementById('actionStatus').style.display = 'none';
+              // Reload to show updates
+              setTimeout(() => {
+                PAGES.cajas.movimiento(cajaId, movimientoId);
+              }, SAVE_WAIT);
+            })
+            .catch((e) => {
+              console.warn('Error saving:', e);
+              document.getElementById('actionStatus').style.display = 'none';
+              guardarBtn.disabled = false;
+              guardarBtn.style.opacity = '1';
+              toastr.error('Error al guardar el movimiento');
+            });
+        })
+        .catch((e) => {
+          console.warn('DB.put error', e);
+          document.getElementById('actionStatus').style.display = 'none';
+          guardarBtn.disabled = false;
+          guardarBtn.style.opacity = '1';
+          toastr.error('Error al guardar el movimiento');
+        });
+    };
+
+    // Show/hide edit button based on permissions
+    if (checkRole('cajas:edit')) {
+      document.getElementById(btn_editar).style.display = 'inline-block';
+      document.getElementById(btn_borrar).style.display = 'inline-block';
     }
+
+    // Delete handler
+    document.getElementById(btn_borrar).onclick = () => {
+      if (confirm('¿Quieres borrar este movimiento?')) {
+        DB.del('cajas_movimientos', movimientoId).then(() => {
+          toastr.success('Movimiento borrado!');
+          setTimeout(() => {
+            setUrlHash('cajas,' + cajaId);
+          }, SAVE_WAIT);
+        });
+      }
+    };
   },
 
   // Create new transaction (movimiento)
@@ -162,9 +352,9 @@ PAGES.cajas = {
           Tipo de Movimiento<br>
           <select id="${field_tipo}">
             <option value="">-- Seleccionar --</option>
-            <option value="Ingreso">➕ Ingreso</option>
-            <option value="Gasto">➖ Gasto</option>
-            <option value="Transferencia">🔄 Transferencia</option>
+            <option value="Ingreso">+ Ingreso</option>
+            <option value="Gasto">- Gasto</option>
+            <option value="Transferencia">> Transferencia</option>
           </select><br><br>
         </label>
         <label>
@@ -445,12 +635,12 @@ PAGES.cajas = {
 
     // Check for special routes
     var parts = location.hash.split(',');
-    if (parts[1] === 'nuevo_movimiento' && parts[2]) {
-      PAGES.cajas.nuevo_movimiento(parts[2]);
+    if (parts[2] === 'movimientos' && parts[3] === '_nuevo') {
+      PAGES.cajas.nuevo_movimiento(parts[1]);
       return;
     }
-    if (parts[1] === 'movimiento' && parts[2] && parts[3]) {
-      PAGES.cajas.movimiento(parts[2], parts[3]);
+    if (parts[2] === 'movimiento' && parts[3]) {
+      PAGES.cajas.movimiento(parts[1], parts[3]);
       return;
     }
 
@@ -498,7 +688,7 @@ PAGES.cajas = {
       ${
         isMonederos
           ? html`<p><small>Aquí se muestran todas las transacciones de los monederos (módulo Pagos)</small></p>`
-          : html`<button class="btn5" id="${btn_nuevo_movimiento}">➕ Nuevo Movimiento</button>`
+          : html`<button class="btn5" id="${btn_nuevo_movimiento}">+ Nuevo Movimiento</button>`
       }
       <div id="${movimientos_container}"></div>
     `;
@@ -571,7 +761,7 @@ PAGES.cajas = {
       };
 
       document.getElementById(btn_nuevo_movimiento).onclick = () => {
-        setUrlHash('cajas,nuevo_movimiento,' + mid);
+        setUrlHash('cajas,' + mid + ',_nuevo');
       };
     } else {
       // Monederos - show aggregated wallet data
@@ -665,7 +855,7 @@ PAGES.cajas = {
           template: (data, element) => {
             var tipo = data.Tipo || '';
             var monto = parseFloat(data.Monto || 0);
-            var sign = tipo === 'Ingreso' ? '+' : tipo === 'Gasto' ? '-' : '↔';
+            var sign = tipo === 'Ingreso' ? '+' : tipo === 'Gasto' ? '-' : '<->';
             var color = tipo === 'Ingreso' ? 'green' : tipo === 'Gasto' ? 'red' : 'blue';
             element.innerHTML = html`<span style="color: ${color}; font-weight: bold;">${sign}${monto.toFixed(2)}€</span>`;
           },
@@ -681,13 +871,13 @@ PAGES.cajas = {
       ];
 
       TS_IndexElement(
-        'cajas_movimientos',
+        'cajas,' + mid + ',movimiento',
         config,
         'cajas_movimientos',
         document.getElementById(movimientos_container),
         function (data, new_tr) {
           new_tr.onclick = () => {
-            setUrlHash('cajas,movimiento,' + mid + ',' + data._key);
+            setUrlHash('cajas,' + mid + ',movimiento,' + data._key);
           };
         },
         function (data) {
@@ -713,7 +903,7 @@ PAGES.cajas = {
     container.innerHTML = html`
       <h1>Cajas</h1>
       <button class="btn5" id="${btn_monederos}" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-bottom: 10px;">
-        💳 Ver Monederos
+        Ver Monederos
       </button>
       <button id="${btn_new}">Nueva Caja</button>
       <div id="${tableContainer}"></div>
