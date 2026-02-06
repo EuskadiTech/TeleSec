@@ -44,7 +44,7 @@ PAGES.cajas = {
         </label>
         <label>
           Foto del Ticket<br>
-          <img id="${render_foto}" height="200px" style="border: 3px solid #ddd; display: block; margin: 10px 0;" src="static/ico/user_generic.png">
+          <img id="${render_foto}" height="200px" style="border: 3px solid #ddd; display: none; margin: 10px 0;">
         </label>
         <label>
           Notas<br>
@@ -144,6 +144,8 @@ PAGES.cajas = {
     var field_notas = safeuuid();
     var field_foto = safeuuid();
     var render_foto = safeuuid();
+    var field_caja_destino = safeuuid();
+    var div_caja_destino = safeuuid();
     var btn_guardar = safeuuid();
     var btn_cancelar = safeuuid();
 
@@ -174,10 +176,18 @@ PAGES.cajas = {
           <input type="hidden" id="${field_persona}">
           <div id="personaSelector"></div>
         </label>
+        <div id="${div_caja_destino}" style="display: none;">
+          <label>
+            Caja Destino (para transferencias)<br>
+            <select id="${field_caja_destino}">
+              <option value="">-- Seleccionar Caja Destino --</option>
+            </select><br><br>
+          </label>
+        </div>
         <label>
           Foto del Ticket<br>
           <small>Obligatorio para gastos</small><br>
-          <img id="${render_foto}" height="150px" style="border: 3px inset; min-width: 100px; cursor: pointer; display: block; margin: 10px 0;" src="static/ico/user_generic.png">
+          <img id="${render_foto}" height="150px" style="border: 3px dashed #ccc; min-width: 100px; cursor: pointer; display: block; margin: 10px 0; background: #f5f5f5;" title="Haz clic para subir foto">
           <input type="file" accept="image/*" id="${field_foto}" style="display: none;"><br>
         </label>
         <label>
@@ -212,6 +222,44 @@ PAGES.cajas = {
       '- No hay personas registradas -'
     );
 
+    // Load cajas for destination selection
+    DB.map('cajas', (data, key) => {
+      function addCajaOption(cajaData, cajaKey) {
+        if (cajaKey === cajaId) return; // Don't show current caja
+        var select = document.getElementById(field_caja_destino);
+        if (!select) return;
+        var option = document.createElement('option');
+        option.value = cajaKey;
+        option.textContent = cajaData.Nombre || cajaKey;
+        select.appendChild(option);
+      }
+
+      if (typeof data === 'string') {
+        TS_decrypt(
+          data,
+          SECRET,
+          (cajaData, wasEncrypted) => {
+            addCajaOption(cajaData, key);
+          },
+          'cajas',
+          key
+        );
+      } else {
+        addCajaOption(data, key);
+      }
+    });
+
+    // Show/hide destination caja based on transaction type
+    document.getElementById(field_tipo).addEventListener('change', function () {
+      var tipo = this.value;
+      var divDestino = document.getElementById(div_caja_destino);
+      if (tipo === 'Transferencia') {
+        divDestino.style.display = 'block';
+      } else {
+        divDestino.style.display = 'none';
+      }
+    });
+
     // Photo upload handler (click image to upload)
     document.getElementById(render_foto).onclick = () => {
       document.getElementById(field_foto).click();
@@ -239,6 +287,7 @@ PAGES.cajas = {
       var personaId = document.getElementById(field_persona).value;
       var fecha = document.getElementById(field_fecha).value;
       var notas = document.getElementById(field_notas).value;
+      var cajaDestinoId = document.getElementById(field_caja_destino).value;
 
       // Validation
       if (!tipo) {
@@ -256,6 +305,18 @@ PAGES.cajas = {
       if (!fecha) {
         alert('Por favor selecciona una fecha');
         return;
+      }
+
+      // Validate destination caja for transfers
+      if (tipo === 'Transferencia') {
+        if (!cajaDestinoId) {
+          alert('Por favor selecciona la caja destino para la transferencia');
+          return;
+        }
+        if (cajaDestinoId === cajaId) {
+          alert('No puedes transferir a la misma caja');
+          return;
+        }
       }
 
       // Validate photo for expenses
@@ -279,6 +340,11 @@ PAGES.cajas = {
         Notas: notas,
       };
 
+      // Add destination caja for transfers
+      if (tipo === 'Transferencia') {
+        data.CajaDestino = cajaDestinoId;
+      }
+
       document.getElementById('actionStatus').style.display = 'block';
       DB.put('cajas_movimientos', movimientoId, data)
         .then(() => {
@@ -296,8 +362,15 @@ PAGES.cajas = {
 
           attachPromise
             .then(() => {
-              // Update caja balance
+              // Update source caja balance
               return updateCajaBalance(cajaId, tipo, monto);
+            })
+            .then(() => {
+              // If transfer, update destination caja balance
+              if (tipo === 'Transferencia' && cajaDestinoId) {
+                return updateCajaBalance(cajaDestinoId, 'Ingreso', monto);
+              }
+              return Promise.resolve();
             })
             .then(() => {
               toastr.success('Movimiento guardado!');
@@ -335,10 +408,10 @@ PAGES.cajas = {
 
           if (tipo === 'Ingreso') {
             newBalance = currentBalance + monto;
-          } else if (tipo === 'Gasto') {
+          } else if (tipo === 'Gasto' || tipo === 'Transferencia') {
+            // For transfers, this updates the source caja (deduct amount)
             newBalance = currentBalance - monto;
           }
-          // Transferencia doesn't affect this caja's balance
 
           cajaData.Balance = fixfloat(newBalance);
           return DB.put('cajas', cajaId, cajaData);
@@ -618,7 +691,7 @@ PAGES.cajas = {
           };
         },
         function (data) {
-          // Filter: only show movements for this caja
+          // Filter: only show movements for this caja (return true to HIDE the row)
           return data.Caja !== mid;
         },
         true
