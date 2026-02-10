@@ -127,3 +127,4 @@ function LogOutTeleSec() {
   history.replaceState(null, '', '?' + urlParams.toString());
   location.reload();
 }
+var TTS_RATE = parseFloat(urlParams.get('tts_rate')) || 0.75;

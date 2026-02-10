@@ -61,6 +61,34 @@ PAGES.supercafe = {
       divact.innerHTML = '';
       addCategory_Personas(divact, SC_Personas, currentPersonaID, (value) => {
         document.getElementById(field_persona).value = value;
+        
+        // Check for outstanding debts when person is selected
+        DB.list('supercafe').then((rows) => {
+          var deudasCount = 0;
+          var processed = 0;
+          var total = rows.length;
+          
+          if (total === 0) return;
+          
+          // Count debts for this person
+          rows.forEach((row) => {
+            TS_decrypt(row.data, SECRET, (data) => {
+              if (data.Persona == value && data.Estado == 'Deuda') {
+                deudasCount++;
+              }
+              processed++;
+              
+              // When all rows are processed, show warning if needed
+              if (processed === total && deudasCount >= 3) {
+                toastr.warning(`Esta persona tiene ${deudasCount} comandas en deuda. No se podrá guardar el pedido.`, '', {
+                  timeOut: 5000
+                });
+              }
+            }, 'supercafe', row.id);
+          });
+        }).catch((e) => {
+          console.warn('Error checking debts', e);
+        });
       });
       Object.entries(SC_actions).forEach((category) => {
         addCategory(
@@ -115,33 +143,80 @@ PAGES.supercafe = {
         return;
       }
 
-      // Disable button after validation passes
-      guardarBtn.disabled = true;
-      guardarBtn.style.opacity = '0.5';
+      var personaId = document.getElementById(field_persona).value;
 
-      var data = {
-        Fecha: document.getElementById(field_fecha).value,
-        Persona: document.getElementById(field_persona).value,
-        Comanda: JSON.stringify(currentData),
-        Notas: document.getElementById(field_notas).value,
-        Estado: document.getElementById(field_estado).value.replace('%%', 'Pedido'),
-      };
-      document.getElementById('actionStatus').style.display = 'block';
-      DB.put('supercafe', mid, data)
-        .then(() => {
-          toastr.success('Guardado!');
-          setTimeout(() => {
-            document.getElementById('actionStatus').style.display = 'none';
-            setUrlHash('supercafe');
-          }, SAVE_WAIT);
-        })
-        .catch((e) => {
-          console.warn('DB.put error', e);
-          guardarBtn.disabled = false;
-          guardarBtn.style.opacity = '1';
-          document.getElementById('actionStatus').style.display = 'none';
-          toastr.error('Error al guardar la comanda');
+      // Check for outstanding debts
+      DB.list('supercafe').then((rows) => {
+        var deudasCount = 0;
+        var processed = 0;
+        var total = rows.length;
+        
+        if (total === 0) {
+          // No commands, proceed to save
+          proceedToSave();
+          return;
+        }
+        
+        // Count debts for this person
+        rows.forEach((row) => {
+          TS_decrypt(row.data, SECRET, (data) => {
+            if (data.Persona == personaId && data.Estado == 'Deuda') {
+              deudasCount++;
+            }
+            processed++;
+            
+            // When all rows are processed, check if we can save
+            if (processed === total) {
+              if (deudasCount >= 3) {
+                toastr.error('Esta persona tiene más de 3 comandas en deuda. No se puede realizar el pedido.');
+                // Delete the comanda if it was created
+                if (mid) {
+                  DB.del('supercafe', mid).then(() => {
+                    setTimeout(() => {
+                      setUrlHash('supercafe');
+                    }, 1000);
+                  });
+                }
+              } else {
+                proceedToSave();
+              }
+            }
+          }, 'supercafe', row.id);
         });
+      }).catch((e) => {
+        console.warn('Error checking debts', e);
+        toastr.error('Error al verificar las deudas');
+      });
+      
+      function proceedToSave() {
+        // Disable button after validation passes
+        guardarBtn.disabled = true;
+        guardarBtn.style.opacity = '0.5';
+
+        var data = {
+          Fecha: document.getElementById(field_fecha).value,
+          Persona: personaId,
+          Comanda: JSON.stringify(currentData),
+          Notas: document.getElementById(field_notas).value,
+          Estado: document.getElementById(field_estado).value.replace('%%', 'Pedido'),
+        };
+        document.getElementById('actionStatus').style.display = 'block';
+        DB.put('supercafe', mid, data)
+          .then(() => {
+            toastr.success('Guardado!');
+            setTimeout(() => {
+              document.getElementById('actionStatus').style.display = 'none';
+              setUrlHash('supercafe');
+            }, SAVE_WAIT);
+          })
+          .catch((e) => {
+            console.warn('DB.put error', e);
+            guardarBtn.disabled = false;
+            guardarBtn.style.opacity = '1';
+            document.getElementById('actionStatus').style.display = 'none';
+            toastr.error('Error al guardar la comanda');
+          });
+      }
     };
     document.getElementById(btn_borrar).onclick = () => {
       if (
@@ -250,6 +325,7 @@ PAGES.supercafe = {
       document.getElementById(totalprecio).innerText = tot;
       return tot;
     }
+    var ttS_data = {};
     TS_IndexElement(
       'supercafe',
       config,
@@ -285,13 +361,50 @@ PAGES.supercafe = {
         }
         if (old[key] != data.Estado) {
           if (tts && document.getElementById(tts_check).checked) {
-            var msg = `Comanda de ${SC_Personas[data.Persona].Region}. - ${
-              JSON.parse(data.Comanda)['Selección']
-            }. - ${SC_Personas[data.Persona].Nombre}. - ${data.Estado}`;
-            let utterance = new SpeechSynthesisUtterance(msg);
-            utterance.rate = 0.9;
-            // utterance.voice = speechSynthesis.getVoices()[7]
-            speechSynthesis.speak(utterance);
+            // say "El pedido está de camino a ${Region}" when all comandas for that aula are set to "Entregado".
+            if (ttS_data[data.Region] == undefined) {
+              ttS_data[data.Region] = {};
+            }
+            ttS_data[data.Region][data._key] = data.Estado;
+            var allEntregado = true;
+            Object.values(ttS_data[data.Region]).forEach((estado) => {
+              if (estado != 'Entregado') {
+                allEntregado = false;
+              }
+            });
+            if (allEntregado) {
+              var msgRegion = `Hola, ${SC_Personas[data.Persona].Region}. Estamos entregando vuestro pedido. ¡Que aproveche!`;
+              let utteranceRegion = new SpeechSynthesisUtterance(msgRegion);
+              utteranceRegion.rate = TTS_RATE;
+              speechSynthesis.speak(utteranceRegion);
+            } if (data.Estado == 'Entregado') {
+              var msgEntregado = `El pedido de ${SC_Personas[data.Persona].Nombre} en ${SC_Personas[data.Persona].Region} ha sido entregado.`;
+              let utteranceEntregado = new SpeechSynthesisUtterance(msgEntregado);
+              utteranceEntregado.rate = TTS_RATE;
+              speechSynthesis.speak(utteranceEntregado);
+            } else if (data.Estado == 'En preparación') {
+              var msgPreparacion = `El pedido de ${SC_Personas[data.Persona].Nombre} en ${SC_Personas[data.Persona].Region} está en preparación.`;
+              let utterancePreparacion = new SpeechSynthesisUtterance(msgPreparacion);
+              utterancePreparacion.rate = TTS_RATE;
+              speechSynthesis.speak(utterancePreparacion);
+            } else if (data.Estado == 'Listo') {
+              var msgListo = `El pedido de ${SC_Personas[data.Persona].Nombre} en ${SC_Personas[data.Persona].Region} está listo para ser entregado.`;
+              let utteranceListo = new SpeechSynthesisUtterance(msgListo);
+              utteranceListo.rate = TTS_RATE;
+              speechSynthesis.speak(utteranceListo);
+            } else if (data.Estado == 'Pedido') {
+              var msgPedido = `Se ha realizado un nuevo pedido para ${SC_Personas[data.Persona].Nombre} en ${SC_Personas[data.Persona].Region}.`;
+              let utterancePedido = new SpeechSynthesisUtterance(msgPedido);
+              utterancePedido.rate = TTS_RATE;
+              speechSynthesis.speak(utterancePedido);
+            } else {
+              var msg = `Comanda de ${SC_Personas[data.Persona].Region}. - ${JSON.parse(data.Comanda)['Selección']
+                }. - ${SC_Personas[data.Persona].Nombre}. - ${data.Estado}`;
+              let utterance = new SpeechSynthesisUtterance(msg);
+              utterance.rate = TTS_RATE;
+              // utterance.voice = speechSynthesis.getVoices()[7]
+              speechSynthesis.speak(utterance);
+            }
           }
         }
         old[key] = data.Estado;
@@ -335,11 +448,9 @@ PAGES.supercafe = {
         }
         if (old[key] != data.Estado) {
           if (tts && document.getElementById(tts_check).checked) {
-            var msg = `Comanda de ${SC_Personas[data.Persona].Region}. - ${
-              JSON.parse(data.Comanda)['Selección']
-            }. - ${SC_Personas[data.Persona].Nombre}. - ${data.Estado}`;
+            var msg = `La comanda de ${SC_Personas[data.Persona].Nombre} en ${SC_Personas[data.Persona].Region} ha pasado a deuda.`;
             let utterance = new SpeechSynthesisUtterance(msg);
-            utterance.rate = 0.9;
+            utterance.rate = TTS_RATE;
             // utterance.voice = speechSynthesis.getVoices()[7]
             speechSynthesis.speak(utterance);
           }
