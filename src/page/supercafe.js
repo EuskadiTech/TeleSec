@@ -373,7 +373,7 @@ PAGES.supercafe = {
               }
             });
             if (allEntregado) {
-              var msgRegion = `Hola, ${SC_Personas[data.Persona].Region}. Estamos entregando vuestro pedido. ¡Que aproveche!`;
+              var msgRegion = `Hola, ${SC_Personas[data.Persona].Region}. - Estamos entregando vuestro pedido. ¡Que aproveche!`;
               let utteranceRegion = new SpeechSynthesisUtterance(msgRegion);
               utteranceRegion.rate = TTS_RATE;
               speechSynthesis.speak(utteranceRegion);
