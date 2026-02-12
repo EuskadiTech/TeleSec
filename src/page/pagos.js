@@ -1015,7 +1015,7 @@ PAGES.pagos = {
         <div
           style="background: linear-gradient(135deg, #ff4757, #ff3838); padding: 20px; border-radius: 10px; text-align: center; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"
         >
-          <h3 style="margin: 0;">Total Gastos</h3>
+          <h3 style="margin: 0;">Total Ganancias</h3>
           <div id="${total_gastos}" style="font-size: 32px; font-weight: bold; margin-top: 10px;">
             0.00€
           </div>
@@ -1157,10 +1157,8 @@ PAGES.pagos = {
             totalData.ingresos[id] = monto;
           }
         } else if (tipo === 'Gasto') {
-          if (metodo != 'Tarjeta') {
-            totalData.ingresos[id] = 0;
-            totalData.gastos[id] = monto;
-          }
+          totalData.ingresos[id] = 0;
+          totalData.gastos[id] = monto;
         } else {
           // For Transferencias, don't count in totals
           totalData.ingresos[id] = 0;
