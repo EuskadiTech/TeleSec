@@ -3,6 +3,28 @@ try {
 } catch {
   console.log('ScreenLock Failed');
 }
+
+// Configuración de precios del café (cargado desde DB)
+window.PRECIOS_CAFE = {
+  servicio_base: 10,
+  leche_pequena: 15,
+  leche_grande: 25,
+  cafe: 25,
+  colacao: 25,
+};
+
+// Cargar precios desde la base de datos al iniciar
+if (typeof DB !== 'undefined') {
+  DB.get('config', 'precios_cafe').then((precios) => {
+    if (precios) {
+      Object.assign(window.PRECIOS_CAFE, precios);
+      console.log('Precios del café cargados:', window.PRECIOS_CAFE);
+    }
+  }).catch(() => {
+    console.log('Usando precios por defecto');
+  });
+}
+
 const debounce = (id, callback, wait, args) => {
   // debounce with trailing callback
   // First call runs immediately, then locks for 'wait' ms
@@ -700,36 +722,44 @@ function SC_parse(json) {
 }
 
 function SC_parse_short(json) {
-  var valores = "<small style='font-size: 60%;'>Servicio base (10c)</small>\n";
+  const precios = window.PRECIOS_CAFE || {
+    servicio_base: 10,
+    leche_pequena: 15,
+    leche_grande: 25,
+    cafe: 25,
+    colacao: 25,
+  };
+  
+  var valores = `<small style='font-size: 60%;'>Servicio base (${precios.servicio_base}c)</small>\n`;
 
   Object.entries(json).forEach((entry) => {
     valores += "<small style='font-size: 60%;'>" + entry[0] + ':</small> ' + entry[1] + ' ';
     var combo = entry[0] + ';' + entry[1];
     switch (entry[0]) {
       case 'Leche':
-        // Leche pequeña = 10c
+        // Leche pequeña
         if (
           json['Tamaño'] == 'Pequeño' &&
           ['de Vaca', 'Sin lactosa', 'Vegetal', 'Almendras'].includes(json['Leche'])
         ) {
-          valores += '<small>(P = 10c)</small>';
+          valores += `<small>(P = ${precios.leche_pequena}c)</small>`;
         }
-        // Leche grande = 20c
+        // Leche grande
         if (
           json['Tamaño'] == 'Grande' &&
           ['de Vaca', 'Sin lactosa', 'Vegetal', 'Almendras'].includes(json['Leche'])
         ) {
-          valores += '<small>(G = 20c)</small>';
+          valores += `<small>(G = ${precios.leche_grande}c)</small>`;
         }
         break;
       case 'Selección':
-        // Café = 20c
+        // Café
         if (['Café con leche', 'Solo café (sin leche)'].includes(json['Selección'])) {
-          valores += '<small>(20c)</small>';
+          valores += `<small>(${precios.cafe}c)</small>`;
         }
-        // ColaCao = 20c
+        // ColaCao
         if (json['Selección'] == 'ColaCao con leche') {
-          valores += '<small>(20c)</small>';
+          valores += `<small>(${precios.colacao}c)</small>`;
         }
       default:
         break;
@@ -743,35 +773,50 @@ function SC_parse_short(json) {
 function SC_priceCalc(json) {
   var precio = 0;
   var valores = '';
-  // Servicio base = 10c
-  precio += 10;
-  valores += 'Servicio base = 10c\n';
-  // Leche pequeña = 10c
+  
+  // Usar precios configurables
+  const precios = window.PRECIOS_CAFE || {
+    servicio_base: 10,
+    leche_pequena: 15,
+    leche_grande: 25,
+    cafe: 25,
+    colacao: 25,
+  };
+  
+  // Servicio base
+  precio += precios.servicio_base;
+  valores += `Servicio base = ${precios.servicio_base}c\n`;
+  
+  // Leche pequeña
   if (
     json['Tamaño'] == 'Pequeño' &&
     ['de Vaca', 'Sin lactosa', 'Vegetal', 'Almendras'].includes(json['Leche'])
   ) {
-    precio += 15;
-    valores += 'Leche pequeña = 15c\n';
+    precio += precios.leche_pequena;
+    valores += `Leche pequeña = ${precios.leche_pequena}c\n`;
   }
-  // Leche grande = 20c
+  
+  // Leche grande
   if (
     json['Tamaño'] == 'Grande' &&
     ['de Vaca', 'Sin lactosa', 'Vegetal', 'Almendras'].includes(json['Leche'])
   ) {
-    precio += 25;
-    valores += 'Leche grande = 25c\n';
+    precio += precios.leche_grande;
+    valores += `Leche grande = ${precios.leche_grande}c\n`;
   }
-  // Café = 20c
+  
+  // Café
   if (['Café con leche', 'Solo café (sin leche)'].includes(json['Selección'])) {
-    precio += 25;
-    valores += 'Café = 25c\n';
+    precio += precios.cafe;
+    valores += `Café = ${precios.cafe}c\n`;
   }
-  // ColaCao = 20c
+  
+  // ColaCao
   if (json['Selección'] == 'ColaCao con leche') {
-    precio += 25;
-    valores += 'ColaCao = 25c\n';
+    precio += precios.colacao;
+    valores += `ColaCao = ${precios.colacao}c\n`;
   }
+  
   valores += '<hr>Total: ' + precio + 'c\n';
   return [precio, valores];
 }

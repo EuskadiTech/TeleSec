@@ -17,6 +17,9 @@ PAGES.dataman = {
       case 'labels':
         PAGES.dataman.__labels();
         break;
+      case 'precios':
+        PAGES.dataman.__precios();
+        break;
       default:
       // Tab to edit
     }
@@ -209,12 +212,88 @@ PAGES.dataman = {
       }
     });
   },
+  __precios: function () {
+    var form = safeuuid();
+    
+    // Cargar precios actuales desde DB
+    DB.get('config', 'precios_cafe').then((raw) => {
+      TS_decrypt(raw, SECRET, (precios) => {
+          container.innerHTML = html`
+          <h1>Configuración de Precios del Café</h1>
+          <form id="${form}">
+            <fieldset>
+              <legend>Precios Base (en céntimos)</legend>
+              <label>
+                <b>Servicio base:</b>
+                <input type="number" name="servicio_base" value="${precios.servicio_base || 10}" min="0" step="1" />
+                céntimos
+              </label>
+              <br><br>
+              <label>
+                <b>Leche pequeña:</b>
+                <input type="number" name="leche_pequena" value="${precios.leche_pequena || 15}" min="0" step="1" />
+                céntimos
+              </label>
+              <br><br>
+              <label>
+                <b>Leche grande:</b>
+                <input type="number" name="leche_grande" value="${precios.leche_grande || 25}" min="0" step="1" />
+                céntimos
+              </label>
+              <br><br>
+              <label>
+                <b>Café:</b>
+                <input type="number" name="cafe" value="${precios.cafe || 25}" min="0" step="1" />
+                céntimos
+              </label>
+              <br><br>
+              <label>
+                <b>ColaCao:</b>
+                <input type="number" name="colacao" value="${precios.colacao || 25}" min="0" step="1" />
+                céntimos
+              </label>
+            </fieldset>
+            <br>
+            <button type="submit">💾 Guardar precios</button>
+            <button type="button" onclick="setUrlHash('dataman')">🔙 Volver</button>
+          </form>
+        `;
+        
+        document.getElementById(form).onsubmit = (ev) => {
+          ev.preventDefault();
+          var formData = new FormData(document.getElementById(form));
+          var nuevosPrecios = {
+            servicio_base: parseInt(formData.get('servicio_base')) || 10,
+            leche_pequena: parseInt(formData.get('leche_pequena')) || 15,
+            leche_grande: parseInt(formData.get('leche_grande')) || 25,
+            cafe: parseInt(formData.get('cafe')) || 25,
+            colacao: parseInt(formData.get('colacao')) || 25,
+          };
+          
+          DB.put('config', 'precios_cafe', nuevosPrecios).then(() => {
+            toastr.success('Precios guardados correctamente');
+            // Actualizar variable global
+            if (window.PRECIOS_CAFE) {
+              Object.assign(window.PRECIOS_CAFE, nuevosPrecios);
+            }
+            setTimeout(() => setUrlHash('dataman'), 1000);
+          }).catch((e) => {
+            toastr.error('Error al guardar precios: ' + e.message);
+          });
+        };
+      });
+    }).catch(() => {
+      // Si no hay precios guardados, usar valores por defecto
+      PAGES.dataman.__precios();
+    });
+  },
   index: function () {
     container.innerHTML = html`
       <h1>Administración de datos</h1>
       <a class="button" href="#dataman,import">Importar datos</a>
       <a class="button" href="#dataman,export">Exportar datos</a>
       <a class="button" href="#dataman,labels">Imprimir etiquetas</a>
+      <a class="button" href="#dataman,precios">⚙️ Precios del café</a>
       <a class="button" href="#dataman,config">Ajustes</a>
     `;
   },
