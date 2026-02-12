@@ -8,6 +8,7 @@ var EventListeners = {
   Interval: [],
   QRScanner: [],
   Custom: [],
+  DB: [],
 };
 
 // Safe UUID for html element IDs: generates a unique identifier with a specified prefix, ensuring it is safe for use in HTML element IDs. It uses crypto.randomUUID if available, with a fallback to a random string generation method for environments that do not support it. The generated ID is prefixed to avoid collisions and ensure uniqueness across the application.
@@ -131,7 +132,7 @@ var TTS_RATE = parseFloat(urlParams.get('tts_rate')) || 0.75;
 function TS_SayTTS(msg) {
   try {
     if (window.speechSynthesis) {
-      let utterance = new SpeechSynthesisUtterance(tts_msg);
+      let utterance = new SpeechSynthesisUtterance(msg);
       utterance.rate = TTS_RATE;
       speechSynthesis.speak(utterance);
     }

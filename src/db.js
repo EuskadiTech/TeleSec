@@ -9,7 +9,8 @@ var DB = (function () {
   let changes = null;
   let repPush = null;
   let repPull = null;
-  let callbacks = {}; // table -> [cb]
+  let callbacks = {}; // table -> [{ id, cb }]
+  let callbackSeq = 0;
   let docCache = {}; // _id -> last data snapshot (stringified)
 
   function ensureLocal() {
@@ -32,6 +33,11 @@ var DB = (function () {
 
   function makeId(table, id) {
     return table + ':' + id;
+  }
+
+  function makeCallbackId(table) {
+    callbackSeq += 1;
+    return table + '#' + callbackSeq;
   }
 
   function init(opts) {
@@ -126,7 +132,8 @@ var DB = (function () {
     if (change.deleted || doc._deleted) {
       delete docCache[doc._id];
       if (callbacks[table]) {
-        callbacks[table].forEach((cb) => {
+        callbacks[table].forEach((listener) => {
+          const cb = listener.cb;
           try {
             cb(null, id);
           } catch (e) {
@@ -148,7 +155,8 @@ var DB = (function () {
     }
 
     if (callbacks[table]) {
-      callbacks[table].forEach((cb) => {
+      callbacks[table].forEach((listener) => {
+        const cb = listener.cb;
         try {
           cb(doc.data, id);
         } catch (e) {
@@ -348,12 +356,25 @@ var DB = (function () {
 
   function map(table, cb) {
     ensureLocal();
+    const callbackId = makeCallbackId(table);
     callbacks[table] = callbacks[table] || [];
-    callbacks[table].push(cb);
-    list(table).then((rows) => rows.forEach((r) => cb(r.data, r.id)));
-    return () => {
-      callbacks[table] = callbacks[table].filter((x) => x !== cb);
-    };
+    callbacks[table].push({ id: callbackId, cb: cb });
+    list(table).then((rows) => {
+      const stillListening = (callbacks[table] || []).some((listener) => listener.id === callbackId);
+      if (!stillListening) return;
+      rows.forEach((r) => cb(r.data, r.id));
+    });
+    return callbackId;
+  }
+
+  function unlisten(callbackId) {
+    if (!callbackId) return false;
+    for (const table of Object.keys(callbacks)) {
+      const before = callbacks[table].length;
+      callbacks[table] = callbacks[table].filter((listener) => listener.id !== callbackId);
+      if (callbacks[table].length !== before) return true;
+    }
+    return false;
   }
 
   return {
@@ -363,6 +384,7 @@ var DB = (function () {
     del,
     list,
     map,
+    unlisten,
     replicateToRemote,
     listAttachments,
     deleteAttachment,

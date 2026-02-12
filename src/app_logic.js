@@ -19,6 +19,8 @@ function open_page(params) {
   EventListeners.QRScanner = [];
   EventListeners.Custom.forEach((ev) => ev());
   EventListeners.Custom = [];
+  EventListeners.DB.forEach((ev) => DB.unlisten(ev));
+  EventListeners.DB = [];
 
   if (SUB_LOGGED_IN != true && params != 'login,setup' && !params.startsWith('login,onboarding')) {
     PAGES['login'].index();

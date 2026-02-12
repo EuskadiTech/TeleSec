@@ -15,11 +15,13 @@ window.PRECIOS_CAFE = {
 
 // Cargar precios desde la base de datos al iniciar
 if (typeof DB !== 'undefined') {
-  DB.get('config', 'precios_cafe').then((precios) => {
-    if (precios) {
-      Object.assign(window.PRECIOS_CAFE, precios);
-      console.log('Precios del café cargados:', window.PRECIOS_CAFE);
-    }
+  DB.get('config', 'precios_cafe').then((raw) => {
+    TS_decrypt(raw, SECRET, (precios) => {
+      if (precios) {
+        Object.assign(window.PRECIOS_CAFE, precios);
+        console.log('Precios del café cargados:', window.PRECIOS_CAFE);
+      }
+    });
   }).catch(() => {
     console.log('Usando precios por defecto');
   });
@@ -1259,7 +1261,7 @@ function TS_IndexElement(
   }
   // Subscribe to dataset updates using DB.map (PouchDB) when `ref` is a table name string
   if (typeof ref === 'string') {
-    DB.map(ref, (data, key) => {
+    EventListeners.DB.push(DB.map(ref, (data, key) => {
       function add_row(data, key) {
         if (data != null) {
           data['_key'] = key;
@@ -1274,49 +1276,21 @@ function TS_IndexElement(
           data,
           SECRET,
           (data, wasEncrypted) => {
-            data['_encrypted__'] = wasEncrypted;
-            add_row(data, key);
+            if (data != null && typeof data === 'object') {
+              data['_encrypted__'] = wasEncrypted;
+              add_row(data, key);
+            }
           },
           ref,
           key
         );
       } else {
-        data['_encrypted__'] = false;
+        if (data != null && typeof data === 'object') {
+          data['_encrypted__'] = false;
+        }
         add_row(data, key);
       }
-    });
-  } else if (ref && typeof ref.map === 'function') {
-    // Legacy: try to use ref.map().on if available (for backwards compatibility)
-    try {
-      ref.map().on((data, key, _msg, _ev) => {
-        function add_row(data, key) {
-          if (data != null) {
-            data['_key'] = key;
-            rows[key] = data;
-          } else {
-            delete rows[key];
-          }
-          debounce(debounce_load, render, 200, [rows]);
-        }
-        if (typeof data == 'string') {
-          TS_decrypt(
-            data,
-            SECRET,
-            (data, wasEncrypted) => {
-              data['_encrypted__'] = wasEncrypted;
-              add_row(data, key);
-            },
-            undefined,
-            undefined
-          );
-        } else {
-          data['_encrypted__'] = false;
-          add_row(data, key);
-        }
-      });
-    } catch (e) {
-      console.warn('TS_IndexElement: cannot subscribe to ref', e);
-    }
+    }));
   }
 }
 
@@ -1326,7 +1300,7 @@ function BuildQR(mid, label) {
     dim: 150,
     pad: 0,
     mtx: -1,
-    ecl: 'L',
+    ecl: 'S',
     ecb: 0,
     pal: ['#000000', '#ffffff'],
     vrb: 0,
