@@ -2,7 +2,7 @@ PERMS['cajas'] = 'Cajas';
 PERMS['cajas:edit'] = '&gt; Editar';
 PAGES.cajas = {
   navcss: 'btn8',
-  icon: 'static/appico/credit_cards.png',
+  icon: 'static/appico/piggy_bank.png',
   AccessControl: true,
   Title: 'Cajas',
 

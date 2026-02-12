@@ -128,3 +128,12 @@ function LogOutTeleSec() {
   location.reload();
 }
 var TTS_RATE = parseFloat(urlParams.get('tts_rate')) || 0.75;
+function TS_SayTTS(msg) {
+  try {
+    if (window.speechSynthesis) {
+      let utterance = new SpeechSynthesisUtterance(tts_msg);
+      utterance.rate = TTS_RATE;
+      speechSynthesis.speak(utterance);
+    }
+  } catch { console.warn('TTS error'); }
+}

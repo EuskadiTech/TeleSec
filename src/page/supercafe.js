@@ -80,6 +80,8 @@ PAGES.supercafe = {
               
               // When all rows are processed, show warning if needed
               if (processed === total && deudasCount >= 3) {
+                var tts_msg = `Atención: Esta persona tiene ${deudasCount} comandas en deuda. No se podrá guardar el pedido.`;
+                TS_SayTTS(tts_msg)
                 toastr.warning(`Esta persona tiene ${deudasCount} comandas en deuda. No se podrá guardar el pedido.`, '', {
                   timeOut: 5000
                 });
@@ -279,6 +281,10 @@ PAGES.supercafe = {
         <div id="cont2"></div>
       </details>
     `;
+    document.getElementById(tts_check).checked = localStorage.getItem('TELESEC_TTS_ENABLED') === 'true';
+    document.getElementById(tts_check).onchange = function () {
+      localStorage.setItem('TELESEC_TTS_ENABLED', this.checked);
+    }
     var config = [
       {
         key: 'Persona',
@@ -361,49 +367,35 @@ PAGES.supercafe = {
         }
         if (old[key] != data.Estado) {
           if (tts && document.getElementById(tts_check).checked) {
-            // say "El pedido está de camino a ${Region}" when all comandas for that aula are set to "Entregado".
             if (ttS_data[data.Region] == undefined) {
               ttS_data[data.Region] = {};
             }
             ttS_data[data.Region][data._key] = data.Estado;
-            var allEntregado = true;
+            var allReady = true;
             Object.values(ttS_data[data.Region]).forEach((estado) => {
-              if (estado != 'Entregado') {
-                allEntregado = false;
+              if (estado != 'Listo') {
+                allReady = false;
               }
             });
-            if (allEntregado) {
-              var msgRegion = `Hola, ${SC_Personas[data.Persona].Region}. - Estamos entregando vuestro pedido. ¡Que aproveche!`;
-              let utteranceRegion = new SpeechSynthesisUtterance(msgRegion);
-              utteranceRegion.rate = TTS_RATE;
-              speechSynthesis.speak(utteranceRegion);
+            if (allReady) {
+              var msgRegion = `Hola, ${SC_Personas[data.Persona].Region}. - Vamos a entregar vuestro pedido. ¡Que aproveche!`;
+              TS_SayTTS(msgRegion)
             } if (data.Estado == 'Entregado') {
               var msgEntregado = `El pedido de ${SC_Personas[data.Persona].Nombre} en ${SC_Personas[data.Persona].Region} ha sido entregado.`;
-              let utteranceEntregado = new SpeechSynthesisUtterance(msgEntregado);
-              utteranceEntregado.rate = TTS_RATE;
-              speechSynthesis.speak(utteranceEntregado);
+              TS_SayTTS(msgEntregado)
             } else if (data.Estado == 'En preparación') {
               var msgPreparacion = `El pedido de ${SC_Personas[data.Persona].Nombre} en ${SC_Personas[data.Persona].Region} está en preparación.`;
-              let utterancePreparacion = new SpeechSynthesisUtterance(msgPreparacion);
-              utterancePreparacion.rate = TTS_RATE;
-              speechSynthesis.speak(utterancePreparacion);
+              TS_SayTTS(msgPreparacion)
             } else if (data.Estado == 'Listo') {
               var msgListo = `El pedido de ${SC_Personas[data.Persona].Nombre} en ${SC_Personas[data.Persona].Region} está listo para ser entregado.`;
-              let utteranceListo = new SpeechSynthesisUtterance(msgListo);
-              utteranceListo.rate = TTS_RATE;
-              speechSynthesis.speak(utteranceListo);
+              TS_SayTTS(msgListo)
             } else if (data.Estado == 'Pedido') {
               var msgPedido = `Se ha realizado un nuevo pedido para ${SC_Personas[data.Persona].Nombre} en ${SC_Personas[data.Persona].Region}.`;
-              let utterancePedido = new SpeechSynthesisUtterance(msgPedido);
-              utterancePedido.rate = TTS_RATE;
-              speechSynthesis.speak(utterancePedido);
+              TS_SayTTS(msgPedido)
             } else {
               var msg = `Comanda de ${SC_Personas[data.Persona].Region}. - ${JSON.parse(data.Comanda)['Selección']
                 }. - ${SC_Personas[data.Persona].Nombre}. - ${data.Estado}`;
-              let utterance = new SpeechSynthesisUtterance(msg);
-              utterance.rate = TTS_RATE;
-              // utterance.voice = speechSynthesis.getVoices()[7]
-              speechSynthesis.speak(utterance);
+              TS_SayTTS(msg)
             }
           }
         }
@@ -449,10 +441,7 @@ PAGES.supercafe = {
         if (old[key] != data.Estado) {
           if (tts && document.getElementById(tts_check).checked) {
             var msg = `La comanda de ${SC_Personas[data.Persona].Nombre} en ${SC_Personas[data.Persona].Region} ha pasado a deuda.`;
-            let utterance = new SpeechSynthesisUtterance(msg);
-            utterance.rate = TTS_RATE;
-            // utterance.voice = speechSynthesis.getVoices()[7]
-            speechSynthesis.speak(utterance);
+            TS_SayTTS(msg)
           }
         }
         old[key] = data.Estado;
