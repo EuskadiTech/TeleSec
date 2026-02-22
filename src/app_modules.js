@@ -55,6 +55,368 @@ const debounce = (id, callback, wait, args) => {
   return id;
 };
 
+function TS_CreateSearchOverlay(parentEl, options = {}) {
+  const overlayId = safeuuid();
+  const panelId = safeuuid();
+  const inputId = safeuuid();
+  const closeId = safeuuid();
+  const clearId = safeuuid();
+
+  const overlay = document.createElement('div');
+  overlay.id = overlayId;
+  overlay.style.display = 'none';
+  overlay.style.position = 'fixed';
+  overlay.style.inset = '0';
+  overlay.style.background = 'rgba(0, 0, 0, 0.5)';
+  overlay.style.zIndex = '9999';
+  overlay.style.alignItems = 'center';
+  overlay.style.justifyContent = 'center';
+  overlay.style.padding = '16px';
+  overlay.innerHTML = html`
+    <div
+      id="${panelId}"
+      style="background: white; padding: 12px; border-radius: 8px; width: min(520px, 100%); box-shadow: 0 10px 30px rgba(0,0,0,0.2);"
+    >
+      <div style="display: flex; gap: 6px; align-items: center;">
+        <input
+          type="text"
+          id="${inputId}"
+          placeholder="${options.placeholder || 'Buscar...'}"
+          style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"
+        />
+        <button type="button" class="btn4" id="${clearId}">Limpiar</button>
+        <button type="button" class="btn4" id="${closeId}">Cerrar</button>
+      </div>
+    </div>
+  `;
+
+  const targetParent = parentEl || document.body;
+  targetParent.appendChild(overlay);
+
+  const inputEl = overlay.querySelector('#' + inputId);
+  const closeEl = overlay.querySelector('#' + closeId);
+  const clearEl = overlay.querySelector('#' + clearId);
+  const panelEl = overlay.querySelector('#' + panelId);
+
+  function open() {
+    overlay.style.display = 'flex';
+    inputEl.focus();
+    inputEl.select();
+  }
+
+  function close() {
+    overlay.style.display = 'none';
+  }
+
+  function setValue(value) {
+    inputEl.value = value || '';
+  }
+
+  function getValue() {
+    return inputEl.value || '';
+  }
+
+  inputEl.addEventListener('input', () => {
+    if (typeof options.onInput === 'function') {
+      options.onInput(getValue());
+    }
+  });
+
+  closeEl.addEventListener('click', close);
+  clearEl.addEventListener('click', () => {
+    setValue('');
+    if (typeof options.onInput === 'function') {
+      options.onInput('');
+    }
+    inputEl.focus();
+  });
+
+  overlay.addEventListener('click', (event) => {
+    if (event.target === overlay && panelEl) {
+      close();
+    }
+  });
+
+  return {
+    open,
+    close,
+    setValue,
+    getValue,
+    inputEl,
+    overlayEl: overlay,
+  };
+}
+
+function TS_InitOverlaySearch(container, openBtnId, badgeId, options = {}) {
+  const debounceId = options.debounceId || safeuuid();
+  const wait = options.wait || 200;
+  let currentValue = '';
+  const badgeEl = badgeId ? document.getElementById(badgeId) : null;
+  const overlay = TS_CreateSearchOverlay(container, {
+    placeholder: options.placeholder || 'Buscar...',
+    onInput: (value) => {
+      currentValue = (value || '').toLowerCase().trim();
+      if (badgeEl) {
+        badgeEl.textContent = currentValue ? `Filtro: "${currentValue}"` : '';
+      }
+      if (typeof options.onSearch === 'function') {
+        debounce(debounceId, options.onSearch, wait, [currentValue]);
+      }
+    },
+  });
+  if (openBtnId) {
+    const openBtn = document.getElementById(openBtnId);
+    if (openBtn) {
+      openBtn.addEventListener('click', () => overlay.open());
+    }
+  }
+  return {
+    open: overlay.open,
+    close: overlay.close,
+    setValue: overlay.setValue,
+    getValue: () => currentValue,
+    getValueRaw: overlay.getValue,
+  };
+}
+
+function TS_normalizePictoValue(value) {
+  if (!value) {
+    return { text: '', arasaacId: '' };
+  }
+  if (typeof value === 'string') {
+    return { text: value, arasaacId: '' };
+  }
+  if (typeof value === 'object') {
+    return {
+      text: value.text || value.nombre || value.name || '',
+      arasaacId: value.arasaacId || value.id || '',
+    };
+  }
+  return { text: String(value), arasaacId: '' };
+}
+
+function TS_buildArasaacPictogramUrl(id) {
+  return `https://static.arasaac.org/pictograms/${id}/${id}_300.png`;
+}
+
+function TS_renderPictoPreview(previewEl, value) {
+  const target = typeof previewEl === 'string' ? document.getElementById(previewEl) : previewEl;
+  if (!target) return;
+  target.innerHTML = '';
+  if (!value.text && !value.arasaacId) {
+    const placeholder = document.createElement('b');
+    placeholder.textContent = 'Seleccionar Pictograma';
+    target.appendChild(placeholder);
+  }
+
+  if (value.arasaacId) {
+    const img = document.createElement('img');
+    img.src = TS_buildArasaacPictogramUrl(value.arasaacId);
+    img.alt = value.text || 'Pictograma';
+    img.width = 100;
+    img.height = 100;
+    img.loading = 'lazy';
+    img.style.objectFit = 'contain';
+    target.appendChild(img);
+  }
+  if (value.text) {
+    const text = document.createElement('span');
+    text.textContent = value.text;
+    target.appendChild(text);
+  }
+}
+
+function TS_applyPictoValue(pictoEl, value) {
+  if (typeof pictoEl === 'string') {
+    pictoEl = document.getElementById(pictoEl);
+  }
+  const plate = TS_normalizePictoValue(value);
+  pictoEl.dataset.PictoValue = JSON.stringify(plate);
+  TS_renderPictoPreview(pictoEl, plate);
+}
+
+function TS_getPictoValue(pictoEl) {
+  if (typeof pictoEl === 'string') {
+    pictoEl = document.getElementById(pictoEl);
+  }
+  if (!pictoEl) return { text: '', arasaacId: '' };
+  const plate = pictoEl.dataset.PictoValue ? JSON.parse(pictoEl.dataset.PictoValue) : { text: '', arasaacId: '' };
+  return TS_normalizePictoValue(plate);
+}
+
+function TS_CreateArasaacSelector(options) {
+  let panelEl = options.panelEl;
+  let searchEl = options.searchEl;
+  let resultsEl = options.resultsEl;
+  let statusEl = options.statusEl;
+  let closeEl = options.closeEl;
+  const debounceId = options.debounceId || safeuuid();
+  const onPick = typeof options.onPick === 'function' ? options.onPick : () => {};
+  let activeContext = null;
+  let overlayEl = null;
+
+  if (options.modal === true && !panelEl) {
+    const overlayId = safeuuid();
+    const panelId = safeuuid();
+    const searchId = safeuuid();
+    const closeId = safeuuid();
+    const statusId = safeuuid();
+    const resultsId = safeuuid();
+
+    overlayEl = document.createElement('div');
+    overlayEl.id = overlayId;
+    overlayEl.style.display = 'none';
+    overlayEl.style.position = 'fixed';
+    overlayEl.style.inset = '0';
+    overlayEl.style.background = 'rgba(0, 0, 0, 0.5)';
+    overlayEl.style.zIndex = '10000';
+    overlayEl.style.alignItems = 'center';
+    overlayEl.style.justifyContent = 'center';
+    overlayEl.style.padding = '16px';
+    overlayEl.innerHTML = html`
+      <div
+        id="${panelId}"
+        style="background: white; padding: 12px; border-radius: 8px; width: min(680px, 100%); box-shadow: 0 10px 30px rgba(0,0,0,0.2);"
+      >
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <input
+            type="text"
+            id="${searchId}"
+            placeholder="Buscar pictogramas ARASAAC..."
+            style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"
+          />
+          <button type="button" class="btn4" id="${closeId}">Cerrar</button>
+        </div>
+        <div id="${statusId}" style="margin-top: 6px;"></div>
+        <div
+          id="${resultsId}"
+          style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; max-height: 60vh; overflow: auto;"
+        ></div>
+      </div>
+    `;
+
+    document.body.appendChild(overlayEl);
+    panelEl = overlayEl.querySelector('#' + panelId);
+    searchEl = overlayEl.querySelector('#' + searchId);
+    resultsEl = overlayEl.querySelector('#' + resultsId);
+    statusEl = overlayEl.querySelector('#' + statusId);
+    closeEl = overlayEl.querySelector('#' + closeId);
+
+    overlayEl.addEventListener('click', (event) => {
+      if (event.target === overlayEl) {
+        close();
+      }
+    });
+  }
+
+  function open(context) {
+    activeContext = context || activeContext;
+    if (overlayEl) {
+      overlayEl.style.display = 'flex';
+    } else if (panelEl) {
+      panelEl.style.display = 'block';
+    }
+    if (searchEl) searchEl.focus();
+  }
+
+  function close() {
+    if (overlayEl) {
+      overlayEl.style.display = 'none';
+    } else if (panelEl) {
+      panelEl.style.display = 'none';
+    }
+  }
+
+  function renderResults(items, term) {
+    if (!resultsEl || !statusEl) return;
+    resultsEl.innerHTML = '';
+    if (!items.length) {
+      statusEl.textContent = `No se encontraron pictogramas para "${term}"`;
+      return;
+    }
+    statusEl.textContent = `${items.length} pictogramas`;
+    items.slice(0, 60).forEach((item) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.style.display = 'flex';
+      btn.style.flexDirection = 'column';
+      btn.style.alignItems = 'center';
+      btn.style.gap = '4px';
+      btn.style.padding = '4px';
+      btn.style.border = '1px solid #ddd';
+      btn.style.background = 'white';
+      btn.style.cursor = 'pointer';
+
+      const img = document.createElement('img');
+      img.src = TS_buildArasaacPictogramUrl(item.id);
+      img.alt = item.label;
+      img.width = 64;
+      img.height = 64;
+      img.loading = 'lazy';
+      img.style.objectFit = 'contain';
+
+      const label = document.createElement('span');
+      label.style.fontSize = '12px';
+      label.textContent = item.label;
+
+      btn.appendChild(img);
+      btn.appendChild(label);
+      btn.onclick = () => {
+        if (!activeContext) return;
+        onPick(activeContext, item);
+        close();
+      };
+      resultsEl.appendChild(btn);
+    });
+  }
+
+  function search(term) {
+    if (!statusEl || !resultsEl) return;
+    const trimmed = term.trim();
+    if (trimmed.length < 2) {
+      statusEl.textContent = 'Escribe al menos 2 caracteres para buscar.';
+      resultsEl.innerHTML = '';
+      return;
+    }
+    statusEl.textContent = 'Buscando...';
+    fetch(`https://api.arasaac.org/api/pictograms/es/search/${encodeURIComponent(trimmed)}`)
+      .then((res) => res.json())
+      .then((items) => {
+        const pictograms = (Array.isArray(items) ? items : [])
+          .map((item) => {
+            if (typeof item === 'string' || typeof item === 'number') {
+              return { id: item, label: trimmed };
+            }
+            const id = item._id || item.id;
+            const keywords = Array.isArray(item.keywords) ? item.keywords : [];
+            const keyword = keywords[0] ? keywords[0].keyword || keywords[0].name : '';
+            const label = keyword || item.keyword || item.name || trimmed;
+            return { id, label };
+          })
+          .filter((item) => item.id);
+        renderResults(pictograms, trimmed);
+      })
+      .catch(() => {
+        statusEl.textContent = 'Error al buscar pictogramas.';
+        resultsEl.innerHTML = '';
+      });
+  }
+
+  if (closeEl) {
+    closeEl.onclick = close;
+  }
+  if (searchEl) {
+    searchEl.addEventListener('input', () =>
+      debounce(debounceId, search, 300, [searchEl.value])
+    );
+  }
+
+  return {
+    open,
+    close,
+  };
+}
+
 const wheelcolors = [
   // Your original custom colors
   '#ff0000',
@@ -922,6 +1284,11 @@ function TS_IndexElement(
             if (formattedDate.includes(searchValue)) return true;
           }
           break;
+        case 'picto': {
+          const plate = TS_normalizePictoValue(value);
+          if (plate.text && plate.text.toLowerCase().includes(searchValue)) return true;
+          break;
+        }
         default:
           // For raw and other types, search in the direct value
           if (String(value).toLowerCase().includes(searchValue)) return true;
@@ -1035,6 +1402,33 @@ function TS_IndexElement(
               tdFechaISO.innerText = diffString.trim();
             }
             new_tr.appendChild(tdFechaISO);
+            break;
+          }
+          case 'picto': {
+            const tdPicto = document.createElement('td');
+            const plate = TS_normalizePictoValue(data[key.key]);
+            const wrapper = document.createElement('div');
+            wrapper.style.display = 'flex';
+            wrapper.style.alignItems = 'center';
+            wrapper.style.gap = '8px';
+            if (plate.arasaacId) {
+              const img = document.createElement('img');
+              img.src = TS_buildArasaacPictogramUrl(plate.arasaacId);
+              img.alt = plate.text || 'Pictograma';
+              img.width = 48;
+              img.height = 48;
+              img.loading = 'lazy';
+              img.style.objectFit = 'contain';
+              wrapper.appendChild(img);
+            }
+            if (plate.text) {
+              const text = document.createElement('span');
+              console.log('Picto data', data, 'normalized', plate);
+              text.textContent = data[key.labelkey] || plate.text || '';
+              wrapper.appendChild(text);
+            }
+            tdPicto.appendChild(wrapper);
+            new_tr.appendChild(tdPicto);
             break;
           }
           case 'template': {

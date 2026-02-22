@@ -35,7 +35,7 @@ function open_page(params) {
     PAGES[app].index();
     return;
   }
-  PAGES[app].edit(path[1]);
+  PAGES[app].edit(path.slice(1).join(','));
 }
 
 function setUrlHash(hash) {

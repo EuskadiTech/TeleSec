@@ -12,7 +12,14 @@ PAGES.comedor = {
     }
     var nameh1 = safeuuid();
     var field_fecha = safeuuid();
-    var field_platos = safeuuid();
+    var field_tipo = safeuuid();
+    var field_primero = safeuuid();
+    var field_segundo = safeuuid();
+    var field_postre = safeuuid();
+    var btn_picto_primero = safeuuid();
+    var btn_picto_segundo = safeuuid();
+    var btn_picto_postre = safeuuid();
+    var debounce_picto = safeuuid();
     var btn_guardar = safeuuid();
     var btn_borrar = safeuuid();
     container.innerHTML = html`
@@ -24,18 +31,55 @@ PAGES.comedor = {
           <input type="date" id="${field_fecha}" value="" /><br /><br />
         </label>
         <label>
-          Platos<br />
-          <textarea id="${field_platos}"></textarea><br /><br />
+          Tipo<br />
+          <input type="text" id="${field_tipo}" value="" /><br /><br />
+        </label>
+        <label>
+          Primero<br />
+          <input type="text" id="${field_primero}" value="" /><br />
+          <div class="picto" id="${btn_picto_primero}"></div>
+        </label>
+        <label>
+          Segundo<br />
+          <input type="text" id="${field_segundo}" value="" /><br />
+          <div class="picto" id="${btn_picto_segundo}"></div>
+        </label>
+        <label>
+          Postre<br />
+          <input type="text" id="${field_postre}" value="" /><br />
+          <div class="picto" id="${btn_picto_postre}"></div>
         </label>
         <button class="btn5" id="${btn_guardar}">Guardar</button>
         <button class="rojo" id="${btn_borrar}">Borrar</button>
       </fieldset>
     `;
+    const pictogramSelector = TS_CreateArasaacSelector({
+      modal: true,
+      debounceId: debounce_picto,
+      onPick: (context, item) => {
+        TS_applyPictoValue(context.pictoId, {
+          text: item.label,
+          arasaacId: String(item.id),
+        });
+      },
+    });
+    document.getElementById(btn_picto_primero).onclick = () =>
+      pictogramSelector.open({ pictoId: btn_picto_primero });
+    document.getElementById(btn_picto_segundo).onclick = () =>
+      pictogramSelector.open({ pictoId: btn_picto_segundo });
+    document.getElementById(btn_picto_postre).onclick = () =>
+      pictogramSelector.open({ pictoId: btn_picto_postre });
     DB.get('comedor', mid).then((data) => {
       function load_data(data, ENC = '') {
         document.getElementById(nameh1).innerText = mid;
         document.getElementById(field_fecha).value = data['Fecha'] || mid || CurrentISODate();
-        document.getElementById(field_platos).value = data['Platos'] || '';
+        document.getElementById(field_tipo).value = data['Tipo'] || '';
+        document.getElementById(field_primero).value = data['Primero'] || '';
+        document.getElementById(field_segundo).value = data['Segundo'] || '';
+        document.getElementById(field_postre).value = data['Postre'] || '';
+        TS_applyPictoValue(btn_picto_primero, data['Primero_Picto'] || '');
+        TS_applyPictoValue(btn_picto_segundo, data['Segundo_Picto'] || '');
+        TS_applyPictoValue(btn_picto_postre, data['Postre_Picto'] || '');
       }
       if (typeof data == 'string') {
         TS_decrypt(
@@ -60,18 +104,25 @@ PAGES.comedor = {
       guardarBtn.style.opacity = '0.5';
 
       const newDate = document.getElementById(field_fecha).value;
+      const newTipo = document.getElementById(field_tipo).value.trim();
       var data = {
         Fecha: newDate,
-        Platos: document.getElementById(field_platos).value,
+        Tipo: newTipo,
+        Primero: document.getElementById(field_primero).value.trim(),
+        Segundo: document.getElementById(field_segundo).value.trim(),
+        Postre: document.getElementById(field_postre).value.trim(),
+        Primero_Picto: TS_getPictoValue(btn_picto_primero),
+        Segundo_Picto: TS_getPictoValue(btn_picto_segundo),
+        Postre_Picto: TS_getPictoValue(btn_picto_postre),
       };
 
       // If the date has changed, we need to delete the old entry
-      if (mid !== newDate && mid !== '') {
+      if (mid !== newDate + "," + newTipo && mid !== '') {
         DB.del('comedor', mid);
       }
 
       document.getElementById('actionStatus').style.display = 'block';
-      DB.put('comedor', newDate, data)
+      DB.put('comedor', newDate + "," + newTipo, data)
         .then(() => {
           toastr.success('Guardado!');
           setTimeout(() => {
@@ -120,10 +171,31 @@ PAGES.comedor = {
           label: 'Fecha',
         },
         {
-          key: 'Platos',
+          key: 'Tipo',
           type: 'raw',
           default: '',
-          label: 'Platos',
+          label: 'Tipo',
+        },
+        {
+          key: 'Primero_Picto',
+          type: 'picto',
+          default: '',
+          label: 'Primero',
+          labelkey: 'Primero',
+        },
+        {
+          key: 'Segundo_Picto',
+          type: 'picto',
+          default: '',
+          label: 'Segundo',
+          labelkey: 'Segundo',
+        },
+        {
+          key: 'Postre_Picto',
+          type: 'picto',
+          default: '',
+          label: 'Postre',
+          labelkey: 'Postre',
         },
       ],
       'comedor',
