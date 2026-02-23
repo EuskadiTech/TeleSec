@@ -247,7 +247,7 @@ PAGES.supercafe = {
     var ev = setTimeout(() => {
       tts = true;
       console.log('TTS Enabled');
-      toastr.info('Texto a voz disponible');
+      //toastr.info('Texto a voz disponible');
     }, 6500);
     EventListeners.Timeout.push(ev);
     const tablebody = safeuuid();
@@ -270,7 +270,7 @@ PAGES.supercafe = {
         open
       >
         <summary>Todas las comandas</summary>
-        <div id="cont1"></div>
+        <div id="${tablebody}"></div>
       </details>
       <br />
       <details
@@ -278,7 +278,7 @@ PAGES.supercafe = {
         open
       >
         <summary>Deudas</summary>
-        <div id="cont2"></div>
+        <div id="${tablebody2}"></div>
       </details>
     `;
     document.getElementById(tts_check).checked = localStorage.getItem('TELESEC_TTS_ENABLED') === 'true';
@@ -336,7 +336,7 @@ PAGES.supercafe = {
       'supercafe',
       config,
       'supercafe',
-      document.querySelector('#cont1'),
+      document.getElementById(tablebody),
       (data, new_tr) => {
         // new_tr.style.backgroundColor = "#FFCCCB";
         comandasTot[data._key] = SC_priceCalc(JSON.parse(data.Comanda))[0];
@@ -408,7 +408,7 @@ PAGES.supercafe = {
       'supercafe',
       config,
       'supercafe',
-      document.querySelector('#cont2'),
+      document.getElementById(tablebody2),
       (data, new_tr) => {
         // new_tr.style.backgroundColor = "#FFCCCB";
         comandasTot[data._key] = 0; // No mostrar comandas en deuda.
