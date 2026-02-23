@@ -660,11 +660,12 @@ PAGES.pagos = {
   },
 
   // Edit/view transaction
-  edit: function (tid) {
+  edit: function (ftid) {
     if (!checkRole('pagos')) {
       setUrlHash('pagos');
       return;
     }
+    var tid = ftid.split(',')[0];
     var tid2 = location.hash.split(',');
     if (tid == 'datafono') {
       PAGES.pagos.datafono();
