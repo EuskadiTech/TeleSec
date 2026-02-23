@@ -1789,6 +1789,12 @@ if (couchHost) {
 }
 
 const statusImg = document.getElementById('connectStatus');
+statusImg.onclick = () => {
+  var ribbon = document.getElementById('ribbon-content');
+  var alternative_ribbon = document.getElementById('ribbon-content-alternative');
+  ribbon.style.display = ribbon.style.display === 'none' ? 'block' : 'none';
+  alternative_ribbon.style.display = alternative_ribbon.style.display === 'none' ? 'block' : 'none';
+}
 function updateStatusOrb() {
   const now = Date.now();
   const recentSync = window.TELESEC_LAST_SYNC && now - window.TELESEC_LAST_SYNC <= 3000;

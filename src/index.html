@@ -14,9 +14,9 @@
 
 <body>
   <div class="ribbon no_print" id="header_hide_query">
-    <img class="ribbon-orb" id="connectStatus" src="static/logo.jpg" />
+    <img class="ribbon-orb" id="connectStatus" src="static/logo.jpg" style="cursor: pointer;" />
     
-    <div class="ribbon-content">
+    <div class="ribbon-content" id="ribbon-content" style="display: none;">
       <div class="ribbon-tabs">
         <div class="ribbon-tab active" data-tab="modulos">Modulos</div>
         <div class="ribbon-tab" data-tab="buscar">Buscar</div>
@@ -42,6 +42,10 @@
       </details>
       
         <small style="margin-top:10px;">Base de datos: <b id="peerLink">(no configurado)</b></small>
+    </div>
+    <div class="ribbon-content" id="ribbon-content-alternative">
+      <h1 style="margin: 0;">TeleSec</h1>
+      <span>Encriptado y seguro. <i><small>(pulsa el icono para mostrar el menú)</small></i></span>
     </div>
   </div>
   
