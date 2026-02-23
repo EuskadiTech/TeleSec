@@ -451,11 +451,12 @@ Cargando...</pre
       }
     };
   },
-  edit: function (section) {
+  edit: function (fsection) {
     if (!checkRole('aulas')) {
       setUrlHash('index');
       return;
     }
+    var section = fsection.split(',')[0];
     var item = location.hash.replace('#', '').split("?")[0].split(',')[2];
     if (!item) {
       // No item, show section
