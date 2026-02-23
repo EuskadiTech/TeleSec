@@ -2,6 +2,7 @@ import json
 import os
 import shutil
 import sys
+import time
 
 def get_all_files(directory):
     files = []
@@ -14,7 +15,7 @@ def get_all_files(directory):
     return files
 
 PREFETCH = ""
-VERSIONCO = "2026-02"
+VERSIONCO = "2026-02-23_" + time.strftime("%Y%m%d%H%M%S")
 HANDLEPARSE = get_all_files("src")
 TITLE = os.environ.get("TELESEC_TITLE", "TeleSec")
 HOSTER = os.environ.get("TELESEC_HOSTER", "EuskadiTech")
