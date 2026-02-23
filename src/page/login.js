@@ -421,11 +421,11 @@ PAGES.login = {
       SUB_LOGGED_IN_DETAILS = SC_Personas[SUB_LOGGED_IN_ID];
       SUB_LOGGED_IN = true;
       SetPages();
-      if (location.hash.replace('#', '').startsWith('login')) {
+      if (location.hash.replace('#', '').split("?")[0].startsWith('login')) {
         open_page('index');
         setUrlHash('index');
       } else {
-        open_page(location.hash.replace('#', ''));
+        open_page(location.hash.replace('#', '').split("?")[0]);
       }
     };
 

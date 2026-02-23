@@ -456,7 +456,7 @@ Cargando...</pre
       setUrlHash('index');
       return;
     }
-    var item = location.hash.replace('#', '').split(',')[2];
+    var item = location.hash.replace('#', '').split("?")[0].split(',')[2];
     if (!item) {
       // No item, show section
       switch (section) {

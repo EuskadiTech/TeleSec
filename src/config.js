@@ -82,7 +82,7 @@ if (urlParams.get('couch') != null) {
     history.replaceState(
       null,
       '',
-      location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '') + location.hash
+      location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '') + location.hash.split("?")[0]
     );
 
     console.log('CouchDB auto-configured from URL parameter');

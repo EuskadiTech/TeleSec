@@ -621,7 +621,8 @@ function addCategory_Personas(
   change_cb = () => {},
   label = 'Persona',
   open_default = false,
-  default_empty_text = '- Lista Vacia -'
+  default_empty_text = '- Lista Vacia -',
+  show_hidden = false,
 ) {
   var details_0 = document.createElement('details'); // children: img_0, summary_0
   //details_0.open = true;
@@ -670,6 +671,7 @@ function addCategory_Personas(
     .map((entry) => {
       var key = entry['_key'];
       var value = entry;
+      if (value.Oculto == true && !show_hidden) { return; }
       if (lastreg != value.Region.toUpperCase()) {
         lastreg = value.Region.toUpperCase();
         var h3_0 = document.createElement('h2');
@@ -1218,6 +1220,7 @@ function TS_IndexElement(
                 id="${searchKeyInput}"
                 placeholder="🔍 Buscar..."
                 style="width: calc(100% - 18px); padding: 8px; border: 1px solid #ccc; border-radius: 4px; background-color: rebeccapurple; color: white;"
+                value=""
               />
             </th>
           </tr>
@@ -1237,7 +1240,11 @@ function TS_IndexElement(
   // Add search functionality
   const searchKeyEl = document.getElementById(searchKeyInput);
   searchKeyEl.addEventListener('input', () => debounce(debounce_search, render, 200, [rows]));
-
+  // If there is a preset search value in URL, apply it
+  var hashQuery = new URLSearchParams(window.location.hash.split('?')[1]);
+  if (hashQuery.has('search')) {
+    searchKeyEl.value = hashQuery.get('search');
+  }
   function searchInData(data, searchValue, config) {
     if (!searchValue) return true;
 
@@ -1846,7 +1853,7 @@ var BootIntervalID = setInterval(() => {
                   SUB_LOGGED_IN = true;
                   localStorage.setItem('TELESEC_BYPASS_ID', SUB_LOGGED_IN_ID);
                   SetPages();
-                  open_page(location.hash.replace('#', ''));
+                  open_page(location.hash.replace('#', '').split("?")[0]);
                 }
                 if (!data) {
                   const persona = { Nombre: 'Admin (bypass)', Roles: 'ADMIN,' };
@@ -1883,7 +1890,7 @@ var BootIntervalID = setInterval(() => {
         }
       } else {
         SetPages();
-        open_page(location.hash.replace('#', ''));
+        open_page(location.hash.replace('#', '').split("?")[0]);
       }
       clearInterval(BootIntervalID);
     }

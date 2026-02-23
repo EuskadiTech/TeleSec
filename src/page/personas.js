@@ -17,6 +17,7 @@ PAGES.personas = {
     var field_notas = safeuuid();
     var field_anilla = safeuuid();
     var field_foto = safeuuid();
+    var field_oculto = safeuuid();
     var render_foto = safeuuid();
     var field_monedero_balance = safeuuid();
     var field_monedero_notas = safeuuid();
@@ -35,7 +36,6 @@ PAGES.personas = {
               Zona<br>
               <input type="text" id="${field_zona}"><br><br>
           </label>
-          </label>
           <details>
             <summary>Permisos</summary>
             <form id="${permisosdet}">
@@ -50,7 +50,10 @@ PAGES.personas = {
               <img id="${render_foto}" height="100px" style="border: 3px inset; min-width: 7px;" src="static/ico/user_generic.png">
               <input type="file" accept="image/*" id="${field_foto}" style="display: none;"><br><br>
           </label>
-          
+          <label>
+              Ocultar persona?<br>
+              <input type="checkbox" id="${field_oculto}"><br><br>
+          </label>
           <details style="background: #e3f2fd; border: 2px solid #2196f3; border-radius: 8px; padding: 10px; margin: 15px 0;">
             <summary style="cursor: pointer; font-weight: bold; color: #1976d2;">💳 Tarjeta Monedero</summary>
             <div style="padding: 15px;">
@@ -110,6 +113,7 @@ PAGES.personas = {
         document.getElementById(field_nombre).value = data['Nombre'] || '';
         document.getElementById(field_zona).value = data['Region'] || '';
         document.getElementById(field_anilla).value = data['SC_Anilla'] || '';
+        document.getElementById(field_oculto).checked = data['Oculto'] || false;
         // set fallback image immediately
         document.getElementById(render_foto).src = data['Foto'] || 'static/ico/user_generic.png';
         resized = data['Foto'] || 'static/ico/user_generic.png';
@@ -166,6 +170,7 @@ PAGES.personas = {
         Region: document.getElementById(field_zona).value,
         Roles: dt.getAll('perm').join(',') + ',',
         SC_Anilla: document.getElementById(field_anilla).value,
+        Oculto: document.getElementById(field_oculto).checked,
         // Foto moved to PouchDB attachment named 'foto'
         markdown: document.getElementById(field_notas).value,
         Monedero_Balance: parseFloat(document.getElementById(field_monedero_balance).value) || 0,
@@ -204,7 +209,7 @@ PAGES.personas = {
         });
     };
     document.getElementById(btn_ver_monedero).onclick = () => {
-      setUrlHash('pagos'); // Navigate to pagos and show transactions for this person
+      setUrlHash('pagos?search=' + encodeURIComponent(document.getElementById(field_nombre).value)); // Navigate to pagos and show transactions for this person
     };
     document.getElementById(btn_borrar).onclick = () => {
       if (confirm('¿Quieres borrar esta persona?') == true) {

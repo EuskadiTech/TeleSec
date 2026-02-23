@@ -634,7 +634,7 @@ PAGES.cajas = {
     }
 
     // Check for special routes
-    var parts = location.hash.split(',');
+    var parts = location.hash.split("?")[0].split(',');
     if (parts[2] === 'movimientos' && parts[3] === '_nuevo') {
       PAGES.cajas.nuevo_movimiento(parts[1]);
       return;

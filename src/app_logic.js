@@ -52,7 +52,7 @@ function setUrlHash(hash) {
   }
 }
 window.onhashchange = () => {
-  open_page(location.hash.replace('#', ''));
+  open_page(location.hash.replace('#', '').split("?")[0]);
 };
 
 function download(filename, text) {
