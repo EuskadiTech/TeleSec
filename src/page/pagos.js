@@ -498,7 +498,8 @@ PAGES.pagos = {
         },
         'Monedero',
         false,
-        '- No hay personas registradas -'
+        '- No hay personas registradas -',
+        true
       );
     }
 
@@ -517,7 +518,8 @@ PAGES.pagos = {
         },
         'Monedero Destino',
         false,
-        '- No hay personas registradas -'
+        '- No hay personas registradas -',
+        true
       );
     }
 
@@ -1548,7 +1550,8 @@ PAGES.pagos = {
         },
         'Monedero',
         false,
-        '- No hay personas registradas -'
+        '- No hay personas registradas -',
+        true
       );
     }
 
@@ -1567,7 +1570,8 @@ PAGES.pagos = {
         },
         'Monedero Destino',
         false,
-        '- No hay personas registradas -'
+        '- No hay personas registradas -',
+        true
       );
     }
 
