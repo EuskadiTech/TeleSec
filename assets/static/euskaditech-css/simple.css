@@ -430,7 +430,7 @@ pre {
   font-size: 15px;
 }
 .picto {
-  height: 125px;
+  min-height: 125px;
   width: 100px;
   border: 2.5px solid black;
   border-radius: 5px;
@@ -443,4 +443,12 @@ pre {
 .picto b {
   padding-top: 40px;
   display: inline-block;
+}
+
+.panel-option input {
+  display: none;
+}
+.panel-option:has(input:checked) {
+  background-color: #ccc;
+  outline: 5px solid blue;
 }

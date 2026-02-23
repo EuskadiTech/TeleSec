@@ -115,12 +115,40 @@ PAGES.panel = {
       fecha: CurrentISODate(),
       comedor: {
         primero: (comedor.Primero || '').trim(),
+        primeroPicto: comedor.Primero_Picto || '',
         segundo: (comedor.Segundo || '').trim(),
+        segundoPicto: comedor.Segundo_Picto || '',
         postre: (comedor.Postre || '').trim(),
+        postrePicto: comedor.Postre_Picto || '',
         tipo: (comedor.Tipo || '').trim(),
       },
       planHoy: planHoy,
     };
+  },
+
+  __hasPictoData: function (picto) {
+    return !!(
+      picto &&
+      typeof picto === 'object' &&
+      ((picto.text || '').trim() !== '' || (picto.arasaacId || '').trim() !== '')
+    );
+  },
+
+  __getOptionPicto: function (question, option) {
+    if (!question || !question.optionPictos) return '';
+    return question.optionPictos[String(option || '').trim()] || '';
+  },
+
+  __renderOptionContent: function (question, option) {
+    var picto = PAGES.panel.__getOptionPicto(question, option);
+    var withPicto = typeof makePictoStatic === 'function' && PAGES.panel.__hasPictoData(picto);
+    if (!withPicto) return `<span>${option}</span>`;
+    return `
+      <span style="align-items:center; gap:8px;">
+        ${makePictoStatic(picto)}
+        <span>${option}</span>
+      </span>
+    `;
   },
 
   __pickDistractors: function (correct, pool, count) {
@@ -161,6 +189,10 @@ PAGES.panel = {
   __buildQuestions: function (ctx) {
     var c = ctx.comedor || {};
     var poolComedor = [c.primero, c.segundo, c.postre, 'No hay menú registrado'];
+    var comedorPictosByText = {};
+    if (c.primero) comedorPictosByText[c.primero] = c.primeroPicto || '';
+    if (c.segundo) comedorPictosByText[c.segundo] = c.segundoPicto || '';
+    if (c.postre) comedorPictosByText[c.postre] = c.postrePicto || '';
     var questions = [];
 
     if (c.primero) {
@@ -169,6 +201,7 @@ PAGES.panel = {
         id: 'q-comida-primero',
         text: '¿Qué hay de comer hoy de primero?',
         options: PAGES.panel.__shuffle(opts1),
+        optionPictos: comedorPictosByText,
         correct: c.primero,
         ok: '¡Correcto! Ya sabes el primer plato de hoy.',
         bad: 'Repasa el menú del día para anticipar la comida.',
@@ -181,6 +214,7 @@ PAGES.panel = {
         id: 'q-comida-segundo',
         text: '¿Y de segundo, qué toca?',
         options: PAGES.panel.__shuffle(opts2),
+        optionPictos: comedorPictosByText,
         correct: c.segundo,
         ok: '¡Bien! Segundo identificado.',
         bad: 'Casi. Mira el módulo Comedor para recordar el segundo plato.',
@@ -193,6 +227,7 @@ PAGES.panel = {
         id: 'q-comida-postre',
         text: '¿Cuál es el postre de hoy?',
         options: PAGES.panel.__shuffle(opts3),
+        optionPictos: comedorPictosByText,
         correct: c.postre,
         ok: '¡Perfecto! Postre acertado.',
         bad: 'No pasa nada, revisa el postre en el menú diario.',
@@ -264,10 +299,11 @@ PAGES.panel = {
         .map((option, i) => {
           var oid = safeuuid();
           var checked = selected === option ? 'checked' : '';
+          var optionContent = PAGES.panel.__renderOptionContent(q, option);
           return `
-            <label for="${oid}" style="display:block; margin: 8px 0; padding: 8px; border: 1px solid #ccc; border-radius: 6px; cursor:pointer;">
+            <label class="panel-option" for="${oid}" style="display:block;margin: 8px 0;padding: 8px;border: 1px solid #ccc;border-radius: 6px;cursor:pointer;max-width: 150px;text-align: center;">
               <input id="${oid}" type="radio" name="panel-question" value="${option.replace(/"/g, '&quot;')}" ${checked} />
-              ${option}
+              ${optionContent}
             </label>
           `;
         })
@@ -281,7 +317,7 @@ PAGES.panel = {
             Menú hoy: ${ctx.comedor.primero || '—'} / ${ctx.comedor.segundo || '—'} /
             ${ctx.comedor.postre || '—'}
           </small>
-          <div style="margin-top: 10px;">${optionsHtml}</div>
+          <div style="margin-top: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px;">${optionsHtml}</div>
           <div id="panel-feedback" style="margin-top: 12px;"><i>${state.feedback || ''}</i></div>
           <div style="margin-top: 12px; display:flex; gap:8px;">
             <button class="btn5" id="panel-next">Comprobar y continuar</button>

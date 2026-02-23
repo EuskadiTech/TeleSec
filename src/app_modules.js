@@ -225,6 +225,12 @@ function TS_renderPictoPreview(previewEl, value) {
     target.appendChild(text);
   }
 }
+function makePictoStatic(picto) {
+  var element = document.createElement('div');
+  element.className = 'picto';
+  TS_renderPictoPreview(element, picto);
+  return element.outerHTML;
+}
 
 function TS_applyPictoValue(pictoEl, value) {
   if (typeof pictoEl === 'string') {

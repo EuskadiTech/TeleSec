@@ -12,7 +12,6 @@ PAGES.index = {
       <em>Utiliza el menú superior para abrir un modulo</em>
       <br /><br />
       <button class="btn1" onclick="ActualizarProgramaTeleSec()">Actualizar programa</button>
-      <br /><br />
       <button class="btn1" onclick="LogOutTeleSec()">Cerrar sesión</button>
     `;
   },
