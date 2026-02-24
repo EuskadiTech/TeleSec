@@ -276,6 +276,8 @@ PAGES.panel = {
       answers: {},
       score: 0,
       feedback: '',
+      feedbackType: '',
+      reviewMode: false,
     };
 
     function saveResult() {
@@ -299,15 +301,35 @@ PAGES.panel = {
         .map((option, i) => {
           var oid = safeuuid();
           var checked = selected === option ? 'checked' : '';
+          var disabled = state.reviewMode ? 'disabled' : '';
+          var optionStyle =
+            'display:block;margin: 8px 0;padding: 8px;border: 1px solid #ccc;border-radius: 6px;cursor:pointer;max-width: 150px;text-align: center;';
+
+          if (state.reviewMode) {
+            if (option === q.correct) {
+              optionStyle =
+                'display:block;margin: 8px 0;padding: 8px;border: 2px solid #2ed573;background:#eafff1;border-radius: 6px;cursor:pointer;max-width: 150px;text-align: center;';
+            } else if (option === selected && option !== q.correct) {
+              optionStyle =
+                'display:block;margin: 8px 0;padding: 8px;border: 2px solid #ff4757;background:#ffecec;border-radius: 6px;cursor:pointer;max-width: 150px;text-align: center;';
+            }
+          }
+
           var optionContent = PAGES.panel.__renderOptionContent(q, option);
           return `
-            <label class="panel-option" for="${oid}" style="display:block;margin: 8px 0;padding: 8px;border: 1px solid #ccc;border-radius: 6px;cursor:pointer;max-width: 150px;text-align: center;">
-              <input id="${oid}" type="radio" name="panel-question" value="${option.replace(/"/g, '&quot;')}" ${checked} />
+            <label class="panel-option" for="${oid}" style="${optionStyle}">
+              <input id="${oid}" type="radio" name="panel-question" value="${option.replace(/"/g, '&quot;')}" ${checked} ${disabled} />
               ${optionContent}
             </label>
           `;
         })
         .join('');
+
+      var feedbackColor = '#555';
+      if (state.feedbackType === 'ok') feedbackColor = '#1f8f4a';
+      if (state.feedbackType === 'bad') feedbackColor = '#c0392b';
+
+      var nextButtonText = state.reviewMode ? 'Continuar' : 'Comprobar';
 
       target.innerHTML = html`
         <fieldset style="max-width: 800px;">
@@ -318,9 +340,9 @@ PAGES.panel = {
             ${ctx.comedor.postre || '—'}
           </small>
           <div style="margin-top: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px;">${optionsHtml}</div>
-          <div id="panel-feedback" style="margin-top: 12px;"><i>${state.feedback || ''}</i></div>
+          <div id="panel-feedback" style="margin-top: 12px; color:${feedbackColor};"><i>${state.feedback || ''}</i></div>
           <div style="margin-top: 12px; display:flex; gap:8px;">
-            <button class="btn5" id="panel-next">Comprobar y continuar</button>
+            <button class="btn5" id="panel-next">${nextButtonText}</button>
             <button id="panel-cancel">Salir</button>
           </div>
         </fieldset>
@@ -328,9 +350,26 @@ PAGES.panel = {
 
       document.getElementById('panel-cancel').onclick = () => setUrlHash('index');
       document.getElementById('panel-next').onclick = () => {
+        if (state.reviewMode) {
+          state.reviewMode = false;
+          state.feedback = '';
+          state.feedbackType = '';
+
+          if (state.idx < questions.length - 1) {
+            state.idx++;
+            renderCurrent();
+            return;
+          }
+
+          saveResult();
+          renderFinal();
+          return;
+        }
+
         var checked = document.querySelector('input[name="panel-question"]:checked');
         if (!checked) {
           state.feedback = 'Selecciona una opción antes de continuar.';
+          state.feedbackType = 'bad';
           renderCurrent();
           return;
         }
@@ -342,21 +381,14 @@ PAGES.panel = {
         if (wasCorrect) {
           state.score++;
           state.feedback = '✅ ' + q.ok;
+          state.feedbackType = 'ok';
         } else {
           state.feedback = '❌ ' + q.bad + ' Respuesta esperada: ' + q.correct;
+          state.feedbackType = 'bad';
         }
 
-        if (state.idx < questions.length - 1) {
-          state.idx++;
-          setTimeout(() => {
-            state.feedback = '';
-            renderCurrent();
-          }, 350);
-          return;
-        }
-
-        saveResult();
-        renderFinal();
+        state.reviewMode = true;
+        renderCurrent();
       };
     }
 
@@ -383,6 +415,8 @@ PAGES.panel = {
         state.answers = {};
         state.score = 0;
         state.feedback = '';
+        state.feedbackType = '';
+        state.reviewMode = false;
         renderCurrent();
       };
       document.getElementById('panel-home').onclick = () => setUrlHash('index');

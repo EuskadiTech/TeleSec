@@ -5,77 +5,11 @@ PAGES.pagos = {
   icon: 'static/appico/credit_cards.png',
   AccessControl: true,
   Title: 'Pagos',
-  CajaCafeID: 'caja_cafe',
-  CajaCafeNombre: 'Caja Café',
 
   __getVisiblePersonas: function () {
     return Object.fromEntries(
       Object.entries(SC_Personas).filter(([_, persona]) => !(persona && persona.Oculto === true))
     );
-  },
-
-  __ensureCajaCafePersona: function () {
-    var cajaId = PAGES.pagos.CajaCafeID;
-    var cajaNombre = PAGES.pagos.CajaCafeNombre;
-    var existing = SC_Personas[cajaId];
-
-    if (existing && existing.Nombre === cajaNombre && existing.Oculto === true) {
-      return Promise.resolve(cajaId);
-    }
-
-    var data = {
-      Nombre: cajaNombre,
-      Region: 'Sistema',
-      Roles: '',
-      SC_Anilla: '',
-      markdown: 'Monedero interno de cafetería',
-      Monedero_Balance: parseFloat((existing && existing.Monedero_Balance) || 0) || 0,
-      Monedero_Notas: (existing && existing.Monedero_Notas) || '',
-      Oculto: true,
-    };
-
-    return DB.put('personas', cajaId, data)
-      .then(() => {
-        SC_Personas[cajaId] = data;
-        return cajaId;
-      })
-      .catch((e) => {
-        console.warn('DB.put error', e);
-        return null;
-      });
-  },
-
-  __creditCajaCafeForGasto: function (personaOrigenId, monto, callback) {
-    var cajaId = PAGES.pagos.CajaCafeID;
-    if (personaOrigenId === cajaId) {
-      if (callback) callback();
-      return;
-    }
-
-    PAGES.pagos.__ensureCajaCafePersona().then((resolvedCajaId) => {
-      if (!resolvedCajaId) {
-        if (callback) callback();
-        return;
-      }
-
-      var caja = SC_Personas[resolvedCajaId];
-      if (!caja) {
-        if (callback) callback();
-        return;
-      }
-
-      var currentBalance = parseFloat(caja.Monedero_Balance || 0);
-      caja.Monedero_Balance = fixfloat(currentBalance + monto);
-
-      DB.put('personas', resolvedCajaId, caja)
-        .then(() => {
-          if (callback) callback();
-        })
-        .catch((e) => {
-          console.warn('DB.put error', e);
-          if (callback) callback();
-        });
-    });
   },
 
   // Datafono view for creating/processing transactions
@@ -103,8 +37,6 @@ PAGES.pagos = {
       prefilledData.persona = scannedPersona;
       sessionStorage.removeItem('pagos_scanned_persona');
     }
-
-    PAGES.pagos.__ensureCajaCafePersona();
 
     var field_tipo = safeuuid();
     var field_monto = safeuuid();
@@ -577,13 +509,7 @@ PAGES.pagos = {
       var shouldUpdateBalance = !(tipo === 'Gasto' && metodo === 'Efectivo');
 
       function finalizeTransactionSave() {
-        if (tipo === 'Gasto') {
-          PAGES.pagos.__creditCajaCafeForGasto(personaId, monto, () => {
-            saveTransaction(ticketId, transactionData);
-          });
-        } else {
-          saveTransaction(ticketId, transactionData);
-        }
+        saveTransaction(ticketId, transactionData);
       }
 
       if (shouldUpdateBalance) {
@@ -1017,14 +943,7 @@ PAGES.pagos = {
               });
             } else if (tipo === 'Gasto') {
               revertWalletBalance(personaId, 'Ingreso', monto, () => {
-                var cajaId = PAGES.pagos.CajaCafeID;
-                if (personaId === cajaId) {
-                  deleteTransaction(tid);
-                  return;
-                }
-                revertWalletBalance(cajaId, 'Gasto', monto, () => {
-                  deleteTransaction(tid);
-                });
+                deleteTransaction(tid);
               });
             } else if (tipo === 'Transferencia') {
               var destinoId = data.PersonaDestino;
@@ -1088,8 +1007,6 @@ PAGES.pagos = {
       setUrlHash('index');
       return;
     }
-
-    PAGES.pagos.__ensureCajaCafePersona();
 
     var btn_datafono = safeuuid();
     var total_ingresos = safeuuid();
@@ -1372,8 +1289,6 @@ PAGES.pagos = {
       setUrlHash('pagos');
       return;
     }
-
-    PAGES.pagos.__ensureCajaCafePersona();
 
     var field_tipo = safeuuid();
     var field_monto = safeuuid();
