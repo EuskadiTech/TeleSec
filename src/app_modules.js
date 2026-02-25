@@ -1261,7 +1261,7 @@ function TS_IndexElement(
     });
     document.getElementById(filter_tr).innerHTML = '<th colspan="100%" style="color: #000; background: #fff;">Filtrando por: ' + Object.entries(filters)
       .map(([key, value]) => `${key}`)
-    .join(', ') + ' - <a href="' + window.location.hash.split('?')[0] + '">Limpiar filtros</a></th>';
+    .join(', ') + ' - <a href=' + window.location.hash.split('?')[0] + '">Limpiar filtros</a></th>';
   }
   function searchInData(data, searchValue, config) {
     if (filters) {
