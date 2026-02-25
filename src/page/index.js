@@ -13,7 +13,7 @@ PAGES.index = {
       </h2>
       <div
         id="${div_stats}"
-        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;"
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin-bottom: 20px;"
       ></div>
       <em>Utiliza el menú superior para abrir un modulo</em>
       <br /><br />
