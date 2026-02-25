@@ -1731,6 +1731,8 @@ var TS_INSTALLED_APPS_CACHE_KEY = '';
 var TS_INSTALLED_APPS_LOADING = false;
 var TS_ESSENTIAL_APPS = new Set(['index', 'personas', 'dataman']);
 var TS_LOCKED_APPS = new Set(['index', 'personas', 'dataman']);
+var TS_APPS_SYNC_LISTENER_ID = null;
+var TS_APPS_SYNC_REFRESH_PENDING = false;
 
 function TS_getAppInstallStorageKey() {
   var dbName = 'telesec';
@@ -2250,6 +2252,90 @@ function TS_resetAppsToDefault() {
   });
 }
 
+function TS_queueAppsUIRefresh() {
+  if (TS_APPS_SYNC_REFRESH_PENDING) return;
+  TS_APPS_SYNC_REFRESH_PENDING = true;
+  setTimeout(() => {
+    TS_APPS_SYNC_REFRESH_PENDING = false;
+    try {
+      SetPages();
+      var currentPage = location.hash.replace('#', '').split('?')[0].split(',')[0];
+      if (currentPage === 'tienda_apps' && PAGES.tienda_apps && typeof PAGES.tienda_apps.index === 'function') {
+        PAGES.tienda_apps.index();
+      }
+    } catch (e) {
+      console.warn('Apps UI refresh warning', e);
+    }
+  }, 50);
+}
+
+function TS_applyInstalledAppsFromConfigValue(raw, key) {
+  if (key !== TS_getAppInstallDocId()) return;
+  if (raw == null) {
+    TS_setInstalledAppsCache(TS_buildDefaultInstalledSet());
+    TS_queueAppsUIRefresh();
+    return;
+  }
+  if (typeof raw === 'string') {
+    TS_decrypt(
+      raw,
+      SECRET,
+      (decrypted) => {
+        var parsed = TS_parseInstalledAppsPayload(decrypted);
+        if (parsed) {
+          TS_setInstalledAppsCache(parsed);
+          TS_queueAppsUIRefresh();
+        }
+      },
+      'config',
+      key
+    );
+    return;
+  }
+  var parsed = TS_parseInstalledAppsPayload(raw);
+  if (parsed) {
+    TS_setInstalledAppsCache(parsed);
+    TS_queueAppsUIRefresh();
+  }
+}
+
+function TS_applyExternalAppsFromConfigValue(raw, key) {
+  if (key !== TS_getExternalAppsDocId()) return;
+  if (raw == null) {
+    TS_setExternalAppsCache([]);
+    TS_queueAppsUIRefresh();
+    return;
+  }
+  if (typeof raw === 'string') {
+    TS_decrypt(
+      raw,
+      SECRET,
+      (decrypted) => {
+        var parsed = TS_parseExternalAppsPayload(decrypted);
+        TS_setExternalAppsCache(parsed);
+        TS_applyExternalAppsRegistry(TS_EXTERNAL_APPS_CACHE);
+        TS_queueAppsUIRefresh();
+      },
+      'config',
+      key
+    );
+    return;
+  }
+  var parsed = TS_parseExternalAppsPayload(raw);
+  TS_setExternalAppsCache(parsed);
+  TS_applyExternalAppsRegistry(TS_EXTERNAL_APPS_CACHE);
+  TS_queueAppsUIRefresh();
+}
+
+function TS_initAppsRealtimeSync() {
+  if (!window.DB || typeof DB.map !== 'function') return;
+  if (TS_APPS_SYNC_LISTENER_ID) return;
+  TS_APPS_SYNC_LISTENER_ID = DB.map('config', (data, key) => {
+    TS_applyInstalledAppsFromConfigValue(data, key);
+    TS_applyExternalAppsFromConfigValue(data, key);
+  });
+}
+
 function checkRole(role) {
   var roles = SUB_LOGGED_IN_DETAILS.Roles || '';
   var rolesArr = roles.split(',');
@@ -2260,6 +2346,7 @@ function checkRole(role) {
   }
 }
 function SetPages() {
+  TS_initAppsRealtimeSync();
   var expectedExternalKey = TS_getExternalAppsDocId();
   if (!TS_EXTERNAL_APPS_READY || TS_EXTERNAL_APPS_CACHE_KEY !== expectedExternalKey) {
     TS_loadExternalAppsFromDB().then(() => {
