@@ -5,6 +5,66 @@ PAGES.comedor = {
   icon: 'static/appico/apple.png',
   AccessControl: true,
   Title: 'Comedor',
+  __cleanupOldMenus: async function () {
+    try {
+      var rows = await DB.list('comedor');
+      var now = new Date();
+      var todayUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+      var removed = 0;
+
+      function parseISODateToUTC(value) {
+        if (!value || typeof value !== 'string') return null;
+        var match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (!match) return null;
+        var y = parseInt(match[1], 10);
+        var m = parseInt(match[2], 10) - 1;
+        var d = parseInt(match[3], 10);
+        return Date.UTC(y, m, d);
+      }
+
+      async function getFechaFromRow(row) {
+        var data = row.data;
+        if (typeof data === 'string') {
+          return await new Promise((resolve) => {
+            TS_decrypt(
+              data,
+              SECRET,
+              (decrypted) => {
+                if (decrypted && typeof decrypted === 'object') {
+                  resolve(decrypted.Fecha || row.id.split(',')[0] || '');
+                } else {
+                  resolve(row.id.split(',')[0] || '');
+                }
+              },
+              'comedor',
+              row.id
+            );
+          });
+        }
+        if (data && typeof data === 'object') {
+          return data.Fecha || row.id.split(',')[0] || '';
+        }
+        return row.id.split(',')[0] || '';
+      }
+
+      for (const row of rows) {
+        var fecha = await getFechaFromRow(row);
+        var rowUTC = parseISODateToUTC(fecha);
+        if (rowUTC == null) continue;
+        var ageDays = Math.floor((todayUTC - rowUTC) / 86400000);
+        if (ageDays >= 30) {
+          await DB.del('comedor', row.id);
+          removed += 1;
+        }
+      }
+
+      if (removed > 0) {
+        toastr.info('Limpieza automática: ' + removed + ' menús antiguos eliminados.');
+      }
+    } catch (e) {
+      console.warn('Comedor cleanup error', e);
+    }
+  },
   edit: function (mid) {
     if (!checkRole('comedor:edit')) {
       setUrlHash('comedor');
@@ -161,52 +221,56 @@ PAGES.comedor = {
       <button id="${btn_new}">Nueva entrada</button>
       <div id="${cont}"></div>
     `;
-    TS_IndexElement(
-      'comedor',
-      [
-        {
-          key: 'Fecha',
-          type: 'raw',
-          default: '',
-          label: 'Fecha',
-        },
-        {
-          key: 'Tipo',
-          type: 'raw',
-          default: '',
-          label: 'Tipo',
-        },
-        {
-          key: 'Primero_Picto',
-          type: 'picto',
-          default: '',
-          label: 'Primero',
-          labelkey: 'Primero',
-        },
-        {
-          key: 'Segundo_Picto',
-          type: 'picto',
-          default: '',
-          label: 'Segundo',
-          labelkey: 'Segundo',
-        },
-        {
-          key: 'Postre_Picto',
-          type: 'picto',
-          default: '',
-          label: 'Postre',
-          labelkey: 'Postre',
-        },
-      ],
-      'comedor',
-      document.getElementById(cont),
-      (data, new_tr) => {
-        // new_tr.style.backgroundColor = "#FFCCCB";
-        if (data.Fecha == CurrentISODate()) {
-          new_tr.style.backgroundColor = 'lightgreen';
+    var renderList = () => {
+      TS_IndexElement(
+        'comedor',
+        [
+          {
+            key: 'Fecha',
+            type: 'raw',
+            default: '',
+            label: 'Fecha',
+          },
+          {
+            key: 'Tipo',
+            type: 'raw',
+            default: '',
+            label: 'Tipo',
+          },
+          {
+            key: 'Primero_Picto',
+            type: 'picto',
+            default: '',
+            label: 'Primero',
+            labelkey: 'Primero',
+          },
+          {
+            key: 'Segundo_Picto',
+            type: 'picto',
+            default: '',
+            label: 'Segundo',
+            labelkey: 'Segundo',
+          },
+          {
+            key: 'Postre_Picto',
+            type: 'picto',
+            default: '',
+            label: 'Postre',
+            labelkey: 'Postre',
+          },
+        ],
+        'comedor',
+        document.getElementById(cont),
+        (data, new_tr) => {
+          // new_tr.style.backgroundColor = "#FFCCCB";
+          if (data.Fecha == CurrentISODate()) {
+            new_tr.style.backgroundColor = 'lightgreen';
+          }
         }
-      }
-    );
+      );
+    };
+
+    PAGES.comedor.__cleanupOldMenus().finally(renderList);
 
     if (!checkRole('comedor:edit')) {
       document.getElementById(btn_new).style.display = 'none';

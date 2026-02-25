@@ -8,7 +8,7 @@ function tableScroll(query) {
 //var secretTokenEl = document.getElementById("secretToken");
 var container = document.getElementById('container');
 
-function open_page(params, retryAfterExternalLoad = false) {
+function open_page(params) {
   // Clear stored event listeners and timers
   EventListeners.GunJS = [];
   EventListeners.Timeout.forEach((ev) => clearTimeout(ev));
@@ -32,19 +32,8 @@ function open_page(params, retryAfterExternalLoad = false) {
   var path = params.split(',');
   var app = path[0];
   if (!PAGES[app]) {
-    if (!retryAfterExternalLoad && typeof TS_loadExternalAppsFromDB === 'function') {
-      TS_loadExternalAppsFromDB().then(() => {
-        open_page(params, true);
-      });
-      return;
-    }
     toastr.error('La app solicitada no existe.');
     setUrlHash('index');
-    return;
-  }
-  if (typeof TS_isAppInstalled === 'function' && !TS_isAppInstalled(app)) {
-    toastr.error('Esta app no está instalada. Instálala desde la Tienda de apps.');
-    setUrlHash('tienda_apps');
     return;
   }
   if (path[1] == undefined) {
