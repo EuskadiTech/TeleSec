@@ -66,7 +66,7 @@ PAGES.personas = {
                   Notas del Monedero<br>
                   <textarea id="${field_monedero_notas}" rows="3" placeholder="Notas adicionales sobre el monedero..."></textarea><br><br>
               </label>
-              <button type="button" id="${btn_ver_monedero}" class="btn5">Ver Transacciones del Monedero</button>
+              <button type="button" id="${btn_ver_monedero}" class="btn5">Ver movimientos</button>
             </div>
           </details>
           <details style="background: #e3fde3ff; border: 2px solid #21f328ff; border-radius: 8px; padding: 10px; margin: 15px 0; display: none;">
@@ -209,7 +209,7 @@ PAGES.personas = {
         });
     };
     document.getElementById(btn_ver_monedero).onclick = () => {
-      setUrlHash('pagos?search=' + encodeURIComponent(document.getElementById(field_nombre).value)); // Navigate to pagos and show transactions for this person
+      setUrlHash('pagos?filter=Persona:' + encodeURIComponent(mid)); // Navigate to pagos and show transactions for this person
     };
     document.getElementById(btn_borrar).onclick = () => {
       if (confirm('¿Quieres borrar esta persona?') == true) {

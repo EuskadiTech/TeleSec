@@ -1213,6 +1213,7 @@ function TS_IndexElement(
   var searchKeyInput = safeuuid();
   var debounce_search = safeuuid();
   var debounce_load = safeuuid();
+  var filter_tr = safeuuid();
 
   // Create the container with search bar and table
   container.innerHTML = html`
@@ -1230,6 +1231,7 @@ function TS_IndexElement(
               />
             </th>
           </tr>
+          <tr id="${filter_tr}"></tr>
           <tr id="${tablehead}"></tr>
         </thead>
         <tbody id="${tablebody}"></tbody>
@@ -1251,7 +1253,24 @@ function TS_IndexElement(
   if (hashQuery.has('search')) {
     searchKeyEl.value = hashQuery.get('search');
   }
+  var filters = {};
+  if (hashQuery.has('filter')) {
+    hashQuery.getAll('filter').forEach((filter) => {
+      var [key, value] = filter.split(":");
+      filters[key] = value;
+    });
+    document.getElementById(filter_tr).innerHTML = '<th colspan="100%" style="color: #000; background: #fff;">Filtrando por: ' + Object.entries(filters)
+      .map(([key, value]) => `${key}`)
+    .join(', ') + ' - <a href="' + window.location.hash.split('?')[0] + '">Limpiar filtros</a></th>';
+  }
   function searchInData(data, searchValue, config) {
+    if (filters) {
+      for (var fkey in filters) {
+        if (data[fkey] != filters[fkey]) {
+          return false;
+        }
+      }
+    }
     if (!searchValue) return true;
 
     // Search in ID
