@@ -452,3 +452,23 @@ pre {
   background-color: #ccc;
   outline: 5px solid blue;
 }
+
+.saveico {
+  border-color: green !important;
+}
+.delico {
+  border-color: red !important;
+}
+.opicon {
+  border-color: blue !important;
+}
+.saveico img, .delico img, .opicon img {
+  height: 52px;
+  vertical-align: middle;
+}
+.saveico, .delico, .opicon {
+  padding: 2.5px 7.5px;
+  background: transparent;
+  border-radius: 10px;
+  border: 4px solid;
+}

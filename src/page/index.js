@@ -11,10 +11,13 @@ PAGES.index = {
         Tienes ${parseFloat(SUB_LOGGED_IN_DETAILS.Monedero_Balance).toPrecision(2)} € en el
         monedero.
       </h2>
-      <div
-        id="${div_stats}"
-        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin-bottom: 20px;"
-      ></div>
+      <details style="border: 2px solid black; padding: 15px; border-radius: 10px;">
+        <summary>Estadisticas</summary>
+        <div
+          id="${div_stats}"
+          style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin-bottom: 20px;"
+        ></div>
+      </details>
       <em>Utiliza el menú superior para abrir un modulo</em>
       <br /><br />
       <button class="btn1" onclick="ActualizarProgramaTeleSec()">Actualizar programa</button>

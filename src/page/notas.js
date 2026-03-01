@@ -45,8 +45,14 @@ PAGES.notas = {
           <div id="${attachments_list}"></div>
         </label>
         <hr />
-        <button class="btn5" id="${btn_guardar}">Guardar</button>
-        <button class="rojo" id="${btn_borrar}">Borrar</button>
+        <button class="saveico" id="${btn_guardar}">
+          <img src="static/floppy_disk_green.png" />
+          <br>Guardar
+        </button>
+        <button class="delico" id="${btn_borrar}">
+          <img src="static/garbage.png" />
+          <br>Borrar
+        </button>
       </fieldset>
     `;
     var divact = document.getElementById(div_actions);
