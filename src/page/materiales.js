@@ -329,7 +329,7 @@ PAGES.materiales = {
           <img src="static/exit.png" />
           <br>Salir
         </button>
-        <button class="opicon" id="${btn_print_chart}" style="float: right;"> <!-- Align to the right -->
+        <button class="opicon" onclick="window.print()" style="float: right;"> <!-- Align to the right -->
           <img src="static/printer2.png" />
           <br>Imprimir
         </button>
@@ -403,10 +403,6 @@ PAGES.materiales = {
     document.getElementById(mov_open_modal_btn).onclick = () => {
       document.getElementById(mov_modal).style.display = 'block';
       renderMovimientos();
-    };
-
-    document.getElementById(btn_print_chart).onclick = () => {
-      window.print();
     };
 
     document.getElementById(mov_modal_close).onclick = () => {

@@ -121,7 +121,7 @@ PAGES.comedor = {
           <img src="static/exit.png" />
           <br>Salir
         </button>
-        <button class="opicon" id="${btn_print_chart}" style="float: right;"> <!-- Align to the right -->
+        <button class="opicon" onclick="window.print()" style="float: right;"> <!-- Align to the right -->
           <img src="static/printer2.png" />
           <br>Imprimir
         </button>
