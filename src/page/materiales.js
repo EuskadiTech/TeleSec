@@ -226,6 +226,18 @@ PAGES.materiales = {
           </div>
 
           <div style="display: flex;flex-direction: column;align-items: stretch;gap: 6px;min-width: 220px;flex: 1 1 280px;">
+            <label for="${field_ubicacion}">Ubicación</label>
+            <input
+              type="text"
+              id="${field_ubicacion}"
+              value="-"
+              list="${field_ubicacion}_list"
+              style="flex: 1;"
+            />
+            <datalist id="${field_ubicacion}_list"></datalist>
+          </div>
+
+          <div style="display: flex;flex-direction: column;align-items: stretch;gap: 6px;min-width: 220px;flex: 1 1 280px;">
             <label for="${field_unidad}">Unidad</label>
             <select id="${field_unidad}" style="flex: 1;">
               <option value="unidad(es)">unidad(es)</option>
@@ -250,22 +262,10 @@ PAGES.materiales = {
             <input type="number" step="0.5" id="${field_cantidad_min}" style="flex: 1;" />
           </div>
 
-          <div style="display: flex;flex-direction: column;align-items: stretch;gap: 6px;min-width: 220px;flex: 1 1 280px;">
-            <label for="${field_ubicacion}">Ubicación</label>
-            <input
-              type="text"
-              id="${field_ubicacion}"
-              value="-"
-              list="${field_ubicacion}_list"
-              style="flex: 1;"
-            />
-            <datalist id="${field_ubicacion}_list"></datalist>
-          </div>
-
-          <div style="display: flex;flex-direction: column;align-items: stretch;gap: 6px;min-width: 220px;flex: 1 1 100%;">
-            <label for="${field_notas}">Notas</label>
-            <textarea id="${field_notas}" style="flex: 1;"></textarea>
-          </div>
+          <label style="display: flex;flex-direction: column;gap: 6px;min-width: 220px;flex: 1 1 100%;">
+              Notas
+              <textarea id="${field_notas}"></textarea>
+          </label>
         </div>
 
         <div
@@ -325,13 +325,13 @@ PAGES.materiales = {
           <img src="static/exchange.png" />
           <br>Movimientos
         </button>
-        <button class="opicon" id="${btn_print_chart}">
-          <img src="static/printer2.png" />
-          <br>Imprimir
-        </button>
-        <button class="opicon" onclick="setUrlHash('materiales')">
+        <button class="opicon" onclick="setUrlHash('materiales')" style="float: right;"> <!-- Align to the right -->
           <img src="static/exit.png" />
           <br>Salir
+        </button>
+        <button class="opicon" id="${btn_print_chart}" style="float: right;"> <!-- Align to the right -->
+          <img src="static/printer2.png" />
+          <br>Imprimir
         </button>
       </fieldset>
       <div id="${mov_chart}" style="max-width: 980px;width: 100%;margin-top: 14px;min-height: 260px;height: min(400px, 52vh);"></div>

@@ -53,6 +53,14 @@ PAGES.notas = {
           <img src="static/garbage.png" />
           <br>Borrar
         </button>
+        <button class="opicon" onclick="setUrlHash('notas')" style="float: right;"> <!-- Align to the right -->
+          <img src="static/exit.png" />
+          <br>Salir
+        </button>
+        <button class="opicon" id="${btn_print_chart}" style="float: right;"> <!-- Align to the right -->
+          <img src="static/printer2.png" />
+          <br>Imprimir
+        </button>
       </fieldset>
     `;
     var divact = document.getElementById(div_actions);

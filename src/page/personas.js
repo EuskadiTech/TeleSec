@@ -20,73 +20,58 @@ PAGES.personas = {
     var field_oculto = safeuuid();
     var render_foto = safeuuid();
     var field_monedero_balance = safeuuid();
-    var field_monedero_notas = safeuuid();
     var btn_guardar = safeuuid();
     var btn_borrar = safeuuid();
     var btn_ver_monedero = safeuuid();
     container.innerHTML = html`
       <h1>Persona <code id="${nameh1}"></code></h1>
-      ${BuildQR('personas,' + mid, 'Esta Persona')}
-      <fieldset>
-          <label>
-              Nombre<br>
-              <input type="text" id="${field_nombre}"><br><br>
-          </label>
-          <label>
-              Zona<br>
-              <input type="text" id="${field_zona}"><br><br>
-          </label>
-          <details>
-            <summary>Permisos</summary>
-            <form id="${permisosdet}">
-            </form>
-          </details>
-          <label>
-              Anilla<br>
-              <input type="color" id="${field_anilla}"><br><br>
-          </label>
-          <label>
-              Foto (PNG o JPG)<br>
-              <img id="${render_foto}" height="100px" style="border: 3px inset; min-width: 7px;" src="static/ico/user_generic.png">
-              <input type="file" accept="image/*" id="${field_foto}" style="display: none;"><br><br>
-          </label>
-          <label>
-              Ocultar persona?<br>
-              <input type="checkbox" id="${field_oculto}"><br><br>
-          </label>
-          <details style="background: #e3f2fd; border: 2px solid #2196f3; border-radius: 8px; padding: 10px; margin: 15px 0;">
-            <summary style="cursor: pointer; font-weight: bold; color: #1976d2;">💳 Tarjeta Monedero</summary>
-            <div style="padding: 15px;">
-              <label>
-                  Balance Actual<br>
-                  <input type="number" step="0.01" id="${field_monedero_balance}" style="font-size: 24px; font-weight: bold; color: #1976d2;"><br>
-                  <small>Se actualiza automáticamente con las transacciones</small><br><br>
-              </label>
-              <label>
-                  Notas del Monedero<br>
-                  <textarea id="${field_monedero_notas}" rows="3" placeholder="Notas adicionales sobre el monedero..."></textarea><br><br>
-              </label>
-              <button type="button" id="${btn_ver_monedero}" class="btn5">Ver movimientos</button>
-            </div>
-          </details>
-          <details style="background: #e3fde3ff; border: 2px solid #21f328ff; border-radius: 8px; padding: 10px; margin: 15px 0; display: none;">
-            <summary style="cursor: pointer; font-weight: bold; color: rgba(26, 141, 3, 1);">🔗 Generar enlaces</summary>
-            <div style="padding: 15px;">
-              <label>
-                  Este servidor<br>
-                  <input type="url" value="${location.protocol}//${location.hostname}:${location.port}${location.pathname}?login=${getDBName()}:${SECRET}&sublogin=${mid}" style="font-size: 10px; font-weight: bold; color: #000;"><br>
-              </label>
-              <label>
-                  Cualquier Servidor<br>
-                  <input type="url" value="https://tech.eus/ts/?login=${getDBName()}:${SECRET}&sublogin=${mid}" style="font-size: 10px; font-weight: bold; color: #000;"><br>
-              </label>
-            </div>
-          </details>
-
-          <label>
-              Notas<br>
-              <textarea id="${field_notas}"></textarea><br><br>
-          </label><hr>
+      <fieldset style="width: 100%;max-width: 980px;box-sizing: border-box;">
+          <div style="display: flex;flex-wrap: wrap;gap: 10px 16px;">
+            <label style="display: flex;flex-direction: column;gap: 6px;max-width: 105px;flex: 1 1 105px;">
+                Foto
+                <img id="${render_foto}" height="100px" style="border: 3px inset; min-width: 7px; width: fit-content;" src="static/ico/user_generic.png">
+                <input type="file" accept="image/*" id="${field_foto}" style="display: none;">
+            </label>
+            <label style="display: flex;flex-direction: column;gap: 6px;min-width: 220px;flex: 1 1 280px;">
+                Nombre
+                <input type="text" id="${field_nombre}">
+            </label>
+            <label style="display: flex;flex-direction: column;gap: 6px;min-width: 170px;flex: 1 1 170px;">
+                Zona
+                <input type="text" id="${field_zona}">
+            </label>
+            <label style="display: flex;flex-direction: column;gap: 6px;max-width: 170px;flex: 1 1 170px;">
+                Saldo Monedero
+                <input type="number" step="0.01" id="${field_monedero_balance}" disabled style="color: #000; font-weight: bold;">
+            </label>
+            <label style="display: flex;flex-direction: column;gap: 6px;max-width: 50px;flex: 1 1 50px;">
+                Anilla
+                <input type="color" id="${field_anilla}">
+            </label>
+            <label style="display: flex;flex-direction: column;gap: 6px;max-width: 60px;flex: 1 1 60px;">
+                Ocultar?
+                <input type="checkbox" id="${field_oculto}" style="height: 50px; width: 50px; margin: 0;">
+            </label>
+            <label style="display: flex;flex-direction: column;gap: 6px;min-width: 220px;flex: 1 1 100%;">
+                Notas
+                <textarea id="${field_notas}"></textarea>
+            </label>
+            <details style="flex: 1 1 100%;">
+              <summary>Permisos</summary>
+              <form id="${permisosdet}">
+              </form>
+            </details>
+            <details style="background: #e3fde3ff; border: 2px solid #21f328ff; border-radius: 8px; padding: 10px; margin: 15px 0; display: none; flex: 1 1 100%;">
+              <summary style="cursor: pointer; font-weight: bold; color: rgba(26, 141, 3, 1);">🔗 Generar enlaces</summary>
+              <div style="padding: 15px;display: flex;flex-wrap: wrap;gap: 10px 16px;align-items: flex-end;">
+                <label style="display: flex;flex-direction: column;gap: 6px;min-width: 220px;flex: 1 1 100%;">
+                    Este servidor
+                    <input type="url" value="${location.protocol}//${location.hostname}:${location.port}${location.pathname}?sublogin=${mid}" style="font-size: 10px; font-weight: bold; color: #000;">
+                </label>
+              </div>
+            </details>
+          </div>
+          <hr>
           <button class="saveico" id="${btn_guardar}">
             <img src="static/floppy_disk_green.png" />
             <br>Guardar
@@ -94,6 +79,18 @@ PAGES.personas = {
           <button class="delico" id="${btn_borrar}">
             <img src="static/garbage.png" />
             <br>Borrar
+          </button>
+          <button type="button" id="${btn_ver_monedero}" class="opicon">
+            <img src="static/cash_flow.png" />
+            <br>Movimientos
+          </button>
+          <button class="opicon" onclick="setUrlHash('personas')" style="float: right;"> <!-- Align to the right -->
+            <img src="static/exit.png" />
+            <br>Salir
+          </button>
+          <button class="opicon" id="${btn_print_chart}" style="float: right;"> <!-- Align to the right -->
+            <img src="static/printer2.png" />
+            <br>Imprimir
           </button>
       </fieldset>
       `;
@@ -134,7 +131,6 @@ PAGES.personas = {
           .catch(() => {});
         document.getElementById(field_notas).value = data['markdown'] || '';
         document.getElementById(field_monedero_balance).value = data['Monedero_Balance'] || 0;
-        document.getElementById(field_monedero_notas).value = data['Monedero_Notas'] || '';
       }
       if (typeof data == 'string') {
         TS_decrypt(
@@ -180,7 +176,6 @@ PAGES.personas = {
         // Foto moved to PouchDB attachment named 'foto'
         markdown: document.getElementById(field_notas).value,
         Monedero_Balance: parseFloat(document.getElementById(field_monedero_balance).value) || 0,
-        Monedero_Notas: document.getElementById(field_monedero_notas).value,
       };
       document.getElementById('actionStatus').style.display = 'block';
       DB.put('personas', mid, data)
