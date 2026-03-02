@@ -57,20 +57,37 @@ Se añadió soporte para control de ordenadores del aula:
 
 ### Ejecutar agente en Windows
 
+El agente usa un archivo de configuración en la carpeta personal del usuario:
+
+- Ruta por defecto: `~/.telesec/windows_agent.json`
+- Se crea automáticamente si no existe
+
 ```bash
-python -m python_sdk.windows_agent \
-	--server "https://tu-couchdb" \
-	--db "telesec" \
-	--user "usuario" \
-	--password "clave" \
-	--secret "SECRET123"
+python -m python_sdk.windows_agent --once
 ```
+
+Ejemplo del JSON de configuración:
+
+```json
+{
+	"server": "https://tu-couchdb",
+	"db": "telesec",
+	"user": "usuario",
+	"password": "clave",
+	"secret": "SECRET123",
+	"machine_id": "",
+	"interval": 15
+}
+```
+
+También puedes sobrescribir valores por CLI (`--server`, `--secret`, etc.).
 
 Opciones útiles:
 
 - `--once`: una sola iteración
 - `--interval 15`: intervalo (segundos)
 - `--dry-run`: no apaga realmente, solo simula
+- `--config <ruta>`: ruta alternativa del archivo JSON
 
 ### Hora de servidor (sin depender del reloj local)
 

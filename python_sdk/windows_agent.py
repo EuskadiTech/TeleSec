@@ -1,5 +1,6 @@
 import argparse
 import ctypes
+import json
 import os
 import socket
 import subprocess
@@ -130,28 +131,113 @@ def run_once(client: TeleSecCouchDB, machine_id: str, dry_run: bool = False) -> 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="TeleSec Windows Agent")
-    parser.add_argument("--server", required=True, help="CouchDB server URL, ej. https://couch.example")
+    parser.add_argument("--server", default="", help="CouchDB server URL, ej. https://couch.example")
     parser.add_argument("--db", default="telesec", help="Database name")
     parser.add_argument("--user", default="", help="CouchDB username")
     parser.add_argument("--password", default="", help="CouchDB password")
-    parser.add_argument("--secret", required=True, help="TeleSec secret para cifrado")
+    parser.add_argument("--secret", default="", help="TeleSec secret para cifrado")
     parser.add_argument("--machine-id", default="", help="ID de máquina (default: hostname)")
     parser.add_argument("--interval", type=int, default=15, help="Intervalo en segundos")
     parser.add_argument("--once", action="store_true", help="Ejecutar una sola iteración")
     parser.add_argument("--dry-run", action="store_true", help="No apagar realmente, solo log")
+    parser.add_argument(
+        "--config",
+        default="",
+        help="Ruta de config JSON (default: ~/.telesec/windows_agent.json)",
+    )
     return parser.parse_args()
+
+
+def _default_config_path() -> str:
+    return os.path.join(os.path.expanduser("~"), ".telesec", "windows_agent.json")
+
+
+def _load_or_init_config(path: str) -> Dict[str, Any]:
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        default_cfg = {
+            "server": "https://tu-couchdb",
+            "db": "telesec",
+            "user": "",
+            "password": "",
+            "secret": "",
+            "machine_id": "",
+            "interval": 15,
+        }
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(default_cfg, f, ensure_ascii=False, indent=2)
+        return default_cfg
+
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+        if isinstance(data, dict):
+            return data
+        return {}
+
+
+def _save_config(path: str, data: Dict[str, Any]) -> None:
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def _pick(cli_value: Any, cfg_value: Any, default_value: Any = None) -> Any:
+    if cli_value is None:
+        return cfg_value if cfg_value not in [None, ""] else default_value
+    if isinstance(cli_value, str):
+        if cli_value.strip() == "":
+            return cfg_value if cfg_value not in [None, ""] else default_value
+        return cli_value
+    return cli_value
 
 
 def main() -> int:
     args = parse_args()
-    machine_id = (args.machine_id or socket.gethostname() or "unknown-host").strip()
+    config_path = args.config or _default_config_path()
+    try:
+        cfg = _load_or_init_config(config_path)
+    except Exception as exc:
+        print(f"No se pudo cargar/crear config en {config_path}: {exc}", file=sys.stderr)
+        return 3
+
+    server = _pick(args.server, cfg.get("server"), "")
+    db = _pick(args.db, cfg.get("db"), "telesec")
+    user = _pick(args.user, cfg.get("user"), "")
+    password = _pick(args.password, cfg.get("password"), "")
+    secret = _pick(args.secret, cfg.get("secret"), "")
+    machine_id = _pick(args.machine_id, cfg.get("machine_id"), "")
+    interval = _pick(args.interval, cfg.get("interval"), 15)
+
+    machine_id = (machine_id or socket.gethostname() or "unknown-host").strip()
+
+    if not server or not secret:
+        print(
+            "Falta configuración obligatoria. Edita el JSON en: " + config_path,
+            file=sys.stderr,
+        )
+        return 4
+
+    # Persist effective parameters for next runs
+    try:
+        persistent_cfg = {
+            "server": server,
+            "db": db,
+            "user": user,
+            "password": password,
+            "secret": secret,
+            "machine_id": machine_id,
+            "interval": int(interval),
+        }
+        _save_config(config_path, persistent_cfg)
+    except Exception as exc:
+        print(f"No se pudo guardar config en {config_path}: {exc}", file=sys.stderr)
 
     client = TeleSecCouchDB(
-        server_url=args.server,
-        dbname=args.db,
-        secret=args.secret,
-        username=args.user or None,
-        password=args.password or None,
+        server_url=server,
+        dbname=db,
+        secret=secret,
+        username=user or None,
+        password=password or None,
     )
 
     try:
@@ -169,7 +255,7 @@ def main() -> int:
             run_once(client=client, machine_id=machine_id, dry_run=args.dry_run)
         except Exception as exc:
             print(f"Error en iteración agente: {exc}", file=sys.stderr)
-        time.sleep(max(5, args.interval))
+        time.sleep(max(5, int(interval)))
 
 
 if __name__ == "__main__":
