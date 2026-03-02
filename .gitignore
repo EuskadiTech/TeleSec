@@ -3,3 +3,12 @@ radata/*
 node_modules/*
 .DS_Store
 ._*
+# Python
+__pycache__/*
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/*
+*.egg
+.venv/*
+venv/*

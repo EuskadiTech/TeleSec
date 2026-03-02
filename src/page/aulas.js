@@ -48,6 +48,9 @@ PAGES.aulas = {
           <a class="button btn4" style="font-size: 25px;" href="#supercafe"
             ><img src="${PAGES.supercafe.icon}" height="20" /> Ver comandas</a
           >
+          <a class="button btn8" style="font-size: 25px;" href="#aulas,ordenadores"
+            ><img src="${PAGES.aulas.icon}" height="20" /> Control de ordenadores</a
+          >
         </fieldset>
         <fieldset style="float: left;">
           <legend>Datos de hoy</legend>
@@ -451,6 +454,211 @@ Cargando...</pre
       }
     };
   },
+  __decryptIfNeeded: function (table, id, raw) {
+    return new Promise((resolve) => {
+      if (typeof raw !== 'string') {
+        resolve(raw || {});
+        return;
+      }
+      TS_decrypt(
+        raw,
+        SECRET,
+        (data) => {
+          resolve(data || {});
+        },
+        table,
+        id
+      );
+    });
+  },
+  __getServerNow: async function () {
+    try {
+      var couchUrl = (localStorage.getItem('TELESEC_COUCH_URL') || '').replace(/\/$/, '');
+      var couchUser = localStorage.getItem('TELESEC_COUCH_USER') || '';
+      var couchPass = localStorage.getItem('TELESEC_COUCH_PASS') || '';
+      var couchDb = localStorage.getItem('TELESEC_COUCH_DBNAME') || 'telesec';
+
+      if (couchUrl) {
+        var target = couchUrl + '/' + encodeURIComponent(couchDb);
+        var headers = {};
+        if (couchUser) {
+          headers['Authorization'] = 'Basic ' + btoa(couchUser + ':' + couchPass);
+        }
+        var res = await fetch(target, { method: 'HEAD', headers: headers });
+        var dateHeader = res.headers.get('Date');
+        if (dateHeader) {
+          var dt = new Date(dateHeader);
+          if (!isNaN(dt.getTime())) return dt;
+        }
+      }
+    } catch (e) {
+      console.warn('No se pudo obtener hora desde CouchDB', e);
+    }
+
+    try {
+      var wres = await fetch('https://worldtimeapi.org/api/timezone/Etc/UTC');
+      if (wres.ok) {
+        var wjson = await wres.json();
+        if (wjson && wjson.utc_datetime) {
+          var wdt = new Date(wjson.utc_datetime);
+          if (!isNaN(wdt.getTime())) return wdt;
+        }
+      }
+    } catch (e2) {
+      console.warn('No se pudo obtener hora desde worldtimeapi', e2);
+    }
+
+    return new Date();
+  },
+  __scheduleShutdown: async function (machineId) {
+    try {
+      document.getElementById('actionStatus').style.display = 'block';
+      var serverNow = await PAGES.aulas.__getServerNow();
+      var shutdownAt = new Date(serverNow.getTime() + 2 * 60 * 1000).toISOString();
+      var raw = await DB.get('aulas_ordenadores', machineId);
+      var data = await PAGES.aulas.__decryptIfNeeded('aulas_ordenadores', machineId, raw);
+      data = data || {};
+      data.Hostname = data.Hostname || machineId;
+      data.ShutdownBeforeDate = shutdownAt;
+      data.ShutdownRequestedAt = serverNow.toISOString();
+      data.ShutdownRequestedBy = SUB_LOGGED_IN_ID || '';
+      await DB.put('aulas_ordenadores', machineId, data);
+      toastr.warning('Apagado programado antes de: ' + shutdownAt);
+    } catch (e) {
+      console.warn('Error programando apagado remoto', e);
+      toastr.error('No se pudo programar el apagado remoto');
+    } finally {
+      document.getElementById('actionStatus').style.display = 'none';
+    }
+  },
+  __cancelShutdown: async function (machineId) {
+    try {
+      document.getElementById('actionStatus').style.display = 'block';
+      var raw = await DB.get('aulas_ordenadores', machineId);
+      var data = await PAGES.aulas.__decryptIfNeeded('aulas_ordenadores', machineId, raw);
+      data = data || {};
+      data.Hostname = data.Hostname || machineId;
+      data.ShutdownBeforeDate = '';
+      data.ShutdownRequestedAt = '';
+      data.ShutdownRequestedBy = '';
+      await DB.put('aulas_ordenadores', machineId, data);
+      toastr.success('Apagado remoto cancelado');
+    } catch (e) {
+      console.warn('Error cancelando apagado remoto', e);
+      toastr.error('No se pudo cancelar el apagado remoto');
+    } finally {
+      document.getElementById('actionStatus').style.display = 'none';
+    }
+  },
+  _ordenadores: function () {
+    container.innerHTML = html`
+      <a class="button" href="#aulas">← Volver a Gestión de Aulas</a>
+      <h1>Control de ordenadores</h1>
+      <p>
+        Estado enviado por el agente Windows. El apagado remoto se programa con hora de servidor.
+      </p>
+      <div id="cont"></div>
+    `;
+
+    TS_IndexElement(
+      'aulas,ordenadores',
+      [
+        { key: 'Hostname', type: 'raw', default: '', label: 'Hostname' },
+        { key: 'UsuarioActual', type: 'raw', default: '', label: 'Usuario actual' },
+        { key: 'AppActualEjecutable', type: 'raw', default: '', label: 'App actual (exe)' },
+        { key: 'AppActualTitulo', type: 'raw', default: '', label: 'App actual (título)' },
+        { key: 'LastSeenAt', type: 'raw', default: '', label: 'Último visto (server)' },
+        {
+          key: 'ShutdownBeforeDate',
+          type: 'template',
+          label: 'Apagado remoto',
+          template: (data, td) => {
+            var text = document.createElement('div');
+            text.style.marginBottom = '6px';
+            text.innerText = data.ShutdownBeforeDate
+              ? '⏻ Antes de: ' + data.ShutdownBeforeDate
+              : 'Sin apagado programado';
+            td.appendChild(text);
+
+            var btnOn = document.createElement('button');
+            btnOn.className = 'rojo';
+            btnOn.innerText = 'Programar +2m';
+            btnOn.onclick = async (event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              await PAGES.aulas.__scheduleShutdown(data._key);
+              return false;
+            };
+            td.appendChild(btnOn);
+
+            if (data.ShutdownBeforeDate) {
+              td.appendChild(document.createElement('br'));
+              var btnCancel = document.createElement('button');
+              btnCancel.className = 'btn5';
+              btnCancel.innerText = 'Cancelar';
+              btnCancel.onclick = async (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                await PAGES.aulas.__cancelShutdown(data._key);
+                return false;
+              };
+              td.appendChild(btnCancel);
+            }
+          },
+        },
+      ],
+      'aulas_ordenadores',
+      document.querySelector('#cont')
+    );
+  },
+  _ordenadores__edit: function (mid) {
+    var field_host = safeuuid();
+    var field_user = safeuuid();
+    var field_exe = safeuuid();
+    var field_title = safeuuid();
+    var field_seen = safeuuid();
+    var field_shutdown = safeuuid();
+    var btn_schedule = safeuuid();
+    var btn_cancel = safeuuid();
+
+    container.innerHTML = html`
+      <a class="button" href="#aulas,ordenadores">← Volver a ordenadores</a>
+      <h1>Ordenador <code>${mid}</code></h1>
+      <fieldset style="float: none; width: calc(100% - 40px);max-width: none;">
+        <legend>Estado</legend>
+        <label>Hostname<br /><input readonly id="${field_host}" /></label><br /><br />
+        <label>Usuario actual<br /><input readonly id="${field_user}" /></label><br /><br />
+        <label>App actual (exe)<br /><input readonly id="${field_exe}" /></label><br /><br />
+        <label>App actual (título)<br /><input readonly id="${field_title}" /></label><br /><br />
+        <label>Último visto (server)<br /><input readonly id="${field_seen}" /></label><br /><br />
+        <label>ShutdownBeforeDate<br /><input readonly id="${field_shutdown}" /></label><br /><br />
+        <button class="rojo" id="${btn_schedule}">Programar apagado +2m</button>
+        <button class="btn5" id="${btn_cancel}">Cancelar apagado</button>
+      </fieldset>
+    `;
+
+    async function loadData() {
+      var raw = await DB.get('aulas_ordenadores', mid);
+      var data = await PAGES.aulas.__decryptIfNeeded('aulas_ordenadores', mid, raw);
+      data = data || {};
+      document.getElementById(field_host).value = data.Hostname || mid;
+      document.getElementById(field_user).value = data.UsuarioActual || '';
+      document.getElementById(field_exe).value = data.AppActualEjecutable || '';
+      document.getElementById(field_title).value = data.AppActualTitulo || '';
+      document.getElementById(field_seen).value = data.LastSeenAt || '';
+      document.getElementById(field_shutdown).value = data.ShutdownBeforeDate || '';
+    }
+
+    loadData();
+    document.getElementById(btn_schedule).onclick = async () => {
+      await PAGES.aulas.__scheduleShutdown(mid);
+      await loadData();
+    };
+    document.getElementById(btn_cancel).onclick = async () => {
+      await PAGES.aulas.__cancelShutdown(mid);
+      await loadData();
+    };
+  },
   edit: function (fsection) {
     if (!checkRole('aulas')) {
       setUrlHash('index');
@@ -467,6 +675,9 @@ Cargando...</pre
         case 'informes':
           this._informes();
           break;
+        case 'ordenadores':
+          this._ordenadores();
+          break;
         default:
           this.index();
           break;
@@ -479,6 +690,9 @@ Cargando...</pre
           break;
         case 'informes':
           this._informes__edit(item);
+          break;
+        case 'ordenadores':
+          this._ordenadores__edit(item);
           break;
       }
     }
