@@ -415,7 +415,7 @@ def run_once(client: TeleSecCouchDB, machine_id: str, dry_run: bool = False) -> 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="TeleSec Windows Agent")
     parser.add_argument("--server", default="", help="CouchDB server URL, ej. https://couch.example")
-    parser.add_argument("--db", default="telesec", help="Database name")
+    parser.add_argument("--db", default="", help="Database name")
     parser.add_argument("--user", default="", help="CouchDB username")
     parser.add_argument("--password", default="", help="CouchDB password")
     parser.add_argument("--secret", default="", help="TeleSec secret para cifrado")
