@@ -949,9 +949,11 @@ function TS_decrypt(input, secret, callback, table, id) {
   }
 
   // Encrypted format marker: RSA{<ciphertext>} where <ciphertext> is CryptoJS AES output
+  console.debug(input);
   if (input.startsWith('RSA{') && input.endsWith('}') && typeof CryptoJS !== 'undefined') {
     try {
       var data = input.slice(4, -1);
+      console.debug("TS_decrypt secret:", ">" + secret + "<", typeof secret, secret?.length);
       var words = CryptoJS.AES.decrypt(data, secret);
       var decryptedUtf8 = null;
       try {
