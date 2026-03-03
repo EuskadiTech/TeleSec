@@ -12,9 +12,9 @@ from typing import Any, Dict, Optional
 import psutil
 
 try:
-    from .telesec_couchdb import TeleSecCouchDB, TeleSecCouchDBError, ts_decrypt
-except ImportError:
     from telesec_couchdb import TeleSecCouchDB, TeleSecCouchDBError, ts_decrypt
+except ImportError:
+    from .telesec_couchdb import TeleSecCouchDB, TeleSecCouchDBError, ts_decrypt
 
 
 def utcnow_iso() -> str:
