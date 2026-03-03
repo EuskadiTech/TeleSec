@@ -84,32 +84,52 @@ def ts_encrypt(input_value: Any, secret: str) -> str:
     return f"RSA{{{b64}}}"
 
 
-def ts_encrypt(input_value: Any, secret: str) -> str:
+
+def ts_decrypt(input_value: Any, secret: str) -> Any:
+    """
+    Compatible with JS TS_decrypt behavior:
+    - If not string: return as-is.
+    - If RSA{...}: decrypt AES(CryptoJS passphrase mode), parse JSON when possible.
+    - If plain string JSON: parse JSON.
+    - Else: return raw string.
+    """
     if not isinstance(input_value, str):
-        payload = json.dumps(input_value, separators=(",", ":"), ensure_ascii=False)
-    else:
-        payload = input_value
+        return input_value
 
-    payload_bytes = payload.encode("utf-8")
-    salt = os.urandom(8)
+    is_wrapped = input_value.startswith("RSA{") and input_value.endswith("}")
+    if is_wrapped:
+        if not secret:
+            raise TeleSecCryptoError("Secret is required to decrypt RSA payload")
+        b64 = input_value[4:-1]
+        try:
+            raw = base64.b64decode(b64)
+        except Exception as exc:
+            raise TeleSecCryptoError("Invalid base64 payload") from exc
 
-    # OpenSSL EVP_BytesToKey (MD5)
-    dx = b""
-    salted = b""
-    while len(salted) < 48:  # 32 key + 16 iv
-        dx = hashlib.md5(dx + secret.encode() + salt).digest()
-        salted += dx
+        if len(raw) < 16 or not raw.startswith(b"Salted__"):
+            raise TeleSecCryptoError("Unsupported encrypted payload format")
 
-    key = salted[:32]
-    iv = salted[32:48]
+        salt = raw[8:16]
+        ciphertext = raw[16:]
+        key, iv = _evp_bytes_to_key(secret.encode("utf-8"), salt, 32, 16)
+        cipher = AES.new(key, AES.MODE_CBC, iv=iv)
+        decrypted = cipher.decrypt(ciphertext)
+        decrypted = _pkcs7_unpad(decrypted, 16)
 
-    cipher = AES.new(key, AES.MODE_CBC, iv)
-    encrypted = cipher.encrypt(_pkcs7_pad(payload_bytes, 16))
+        try:
+            text = decrypted.decode("utf-8")
+        except UnicodeDecodeError:
+            text = decrypted.decode("latin-1")
 
-    openssl_blob = b"Salted__" + salt + encrypted
-    b64 = base64.b64encode(openssl_blob).decode("utf-8")
+        try:
+            return json.loads(text)
+        except Exception:
+            return text
 
-    return f"RSA{{{b64}}}"
+    try:
+        return json.loads(input_value)
+    except Exception:
+        return input_value
 
 @dataclass
 class TeleSecDoc:
