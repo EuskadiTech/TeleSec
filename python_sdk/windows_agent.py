@@ -372,7 +372,7 @@ def should_shutdown(data: Dict[str, Any], server_now: datetime) -> bool:
     target = parse_iso(str(data.get("ShutdownBeforeDate", "") or ""))
     if not target:
         return False
-    return server_now >= target
+    return server_now <= target
 
 
 def execute_shutdown(dry_run: bool = False) -> None:
