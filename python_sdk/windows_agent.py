@@ -7,7 +7,7 @@ import subprocess
 import sys
 import time
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 
 import psutil
 import base64
