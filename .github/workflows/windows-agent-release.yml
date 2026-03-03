@@ -31,13 +31,13 @@ jobs:
       - name: Build hidden EXE with PyInstaller
         shell: bash
         run: |
-          pyinstaller --noconfirm --clean --onefile --noconsole --name telesec-windows-agent python_sdk/windows_agent.py
+          cd python_sdk ; pyinstaller --noconfirm --clean --onefile --noconsole --hidden-import=telesec_couchdb --name telesec-windows-agent windows_agent.py
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
           name: telesec-windows-agent
-          path: dist/telesec-windows-agent.exe
+          path: python_sdk/dist/telesec-windows-agent.exe
 
       - name: Upload asset to GitHub Release
         if: github.event_name == 'release'
