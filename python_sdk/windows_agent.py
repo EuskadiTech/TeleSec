@@ -401,8 +401,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--secret", default="", help="TeleSec secret para cifrado")
     parser.add_argument("--machine-id", default="", help="ID de máquina (default: hostname)")
     parser.add_argument("--interval", type=int, default=15, help="Intervalo en segundos")
-    parser.add_argument("--once", action="store_true", help="Ejecutar una sola iteración")
-    parser.add_argument("--dry-run", action="store_true", help="No apagar realmente, solo log")
+    parser.add_argument("--once", action="store_false", help="Ejecutar una sola iteración")
+    parser.add_argument("--dry-run", action="store_false", help="No apagar realmente, solo log")
     parser.add_argument(
         "--config",
         default="",
