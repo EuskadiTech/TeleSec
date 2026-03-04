@@ -285,9 +285,9 @@ PAGES.materiales = {
                 <div style="display: flex;flex-direction: column;align-items: stretch;gap: 6px;min-width: 180px;flex: 1 1 220px;">
                   <label for="${mov_tipo}">Tipo</label>
                   <select id="${mov_tipo}" style="flex: 1;">
-                    <option value="Entrada">Entrada</option>
-                    <option value="Salida">Salida</option>
-                    <option value="Ajuste">Ajuste</option>
+                    <option value="Entrada">Entrada - Meter al almacen</option>
+                    <option value="Salida">Salida - Sacar del almacen</option>
+                    <option value="Ajuste">Ajuste - Existencias actuales</option>
                   </select>
                 </div>
                 <div style="display: flex;flex-direction: column;align-items: stretch;gap: 6px;min-width: 180px;flex: 1 1 220px;">
@@ -424,7 +424,7 @@ PAGES.materiales = {
       var nota = document.getElementById(mov_nota).value || '';
       var actual = parseNum(document.getElementById(field_cantidad).value, 0);
 
-      if (!Number.isFinite(cantidadMov) || cantidadMov <= 0) {
+      if ((!Number.isFinite(cantidadMov) || cantidadMov <= 0) && tipo !== 'Ajuste') {
         toastr.warning('Indica una cantidad válida para el movimiento');
         return;
       }

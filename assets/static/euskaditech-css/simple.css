@@ -65,7 +65,8 @@ a:hover {
 @media print {
   .supermesh-indicator,
   .no_print,
-  .no_print * {
+  .no_print *,
+  .saveico, .delico, .opicon {
     display: none !important;
   }
 }

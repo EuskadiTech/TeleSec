@@ -1,4 +1,5 @@
 PERMS['aulas'] = 'Aulas (Solo docentes!)';
+PERMS['aulas:resumen_diario'] = '> Resumen diario';
 PAGES.aulas = {
   //navcss: "btn1",
   Title: 'Gest-Aula',
@@ -13,168 +14,98 @@ PAGES.aulas = {
     var data_Tareas = safeuuid();
     var data_Diario = safeuuid();
     var data_Weather = safeuuid();
+    var link_alertas = safeuuid();
+    var link_diario = safeuuid();
+    var link_actividades = safeuuid();
     container.innerHTML = html`
       <h1>Gestión del Aula</h1>
       <div>
         <fieldset style="float: left;">
-          <legend><img src="${PAGES.notas.icon}" height="20" /> Notas esenciales</legend>
-          <a class="button" style="font-size: 25px;" href="#notas,inicio_dia"
-            >Como iniciar el día</a
-          >
-          <a class="button" style="font-size: 25px;" href="#notas,realizacion_cafe"
-            >Como realizar el café</a
-          >
-          <a class="button" style="font-size: 25px;" href="#notas,fin_dia">Como acabar el día</a>
-          <a class="button" style="font-size: 25px;" href="#notas,horario">Horario</a>
-          <a class="button" style="font-size: 25px;" href="#notas,tareas">Tareas</a>
+          <legend>Atajos de hoy</legend>
+          <a class="button" id="${link_alertas}" href="#notas,alertas">
+            Alertas
+          </a>
+          <a class="button btn2" href="#aulas,solicitudes,${safeuuid('')}">
+            Solicitar material
+          </a>
+          <a class="button" id="${link_diario}" href="#aulas,informes,diario-${CurrentISODate()}">
+            Informe
+          </a>
+          <a class="button" id="${link_actividades}" href="#aulas,informes,actividades-${CurrentISODate()}">
+            Actividades
+          </a>
+          <a class="button btn5" href="#aulas,ordenadores">
+            Ordenadores
+          </a>
+          <a class="button btn6" href="#aulas,resumen_diario">
+            Resumen Diario
+          </a>
         </fieldset>
         <fieldset style="float: left;">
           <legend>Acciones</legend>
-          <a class="button" style="font-size: 25px;" href="#aulas,solicitudes"
-            ><img src="${PAGES.materiales.icon}" height="20" /> Solicitudes de material</a
-          >
-          <a
-            class="button"
-            style="font-size: 25px;"
-            href="#aulas,informes,diario-${CurrentISODate()}"
-            >Diario de hoy</a
-          >
-          <a class="button rojo" style="font-size: 25px;" href="#notas,alertas"
-            ><img src="${PAGES.notas.icon}" height="20" /> Ver Alertas</a
-          >
-          <a class="button" style="font-size: 25px;" href="#aulas,informes"
-            ><img src="${PAGES.aulas.icon}" height="20" /> Informes y diarios</a
-          >
-          <a class="button btn4" style="font-size: 25px;" href="#supercafe"
-            ><img src="${PAGES.supercafe.icon}" height="20" /> Ver comandas</a
-          >
-          <a class="button btn8" style="font-size: 25px;" href="#aulas,ordenadores"
-            ><img src="${PAGES.aulas.icon}" height="20" /> Control de ordenadores</a
-          >
-        </fieldset>
-        <fieldset style="float: left;">
-          <legend>Datos de hoy</legend>
-
-          <span
-            class="btn7"
-            style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black; max-width: 25rem;"
-            ><b>Menú Comedor:</b> <br /><span id="${data_Comedor}">Cargando...</span></span
-          >
-          <span
-            class="btn6"
-            style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black; max-width: 25rem;"
-            ><b>Tareas:</b> <br />
-            <pre style="overflow-wrap: break-word;white-space:pre-wrap;" id="${data_Tareas}">
-Cargando...</pre
-            >
-          </span>
-          <span
-            class="btn5"
-            style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black; max-width: 25rem;"
-            ><b>Diario:</b> <br />
-            <pre style="overflow-wrap: break-word;white-space:pre-wrap;" id="${data_Diario}">
-Cargando...</pre
-            >
-          </span>
-          <span
-            class="btn4"
-            style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black; max-width: 25rem;"
-            ><b>Clima:</b> <br /><img
-              loading="lazy"
-              style="padding: 15px; background-color: white; width: 245px;"
-              id="${data_Weather}"
-          /></span>
+          <a class="button" style="font-size: 25px;" href="#aulas,solicitudes">
+            Solicitudes de materiales
+          </a>
+          <a class="button" style="font-size: 25px;" href="#aulas,informes">
+            Informes
+          </a>
         </fieldset>
       </div>
     `;
-
-    //#region Cargar Clima
-    // Get location from DB settings.weather_location; if missing ask user and save it
-    // url format: https://wttr.in/<loc>?F0m
-    DB.get('settings', 'weather_location').then((loc) => {
-      if (!loc) {
-        loc = prompt('Introduce tu ubicación para el clima (ciudad, país):', 'Madrid, Spain');
-        if (loc) {
-          DB.put('settings', 'weather_location', loc);
+    
+    //#region Contar alertas activas y mostrarlas en el botón
+    DB.get('notas', 'alertas')
+      .then((res) => TS_decrypt(res, SECRET, (data) => {
+        var count = 0;
+        // Sumar el total de alertas activas, cada linea de "Contenido"
+        // es una alerta, aunque podrían hacerse varias por nota.
+        // Ignora lineas que no empiezen por > (por si el profesor escribe algo que no es una alerta)
+        data.Contenido.split('\n').forEach((line) => {
+          if (line.trim().startsWith('>')) count++;
+        });
+        if (count > 0) {
+          document.getElementById(link_alertas).innerText = `Alertas (${count})`;
+          document.getElementById(link_alertas).classList.add('rojo');
+        } else {
+          document.getElementById(link_alertas).innerText = 'Alertas';
+          document.getElementById(link_alertas).classList.remove('rojo');
         }
-      }
-      if (loc) {
-        document.getElementById(data_Weather).src =
-          'https://wttr.in/' + encodeURIComponent(loc) + '_IF0m_background=FFFFFF.png';
+      }))
+      .catch((e) => {
+        console.warn('Error contando alertas activas', e);
+      });
+    //#endregion Contar alertas activas
+    //#region Comprobar si hay un diario para hoy y marcar el botón
+    DB.get('aulas_informes', 'diario-' + CurrentISODate())
+      .then((res) => {
+        if (res) {
+          document.getElementById(link_diario).classList.add('btn2'); 
+        } else {
+          document.getElementById(link_diario).classList.remove('btn2');
+        }
+      })
+      .catch((e) => {
+        console.warn('Error comprobando diario de hoy', e);
+      });
+    //#endregion Comprobar diario
+    //#region Comprobar si hay un informe de actividades para hoy y contar las actividades (mismo formato que alertas)
+    DB.get('aulas_informes', 'actividades-' + CurrentISODate()).then((res) => TS_decrypt(res, SECRET, (data) => {
+      var count = 0;
+      data.Contenido.split('\n').forEach((line) => {
+        if (line.trim().startsWith('>')) count++;
+      });
+      if (count > 0) {
+        document.getElementById(link_actividades).innerText = `Actividades (${count})`;
+        document.getElementById(link_actividades).classList.add('btn4');
       } else {
-        document.getElementById(data_Weather).src = 'https://wttr.in/_IF0m_background=FFFFFF.png';
+        document.getElementById(link_actividades).innerText = 'Actividades';
+        document.getElementById(link_actividades).classList.remove('btn4');
       }
+    }))
+    .catch((e) => {
+      console.warn('Error comprobando actividades de hoy', e);
     });
-    //#endregion Cargar Clima
-    //#region Cargar Comedor
-    DB.get('comedor', CurrentISODate()).then((data) => {
-      function add_row(data) {
-        // Fix newlines
-        data.Platos = data.Platos || 'No hay platos registrados para hoy.';
-        // Display platos
-        document.getElementById(data_Comedor).innerHTML = data.Platos.replace(/\n/g, '<br>');
-      }
-      if (typeof data == 'string') {
-        TS_decrypt(
-          data,
-          SECRET,
-          (data, wasEncrypted) => {
-            add_row(data || {});
-          },
-          'comedor',
-          CurrentISODate()
-        );
-      } else {
-        add_row(data || {});
-      }
-    });
-    //#endregion Cargar Comedor
-    //#region Cargar Tareas
-    DB.get('notas', 'tareas').then((data) => {
-      function add_row(data) {
-        // Fix newlines
-        data.Contenido = data.Contenido || 'No hay tareas.';
-        // Display platos
-        document.getElementById(data_Tareas).innerHTML = data.Contenido.replace(/\n/g, '<br>');
-      }
-      if (typeof data == 'string') {
-        TS_decrypt(
-          data,
-          SECRET,
-          (data, wasEncrypted) => {
-            add_row(data || {});
-          },
-          'notas',
-          'tareas'
-        );
-      } else {
-        add_row(data || {});
-      }
-    });
-    //#endregion Cargar Tareas
-    //#region Cargar Diario
-    DB.get('aulas_informes', 'diario-' + CurrentISODate()).then((data) => {
-      function add_row(data) {
-        // Fix newlines
-        data.Contenido = data.Contenido || 'No hay un diario.';
-        // Display platos
-        document.getElementById(data_Diario).innerHTML = data.Contenido.replace(/\n/g, '<br>');
-      }
-      if (typeof data == 'string') {
-        TS_decrypt(
-          data,
-          SECRET,
-          (data, wasEncrypted) => {
-            add_row(data || {});
-          },
-          'aulas_informes',
-          'diario-' + CurrentISODate()
-        );
-      } else {
-        add_row(data || {});
-      }
-    });
-    //#endregion Cargar Diario
+    //#endregion Comprobar actividades
   },
   _solicitudes: function () {
     const tablebody = safeuuid();
@@ -190,7 +121,7 @@ Cargando...</pre
       [
         {
           key: 'Solicitante',
-          type: 'persona',
+          type: 'persona-nombre',
           default: '',
           label: 'Solicitante',
         },
@@ -233,8 +164,14 @@ Cargando...</pre
           ><br /><br />
         </label>
         <hr />
-        <button class="btn5" id="${btn_guardar}">Guardar</button>
-        <button class="rojo" id="${btn_borrar}">Borrar</button>
+        <button class="saveico" id="${btn_guardar}">
+          <img src="static/floppy_disk_green.png" />
+          <br>Guardar
+        </button>
+        <button class="delico" id="${btn_borrar}">
+          <img src="static/garbage.png" />
+          <br>Borrar
+        </button>
       </fieldset>
     `;
     (async () => {
@@ -311,7 +248,7 @@ Cargando...</pre
       <div
         style="display: inline-block; border: 2px solid black; padding: 5px; border-radius: 5px;"
       >
-        <b>Diario:</b><br />
+        <b>Por fecha:</b><br />
         <input type="date" id="${field_new_byday}" value="${CurrentISODate()}" />
         <button id="${btn_new_byday}">Abrir / Nuevo</button>
       </div>
@@ -324,7 +261,7 @@ Cargando...</pre
       [
         {
           key: 'Autor',
-          type: 'persona',
+          type: 'persona-nombre',
           default: '',
           label: 'Autor',
         },
@@ -367,7 +304,10 @@ Cargando...</pre
     var title = '';
     if (mid.startsWith('diario-')) {
       var date = mid.replace('diario-', '').split('-');
-      title = 'Diario ' + date[2] + '/' + date[1] + '/' + date[0];
+      title = 'Informe del ' + date[2] + '/' + date[1] + '/' + date[0];
+    } else if (mid.startsWith('actividades-')) {
+      var date = mid.replace('actividades-', '').split('-');
+      title = 'Actividades para el ' + date[2] + '/' + date[1] + '/' + date[0];
     }
     container.innerHTML = html`
       <a class="button" href="#aulas,informes">← Volver a informes</a>
@@ -388,8 +328,14 @@ Cargando...</pre
           ><br /><br />
         </label>
         <hr />
-        <button class="btn5" id="${btn_guardar}">Guardar</button>
-        <button class="rojo" id="${btn_borrar}">Borrar</button>
+        <button class="saveico" id="${btn_guardar}">
+          <img src="static/floppy_disk_green.png" />
+          <br>Guardar
+        </button>
+        <button class="delico" id="${btn_borrar}">
+          <img src="static/garbage.png" />
+          <br>Borrar
+        </button>
       </fieldset>
     `;
     (async () => {
@@ -659,6 +605,141 @@ Cargando...</pre
       await loadData();
     };
   },
+  _resumen_diario: function () {
+    var data_Comedor = safeuuid();
+    var data_Tareas = safeuuid();
+    var data_Diario = safeuuid();
+    var data_Weather = safeuuid();
+    if (!checkRole('aulas:resumen_diario')) {
+      setUrlHash('index');
+      return;
+    }
+    container.innerHTML = html`
+      <h1>Resumen Diario ${CurrentISODate()}</h1>
+      <button onclick="print()" class="no_print">Imprimir</button>
+      <a class="button no_print" href="#aulas">← Volver a Gestión de Aulas</a>
+      <br /><span
+        class="btn7"
+        style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black;"
+        ><b>Menú Comedor:</b> <br /><span id="${data_Comedor}">Cargando...</span></span
+      >
+      <br /><span
+        class="btn6"
+        style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black;"
+        ><b>Tareas:</b> <br />
+        <pre style="overflow-wrap: break-word;white-space:pre-wrap;" id="${data_Tareas}">
+Cargando...</pre
+        >
+      </span>
+      <br /><span
+        class="btn5"
+        style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black;"
+        ><b>Informe:</b> <br />
+        <pre style="overflow-wrap: break-word;white-space:pre-wrap;" id="${data_Diario}">
+Cargando...</pre
+        >
+      </span>
+      <br /><span
+        class="btn4"
+        style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black;"
+        ><b>Clima:</b> <br /><img
+          loading="lazy"
+          style="padding: 15px; background-color: white; height: 75px;"
+          id="${data_Weather}"
+      /></span>
+    `;
+
+    //#region Cargar Clima
+    // Get location from DB settings.weather_location; if missing ask user and save it
+    // url format: https://wttr.in/<loc>?F0m
+    DB.get('settings', 'weather_location').then((loc) => {
+      if (!loc) {
+        loc = prompt('Introduce tu ubicación para el clima (ciudad, país):', 'Madrid, Spain');
+        if (loc) {
+          DB.put('settings', 'weather_location', loc);
+        }
+      }
+      if (loc) {
+        document.getElementById(data_Weather).src =
+          'https://wttr.in/' + encodeURIComponent(loc) + '_IF0m_background=FFFFFF.png';
+      } else {
+        document.getElementById(data_Weather).src = 'https://wttr.in/_IF0m_background=FFFFFF.png';
+      }
+    });
+    //#endregion Cargar Clima
+    //#region Cargar Comedor
+    DB.get('comedor', CurrentISODate()).then((data) => {
+      function add_row(data) {
+        if (!data.Primero) {
+          var result = 'No hay información del comedor para hoy.';
+        } else {
+          var result = data.Primero + "<br>" + data.Segundo + "<br>" + data.Postre;
+        }
+        // Display platos
+        document.getElementById(data_Comedor).innerHTML = result;
+      }
+      if (typeof data == 'string') {
+        TS_decrypt(
+          data,
+          SECRET,
+          (data, wasEncrypted) => {
+            add_row(data || {});
+          },
+          'comedor',
+          CurrentISODate()
+        );
+      } else {
+        add_row(data || {});
+      }
+    });
+    //#endregion Cargar Comedor
+    //#region Cargar Tareas
+    DB.get('notas', 'tareas').then((data) => {
+      function add_row(data) {
+        // Fix newlines
+        data.Contenido = data.Contenido || 'No hay tareas.';
+        // Display tareas
+        document.getElementById(data_Tareas).innerHTML = data.Contenido.replace(/\n/g, '<br>');
+      }
+      if (typeof data == 'string') {
+        TS_decrypt(
+          data,
+          SECRET,
+          (data, wasEncrypted) => {
+            add_row(data || {});
+          },
+          'notas',
+          'tareas'
+        );
+      } else {
+        add_row(data || {});
+      }
+    });
+    //#endregion Cargar Tareas
+    //#region Cargar Diario
+    DB.get('aulas_informes', 'diario-' + CurrentISODate()).then((data) => {
+      function add_row(data) {
+        // Fix newlines
+        data.Contenido = data.Contenido || 'No hay un diario.';
+        // Display platos
+        document.getElementById(data_Diario).innerHTML = data.Contenido.replace(/\n/g, '<br>');
+      }
+      if (typeof data == 'string') {
+        TS_decrypt(
+          data,
+          SECRET,
+          (data, wasEncrypted) => {
+            add_row(data || {});
+          },
+          'aulas_informes',
+          'diario-' + CurrentISODate()
+        );
+      } else {
+        add_row(data || {});
+      }
+    });
+    //#endregion Cargar Diario
+  },
   edit: function (fsection) {
     if (!checkRole('aulas')) {
       setUrlHash('index');
@@ -677,6 +758,9 @@ Cargando...</pre
           break;
         case 'ordenadores':
           this._ordenadores();
+          break;
+        case 'resumen_diario':
+          this._resumen_diario();
           break;
         default:
           this.index();
