@@ -69,6 +69,7 @@ a:hover {
   .saveico, .delico, .opicon {
     display: none !important;
   }
+  main {padding: 0;}
 }
 
 button,

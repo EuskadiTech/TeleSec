@@ -718,111 +718,35 @@ PAGES.pagos = {
     var btn_revert = safeuuid();
 
     container.innerHTML = html`
-      <h1>Transacción <code id="${nameh1}"></code></h1>
-      ${BuildQR('pagos,' + tid, 'Esta Transacción')}
-      <button id="${btn_volver}">← Volver a Pagos</button>
-      <button id="${btn_volver2}">← Volver a SuperCafé</button>
-      <fieldset>
-        <legend>Detalles de la Transacción</legend>
+      <h1 class="no_print">Transacción <code id="${nameh1}"></code></h1>
+      <button class="no_print" id="${btn_volver}">← Volver a Pagos</button>
+      <button class="no_print" id="${btn_volver2}">← Volver a SuperCafé</button>
+      
+      <h4>Ticket - ${tid}</h4>
+      <b>Fecha</b>: <span id="${field_fecha}"></span><br />
+      <b>Operación</b>: <span id="${field_tipo}"></span> realizado por <span id="${field_persona}"></span><br />
 
-        <label>
-          Ticket/ID<br />
-          <input
-            type="text"
-            id="${field_ticket}"
-            readonly
-            style="background: #f0f0f0;"
-          /><br /><br />
-        </label>
+      <div id="${div_persona_destino}" style="display: none;">
+        <b>Destino</b>: <span id="${field_persona_destino}"></span><br />
+      </div>
 
-        <label>
-          Fecha y Hora<br />
-          <input
-            type="text"
-            id="${field_fecha}"
-            readonly
-            style="background: #f0f0f0;"
-          /><br /><br />
-        </label>
+      <b>Metodo</b>: <span id="${field_metodo}"></span><br />
 
-        <label>
-          Tipo<br />
-          <input type="text" id="${field_tipo}" readonly style="background: #f0f0f0;" /><br /><br />
-        </label>
+      <div id="${div_origen}" style="display: none;">
+        <b>Origen</b>: <span id="${field_origen}"></span><br />
+      </div>
+      <hr />
+      <span id="${field_notas}"></span><br />
+      <hr>
+      <b>Estado</b>: <span id="${field_estado}"></span><br />
+      <h1 id="${field_monto}" style="color: green; text-align: center;">0.00€</h1>
+      <hr>
 
-        <label>
-          Monto<br />
-          <input
-            type="text"
-            id="${field_monto}"
-            readonly
-            style="background: #f0f0f0; font-size: 24px; font-weight: bold;"
-          /><br /><br />
-        </label>
-
-        <label>
-          Monedero (Persona)<br />
-          <input
-            type="text"
-            id="${field_persona}"
-            readonly
-            style="background: #f0f0f0;"
-          /><br /><br />
-        </label>
-
-        <div id="${div_persona_destino}" style="display: none;">
-          <label>
-            Monedero Destino<br />
-            <input
-              type="text"
-              id="${field_persona_destino}"
-              readonly
-              style="background: #f0f0f0;"
-            /><br /><br />
-          </label>
-        </div>
-
-        <label>
-          Método de Pago<br />
-          <input
-            type="text"
-            id="${field_metodo}"
-            readonly
-            style="background: #f0f0f0;"
-          /><br /><br />
-        </label>
-
-        <label>
-          Estado<br />
-          <input
-            type="text"
-            id="${field_estado}"
-            readonly
-            style="background: #f0f0f0;"
-          /><br /><br />
-        </label>
-
-        <div id="${div_origen}" style="display: none;">
-          <label>
-            Origen<br />
-            <input
-              type="text"
-              id="${field_origen}"
-              readonly
-              style="background: #f0f0f0;"
-            /><br /><br />
-          </label>
-        </div>
-
-        <label>
-          Notas<br />
-          <textarea id="${field_notas}" readonly rows="4" style="background: #f0f0f0;"></textarea
-          ><br /><br />
-        </label>
-      </fieldset>
-
-      <fieldset style="margin-top: 20px;">
+      <fieldset style="margin-top: 20px;" class="no_print">
         <legend>Acciones</legend>
+        <button onclick="window.print()" class="btn4" style="font-size: 16px; padding: 10px 20px; margin: 5px;">
+          🖨️ Imprimir Ticket
+        </button>
         <button
           id="${btn_edit}"
           class="btn5"
@@ -859,33 +783,33 @@ PAGES.pagos = {
       function load_data(data) {
         console.log('Transaction data:', data);
         document.getElementById(nameh1).innerText = tid;
-        document.getElementById(field_ticket).value = data.Ticket || tid;
+        //document.getElementById(field_ticket).innerText = data.Ticket || tid;
 
         var fecha = data.Fecha || '';
         if (fecha) {
           var d = new Date(fecha);
-          document.getElementById(field_fecha).value = d.toLocaleString('es-ES');
+          document.getElementById(field_fecha).innerText = d.toLocaleString('es-ES');
         }
 
-        document.getElementById(field_tipo).value = data.Tipo || '';
-        document.getElementById(field_monto).value = (data.Monto || 0).toFixed(2) + '€';
+        document.getElementById(field_tipo).innerText = data.Tipo || '';
+        document.getElementById(field_monto).innerText = (data.Monto || 0).toFixed(2) + '€';
 
         var persona = SC_Personas[data.Persona] || {};
-        document.getElementById(field_persona).value = persona.Nombre || data.Persona || '';
+        document.getElementById(field_persona).innerText = persona.Nombre || data.Persona || '';
 
         if (data.PersonaDestino) {
           var personaDestino = SC_Personas[data.PersonaDestino] || {};
-          document.getElementById(field_persona_destino).value =
+          document.getElementById(field_persona_destino).innerText =
             personaDestino.Nombre || data.PersonaDestino || '';
           document.getElementById(div_persona_destino).style.display = 'block';
         }
 
-        document.getElementById(field_metodo).value = data.Metodo || '';
-        document.getElementById(field_estado).value = data.Estado || '';
-        document.getElementById(field_notas).value = data.Notas || '';
+        document.getElementById(field_metodo).innerText = data.Metodo || '';
+        document.getElementById(field_estado).innerText = data.Estado || '';
+        document.getElementById(field_notas).innerText = data.Notas || '';
 
         if (data.Origen) {
-          document.getElementById(field_origen).value =
+          document.getElementById(field_origen).innerText =
             data.Origen + (data.OrigenID ? ' (' + data.OrigenID + ')' : '');
           document.getElementById(div_origen).style.display = 'block';
         }
