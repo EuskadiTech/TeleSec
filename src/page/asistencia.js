@@ -217,7 +217,7 @@ PAGES.asistencia = {
       htmlOut += '<table style="min-width: 100%; border-collapse: collapse;">';
       aulas.forEach((aula) => {
         htmlOut += `<tr><td colspan="${fechas.length + 1}" style="background: #000; color: #fff; padding: 8px; font-size: 26px;"><b>${escapeHtml(aula)}</b></td></tr>`;
-        htmlOut += '<thead><tr style="background: #000; color: #fff;">';
+        htmlOut += '<tr style="background: #000; color: #fff;">';
         htmlOut +=
           '<th style="position: sticky; left: 0; background: #000; color: #fff; min-width: 210px; border-bottom: 1px solid #ddd; padding: 8px;">Alumno</th>';
         fechas.forEach((f) => {
@@ -228,7 +228,7 @@ PAGES.asistencia = {
           });
           htmlOut += `<th style="border-bottom: 1px solid #ddd; padding: 8px; white-space: nowrap;">${fecha_formatted}</th>`;
         });
-        htmlOut += '</tr></thead><tbody>';
+        htmlOut += '</tr>';
 
         groups[aula].forEach((row) => {
           const nombre = row.data.Nombre || row.id;
@@ -248,9 +248,8 @@ PAGES.asistencia = {
           });
           htmlOut += '</tr>';
         });
-
-        htmlOut += '</tbody></table></div>';
       });
+      htmlOut += '</tbody></table></div>';
 
       root.innerHTML = htmlOut;
       root.querySelectorAll('select[data-persona]').forEach((el) => {
