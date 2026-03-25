@@ -308,49 +308,19 @@ PAGES.login = {
       </p>
     `;
     // Helper: normalize and apply config object
-    function applyConfig(cfg) {
-      try {
-        if (!cfg) throw new Error('JSON vacío');
-        var url = cfg.server || cfg.couch || cfg.url || cfg.host || cfg.hostname || cfg.server_url;
-        var dbname = cfg.dbname || cfg.database || cfg.db || cfg.name;
-        var user = cfg.username || cfg.user || cfg.u;
-        var pass = cfg.password || cfg.pass || cfg.p;
-        var secret = (cfg.secret || cfg.key || cfg.secretKey || cfg.SECRET || '').toString();
-        if (!url) throw new Error('Falta campo "server" en JSON');
-        var URL_PARSED = parseURL(url);
-        var host = URL_PARSED.hostname || url;
-        localStorage.setItem('TELESEC_COUCH_URL', 'https://' + host);
-        if (dbname) localStorage.setItem('TELESEC_COUCH_DBNAME', dbname);
-        if (user) localStorage.setItem('TELESEC_COUCH_USER', user);
-        if (pass) localStorage.setItem('TELESEC_COUCH_PASS', pass);
-        if (secret) {
-          localStorage.setItem('TELESEC_SECRET', secret.toUpperCase());
-          SECRET = secret.toUpperCase();
-        }
-        DB.init({
-          secret: SECRET,
-          remoteServer: 'https://' + url.replace(/^https?:\/\//, ''),
-          username: user,
-          password: pass,
-          dbname: dbname || undefined,
-        });
-        toastr.success('Configuración aplicada e iniciando sincronización');
-        location.hash = '#login';
-        setTimeout(function () {
-          location.reload();
-        }, 400);
-      } catch (e) {
-        toastr.error('Error aplicando configuración: ' + (e && e.message ? e.message : e));
-      }
-    }
     document.getElementById(btn_save).onclick = () => {
       var url = document.getElementById(field_couch).value.trim();
       var secret = document.getElementById(field_secret).value.trim();
-      var URL_PARSED = parseURL(url);
+      var normalizedUrl = url;
+      if (!/^https?:\/\//i.test(url)) {
+        normalizedUrl = 'https://' + url;
+      }
+      var URL_PARSED = parseURL(normalizedUrl);
       var host = URL_PARSED.hostname || url;
       var user = URL_PARSED.username || '';
       var pass = URL_PARSED.password || '';
       var dbname = URL_PARSED.pathname ? URL_PARSED.pathname.replace(/^\//, '') : '';
+      console.log('Parsed URL:', { host, user, pass, dbname });
       localStorage.setItem('TELESEC_COUCH_URL', 'https://' + host);
       localStorage.setItem('TELESEC_COUCH_DBNAME', dbname);
       localStorage.setItem('TELESEC_COUCH_USER', user);

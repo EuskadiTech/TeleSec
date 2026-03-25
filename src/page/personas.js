@@ -149,10 +149,15 @@ PAGES.personas = {
     document.getElementById(field_foto).addEventListener('change', function (e) {
       const file = e.target.files[0];
       if (!file) return;
-      // Do NOT resize — keep original uploaded image
+      // resize images with resizeInputImage.
       const reader = new FileReader();
       reader.onload = function (ev) {
         const url = ev.target.result;
+        resizeInputImage(file, (resizedDataUrl) => {
+          document.getElementById(render_foto).src = resizedDataUrl;
+          resized = resizedDataUrl;
+        });
+        // show original immediately while resizing in background (resized image will replace it once ready)
         document.getElementById(render_foto).src = url;
         resized = url;
       };
