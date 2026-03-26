@@ -100,6 +100,9 @@ button:hover,
   text-decoration: underline;
   opacity: 0.9;
 }
+.saveico img, .delico img, .opico img, .opicon img {
+    height: 55px;
+}
 
 /* https://coolors.co/palette/ff0000-ff8700-ffd300-deff0a-a1ff0a-0aff99-0aefff-147df5-580aff-be0aff */
 .btn1 { background: #ff0000; color: #fff; border-color: #cc0000; }
