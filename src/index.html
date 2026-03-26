@@ -7,74 +7,146 @@
   <link rel="manifest" href="manifest.json" />
   <title>%%TITLE%%</title>
   <link rel="icon" type="image/png" href="static/logo.jpg" />
-  <link href="static/euskaditech-css/simple.css" rel="stylesheet" />
+  <!-- Font Awesome 5 -->
+  <link href="static/adminlte/fontawesome.min.css" rel="stylesheet" />
+  <!-- Bootstrap 4 -->
+  <link href="static/adminlte/bootstrap.min.css" rel="stylesheet" />
+  <!-- AdminLTE 3 -->
+  <link href="static/adminlte/adminlte.min.css" rel="stylesheet" />
+  <!-- TeleSec Custom -->
+  <link href="static/telesec-custom.css" rel="stylesheet" />
+  <!-- DataTables CSS -->
+  <link href="static/adminlte/datatables/dataTables.bootstrap4.min.css" rel="stylesheet" />
+  <!-- Toastr -->
   <link href="static/toastr.min.css" rel="stylesheet" />
   %%PREFETCH%%
 </head>
 
-<body>
-  <div class="ribbon no_print" id="header_hide_query">
-    <img class="ribbon-orb" id="connectStatus" src="static/logo.jpg" style="cursor: pointer;" />
-    
-    <div class="ribbon-content" id="ribbon-content" style="display: none;">
-      <div class="ribbon-tabs">
-        <div class="ribbon-tab active" data-tab="modulos">Modulos</div>
-        <div class="ribbon-tab" data-tab="buscar">Buscar</div>
-      </div>
-      
-      <!-- Tab: Modulos -->
-      <details id="tab-modulos" open>
-        <summary hidden>Modulos</summary>
-        <div class="ribbon-panel" id="appendApps2">
-        </div>
-      </details>
-      
-      <!-- Tab: Buscar -->
-      <details id="tab-buscar">
-        <summary hidden>Buscar</summary>
-        <div class="ribbon-panel">
-          <input type="text" id="quickSearchInput" placeholder="Búsqueda rápida..." 
-                 onkeypress="if(event.key==='Enter') document.getElementById('quickSearchBtn').click()">
-          <button id="quickSearchBtn" onclick="setUrlHash('buscar')" class="btn5">
-            Buscar
+<body class="hold-transition sidebar-mini layout-fixed">
+  <div class="wrapper">
+
+    <!-- Top Navbar -->
+    <nav class="main-header navbar navbar-expand navbar-white navbar-light no_print" id="header_hide_query">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" data-widget="pushmenu" href="#" role="button">
+            <i class="fas fa-bars"></i>
+          </a>
+        </li>
+        <li class="nav-item d-none d-sm-inline-block">
+          <span class="nav-link ts-brand-name">%%TITLE%%</span>
+        </li>
+      </ul>
+      <ul class="navbar-nav ml-auto align-items-center">
+        <li class="nav-item d-none d-sm-flex align-items-center" style="gap: 4px;">
+          <input type="text" id="quickSearchInput" class="form-control form-control-sm"
+                 placeholder="Búsqueda rápida…"
+                 onkeypress="if(event.key==='Enter') document.getElementById('quickSearchBtn').click()"
+                 style="width: 200px;">
+          <button id="quickSearchBtn" onclick="setUrlHash('buscar')" class="btn btn-sm btn-default border">
+            <i class="fas fa-search"></i>
           </button>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link p-1" href="#">
+            <img id="connectStatus" src="static/logo.jpg"
+                 style="height: 28px; width: 28px; border-radius: 50%; cursor: pointer; object-fit: cover;"
+                 title="Estado de conexión" />
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Sidebar -->
+    <aside class="main-sidebar sidebar-dark-primary elevation-4 no_print">
+      <a href="#index" class="brand-link">
+        <img src="static/logo.jpg" alt="%%TITLE%%" class="brand-image img-circle elevation-3" style="opacity: .8" />
+        <span class="brand-text font-weight-light">%%TITLE%%</span>
+      </a>
+      <div class="sidebar">
+        <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+          <div class="image">
+            <img src="static/logo.jpg" class="img-circle elevation-2" alt="DB"
+                 style="width: 35px; height: 35px; object-fit: cover;" />
+          </div>
+          <div class="info">
+            <small class="d-block" style="font-size: 11px; color: #adb5bd;">Base de datos:</small>
+            <small id="peerLink" class="d-block" style="font-size: 11px; color: #c2c7d0;">(no configurado)</small>
+          </div>
         </div>
-      </details>
-      
-        <small style="margin-top:10px;">Base de datos: <b id="peerLink">(no configurado)</b></small>
+        <!-- Búsqueda móvil -->
+        <div class="form-inline d-sm-none mb-2 px-2">
+          <div class="input-group w-100">
+            <input class="form-control form-control-sidebar" type="search" id="quickSearchInputMobile"
+                   placeholder="Buscar…" aria-label="Search"
+                   onkeypress="if(event.key==='Enter'){ document.getElementById('quickSearchInput').value=this.value; setUrlHash('buscar'); }">
+            <div class="input-group-append">
+              <button class="btn btn-sidebar"
+                      onclick="document.getElementById('quickSearchInput').value=document.getElementById('quickSearchInputMobile').value; setUrlHash('buscar');">
+                <i class="fas fa-search fa-fw"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <nav class="mt-2">
+          <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
+              data-accordion="false" id="appendApps2">
+            <!-- Populated by SetPages() -->
+          </ul>
+        </nav>
+      </div>
+    </aside>
+
+    <!-- Content Wrapper -->
+    <div class="content-wrapper">
+      <section class="content">
+        <div class="container-fluid">
+          <main id="container" class="py-3"></main>
+        </div>
+      </section>
     </div>
-    <div class="ribbon-content" id="ribbon-content-alternative">
-      <h2 style="margin: 0;">TeleSec, muy seguro. </h2>
-      <i><small>(pulsa el icono para mostrar el menú)</small></i>
-    </div>
-  </div>
-  
-  <img id="loading" src="load.gif" style="display: block; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: calc(100% - 50px); max-width: 400px;" />
-  <main id="container"></main>
-  <img id="actionStatus" src="static/ico/statusok.png" style="
-        z-index: 2048;
-        margin: 0px;
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 100px;
-        height: 100px;
-        display: none;
-      " />
+
+    <!-- Footer -->
+    <footer class="main-footer no_print">
+      <strong>%%TITLE%%</strong> &mdash; %%HOSTER%%
+    </footer>
+
+  </div><!-- /.wrapper -->
+
+  <!-- Loading overlay -->
+  <img id="loading" src="load.gif"
+       style="display: block; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+              width: calc(100% - 50px); max-width: 400px; z-index: 9999;" />
+
+  <!-- Action status icon -->
+  <img id="actionStatus" src="static/ico/statusok.png"
+       style="z-index: 2048; margin: 0; position: fixed; top: 50%; left: 50%;
+              transform: translate(-50%, -50%); width: 100px; height: 100px; display: none;" />
+
+  <!-- Update snackbar -->
   <div id="snackbar">
     Hay una nueva versión de %%TITLE%%.<br /><a id="reload">Pulsa aqui para actualizar.</a>
   </div>
+
+  <!-- Libraries -->
   <script src="static/aes.js"></script>
   <script src="static/showdown.min.js"></script>
   <script src="static/qrcode/html5-qrcode.min.js"></script>
   <script src="static/qrcode/barcode.js"></script>
   <script src="static/qrcode/qrcode.min.js"></script>
   <script src="static/jquery.js"></script>
+  <!-- Bootstrap 4 bundle (includes Popper.js) -->
+  <script src="static/adminlte/bootstrap.bundle.min.js"></script>
   <script src="static/pouchdb.min.js"></script>
   <script src="static/toastr.min.js"></script>
   <script src="static/doublescroll.js"></script>
   <script src="static/chart.umd.min.js"></script>
+  <!-- AdminLTE 3 -->
+  <script src="static/adminlte/adminlte.min.js"></script>
+  <!-- DataTables -->
+  <script src="static/adminlte/datatables/jquery.dataTables.min.js"></script>
+  <script src="static/adminlte/datatables/dataTables.bootstrap4.min.js"></script>
+  <!-- Application -->
   <script src="pwa.js"></script>
   <script src="config.js"></script>
   <script src="db.js"></script>

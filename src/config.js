@@ -39,6 +39,10 @@ if (urlParams.get('ac_bypass') == 'yes') {
 }
 if (urlParams.get('hidenav') != undefined) {
   document.getElementById('header_hide_query').style.display = 'none';
+  var sidebar = document.querySelector('.main-sidebar');
+  if (sidebar) sidebar.style.display = 'none';
+  var cw = document.querySelector('.content-wrapper');
+  if (cw) cw.style.marginLeft = '0';
 }
 // CouchDB URI generator from components: host, user, pass, dbname. Host can include protocol or not, but will be normalized to just hostname in the display. If host is empty, returns empty string.
 function makeCouchURLDisplay(host, user, pass, dbname) {
