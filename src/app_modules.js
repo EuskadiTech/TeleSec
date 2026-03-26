@@ -1538,6 +1538,7 @@ function TS_IndexElement(
           tdPersona.style.textAlign = 'center';
           tdPersona.style.fontSize = '20px';
           tdPersona.style.backgroundColor = regco;
+          tdPersona.style.padding = '0';
           tdPersona.style.color = colorIsDarkAdvanced(regco);
           const regionSpan = document.createElement('span');
           regionSpan.style.fontSize = '40px';
