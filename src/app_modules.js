@@ -1229,7 +1229,7 @@ function TS_IndexElement(
         <div id="${filterId}" class="ts-filter-badge"></div>
       </div>
       <div class="card-body p-0">
-        <table id="${tableId}" class="table table-bordered table-hover ts-index-table mb-0" style="width:100%">
+        <table id="${tableId}" class="table table-bordered table-hover table-sm ts-index-table mb-0" style="width:100%">
           <thead><tr></tr></thead>
           <tbody></tbody>
         </table>
