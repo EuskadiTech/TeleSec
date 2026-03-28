@@ -1806,9 +1806,6 @@ try {
 } catch (e) {
   couchHost = couchUrl;
 }
-if (couchHost) {
-  document.getElementById('peerLink').innerText = couchDatabase + '@' + couchHost;
-}
 
 const statusImg = document.getElementById('connectStatus');
 statusImg.onclick = () => {
