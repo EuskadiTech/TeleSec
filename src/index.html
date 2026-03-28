@@ -70,12 +70,10 @@
             <input class="form-control form-control-sidebar" type="search" id="quickSearchInputMobile"
                    placeholder="Buscar…" aria-label="Search"
                    onkeypress="if(event.key==='Enter'){ document.getElementById('quickSearchInput').value=this.value; setUrlHash('buscar'); }">
-            <div class="input-group-append">
-              <button class="btn btn-sidebar"
-                      onclick="document.getElementById('quickSearchInput').value=document.getElementById('quickSearchInputMobile').value; setUrlHash('buscar');">
-                <i class="fas fa-search fa-fw"></i>
-              </button>
-            </div>
+            <button class="btn btn-sidebar"
+                    onclick="document.getElementById('quickSearchInput').value=document.getElementById('quickSearchInputMobile').value; setUrlHash('buscar');">
+              <i class="fas fa-search fa-fw"></i>
+            </button>
           </div>
         </div>
         <nav class="mt-2">
