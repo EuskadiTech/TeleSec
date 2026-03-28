@@ -5,6 +5,10 @@ PAGES.notas = {
   icon: 'static/appico/edit.png',
   AccessControl: true,
   Title: 'Notas',
+  navItems: [
+    { label: 'Ver notas', hash: 'notas', icon: 'fas fa-sticky-note' },
+    { label: 'Nueva nota', hash: 'notas,nuevo', icon: 'fas fa-plus-circle' },
+  ],
   edit: function (mid) {
     if (!checkRole('notas:edit')) {
       setUrlHash('notas');

@@ -2,9 +2,9 @@ function fixfloat(number) {
   return parseFloat(number).toPrecision(8);
 }
 
-function tableScroll(query) {
-  $(query).doubleScroll();
-}
+// function tableScroll(query) {
+//   $(query).doubleScroll();
+// }
 //var secretTokenEl = document.getElementById("secretToken");
 var container = document.getElementById('container');
 

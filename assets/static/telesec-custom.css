@@ -1,0 +1,324 @@
+/* ============================================================
+   TeleSec Custom CSS — AdminLTE integration + legacy classes
+   ============================================================ */
+
+/* ---- Brand name in navbar ---- */
+.ts-brand-name {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #343a40;
+}
+
+/* ---- Sidebar nav icon images ---- */
+.ts-sidebar-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  /* filter: brightness(0) invert(1); */
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+/* ---- Active sidebar nav item ---- */
+.nav-sidebar .nav-link.active,
+.nav-sidebar .nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+}
+
+/* ---- Treeview arrow ---- */
+.ts-treeview-arrow {
+  margin-left: auto;
+  transition: transform 0.2s ease;
+}
+
+.nav-item.menu-open > .nav-link > p > .ts-treeview-arrow {
+  transform: rotate(-90deg);
+}
+
+/* ---- Treeview sub-items ---- */
+.nav-sidebar .nav-treeview .nav-link {
+  padding-left: 2.5rem;
+  font-size: 0.875rem;
+  opacity: 0.85;
+}
+
+.nav-sidebar .nav-treeview .nav-link:hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.10);
+}
+
+.nav-sidebar .nav-treeview .nav-link.active {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.18);
+  font-weight: 600;
+}
+
+.nav-sidebar .nav-treeview .nav-icon {
+  font-size: 0.65rem;
+  margin-right: 8px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* Sub-list hidden by default; AdminLTE toggles display via .menu-open */
+.nav-item .nav-treeview {
+  display: none;
+}
+.nav-item.menu-open > .nav-treeview {
+  display: block;
+}
+
+/* ---- Content wrapper — ensure proper spacing ---- */
+#container {
+  /* Remove old top-padding; AdminLTE content-wrapper handles space */
+}
+
+/* ============================================================
+   Colored buttons (legacy palette, kept for all pages)
+   ============================================================ */
+button,
+.button {
+  display: inline-block;
+  padding: 5px 12px;
+  border: 2px solid rgba(0, 0, 0, 0.25);
+  font-size: 16px;
+  margin: 3px;
+  text-decoration: none;
+  cursor: pointer;
+  border-radius: 4px;
+  color: #000;
+  background: #f5f5f5;
+}
+.activeSCButton {
+    background: #fbb !important;
+    color: #000 !important;
+    border-color: red !important;
+    outline: 2px solid darkred !important;
+}
+button:hover,
+.button:hover {
+  text-decoration: underline;
+  opacity: 0.9;
+}
+.saveico img, .delico img, .opico img, .opicon img {
+    height: 55px;
+}
+
+/* https://coolors.co/palette/ff0000-ff8700-ffd300-deff0a-a1ff0a-0aff99-0aefff-147df5-580aff-be0aff */
+.btn1 { background: #ff0000; color: #fff; border-color: #cc0000; }
+.btn2 { background: #ff8700; color: #fff; border-color: #cc6d00; }
+.btn3 { background: #ffd300; color: #000; border-color: #cca900; }
+.btn4 { background: #deff0a; color: #000; border-color: #b2cc08; }
+.btn5 { background: #a1ff0a; color: #000; border-color: #81cc08; }
+.btn6 { background: #0aff99; color: #000; border-color: #08cc7a; }
+.btn7 { background: #0aefff; color: #000; border-color: #08bfcc; }
+.btn8 { background: #147df5; color: #fff; border-color: #0f64c4; }
+
+.rojo  { background: #ff0000; color: #fff; }
+.verde { background: #0aff99; color: #000; }
+.azul  { background: #147df5; color: #fff; }
+
+.nav-disabled {
+  background: #333 !important;
+  color: #777 !important;
+  cursor: not-allowed !important;
+}
+.nav-disabled:hover { text-decoration: none !important; }
+
+/* ============================================================
+   Form elements — maintain existing sizing
+   ============================================================ */
+#container input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]),
+#container select,
+#container textarea {
+  font-size: 16px;
+  padding: 5px;
+  width: calc(100% - 11px);
+}
+
+#container input[type="checkbox"],
+#container input[type="radio"] {
+  width: 20px;
+  height: 20px;
+}
+
+#container input[type="color"] {
+  width: 50px;
+  height: 50px;
+}
+
+#container textarea {
+  height: 150px;
+}
+
+#container details summary {
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.picto {
+    display: inline-block;
+    vertical-align: top;
+    min-height: 125px;
+    width: 100px;
+    text-align: center;
+    margin-bottom: 20px;
+    margin-left: auto;
+    margin-right: auto;
+    border-width: 2.5px;
+    border-style: solid;
+    border-color: black;
+    border-image: initial;
+    border-radius: 5px;
+    background: white;
+}
+/* ============================================================
+   Tables — AdminLTE .ts-index-table
+   ============================================================ */
+
+/* Card wrapping TS_IndexElement tables */
+.ts-index-card {
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* Scrollable table body */
+.ts-index-card .card-body {
+  overflow-x: auto;
+}
+
+/* Table itself — let Bootstrap handle borders/hover; just fix widths */
+.ts-index-table {
+  width: max-content;
+  min-width: 100%;
+  white-space: nowrap;
+}
+
+.ts-index-table thead tr th {
+  background-color: #343a40;
+  color: #fff;
+  border-color: #454d55;
+  font-size: 0.85rem;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.ts-index-table tbody tr {
+  cursor: pointer;
+}
+
+.ts-index-table tbody tr:hover td {
+  background-color: rgba(0, 123, 255, 0.06);
+}
+
+.ts-index-table td {
+  vertical-align: middle;
+  font-size: 0.9rem;
+}
+
+/* Generic tables outside the index-card (edit forms, etc.) */
+#container table:not(.ts-index-table) {
+  display: block;
+  width: fit-content;
+  min-width: min(750px, 100%);
+  border: 1px solid #dee2e6;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+#container table:not(.ts-index-table) thead tr {
+  background-color: #343a40;
+  color: #fff;
+}
+
+#container table:not(.ts-index-table) tr td,
+#container table:not(.ts-index-table) tr th {
+  padding: 6px 10px;
+  border: 1px solid #dee2e6;
+  white-space: nowrap;
+}
+
+/* Filter badge row */
+.ts-filter-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+/* ============================================================
+   Sync / connection status helpers (supermesh indicator)
+   ============================================================ */
+.supermesh-indicator {
+  border-top-left-radius: 15px;
+  background-color: greenyellow;
+  border-top: 5px solid green;
+  border-left: 5px solid green;
+  padding: 15px;
+  max-width: 30rem;
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  color: black;
+  display: none;
+  z-index: 1050;
+}
+
+.supermesh-indicator a { color: blue; }
+details.supermesh-indicator summary { font-size: unset; }
+
+/* ============================================================
+   Update snackbar
+   ============================================================ */
+#snackbar {
+  visibility: hidden;
+  min-width: 250px;
+  background-color: #343a40;
+  color: #fff;
+  text-align: center;
+  border-radius: 4px;
+  padding: 16px;
+  position: fixed;
+  z-index: 9999;
+  right: 20px;
+  bottom: 30px;
+  font-size: 15px;
+}
+
+#snackbar a { color: #74c0fc; }
+#snackbar.show { visibility: visible; }
+
+/* ============================================================
+   Misc helpers
+   ============================================================ */
+#articleID { font-family: monospace; }
+
+/*.link, a { color: #007bff; text-decoration: underline; cursor: pointer; }
+.link:hover, a:hover { text-decoration: underline; }*/
+
+/* ============================================================
+   Print styles
+   ============================================================ */
+@media print {
+  .main-header,
+  .main-sidebar,
+  .main-footer,
+  .supermesh-indicator,
+  .no_print,
+  .no_print * {
+    display: none !important;
+  }
+
+  .content-wrapper {
+    margin-left: 0 !important;
+  }
+
+  #container { padding: 0 !important; }
+}
+
+/* ============================================================
+   Dark-mode basic adaptation (optional OS preference)
+   ============================================================ */
+@media (prefers-color-scheme: dark) {
+  .link, a { color: #74c0fc; }
+}

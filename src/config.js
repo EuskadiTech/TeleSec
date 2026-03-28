@@ -39,65 +39,34 @@ if (urlParams.get('ac_bypass') == 'yes') {
 }
 if (urlParams.get('hidenav') != undefined) {
   document.getElementById('header_hide_query').style.display = 'none';
+  var sidebar = document.querySelector('.main-sidebar');
+  if (sidebar) sidebar.style.display = 'none';
+  var cw = document.querySelector('.content-wrapper');
+  if (cw) cw.style.marginLeft = '0';
 }
-// CouchDB URI generator from components: host, user, pass, dbname. Host can include protocol or not, but will be normalized to just hostname in the display. If host is empty, returns empty string.
-function makeCouchURLDisplay(host, user, pass, dbname) {
-  if (!host) return '';
-  var display = user + ':' + pass + '@' + host.replace(/^https?:\/\//, '') + '/' + dbname;
-  return display;
-}
-// Auto-configure CouchDB from ?couch=<uri> parameter
-if (urlParams.get('couch') != null) {
+// Auto-configure backend API URL from ?api=<url> query parameter
+if (urlParams.get('api') != null) {
   try {
-    var couchURI = urlParams.get('couch');
-    // Normalize URL: add https:// if no protocol specified
-    var normalizedUrl = couchURI;
-    if (!/^https?:\/\//i.test(couchURI)) {
-      normalizedUrl = 'https://' + couchURI;
+    var apiUrl = (urlParams.get('api') || '').trim().replace(/\/$/, '');
+    if (apiUrl) {
+      localStorage.setItem('TELESEC_API_URL', apiUrl);
+      localStorage.setItem('TELESEC_ONBOARDING_COMPLETE', 'true');
     }
-    var URL_PARSED = parseURL(normalizedUrl);
-    var user = URL_PARSED.username || '';
-    var pass = URL_PARSED.password || '';
-    var dbname = URL_PARSED.pathname ? URL_PARSED.pathname.replace(/^\//, '') : '';
-    var host = URL_PARSED.hostname || normalizedUrl;
-
-    // Extract secret from ?secret= parameter if provided
-    var secret = urlParams.get('secret') || '';
-
-    // Save to localStorage
-    localStorage.setItem('TELESEC_COUCH_URL', 'https://' + host);
-    localStorage.setItem('TELESEC_COUCH_DBNAME', dbname);
-    localStorage.setItem('TELESEC_COUCH_USER', user);
-    localStorage.setItem('TELESEC_COUCH_PASS', pass);
-    if (secret) {
-      localStorage.setItem('TELESEC_SECRET', secret.toUpperCase());
-    }
-
-    // Mark onboarding as complete since we have server config
-    localStorage.setItem('TELESEC_ONBOARDING_COMPLETE', 'true');
-
-    // Clean URL by removing the couch parameter
-    urlParams.delete('couch');
-    urlParams.delete('secret');
+    urlParams.delete('api');
     history.replaceState(
       null,
       '',
-      location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '') + location.hash.split("?")[0]
+      location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '') + location.hash.split('?')[0]
     );
-
-    console.log('CouchDB auto-configured from URL parameter');
+    console.log('Backend API URL auto-configured from URL parameter');
   } catch (e) {
-    console.error('Error auto-configuring CouchDB from URL:', e);
+    console.error('Error auto-configuring API URL:', e);
   }
 }
 
-// getDBName: prefer explicit CouchDB dbname from settings. Single-group model: default to 'telesec'
-function getDBName() {
-  const dbname = localStorage.getItem('TELESEC_COUCH_DBNAME') || '';
-  if (dbname && dbname.trim() !== '') return dbname.trim();
-  return 'telesec';
-}
-var SECRET = '';
+// Backward-compat: if old CouchDB URL is set but no API URL, prompt user to reconfigure
+// (no automatic migration – user must login fresh)
+var SECRET = ''; // kept for backward-compat with any remaining TS_decrypt calls
 var SUB_LOGGED_IN = false;
 var SUB_LOGGED_IN_DETAILS = false;
 var SUB_LOGGED_IN_ID = false;
@@ -117,15 +86,22 @@ if (urlParams.get('sublogin') != null) {
     }
   }, 500);
 }
-// Logout function for sublogin: clears sublogin state and reloads the page without the sublogin parameter
+// Logout: clears session state, stops replication, and reloads
 function LogOutTeleSec() {
   SUB_LOGGED_IN = false;
   SUB_LOGGED_IN_DETAILS = false;
   SUB_LOGGED_IN_ID = false;
+  // Clear JWT tokens
+  localStorage.removeItem('TELESEC_JWT');
+  localStorage.removeItem('TELESEC_REFRESH_TOKEN');
+  localStorage.removeItem('TELESEC_PERSONA_ID');
+  localStorage.removeItem('TELESEC_TENANT_ID');
+  localStorage.removeItem('TELESEC_TENANT_NAME');
+  // Stop background replication
+  if (typeof DB !== 'undefined' && DB.stopReplication) {
+    try { DB.stopReplication(); } catch (e) {}
+  }
   document.getElementById('loading').style.display = 'block';
-  //Remove sublogin from URL and reload
-  urlParams.delete('sublogin');
-  history.replaceState(null, '', '?' + urlParams.toString());
   location.reload();
 }
 var TTS_RATE = parseFloat(urlParams.get('tts_rate')) || 0.75;

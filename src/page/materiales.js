@@ -5,6 +5,10 @@ PAGES.materiales = {
   icon: 'static/appico/shelf.png',
   AccessControl: true,
   Title: 'Almacén',
+  navItems: [
+    { label: 'Ver materiales', hash: 'materiales', icon: 'fas fa-boxes' },
+    { label: 'Nuevo material', hash: 'materiales,nuevo', icon: 'fas fa-plus-circle' },
+  ],
   edit: function (mid) {
     if (!checkRole('materiales:edit')) {
       setUrlHash('materiales');

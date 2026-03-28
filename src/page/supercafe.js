@@ -5,6 +5,10 @@ PAGES.supercafe = {
   icon: 'static/appico/cup.png',
   AccessControl: true,
   Title: 'Cafetería',
+  navItems: [
+    { label: 'Ver pedidos', hash: 'supercafe', icon: 'fas fa-coffee' },
+    { label: 'Nuevo pedido', hash: 'supercafe,nuevo', icon: 'fas fa-plus-circle' },
+  ],
   edit: function (mid) {
     if (!checkRole('supercafe:edit')) {
       setUrlHash('supercafe');

@@ -3,6 +3,11 @@ PAGES.dataman = {
   icon: 'static/appico/gear_edit.png',
   AccessControl: true,
   Title: 'Ajustes',
+  navItems: [
+    { label: 'Configuración', hash: 'dataman,config', icon: 'fas fa-cog' },
+    { label: 'Exportar datos', hash: 'dataman,export', icon: 'fas fa-file-export' },
+    { label: 'Importar datos', hash: 'dataman,import', icon: 'fas fa-file-import' },
+  ],
   edit: function (mid) {
     switch (mid) {
       case 'export':

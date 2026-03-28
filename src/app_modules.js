@@ -15,16 +15,16 @@ window.PRECIOS_CAFE = {
 
 // Cargar precios desde la base de datos al iniciar
 if (typeof DB !== 'undefined') {
-  DB.get('config', 'precios_cafe').then((raw) => {
-    TS_decrypt(raw, SECRET, (precios) => {
-      if (precios) {
+  DB.get('config', 'precios_cafe')
+    .then((precios) => {
+      if (precios && typeof precios === 'object') {
         Object.assign(window.PRECIOS_CAFE, precios);
         console.log('Precios del café cargados:', window.PRECIOS_CAFE);
       }
+    })
+    .catch(() => {
+      console.log('Usando precios por defecto');
     });
-  }).catch(() => {
-    console.log('Usando precios por defecto');
-  });
 }
 
 const debounce = (id, callback, wait, args) => {
@@ -246,7 +246,9 @@ function TS_getPictoValue(pictoEl) {
     pictoEl = document.getElementById(pictoEl);
   }
   if (!pictoEl) return { text: '', arasaacId: '' };
-  const plate = pictoEl.dataset.PictoValue ? JSON.parse(pictoEl.dataset.PictoValue) : { text: '', arasaacId: '' };
+  const plate = pictoEl.dataset.PictoValue
+    ? JSON.parse(pictoEl.dataset.PictoValue)
+    : { text: '', arasaacId: '' };
   return TS_normalizePictoValue(plate);
 }
 
@@ -412,9 +414,7 @@ function TS_CreateArasaacSelector(options) {
     closeEl.onclick = close;
   }
   if (searchEl) {
-    searchEl.addEventListener('input', () =>
-      debounce(debounceId, search, 300, [searchEl.value])
-    );
+    searchEl.addEventListener('input', () => debounce(debounceId, search, 300, [searchEl.value]));
   }
 
   return {
@@ -628,7 +628,7 @@ function addCategory_Personas(
   label = 'Persona',
   open_default = false,
   default_empty_text = '- Lista Vacia -',
-  show_hidden = false,
+  show_hidden = false
 ) {
   var details_0 = document.createElement('details'); // children: img_0, summary_0
   //details_0.open = true;
@@ -677,7 +677,9 @@ function addCategory_Personas(
     .map((entry) => {
       var key = entry['_key'];
       var value = entry;
-      if (value.Oculto == true && !show_hidden) { return; }
+      if (value.Oculto == true && !show_hidden) {
+        return;
+      }
       if (lastreg != value.Region.toUpperCase()) {
         lastreg = value.Region.toUpperCase();
         var h3_0 = document.createElement('h2');
@@ -1023,67 +1025,20 @@ function TS_decrypt(input, secret, callback, table, id) {
   }
 }
 function TS_encrypt(input, secret, callback, mode = 'RSA') {
-  // Skip encryption
-  //callback(input);
-  //return;
-  // Encrypt given value for at-rest storage using CryptoJS AES.
-  // Always return string of form RSA{<ciphertext>} via callback.
+  // Encryption disabled – data is stored in plaintext (no at-rest encryption).
   try {
-    if (typeof CryptoJS === 'undefined') {
-      // CryptoJS not available — return plaintext
-      try {
-        callback(input);
-      } catch (e) {
-        console.error(e);
-      }
-      return;
-    }
-    var payload = input;
-    if (typeof input !== 'string') {
-      try {
-        payload = JSON.stringify(input);
-      } catch (e) {
-        payload = String(input);
-      }
-    }
-    var encrypted = CryptoJS.AES.encrypt(payload, secret).toString();
-    var out = 'RSA{' + encrypted + '}';
-    try {
-      callback(out);
-    } catch (e) {
-      console.error(e);
-    }
+    callback(input);
   } catch (e) {
-    console.error('TS_encrypt: encryption failed', e);
-    try {
-      callback(input);
-    } catch (err) {
-      console.error(err);
-    }
+    console.error(e);
   }
 }
 // Listado precargado de personas:
 DB.map('personas', (data, key) => {
-  function add_row(data, key) {
-    if (data != null) {
-      data['_key'] = key;
-      SC_Personas[key] = data;
-    } else {
-      delete SC_Personas[key];
-    }
-  }
-  if (typeof data == 'string') {
-    TS_decrypt(
-      data,
-      SECRET,
-      (data, wasEncrypted) => {
-        add_row(data, key);
-      },
-      'personas',
-      key
-    );
+  if (data != null) {
+    data['_key'] = key;
+    SC_Personas[key] = data;
   } else {
-    add_row(data, key);
+    delete SC_Personas[key];
   }
 });
 
@@ -1103,7 +1058,7 @@ function SC_parse_short(json) {
     cafe: 25,
     colacao: 25,
   };
-  
+
   var valores = `<small style='font-size: 60%;'>Servicio base (${precios.servicio_base}c)</small>\n`;
 
   Object.entries(json).forEach((entry) => {
@@ -1147,7 +1102,7 @@ function SC_parse_short(json) {
 function SC_priceCalc(json) {
   var precio = 0;
   var valores = '';
-  
+
   // Usar precios configurables
   const precios = window.PRECIOS_CAFE || {
     servicio_base: 10,
@@ -1156,11 +1111,11 @@ function SC_priceCalc(json) {
     cafe: 25,
     colacao: 25,
   };
-  
+
   // Servicio base
   precio += precios.servicio_base;
   valores += `Servicio base = ${precios.servicio_base}c\n`;
-  
+
   // Leche pequeña
   if (
     json['Tamaño'] == 'Pequeño' &&
@@ -1169,7 +1124,7 @@ function SC_priceCalc(json) {
     precio += precios.leche_pequena;
     valores += `Leche pequeña = ${precios.leche_pequena}c\n`;
   }
-  
+
   // Leche grande
   if (
     json['Tamaño'] == 'Grande' &&
@@ -1178,19 +1133,19 @@ function SC_priceCalc(json) {
     precio += precios.leche_grande;
     valores += `Leche grande = ${precios.leche_grande}c\n`;
   }
-  
+
   // Café
   if (['Café con leche', 'Solo café (sin leche)'].includes(json['Selección'])) {
     precio += precios.cafe;
     valores += `Café = ${precios.cafe}c\n`;
   }
-  
+
   // ColaCao
   if (json['Selección'] == 'ColaCao con leche') {
     precio += precios.colacao;
     valores += `ColaCao = ${precios.colacao}c\n`;
   }
-  
+
   valores += '<hr>Total: ' + precio + 'c\n';
   return [precio, valores];
 }
@@ -1204,521 +1159,463 @@ function TS_IndexElement(
   canAddCallback = undefined,
   globalSearchBar = true
 ) {
-  // Every item in config should have:
-  // key: string
-  // type: string
-  // default: string
-  // label: string
-  var tablebody = safeuuid();
-  var tablehead = safeuuid();
-  var scrolltable = safeuuid();
-  var searchKeyInput = safeuuid();
-  var debounce_search = safeuuid();
+  var tableId = safeuuid();
+  var filterId = safeuuid();
   var debounce_load = safeuuid();
-  var filter_tr = safeuuid();
-
-  // Create the container with search bar and table
-  container.innerHTML = html`
-    <div id="${scrolltable}">
-      <table>
-        <thead>
-          <tr style="background: transparent;">
-            <th colspan="100%" style="padding: 0; background: transparent;">
-              <input
-                type="text"
-                id="${searchKeyInput}"
-                placeholder="🔍 Buscar..."
-                style="width: calc(100% - 18px); padding: 8px; border: 1px solid #ccc; border-radius: 4px; background-color: rebeccapurple; color: white;"
-                value=""
-              />
-            </th>
-          </tr>
-          <tr id="${filter_tr}"></tr>
-          <tr id="${tablehead}"></tr>
-        </thead>
-        <tbody id="${tablebody}"></tbody>
-      </table>
-    </div>
-  `;
-  tableScroll('#' + scrolltable); // id="scrolltable"
-  var tablehead_EL = document.getElementById(tablehead);
-  var tablebody_EL = document.getElementById(tablebody);
   var rows = {};
-  config.forEach((key) => {
-    tablehead_EL.innerHTML += `<th>${key.label || ''}</th>`;
-  });
-  // Add search functionality
-  const searchKeyEl = document.getElementById(searchKeyInput);
-  searchKeyEl.addEventListener('input', () => debounce(debounce_search, render, 200, [rows]));
-  // If there is a preset search value in URL, apply it
+  var dtInstance = null;
+
   var hashQuery = new URLSearchParams(window.location.hash.split('?')[1]);
-  if (hashQuery.has('search')) {
-    searchKeyEl.value = hashQuery.get('search');
-  }
   var filters = {};
   if (hashQuery.has('filter')) {
     hashQuery.getAll('filter').forEach((filter) => {
-      var [key, value] = filter.split(":");
-      filters[key] = value;
+      var parts = filter.split(':');
+      filters[parts[0]] = parts[1];
     });
-    document.getElementById(filter_tr).innerHTML = '<th colspan="100%" style="color: #000; background: #fff;">Filtrando por: ' + Object.entries(filters)
-      .map(([key, value]) => `${key}`)
-    .join(', ') + ' - <a href=' + window.location.hash.split('?')[0] + '">Limpiar filtros</a></th>';
   }
-  function searchInData(data, searchValue, config) {
-    if (filters) {
-      for (var fkey in filters) {
-        if (data[fkey] != filters[fkey]) {
-          return false;
-        }
-      }
+
+  container.innerHTML = html`
+    <div class="card card-outline card-primary ts-index-card">
+      <div class="card-header p-2 d-flex align-items-center" style="gap: 6px; min-height: 38px;">
+        <div id="${filterId}" class="ts-filter-badge"></div>
+      </div>
+      <div class="card-body p-0">
+        <table id="${tableId}" class="table table-bordered table-hover table-sm ts-index-table mb-0" style="width:100%">
+          <thead><tr></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  var theadTr = container.querySelector('#' + tableId + ' thead tr');
+  config.forEach((key) => {
+    var th = document.createElement('th');
+    th.textContent = key.label || '';
+    theadTr.appendChild(th);
+  });
+
+  if (Object.keys(filters).length > 0) {
+    var filterKeys = Object.keys(filters).join(', ');
+    var clearHref = window.location.hash.split('?')[0];
+    document.getElementById(filterId).innerHTML =
+      '<span class="badge badge-warning mr-1"><i class="fas fa-filter mr-1"></i>' +
+      filterKeys +
+      '</span>' +
+      '<a href="' +
+      clearHref +
+      '" class="badge badge-secondary">Limpiar filtros</a>';
+  }
+
+  if (typeof $ === 'undefined' || !$.fn || !$.fn.DataTable) {
+    console.warn('DataTables no está cargado.');
+    return;
+  }
+
+  dtInstance = $('#' + tableId).DataTable({
+    paging: true,
+    pageLength: 25,
+    lengthMenu: [10, 25, 50, 100, 250],
+    searching: globalSearchBar !== false,
+    ordering: true,
+    autoWidth: false,
+    processing: true,
+    deferRender: true,
+    language: {
+      decimal: ',',
+      thousands: '.',
+      info: '_START_–_END_ de _TOTAL_',
+      infoEmpty: 'Sin registros',
+      infoFiltered: '(de _MAX_ total)',
+      lengthMenu: '_MENU_ por página',
+      loadingRecords: 'Cargando…',
+      processing: '<i class="fas fa-spinner fa-spin"></i>',
+      search: '<i class="fas fa-search"></i>',
+      searchPlaceholder: 'Buscar…',
+      zeroRecords: 'Sin resultados',
+      paginate: {
+        first: '<i class="fas fa-angle-double-left"></i>',
+        last: '<i class="fas fa-angle-double-right"></i>',
+        next: '<i class="fas fa-angle-right"></i>',
+        previous: '<i class="fas fa-angle-left"></i>',
+      },
+    },
+  });
+
+  EventListeners.Custom.push(() => {
+    if (dtInstance) {
+      try {
+        dtInstance.destroy();
+      } catch (e) {}
+      dtInstance = null;
     }
-    if (!searchValue) return true;
+  });
 
-    // Search in ID
-    if (data._key.toLowerCase().includes(searchValue)) return true;
+  function applyUrlFilters(data) {
+    for (var fkey in filters) {
+      if (data[fkey] != filters[fkey]) return false;
+    }
+    return true;
+  }
 
-    // Search in configured fields
-    for (var field of config) {
-      const value = data[field.key] || field.default || '';
+  function buildRow(data) {
+    if (canAddCallback != undefined && canAddCallback(data) === true) {
+      return null;
+    }
 
-      // Handle different field types
-      switch (field.type) {
-        case 'comanda':
-          try {
-            const comandaData = JSON.parse(data.Comanda);
-            // Search in all comanda fields
-            if (
-              Object.values(comandaData).some((v) => String(v).toLowerCase().includes(searchValue))
-            )
-              return true;
-          } catch (e) {
-            // If JSON parse fails, search in raw string
-            if (data.Comanda.toLowerCase().includes(searchValue)) return true;
+    const new_tr = document.createElement('tr');
+    if (rowCallback != undefined) {
+      rowCallback(data, new_tr);
+    }
+
+    config.forEach((key) => {
+      switch (key.type) {
+        case '_encrypted': {
+          const tdEncrypted = document.createElement('td');
+          if (data['_encrypted__'] === true) {
+            tdEncrypted.innerText = '🔒';
+          } else if (
+            data['_encrypted__'] === 'error' ||
+            data['_encrypted__'] === 'error2' ||
+            data['_encrypted__'] === undefined
+          ) {
+            tdEncrypted.innerText = '⚠️ Error';
+          } else {
+            tdEncrypted.innerText = '';
           }
+          new_tr.appendChild(tdEncrypted);
           break;
-        case 'persona':
-        case 'persona-nombre':
-          var persona = SC_Personas[value] || { Nombre: '', Region: '' };
-          if (field.self == true) {
-            persona = data || { Nombre: '', Region: '' };
-          }
-          if (persona) {
-            // Search in persona fields
-            if (persona.Nombre.toLowerCase().includes(searchValue)) return true;
-            if (persona.Region.toLowerCase().includes(searchValue)) return true;
-          }
+        }
+        case 'raw':
+        case 'text': {
+          const tdRaw = document.createElement('td');
+          const rawContent = (String(data[key.key]) || key.default || '').replace(/\n/g, '<br>');
+          tdRaw.innerHTML = rawContent;
+          new_tr.appendChild(tdRaw);
           break;
+        }
+        case 'moneda': {
+          const tdMoneda = document.createElement('td');
+          const valor = parseFloat(data[key.key]);
+          if (!isNaN(valor)) {
+            tdMoneda.innerText = valor.toFixed(2) + ' €';
+          } else {
+            tdMoneda.innerText = key.default || '';
+          }
+          new_tr.appendChild(tdMoneda);
+          break;
+        }
         case 'fecha':
-        case 'fecha-iso':
-          // Format date as DD/MM/YYYY for searching
-          if (value) {
-            const fechaArray = value.split('-');
-            const formattedDate = `${fechaArray[2]}/${fechaArray[1]}/${fechaArray[0]}`;
-            if (formattedDate.includes(searchValue)) return true;
+        case 'fecha-iso': {
+          const tdFechaISO = document.createElement('td');
+          if (data[key.key]) {
+            const fechaArray = data[key.key].split('-');
+            tdFechaISO.innerText = fechaArray[2] + '/' + fechaArray[1] + '/' + fechaArray[0];
           }
+          new_tr.appendChild(tdFechaISO);
           break;
+        }
+        case 'fecha-diff': {
+          const tdFechaISO = document.createElement('td');
+          if (data[key.key]) {
+            const fecha = new Date(data[key.key]);
+            const now = new Date();
+            const diffTime = Math.abs(now - fecha);
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            const diffMonths = Math.floor(diffDays / 30);
+            const diffYears = Math.floor(diffDays / 365);
+            let diffString = '';
+            if (diffYears > 0) {
+              diffString += diffYears + ' año' + (diffYears > 1 ? 's ' : ' ');
+            }
+            if (diffMonths % 12 > 0) {
+              diffString += (diffMonths % 12) + ' mes' + (diffMonths % 12 > 1 ? 'es ' : ' ');
+            }
+            if (diffMonths >= 3) {
+              tdFechaISO.style.backgroundColor = 'rgb(255, 192, 192)';
+            } else if (diffMonths >= 1) {
+              tdFechaISO.style.backgroundColor = 'rgb(252, 252, 176)';
+            }
+            tdFechaISO.innerText = diffString.trim();
+          }
+          new_tr.appendChild(tdFechaISO);
+          break;
+        }
         case 'picto': {
-          const plate = TS_normalizePictoValue(value);
-          if (plate.text && plate.text.toLowerCase().includes(searchValue)) return true;
+          const tdPicto = document.createElement('td');
+          const plate = TS_normalizePictoValue(data[key.key]);
+          const wrapper = document.createElement('div');
+          wrapper.style.display = 'flex';
+          wrapper.style.alignItems = 'center';
+          wrapper.style.gap = '8px';
+          if (plate.arasaacId) {
+            const img = document.createElement('img');
+            img.src = TS_buildArasaacPictogramUrl(plate.arasaacId);
+            img.alt = plate.text || 'Pictograma';
+            img.width = 48;
+            img.height = 48;
+            img.loading = 'lazy';
+            img.style.objectFit = 'contain';
+            wrapper.appendChild(img);
+          }
+          if (plate.text) {
+            const text = document.createElement('span');
+            text.textContent = data[key.labelkey] || plate.text || '';
+            wrapper.appendChild(text);
+          }
+          tdPicto.appendChild(wrapper);
+          new_tr.appendChild(tdPicto);
+          break;
+        }
+        case 'template': {
+          const tdCustomTemplate = document.createElement('td');
+          new_tr.appendChild(tdCustomTemplate);
+          key.template(data, tdCustomTemplate);
+          break;
+        }
+        case 'comanda': {
+          const tdComanda = document.createElement('td');
+          tdComanda.style.verticalAlign = 'top';
+          const parsedComanda = JSON.parse(data.Comanda);
+          const precio = SC_priceCalc(parsedComanda)[0];
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = setLayeredImages(parsedComanda, data._key);
+          tdComanda.appendChild(tempDiv.firstChild);
+          const pre = document.createElement('pre');
+          pre.style.fontSize = '15px';
+          pre.style.display = 'inline-block';
+          pre.style.margin = '0';
+          pre.style.verticalAlign = 'top';
+          pre.style.padding = '5px';
+          pre.style.background = 'rgba(255, 255, 0, 0.5)';
+          pre.style.border = '1px solid rgba(0, 0, 0, 0.2)';
+          pre.style.borderRadius = '5px';
+          pre.style.boxShadow = '2px 2px 5px rgba(0, 0, 0, 0.1)';
+          pre.style.height = '100%';
+          const spanPrecio = document.createElement('span');
+          spanPrecio.style.fontSize = '20px';
+          spanPrecio.innerHTML = html`Total: ${precio}c`;
+          pre.innerHTML = '<b>Ticket de compra</b> ';
+          pre.appendChild(document.createTextNode('\n'));
+          pre.innerHTML += SC_parse_short(parsedComanda) + '<hr>' + data.Notas + '<hr>';
+          pre.appendChild(spanPrecio);
+          tdComanda.appendChild(pre);
+          new_tr.appendChild(tdComanda);
+          break;
+        }
+        case 'comanda-status': {
+          var sc_nobtn = '';
+          if (urlParams.get('sc_nobtn') == 'yes') {
+            sc_nobtn = 'pointer-events: none; opacity: 0.5';
+          }
+          const td = document.createElement('td');
+          td.style.fontSize = '17px';
+          if (sc_nobtn) {
+            td.style.pointerEvents = 'none';
+            td.style.opacity = '0.5';
+          }
+          const createButton = (text, state) => {
+            const button = document.createElement('button');
+            button.textContent = text;
+            if (data.Estado === state) {
+              button.className = 'rojo';
+            }
+            button.onclick = (event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              data.Estado = state;
+              if (typeof ref === 'string') {
+                DB.put(ref, data._key, data)
+                  .then(() => {
+                    toastr.success('Guardado!');
+                    render();
+                  })
+                  .catch((e) => {
+                    console.warn('DB.put error', e);
+                  });
+              } else {
+                try {
+                  ref.get(data._key).put(data);
+                  toastr.success('Guardado!');
+                } catch (e) {
+                  console.warn('Could not save item', e);
+                }
+              }
+              return false;
+            };
+            return button;
+          };
+          const buttons = [
+            createButton('Pedido', 'Pedido'),
+            createButton('En preparación', 'En preparación'),
+            createButton('Listo', 'Listo'),
+            createButton('Entregado', 'Entregado'),
+            createButton('Deuda', 'Deuda'),
+          ];
+          const paidButton = document.createElement('button');
+          paidButton.textContent = 'Pagado';
+          paidButton.className = 'btn5';
+          paidButton.onclick = (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            var precio = SC_priceCalc(JSON.parse(data.Comanda))[0];
+            var personaId = data.Persona;
+            var comandaId = data._key;
+            var sdata = JSON.stringify({
+              tipo: 'Gasto',
+              monto: precio / 100,
+              persona: personaId,
+              notas: 'Pago de comanda SuperCafé\n' + SC_parse(JSON.parse(data.Comanda)),
+              origen: 'SuperCafé',
+              origen_id: comandaId,
+            });
+            setUrlHash('pagos,datafono_prefill,' + btoa(sdata));
+            return false;
+          };
+          td.append(data.Fecha);
+          td.append(document.createElement('br'));
+          buttons.forEach((button) => {
+            td.appendChild(button);
+            td.appendChild(document.createElement('br'));
+          });
+          td.appendChild(paidButton);
+          new_tr.appendChild(td);
+          break;
+        }
+        case 'persona': {
+          let persona = key.self === true ? data : SC_Personas[data[key.key]] || {};
+          const regco = stringToColour((persona.Region || '?').toLowerCase());
+          const tdPersona = document.createElement('td');
+          tdPersona.style.textAlign = 'center';
+          tdPersona.style.fontSize = '20px';
+          tdPersona.style.backgroundColor = regco;
+          tdPersona.style.padding = '0';
+          tdPersona.style.color = colorIsDarkAdvanced(regco);
+          const regionSpan = document.createElement('span');
+          regionSpan.style.fontSize = '40px';
+          regionSpan.style.textTransform = 'capitalize';
+          regionSpan.textContent = (persona.Region || '?').toLowerCase();
+          tdPersona.appendChild(regionSpan);
+          tdPersona.appendChild(document.createElement('br'));
+          const infoSpan = document.createElement('span');
+          infoSpan.style.backgroundColor = 'white';
+          infoSpan.style.border = '2px solid black';
+          infoSpan.style.borderRadius = '5px';
+          infoSpan.style.display = 'inline-block';
+          infoSpan.style.padding = '5px';
+          infoSpan.style.color = 'black';
+          const img = document.createElement('img');
+          img.src = persona.Foto || 'static/ico/user_generic.png';
+          try {
+            const personaId =
+              key.self === true ? data._key || data._id || data.id : data[key.key];
+            if (personaId) {
+              DB.getAttachment('personas', personaId, 'foto')
+                .then((durl) => {
+                  if (durl) img.src = durl;
+                })
+                .catch(() => {});
+            }
+          } catch (e) {}
+          img.height = 70;
+          infoSpan.appendChild(img);
+          infoSpan.appendChild(document.createElement('br'));
+          infoSpan.appendChild(document.createTextNode(persona.Nombre || ''));
+          infoSpan.appendChild(document.createElement('br'));
+          if (parseFloat(persona.Monedero_Balance || '0') != 0) {
+            const pointsSpan = document.createElement('span');
+            pointsSpan.style.fontSize = '17px';
+            pointsSpan.textContent =
+              parseFloat(persona.Monedero_Balance || '0').toPrecision(2) + ' €';
+            infoSpan.appendChild(pointsSpan);
+          }
+          tdPersona.appendChild(infoSpan);
+          new_tr.appendChild(tdPersona);
+          break;
+        }
+        case 'persona-nombre': {
+          let persona = key.self === true ? data : SC_Personas[data[key.key]] || {};
+          const tdPersonaNombre = document.createElement('td');
+          tdPersonaNombre.style.textAlign = 'center';
+          tdPersonaNombre.style.fontSize = '20px';
+          tdPersonaNombre.textContent = persona.Nombre || '';
+          new_tr.appendChild(tdPersonaNombre);
+          break;
+        }
+        case 'attachment-persona': {
+          const tdAttachment = document.createElement('td');
+          const img = document.createElement('img');
+          img.src = data[key.key] || 'static/ico/user_generic.png';
+          img.style.maxHeight = '80px';
+          img.style.maxWidth = '80px';
+          tdAttachment.appendChild(img);
+          new_tr.appendChild(tdAttachment);
+          try {
+            const personaId =
+              key.self === true ? data._key || data._id || data.id : data[key.key];
+            if (personaId) {
+              DB.getAttachment('personas', personaId, 'foto')
+                .then((durl) => {
+                  if (durl) img.src = durl;
+                })
+                .catch(() => {});
+            }
+          } catch (e) {}
           break;
         }
         default:
-          // For raw and other types, search in the direct value
-          if (String(value).toLowerCase().includes(searchValue)) return true;
+          break;
       }
-    }
-    return false;
+    });
+
+    new_tr.onclick = () => {
+      setUrlHash(pageco + ',' + data._key);
+    };
+    return new_tr;
   }
 
-  // --- Optimized render function ---
-  var lastSearchValue = '';
-  var lastFilteredSorted = [];
-
-  function getFilteredSortedRows(searchValue) {
-    // Only use cache if searchValue is not empty and cache is valid
-    if (searchValue && searchValue === lastSearchValue && lastFilteredSorted.length > 0) {
-      return lastFilteredSorted;
-    }
-    const filtered = Object.entries(rows)
-      .filter(([_, data]) => searchInData(data, searchValue, config))
-      .map(([_, data]) => data)
-      .sort(betterSorter);
-    lastSearchValue = searchValue;
-    lastFilteredSorted = filtered;
-    return filtered;
+  function render() {
+    if (!dtInstance) return;
+    const sorted = Object.values(rows).filter(applyUrlFilters).sort(betterSorter);
+    const trs = sorted.map(buildRow).filter(Boolean);
+    dtInstance.clear();
+    trs.forEach((tr) => dtInstance.row.add(tr));
+    dtInstance.draw(false);
   }
 
-  function render(rows) {
-    const searchValue = searchKeyEl.value.toLowerCase().trim();
-    // Use document fragment for batch DOM update
-    const fragment = document.createDocumentFragment();
-    const filteredSorted = getFilteredSortedRows(searchValue);
-    for (let i = 0; i < filteredSorted.length; i++) {
-      const data = filteredSorted[i];
-      if (canAddCallback != undefined && canAddCallback(data) === true) {
-        continue;
-      }
-      const new_tr = document.createElement('tr');
-      if (rowCallback != undefined) {
-        rowCallback(data, new_tr);
-      }
-      config.forEach((key) => {
-        switch (key.type) {
-          case '_encrypted': {
-            const tdEncrypted = document.createElement('td');
-            if (data['_encrypted__'] === true) {
-              tdEncrypted.innerText = '🔒';
-            } else if (
-              data['_encrypted__'] === 'error' ||
-              data['_encrypted__'] === 'error2' ||
-              data['_encrypted__'] === undefined
-            ) {
-              tdEncrypted.innerText = '⚠️ Error';
-            } else {
-              tdEncrypted.innerText = '';
-            }
-            new_tr.appendChild(tdEncrypted);
-            break;
-          }
-          case 'raw':
-          case 'text': {
-            const tdRaw = document.createElement('td');
-            const rawContent = (String(data[key.key]) || key.default || '').replace(/\n/g, '<br>');
-            tdRaw.innerHTML = rawContent;
-            new_tr.appendChild(tdRaw);
-            break;
-          }
-          case 'moneda': {
-            const tdMoneda = document.createElement('td');
-            const valor = parseFloat(data[key.key]);
-            if (!isNaN(valor)) {
-              tdMoneda.innerText = valor.toFixed(2) + ' €';
-            } else {
-              tdMoneda.innerText = key.default || '';
-            }
-            new_tr.appendChild(tdMoneda);
-            break;
-          }
-          case 'fecha':
-          case 'fecha-iso': {
-            const tdFechaISO = document.createElement('td');
-            if (data[key.key]) {
-              const fechaArray = data[key.key].split('-');
-              tdFechaISO.innerText = fechaArray[2] + '/' + fechaArray[1] + '/' + fechaArray[0];
-            }
-            new_tr.appendChild(tdFechaISO);
-            break;
-          }
-          case 'fecha-diff': {
-            const tdFechaISO = document.createElement('td');
-            if (data[key.key]) {
-              const fecha = new Date(data[key.key]);
-              const now = new Date();
-              const diffTime = Math.abs(now - fecha);
-              const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-              const diffMonths = Math.floor(diffDays / 30);
-              const diffYears = Math.floor(diffDays / 365);
-              let diffString = '';
-              if (diffYears > 0) {
-                diffString += diffYears + ' año' + (diffYears > 1 ? 's ' : ' ');
-              }
-              if (diffMonths % 12 > 0) {
-                diffString += (diffMonths % 12) + ' mes' + (diffMonths % 12 > 1 ? 'es ' : ' ');
-              }
-
-              // if more than 3 months, show rgb(255, 192, 192) as background
-              if (diffMonths >= 3) {
-                tdFechaISO.style.backgroundColor = 'rgb(255, 192, 192)';
-              } else if (diffMonths >= 1) {
-                tdFechaISO.style.backgroundColor = 'rgb(252, 252, 176)';
-              }
-              tdFechaISO.innerText = diffString.trim();
-            }
-            new_tr.appendChild(tdFechaISO);
-            break;
-          }
-          case 'picto': {
-            const tdPicto = document.createElement('td');
-            const plate = TS_normalizePictoValue(data[key.key]);
-            const wrapper = document.createElement('div');
-            wrapper.style.display = 'flex';
-            wrapper.style.alignItems = 'center';
-            wrapper.style.gap = '8px';
-            if (plate.arasaacId) {
-              const img = document.createElement('img');
-              img.src = TS_buildArasaacPictogramUrl(plate.arasaacId);
-              img.alt = plate.text || 'Pictograma';
-              img.width = 48;
-              img.height = 48;
-              img.loading = 'lazy';
-              img.style.objectFit = 'contain';
-              wrapper.appendChild(img);
-            }
-            if (plate.text) {
-              const text = document.createElement('span');
-              console.log('Picto data', data, 'normalized', plate);
-              text.textContent = data[key.labelkey] || plate.text || '';
-              wrapper.appendChild(text);
-            }
-            tdPicto.appendChild(wrapper);
-            new_tr.appendChild(tdPicto);
-            break;
-          }
-          case 'template': {
-            const tdCustomTemplate = document.createElement('td');
-            new_tr.appendChild(tdCustomTemplate);
-            key.template(data, tdCustomTemplate);
-            break;
-          }
-          case 'comanda': {
-            const tdComanda = document.createElement('td');
-            tdComanda.style.verticalAlign = 'top';
-            const parsedComanda = JSON.parse(data.Comanda);
-            const precio = SC_priceCalc(parsedComanda)[0];
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = setLayeredImages(parsedComanda, data._key);
-            tdComanda.appendChild(tempDiv.firstChild);
-            const pre = document.createElement('pre');
-            pre.style.fontSize = '15px';
-            pre.style.display = 'inline-block';
-            pre.style.margin = '0';
-            pre.style.verticalAlign = 'top';
-            pre.style.padding = '5px';
-            pre.style.background = 'rgba(255, 255, 0, 0.5)';
-            pre.style.border = '1px solid rgba(0, 0, 0, 0.2)';
-            pre.style.borderRadius = '5px';
-            pre.style.boxShadow = '2px 2px 5px rgba(0, 0, 0, 0.1)';
-            pre.style.height = '100%';
-            const spanPrecio = document.createElement('span');
-            spanPrecio.style.fontSize = '20px';
-            spanPrecio.innerHTML = html`Total: ${precio}c`;
-            pre.innerHTML = '<b>Ticket de compra</b> ';
-            pre.appendChild(document.createTextNode('\n'));
-            pre.innerHTML += SC_parse_short(parsedComanda) + '<hr>' + data.Notas + '<hr>';
-            pre.appendChild(spanPrecio);
-            tdComanda.appendChild(pre);
-            new_tr.appendChild(tdComanda);
-            break;
-          }
-          case 'comanda-status': {
-            var sc_nobtn = '';
-            if (urlParams.get('sc_nobtn') == 'yes') {
-              sc_nobtn = 'pointer-events: none; opacity: 0.5';
-            }
-            const td = document.createElement('td');
-            td.style.fontSize = '17px';
-            if (sc_nobtn) {
-              td.style.pointerEvents = 'none';
-              td.style.opacity = '0.5';
-            }
-            const createButton = (text, state) => {
-              const button = document.createElement('button');
-              button.textContent = text;
-              if (data.Estado === state) {
-                button.className = 'rojo';
-              }
-              button.onclick = (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                data.Estado = state;
-                if (typeof ref === 'string') {
-                  DB.put(ref, data._key, data)
-                    .then(() => {
-                      toastr.success('Guardado!');
-                      render();
-                    })
-                    .catch((e) => {
-                      console.warn('DB.put error', e);
-                    });
-                } else {
-                  try {
-                    // legacy
-                    ref.get(data._key).put(data);
-                    toastr.success('Guardado!');
-                  } catch (e) {
-                    console.warn('Could not save item', e);
-                  }
-                }
-                return false;
-              };
-              return button;
-            };
-            const buttons = [
-              createButton('Pedido', 'Pedido'),
-              createButton('En preparación', 'En preparación'),
-              createButton('Listo', 'Listo'),
-              createButton('Entregado', 'Entregado'),
-              createButton('Deuda', 'Deuda'),
-            ];
-            const paidButton = document.createElement('button');
-            paidButton.textContent = 'Pagado';
-            paidButton.className = 'btn5';
-            paidButton.onclick = (event) => {
-              event.preventDefault();
-              event.stopPropagation();
-
-              // Open Pagos module with pre-filled data
-              var precio = SC_priceCalc(JSON.parse(data.Comanda))[0];
-              var personaId = data.Persona;
-              var comandaId = data._key;
-
-              // Store prefilled data in sessionStorage for Pagos module
-              var sdata = JSON.stringify({
-                tipo: 'Gasto',
-                monto: precio / 100, // Convert cents to euros
-                persona: personaId,
-                notas: 'Pago de comanda SuperCafé\n' + SC_parse(JSON.parse(data.Comanda)),
-                origen: 'SuperCafé',
-                origen_id: comandaId,
-              });
-
-              // Navigate to datafono
-              setUrlHash('pagos,datafono_prefill,' + btoa(sdata));
-
-              return false;
-            };
-            td.append(data.Fecha);
-            td.append(document.createElement('br'));
-            buttons.forEach((button) => {
-              td.appendChild(button);
-              td.appendChild(document.createElement('br'));
-            });
-            td.appendChild(paidButton);
-            new_tr.appendChild(td);
-            break;
-          }
-          case 'persona': {
-            let persona = key.self === true ? data : SC_Personas[data[key.key]] || {};
-            const regco = stringToColour((persona.Region || '?').toLowerCase());
-            const tdPersona = document.createElement('td');
-            tdPersona.style.textAlign = 'center';
-            tdPersona.style.fontSize = '20px';
-            tdPersona.style.backgroundColor = regco;
-            tdPersona.style.color = colorIsDarkAdvanced(regco);
-            const regionSpan = document.createElement('span');
-            regionSpan.style.fontSize = '40px';
-            regionSpan.style.textTransform = 'capitalize';
-            regionSpan.textContent = (persona.Region || '?').toLowerCase();
-            tdPersona.appendChild(regionSpan);
-            tdPersona.appendChild(document.createElement('br'));
-            const infoSpan = document.createElement('span');
-            infoSpan.style.backgroundColor = 'white';
-            infoSpan.style.border = '2px solid black';
-            infoSpan.style.borderRadius = '5px';
-            infoSpan.style.display = 'inline-block';
-            infoSpan.style.padding = '5px';
-            infoSpan.style.color = 'black';
-            const img = document.createElement('img');
-            img.src = persona.Foto || 'static/ico/user_generic.png';
-            // Prefer attachment 'foto' stored in PouchDB if available
-            try {
-              const personaId =
-                key.self === true ? data._key || data._id || data.id : data[key.key];
-              if (personaId) {
-                DB.getAttachment('personas', personaId, 'foto')
-                  .then((durl) => {
-                    if (durl) img.src = durl;
-                  })
-                  .catch(() => {});
-              }
-            } catch (e) {
-              // ignore
-            }
-            img.height = 70;
-            infoSpan.appendChild(img);
-            infoSpan.appendChild(document.createElement('br'));
-            infoSpan.appendChild(document.createTextNode(persona.Nombre || ''));
-            infoSpan.appendChild(document.createElement('br'));
-            if (parseFloat(persona.Monedero_Balance || '0') != 0) {
-              const pointsSpan = document.createElement('span');
-              pointsSpan.style.fontSize = '17px';
-              pointsSpan.textContent =
-                parseFloat(persona.Monedero_Balance || '0').toPrecision(2) + ' €';
-              infoSpan.appendChild(pointsSpan);
-            }
-            tdPersona.appendChild(infoSpan);
-            new_tr.appendChild(tdPersona);
-            break;
-          }
-          case 'persona-nombre': {
-            let persona = key.self === true ? data : SC_Personas[data[key.key]] || {};
-            const tdPersonaNombre = document.createElement('td');
-            tdPersonaNombre.style.textAlign = 'center';
-            tdPersonaNombre.style.fontSize = '20px';
-            tdPersonaNombre.textContent = persona.Nombre || '';
-            new_tr.appendChild(tdPersonaNombre);
-            break;
-          }
-          case 'attachment-persona': {
-            const tdAttachment = document.createElement('td');
-            const img = document.createElement('img');
-            img.src = data[key.key] || 'static/ico/user_generic.png';
-            img.style.maxHeight = '80px';
-            img.style.maxWidth = '80px';
-            tdAttachment.appendChild(img);
-            new_tr.appendChild(tdAttachment);
-            // Prefer attachment 'foto' stored in PouchDB if available
-            try {
-              const personaId =
-                key.self === true ? data._key || data._id || data.id : data[key.key];
-              if (personaId) {
-                DB.getAttachment('personas', personaId, 'foto')
-                  .then((durl) => {
-                    if (durl) img.src = durl;
-                  })
-                  .catch(() => {});
-              }
-            } catch (e) {
-              // ignore
-            }
-            break;
-          }
-          default:
-            break;
-        }
-      });
-      new_tr.onclick = (event) => {
-        setUrlHash(pageco + ',' + data._key);
-      };
-      fragment.appendChild(new_tr);
-    }
-    // Replace tbody in one operation
-    tablebody_EL.innerHTML = '';
-    tablebody_EL.appendChild(fragment);
-  }
-  // Subscribe to dataset updates using DB.map (PouchDB) when `ref` is a table name string
   if (typeof ref === 'string') {
-    EventListeners.DB.push(DB.map(ref, (data, key) => {
-      function add_row(data, key) {
-        if (data != null) {
-          data['_key'] = key;
-          rows[key] = data;
+    EventListeners.DB.push(
+      DB.map(ref, (data, key) => {
+        function add_row(data, key) {
+          if (data != null) {
+            data['_key'] = key;
+            rows[key] = data;
+          } else {
+            delete rows[key];
+          }
+          debounce(debounce_load, render, 200);
+        }
+        if (typeof data == 'string') {
+          TS_decrypt(
+            data,
+            SECRET,
+            (data, wasEncrypted) => {
+              if (data != null && typeof data === 'object') {
+                data['_encrypted__'] = wasEncrypted;
+                add_row(data, key);
+              }
+            },
+            ref,
+            key
+          );
         } else {
-          delete rows[key];
+          if (data != null && typeof data === 'object') {
+            data['_encrypted__'] = false;
+          }
+          add_row(data, key);
         }
-        debounce(debounce_load, render, 200, [rows]);
-      }
-      if (typeof data == 'string') {
-        TS_decrypt(
-          data,
-          SECRET,
-          (data, wasEncrypted) => {
-            if (data != null && typeof data === 'object') {
-              data['_encrypted__'] = wasEncrypted;
-              add_row(data, key);
-            }
-          },
-          ref,
-          key
-        );
-      } else {
-        if (data != null && typeof data === 'object') {
-          data['_encrypted__'] = false;
-        }
-        add_row(data, key);
-      }
-    }));
+      })
+    );
   }
 }
 
@@ -1757,40 +1654,143 @@ function checkRole(role) {
   }
 }
 function SetPages() {
-  document.getElementById('appendApps2').innerHTML = '';
-  Object.keys(PAGES).forEach((key) => {
-    if (PAGES[key].Esconder == true) {
-      return;
+  var nav = document.getElementById('appendApps2');
+  nav.innerHTML = '';
+
+  function makePlainItem(href, iconSrc, label) {
+    var li = document.createElement('li');
+    var a = document.createElement('a');
+    var icon = document.createElement('img');
+    var p = document.createElement('p');
+    li.className = 'nav-item';
+    a.className = 'nav-link';
+    a.href = href;
+    icon.src = iconSrc;
+    icon.className = 'nav-icon ts-sidebar-icon';
+    p.innerText = label;
+    a.append(icon, p);
+    li.append(a);
+    function updateActive() {
+      var current = location.hash.replace('#', '').split('?')[0];
+      if (href.replace('#', '') === current) {
+        a.classList.add('active');
+      } else {
+        a.classList.remove('active');
+      }
     }
-    if (PAGES[key].AccessControl == true) {
+    updateActive();
+    window.addEventListener('hashchange', updateActive);
+    return li;
+  }
+
+  function makeTreeviewItem(key, page) {
+    var li = document.createElement('li');
+    li.className = 'nav-item has-treeview';
+
+    // Parent link (opens treeview, does not navigate)
+    var a = document.createElement('a');
+    a.className = 'nav-link';
+    a.href = '#';
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+    });
+
+    var icon = document.createElement('img');
+    icon.src = page.icon || 'static/appico/application_enterprise.png';
+    icon.className = 'nav-icon ts-sidebar-icon';
+
+    var p = document.createElement('p');
+    p.innerText = page.Title;
+
+    var arrow = document.createElement('i');
+    arrow.className = 'right fas fa-angle-left ts-treeview-arrow';
+
+    p.append(arrow);
+    a.append(icon, p);
+    li.append(a);
+
+    // Sub-items
+    var ul = document.createElement('ul');
+    ul.className = 'nav nav-treeview';
+
+    page.navItems.forEach(function (item) {
+      var sli = document.createElement('li');
+      sli.className = 'nav-item';
+      var sa = document.createElement('a');
+      sa.className = 'nav-link';
+      sa.href = '#' + item.hash;
+
+      var si = document.createElement('i');
+      si.className = (item.icon || 'far fa-circle') + ' nav-icon';
+
+      var sp = document.createElement('p');
+      sp.innerText = item.label;
+
+      sa.append(si, sp);
+      sli.append(sa);
+      ul.append(sli);
+    });
+
+    li.append(ul);
+
+    // Highlight parent when a child hash is active
+    function updateActive() {
+      var current = location.hash.replace('#', '').split('?')[0];
+      var childHashes = page.navItems.map(function (i) {
+        return i.hash;
+      });
+      if (childHashes.includes(current)) {
+        li.classList.add('menu-open');
+        a.classList.add('active');
+      } else {
+        li.classList.remove('menu-open');
+        a.classList.remove('active');
+      }
+      ul.querySelectorAll('.nav-link').forEach(function (sa) {
+        var h = sa.getAttribute('href').replace('#', '');
+        if (h === current) {
+          sa.classList.add('active');
+        } else {
+          sa.classList.remove('active');
+        }
+      });
+    }
+    updateActive();
+    window.addEventListener('hashchange', updateActive);
+
+    return li;
+  }
+
+  Object.keys(PAGES).forEach(function (key) {
+    var page = PAGES[key];
+    if (page.Esconder == true) return;
+    if (page.AccessControl == true) {
       var roles = SUB_LOGGED_IN_DETAILS.Roles || '';
       var rolesArr = roles.split(',');
-      if (rolesArr.includes('ADMIN') || rolesArr.includes(PAGES[key].AccessControlRole || key) || AC_BYPASS) {
-      } else {
+      if (
+        !rolesArr.includes('ADMIN') &&
+        !rolesArr.includes(page.AccessControlRole || key) &&
+        !AC_BYPASS
+      ) {
         return;
       }
     }
-    var a = document.createElement('a');
-    var img = document.createElement('img');
-    var label = document.createElement('div');
-    a.className = 'ribbon-button';
-    a.href = '#' + key;
-    label.innerText = PAGES[key].Title;
-    label.className = 'label';
-    img.src = PAGES[key].icon || 'static/appico/application_enterprise.png';
-    a.append(img, label);
-    document.getElementById('appendApps2').append(a);
+
+    var li;
+    if (Array.isArray(page.navItems) && page.navItems.length > 0) {
+      li = makeTreeviewItem(key, page);
+    } else {
+      li = makePlainItem(
+        '#' + key,
+        page.icon || 'static/appico/application_enterprise.png',
+        page.Title
+      );
+    }
+    nav.append(li);
   });
-  var a = document.createElement('a');
-  var img = document.createElement('img');
-  var label = document.createElement('div');
-  a.className = 'ribbon-button';
-  a.href = '#index,qr';
-  label.innerText = 'Escanear QR';
-  label.className = 'label';
-  img.src = 'static/appico/barcode.png';
-  a.append(img, label);
-  document.getElementById('appendApps2').append(a);
+
+  // QR Scanner (always visible)
+  nav.append(makePlainItem('#index,qr', 'static/appico/barcode.png', 'Escanear QR'));
 }
 var Booted = false;
 var TimeoutBoot = 3; // in loops of 750ms
@@ -1812,11 +1812,11 @@ if (couchHost) {
 
 const statusImg = document.getElementById('connectStatus');
 statusImg.onclick = () => {
-  var ribbon = document.getElementById('ribbon-content');
-  var alternative_ribbon = document.getElementById('ribbon-content-alternative');
-  ribbon.style.display = ribbon.style.display === 'none' ? 'block' : 'none';
-  alternative_ribbon.style.display = alternative_ribbon.style.display === 'none' ? 'block' : 'none';
-}
+  // Toggle AdminLTE sidebar via pushmenu
+  if (typeof $ !== 'undefined') {
+    $('[data-widget="pushmenu"]').PushMenu('toggle');
+  }
+};
 function updateStatusOrb() {
   const now = Date.now();
   const recentSync = window.TELESEC_LAST_SYNC && now - window.TELESEC_LAST_SYNC <= 3000;
@@ -1887,7 +1887,7 @@ var BootIntervalID = setInterval(() => {
                   SUB_LOGGED_IN = true;
                   localStorage.setItem('TELESEC_BYPASS_ID', SUB_LOGGED_IN_ID);
                   SetPages();
-                  open_page(location.hash.replace('#', '').split("?")[0]);
+                  open_page(location.hash.replace('#', '').split('?')[0]);
                 }
                 if (!data) {
                   const persona = { Nombre: 'Admin (bypass)', Roles: 'ADMIN,' };
@@ -1924,37 +1924,12 @@ var BootIntervalID = setInterval(() => {
         }
       } else {
         SetPages();
-        open_page(location.hash.replace('#', '').split("?")[0]);
+        open_page(location.hash.replace('#', '').split('?')[0]);
       }
       clearInterval(BootIntervalID);
     }
   });
 }, 750);
-
-const tabs = document.querySelectorAll('.ribbon-tab');
-const detailTabs = {
-  modulos: document.getElementById('tab-modulos'),
-  buscar: document.getElementById('tab-buscar'),
-};
-
-tabs.forEach((tab) => {
-  tab.addEventListener('click', () => {
-    const selected = tab.getAttribute('data-tab');
-
-    // Toggle details
-    for (const [key, detailsEl] of Object.entries(detailTabs)) {
-      if (key === selected) {
-        detailsEl.setAttribute('open', '');
-      } else {
-        detailsEl.removeAttribute('open');
-      }
-    }
-
-    // Toggle tab active class
-    tabs.forEach((t) => t.classList.remove('active'));
-    tab.classList.add('active');
-  });
-});
 
 // Global Search Functionality
 function GlobalSearch() {

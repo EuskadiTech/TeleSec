@@ -5,6 +5,10 @@ PAGES.personas = {
   icon: 'static/appico/users.png',
   AccessControl: true,
   Title: 'Personas',
+  navItems: [
+    { label: 'Ver personas', hash: 'personas', icon: 'fas fa-list' },
+    { label: 'Nueva persona', hash: 'personas,nuevo', icon: 'fas fa-user-plus' },
+  ],
   edit: function (mid) {
     if (!checkRole('personas:edit')) {
       setUrlHash('personas');

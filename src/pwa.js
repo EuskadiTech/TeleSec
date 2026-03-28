@@ -4,15 +4,15 @@ const VERSION_CHECK_INTERVAL_MS = 10 * 60 * 1000;
 let lastVersionCheckTs = 0;
 let updatePromptShown = false;
 
-function sendCouchUrlPrefixToServiceWorker(registration) {
+function sendApiUrlToServiceWorker(registration) {
   if (!registration) {
     return;
   }
 
-  const couchUrlPrefix = (localStorage.getItem('TELESEC_COUCH_URL') || '').trim();
+  const apiUrl = (localStorage.getItem('TELESEC_API_URL') || '').trim();
   const message = {
-    type: 'SET_COUCH_URL_PREFIX',
-    url: couchUrlPrefix
+    type: 'SET_API_URL',
+    url: apiUrl
   };
 
   if (registration.active) {
@@ -165,7 +165,7 @@ if ('serviceWorker' in navigator) {
     }
 
     wireRegistration(reg);
-    sendCouchUrlPrefixToServiceWorker(reg);
+    sendApiUrlToServiceWorker(reg);
     checkAppVersion(true);
     setInterval(checkAppVersion, VERSION_CHECK_INTERVAL_MS);
   });
@@ -184,12 +184,12 @@ if ('serviceWorker' in navigator) {
   });
 
   window.addEventListener('storage', (event) => {
-    if (event.key !== 'TELESEC_COUCH_URL') {
+    if (event.key !== 'TELESEC_API_URL') {
       return;
     }
 
     navigator.serviceWorker.getRegistration().then((registration) => {
-      sendCouchUrlPrefixToServiceWorker(registration);
+      sendApiUrlToServiceWorker(registration);
     });
   });
 }
