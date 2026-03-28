@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
                 )),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='notas', to='core.teleSecgroup')),
+                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='notas', to='core.TeleSecGroup')),
                 ('persona', models.ForeignKey(
                     blank=True, null=True,
                     on_delete=django.db.models.deletion.SET_NULL,

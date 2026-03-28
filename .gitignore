@@ -11,4 +11,6 @@ __pycache__/*
 *.egg-info/*
 *.egg
 .venv/*
-venv/*db.sqlite3
+venv/*
+db.sqlite3
+media/

@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
                 ('notas', models.TextField(blank=True)),
                 ('total', models.DecimalField(decimal_places=2, default=0, max_digits=8)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='pedidos_supercafe', to='core.teleSecgroup')),
+                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='pedidos_supercafe', to='core.TeleSecGroup')),
                 ('persona', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='pedidos_supercafe', to='personas.persona')),
             ],
             options={

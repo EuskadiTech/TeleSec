@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
                 ('fecha', models.DateField()),
                 ('contenido', models.TextField(blank=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='informes_aula', to='core.teleSecgroup')),
+                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='informes_aula', to='core.TeleSecGroup')),
             ],
             options={
                 'verbose_name': 'Informe de Aula',
@@ -43,7 +43,7 @@ class Migration(migrations.Migration):
                 ('last_seen_at', models.DateTimeField(blank=True, null=True)),
                 ('comando_apagado', models.BooleanField(default=False)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='ordenadores', to='core.teleSecgroup')),
+                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='ordenadores', to='core.TeleSecGroup')),
             ],
             options={
                 'verbose_name': 'Ordenador de Aula',

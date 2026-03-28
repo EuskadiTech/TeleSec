@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
                 ('descripcion', models.TextField(blank=True)),
                 ('schema', models.JSONField(default=dict)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='tablas', to='core.teleSecgroup')),
+                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='tablas', to='core.TeleSecGroup')),
             ],
             options={
                 'verbose_name': 'Tabla Personalizada',

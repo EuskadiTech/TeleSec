@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
+from core.utils import checkRole
 from .models import ModuleDefinition, TenantModule
 
 
@@ -26,7 +27,7 @@ def store(request):
 def toggle(request, module_id):
     if not request.user.group:
         return JsonResponse({'error': 'No group assigned'}, status=400)
-    if not request.user.is_staff and not request.user.is_superuser:
+    if not checkRole(request.user, 'modulos.change_tenantmodule'):
         return JsonResponse({'error': 'Permission denied'}, status=403)
 
     module = get_object_or_404(ModuleDefinition, pk=module_id)

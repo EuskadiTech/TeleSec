@@ -37,7 +37,7 @@
   </div>
 </div>
 {% else %}
-<div class="text-center text-muted py-5">Esta tabla no tiene campos definidos en su esquema. <a href="#">Edita el esquema</a> para añadir campos.</div>
+<div class="text-center text-muted py-5">Esta tabla no tiene campos definidos en su esquema. <a href="{% url 'edit_tabla' tabla.pk %}">Edita el esquema</a> para añadir campos.</div>
 {% endif %}
 
 {% if not filas and tabla.schema.fields %}

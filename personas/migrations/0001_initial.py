@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
                 ('oculto', models.BooleanField(default=False)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='personas', to='core.teleSecgroup')),
+                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='personas', to='core.TeleSecGroup')),
                 ('user', models.OneToOneField(
                     blank=True, null=True,
                     on_delete=django.db.models.deletion.SET_NULL,

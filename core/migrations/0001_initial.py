@@ -59,7 +59,7 @@ class Migration(migrations.Migration):
                     blank=True, null=True,
                     on_delete=django.db.models.deletion.SET_NULL,
                     related_name='users',
-                    to='core.teleSecgroup',
+                    to='core.TeleSecGroup',
                 )),
                 ('groups', models.ManyToManyField(
                     blank=True,
@@ -90,7 +90,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('nombre', models.CharField(max_length=100)),
                 ('is_admin', models.BooleanField(default=False)),
-                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='roles', to='core.teleSecgroup')),
+                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='roles', to='core.TeleSecGroup')),
                 ('permissions', models.ManyToManyField(blank=True, to='auth.permission')),
             ],
             options={

@@ -27,7 +27,7 @@ class Migration(migrations.Migration):
                 ('postre_picto_id', models.CharField(blank=True, max_length=20)),
                 ('postre_picto_text', models.CharField(blank=True, max_length=200)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='menus', to='core.teleSecgroup')),
+                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='menus', to='core.TeleSecGroup')),
             ],
             options={
                 'verbose_name': 'Menú del Comedor',

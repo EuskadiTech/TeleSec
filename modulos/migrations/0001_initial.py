@@ -38,7 +38,7 @@ class Migration(migrations.Migration):
                 ('group', models.ForeignKey(
                     on_delete=django.db.models.deletion.CASCADE,
                     related_name='tenant_modules',
-                    to='core.teleSecgroup',
+                    to='core.TeleSecGroup',
                 )),
                 ('module', models.ForeignKey(
                     on_delete=django.db.models.deletion.CASCADE,

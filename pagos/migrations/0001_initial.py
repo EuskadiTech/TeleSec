@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
                 ('notas', models.TextField(blank=True)),
                 ('fecha', models.DateTimeField(default=django.utils.timezone.now)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='pagos', to='core.teleSecgroup')),
+                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='pagos', to='core.TeleSecGroup')),
                 ('persona', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='pagos', to='personas.persona')),
                 ('persona_destino', models.ForeignKey(
                     blank=True, null=True,
