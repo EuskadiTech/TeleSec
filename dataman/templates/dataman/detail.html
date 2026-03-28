@@ -1,4 +1,5 @@
 {% extends "core/base.html" %}
+{% load dataman_tags %}
 {% block title %}{{ tabla.nombre }} – DataMan{% endblock %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -8,30 +9,38 @@
   </div>
   <a href="{% url 'create_fila' tabla.pk %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Añadir fila</a>
 </div>
-{% if filas %}
+{% if tabla.schema.fields %}
 <div class="card shadow-sm">
   <div class="table-responsive">
     <table class="table table-hover mb-0">
       <thead class="table-light">
         <tr>
-          {% for key in filas.0.datos.keys %}<th>{{ key }}</th>{% endfor %}
+          {% for field_def in tabla.schema.fields %}<th>{{ field_def.name }}</th>{% endfor %}
           <th class="text-end">Acciones</th>
         </tr>
       </thead>
       <tbody>
         {% for fila in filas %}
         <tr>
-          {% for val in fila.datos.values %}<td>{{ val }}</td>{% endfor %}
+          {% for field_def in tabla.schema.fields %}
+          <td>{{ fila.datos|get_item:field_def.name }}</td>
+          {% endfor %}
           <td class="text-end">
             <a href="{% url 'delete_fila' fila.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
           </td>
         </tr>
+        {% empty %}
+        <tr><td colspan="{{ tabla.schema.fields|length|add:1 }}" class="text-center text-muted py-4">No hay filas.</td></tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
 </div>
 {% else %}
+<div class="text-center text-muted py-5">Esta tabla no tiene campos definidos en su esquema. <a href="#">Edita el esquema</a> para añadir campos.</div>
+{% endif %}
+
+{% if not filas and tabla.schema.fields %}
 <div class="text-center text-muted py-5">No hay datos aún. <a href="{% url 'create_fila' tabla.pk %}">Añade la primera fila.</a></div>
 {% endif %}
 {% endblock %}

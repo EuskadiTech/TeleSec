@@ -46,6 +46,9 @@ def movimiento_material(request, pk):
         cantidad = form.cleaned_data['cantidad']
         antes = material.cantidad
         if tipo == 'Salida':
+            if cantidad > material.cantidad:
+                form.add_error('cantidad', 'No hay suficiente stock para esta salida.')
+                return render(request, 'materiales/movimiento.html', {'form': form, 'material': material})
             material.cantidad -= cantidad
         else:
             material.cantidad += cantidad

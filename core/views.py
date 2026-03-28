@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.views.decorators.http import require_http_methods
 
 from .models import TeleSecGroup
+from modulos.models import TenantModule
 
 
 @require_http_methods(['GET', 'POST'])
@@ -45,11 +46,10 @@ def logout_view(request):
 
 @login_required
 def dashboard(request):
-    from modulos.models import TenantModule
     enabled_modules = []
     if request.user.group:
         enabled_modules = TenantModule.objects.filter(
-            group=request.user.group, module__isnull=False
+            group=request.user.group
         ).select_related('module')
     return render(request, 'core/dashboard.html', {
         'enabled_modules': enabled_modules,
