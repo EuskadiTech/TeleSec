@@ -12,8 +12,3 @@ __pycache__/*
 *.egg
 .venv/*
 venv/*
-# Backend runtime files
-telesec.db
-telesec.db-wal
-telesec.db-shm
-backend/.env

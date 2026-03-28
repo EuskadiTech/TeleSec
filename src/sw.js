@@ -1,11 +1,19 @@
 var CACHE = 'telesec_%%VERSIONCO%%';
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/5.1.2/workbox-sw.js');
 
-let apiUrl = '';
+let couchUrlPrefix = '';
 
 function normalizePrefix(url) {
-  if (!url || typeof url !== 'string') return '';
-  return url.trim().replace(/\/+$/, '');
+  if (!url || typeof url !== 'string') {
+    return '';
+  }
+
+  const trimmedUrl = url.trim();
+  if (!trimmedUrl) {
+    return '';
+  }
+
+  return trimmedUrl.replace(/\/+$/, '');
 }
 
 self.addEventListener('message', (event) => {
@@ -13,23 +21,29 @@ self.addEventListener('message', (event) => {
     self.skipWaiting();
   }
 
-  if (event.data && event.data.type === 'SET_API_URL') {
-    apiUrl = normalizePrefix(event.data.url);
+  if (event.data && event.data.type === 'SET_COUCH_URL_PREFIX') {
+    couchUrlPrefix = normalizePrefix(event.data.url);
   }
 });
 
-// Cache the app shell (static assets + HTML/JS/CSS) with cache-first strategy.
-// Skip the backend API – those responses must be fresh and authenticated.
+// workbox.routing.registerRoute(
+//   new RegExp("/*"),
+//   new workbox.strategies.StaleWhileRevalidate({
+//     cacheName: CACHE,
+//   })
+// );
+
+// All but couchdb
 workbox.routing.registerRoute(
   ({ request, url }) => {
     const requestUrl = request && request.url ? request.url : url.href;
-    const normalized = normalizePrefix(requestUrl);
+    const normalizedRequestUrl = normalizePrefix(requestUrl);
 
-    // Never cache API calls
-    if (apiUrl && normalized.startsWith(apiUrl)) return false;
-    if (url.pathname.startsWith('/api/')) return false;
+    if (couchUrlPrefix && normalizedRequestUrl.startsWith(couchUrlPrefix)) {
+      return false;
+    }
 
-    return url.origin === self.location.origin;
+    return !url.pathname.startsWith('/_couchdb/') && url.origin === self.location.origin;
   },
   new workbox.strategies.CacheFirst({
     cacheName: CACHE,

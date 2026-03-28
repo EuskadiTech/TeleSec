@@ -16,11 +16,13 @@ window.PRECIOS_CAFE = {
 // Cargar precios desde la base de datos al iniciar
 if (typeof DB !== 'undefined') {
   DB.get('config', 'precios_cafe')
-    .then((precios) => {
-      if (precios && typeof precios === 'object') {
-        Object.assign(window.PRECIOS_CAFE, precios);
-        console.log('Precios del café cargados:', window.PRECIOS_CAFE);
-      }
+    .then((raw) => {
+      TS_decrypt(raw, SECRET, (precios) => {
+        if (precios) {
+          Object.assign(window.PRECIOS_CAFE, precios);
+          console.log('Precios del café cargados:', window.PRECIOS_CAFE);
+        }
+      });
     })
     .catch(() => {
       console.log('Usando precios por defecto');
@@ -1025,20 +1027,67 @@ function TS_decrypt(input, secret, callback, table, id) {
   }
 }
 function TS_encrypt(input, secret, callback, mode = 'RSA') {
-  // Encryption disabled – data is stored in plaintext (no at-rest encryption).
+  // Skip encryption
+  //callback(input);
+  //return;
+  // Encrypt given value for at-rest storage using CryptoJS AES.
+  // Always return string of form RSA{<ciphertext>} via callback.
   try {
-    callback(input);
+    if (typeof CryptoJS === 'undefined') {
+      // CryptoJS not available — return plaintext
+      try {
+        callback(input);
+      } catch (e) {
+        console.error(e);
+      }
+      return;
+    }
+    var payload = input;
+    if (typeof input !== 'string') {
+      try {
+        payload = JSON.stringify(input);
+      } catch (e) {
+        payload = String(input);
+      }
+    }
+    var encrypted = CryptoJS.AES.encrypt(payload, secret).toString();
+    var out = 'RSA{' + encrypted + '}';
+    try {
+      callback(out);
+    } catch (e) {
+      console.error(e);
+    }
   } catch (e) {
-    console.error(e);
+    console.error('TS_encrypt: encryption failed', e);
+    try {
+      callback(input);
+    } catch (err) {
+      console.error(err);
+    }
   }
 }
 // Listado precargado de personas:
 DB.map('personas', (data, key) => {
-  if (data != null) {
-    data['_key'] = key;
-    SC_Personas[key] = data;
+  function add_row(data, key) {
+    if (data != null) {
+      data['_key'] = key;
+      SC_Personas[key] = data;
+    } else {
+      delete SC_Personas[key];
+    }
+  }
+  if (typeof data == 'string') {
+    TS_decrypt(
+      data,
+      SECRET,
+      (data, wasEncrypted) => {
+        add_row(data, key);
+      },
+      'personas',
+      key
+    );
   } else {
-    delete SC_Personas[key];
+    add_row(data, key);
   }
 });
 

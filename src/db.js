@@ -1,55 +1,69 @@
-// db.js – RxDB-based local-first database wrapper for TeleSec
-//
-// Replaces PouchDB with RxDB + IndexedDB (Dexie) storage.
-// Replication to the Flask backend uses RxDB's custom pull/push protocol.
-// No at-rest encryption: data is stored in plaintext in IndexedDB.
+// Simple PouchDB wrapper for TeleSec
+// - Uses PouchDB for local storage and optional replication to a CouchDB server
+// - Stores records as docs with _id = "<table>:<id>" and field `data` containing either plain object or encrypted string
+// - Exposes: init, put, get, del, map, list, replicate
 
 var DB = (function () {
-  // -------------------------------------------------------------------------
-  // State
-  // -------------------------------------------------------------------------
-  let rxdb = null;
-  let collection = null;
-  let replicationState = null;
-  let initPromise = null;
-
+  let local = null;
+  let remote = null;
+  let changes = null;
+  let repPush = null;
+  let repPull = null;
+  let repBootstrap = null;
+  let remoteKey = '';
+  let onlineReplTimer = null;
   let callbacks = {}; // table -> [{ id, cb }]
   let callbackSeq = 0;
+  let docCache = {}; // _id -> last data snapshot (stringified)
   let tableListCache = {}; // table -> { ts, rows }
   let tableListInFlight = {}; // table -> Promise<rows>
   let lastOrbAt = 0;
   let orbTimer = null;
-  let onlineReplTimer = null;
 
   const LIST_CACHE_TTL_MS = 1500;
   const ORB_MIN_INTERVAL_MS = 400;
+  const INITIAL_REPL_BATCH_SIZE = 500;
 
-  // -------------------------------------------------------------------------
-  // RxDB schema – single "documents" collection
-  // -------------------------------------------------------------------------
-  const DOCUMENTS_SCHEMA = {
-    version: 0,
-    type: 'object',
-    primaryKey: 'id',
-    properties: {
-      id: { type: 'string', maxLength: 500 },
-      table_name: { type: 'string', maxLength: 100 },
-      data: { type: 'object' },
-      updated_at: { type: 'string', maxLength: 50 },
-    },
-    required: ['id', 'table_name', 'data'],
-    indexes: ['table_name', 'updated_at'],
-  };
-
-  // -------------------------------------------------------------------------
-  // Helpers
-  // -------------------------------------------------------------------------
-  function getApiUrl() {
-    return (localStorage.getItem('TELESEC_API_URL') || '').replace(/\/$/, '');
+  function bootstrapFlagKey(key) {
+    return 'TELESEC_REPL_BOOTSTRAP_DONE:' + key;
   }
 
-  function getAuthToken() {
-    return localStorage.getItem('TELESEC_JWT') || '';
+  function hasBootstrapDone(key) {
+    if (!key) return true;
+    try {
+      return localStorage.getItem(bootstrapFlagKey(key)) === '1';
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function markBootstrapDone(key) {
+    if (!key) return;
+    try {
+      localStorage.setItem(bootstrapFlagKey(key), '1');
+    } catch (e) {}
+  }
+
+  function ensureLocal() {
+    if (local) return;
+    try {
+      const localName = 'telesec';
+      local = new PouchDB(localName);
+      if (changes) {
+        try {
+          changes.cancel();
+        } catch (e) {}
+      }
+      changes = local
+        .changes({ live: true, since: 'now', include_docs: true })
+        .on('change', onChange);
+    } catch (e) {
+      console.warn('ensureLocal error', e);
+    }
+  }
+
+  function makeId(table, id) {
+    return table + ':' + id;
   }
 
   function makeCallbackId(table) {
@@ -57,13 +71,46 @@ var DB = (function () {
     return table + '#' + callbackSeq;
   }
 
+  function makeRemoteKey(opts, localName) {
+    if (!opts || !opts.remoteServer) return '';
+    const server = String(opts.remoteServer || '').replace(/\/$/, '');
+    const dbname = encodeURIComponent(opts.dbname || localName);
+    const username = opts.username || '';
+    return server + '|' + dbname + '|' + username;
+  }
+
   function invalidateTableCache(table) {
     if (table && tableListCache[table]) delete tableListCache[table];
   }
 
-  function updateSyncStatus() {
+  function toStableSnapshot(data) {
+    if (typeof data === 'string') return data;
+    try {
+      return JSON.stringify(data);
+    } catch (e) {
+      return String(data);
+    }
+  }
+
+  function updateSyncStatus(doc) {
     try {
       window.TELESEC_LAST_SYNC = Date.now();
+
+      // Keep hash work bounded on low-end devices: sample payload and include length.
+      let payload = '';
+      try {
+        payload = typeof doc.data === 'string' ? doc.data : JSON.stringify(doc.data || {});
+      } catch (e) {
+        payload = String(doc._id || '');
+      }
+      const sample = payload.length > 512 ? payload.slice(0, 512) + ':' + payload.length : payload;
+      let hash = 0;
+      for (let i = 0; i < sample.length; i++) {
+        hash = (hash * 31 + sample.charCodeAt(i)) >>> 0;
+      }
+      const hue = hash % 360;
+      window.TELESEC_LAST_SYNC_COLOR = `hsl(${hue}, 70%, 50%)`;
+
       if (typeof updateStatusOrb !== 'function') return;
       const now = Date.now();
       const elapsed = now - lastOrbAt;
@@ -76,184 +123,219 @@ var DB = (function () {
       orbTimer = setTimeout(function () {
         orbTimer = null;
         lastOrbAt = Date.now();
-        try { updateStatusOrb(); } catch (e) {}
+        try {
+          updateStatusOrb();
+        } catch (e) {}
       }, ORB_MIN_INTERVAL_MS - elapsed);
     } catch (e) {}
   }
 
-  // -------------------------------------------------------------------------
-  // RxDB initialisation (lazy, called once)
-  // -------------------------------------------------------------------------
-  async function _initRxDB() {
-    if (rxdb) return;
-
-    rxdb = await RxDB.createRxDatabase({
-      name: 'telesec',
-      storage: RxDB.getRxStorageDexie(),
-      ignoreDuplicate: true,
-    });
-
-    const cols = await rxdb.addCollections({
-      documents: { schema: DOCUMENTS_SCHEMA },
-    });
-    collection = cols.documents;
-
-    // Subscribe to all document changes so map() callbacks fire reactively
-    collection.$.subscribe(function (changeEvent) {
-      try {
-        const doc = changeEvent.documentData;
-        if (!doc || !doc.id) return;
-
-        const sep = doc.id.indexOf(':');
-        const table = sep === -1 ? doc.id : doc.id.slice(0, sep);
-        const id = sep === -1 ? '' : doc.id.slice(sep + 1);
-
-        invalidateTableCache(table);
-        updateSyncStatus();
-
-        if (changeEvent.operation === 'DELETE') {
-          (callbacks[table] || []).forEach(function (l) {
-            try { l.cb(null, id); } catch (e) { console.error(e); }
-          });
-          return;
-        }
-
-        (callbacks[table] || []).forEach(function (l) {
-          try { l.cb(doc.data || {}, id); } catch (e) { console.error(e); }
-        });
-      } catch (e) {
-        console.warn('DB change handler error', e);
+  function init(opts) {
+    const localName = 'telesec';
+    try {
+      if (opts && opts.secret) {
+        SECRET = opts.secret;
+        try {
+          localStorage.setItem('TELESEC_SECRET', SECRET);
+        } catch (e) {}
       }
-    });
+    } catch (e) {}
+    local = new PouchDB(localName);
+
+    const nextRemoteKey = makeRemoteKey(opts, localName);
+    if (opts.remoteServer) {
+      try {
+        if (nextRemoteKey !== remoteKey || !remote) {
+          const server = opts.remoteServer.replace(/\/$/, '');
+          const dbname = encodeURIComponent(opts.dbname || localName);
+          let authPart = '';
+          if (opts.username) authPart = opts.username + ':' + (opts.password || '') + '@';
+          const remoteUrl = server.replace(/https?:\/\//, (m) => m) + '/' + dbname;
+          if (opts.username) remote = new PouchDB(remoteUrl.replace(/:\/\//, '://' + authPart));
+          else remote = new PouchDB(remoteUrl);
+          remoteKey = nextRemoteKey;
+          replicateToRemote();
+        }
+      } catch (e) {
+        console.warn('Remote DB init error', e);
+      }
+    }
+
+    if (changes) changes.cancel();
+    changes = local
+      .changes({ live: true, since: 'now', include_docs: true })
+      .on('change', onChange);
+    return Promise.resolve();
   }
 
-  function ensureInit() {
-    if (!initPromise) {
-      initPromise = _initRxDB();
-    }
-    return initPromise;
-  }
+  function replicateToRemote() {
+    ensureLocal();
+    if (!local || !remote) return;
+    try {
+      if (repPush && repPush.cancel) repPush.cancel();
+    } catch (e) {}
+    try {
+      if (repPull && repPull.cancel) repPull.cancel();
+    } catch (e) {}
+    try {
+      if (repBootstrap && repBootstrap.cancel) repBootstrap.cancel();
+    } catch (e) {}
 
-  // -------------------------------------------------------------------------
-  // Replication
-  // -------------------------------------------------------------------------
-  function startReplication() {
-    const apiUrl = getApiUrl();
-    const token = getAuthToken();
-    if (!apiUrl || !token || !collection) return;
-
-    if (replicationState) {
-      try { replicationState.cancel(); } catch (e) {}
-      replicationState = null;
-    }
-
-    replicationState = RxDB.replicateRxCollection({
-      collection: collection,
-      replicationIdentifier: 'telesec-flask-v1',
+    const liveOpts = {
       live: true,
-      retryTime: 5000,
-      pull: {
-        batchSize: 50,
-        handler: async function (lastCheckpoint, batchSize) {
-          const params = new URLSearchParams({ limit: String(batchSize) });
-          if (lastCheckpoint && lastCheckpoint.updatedAt) {
-            params.set('updatedAt', lastCheckpoint.updatedAt);
-            params.set('id', lastCheckpoint.id || '');
-          }
-          const res = await fetch(getApiUrl() + '/api/replicate/pull?' + params.toString(), {
-            headers: {
-              Authorization: 'Bearer ' + getAuthToken(),
-              Accept: 'application/json',
-            },
-          });
-          if (!res.ok) throw new Error('Pull failed: ' + res.status);
-          const json = await res.json();
-          return { documents: json.documents, checkpoint: json.checkpoint };
-        },
-      },
-      push: {
-        batchSize: 50,
-        handler: async function (rows) {
-          const body = rows.map(function (row) { return row.newDocumentState; });
-          const res = await fetch(getApiUrl() + '/api/replicate/push', {
-            method: 'POST',
-            headers: {
-              Authorization: 'Bearer ' + getAuthToken(),
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(body),
-          });
-          if (!res.ok) throw new Error('Push failed: ' + res.status);
-          return await res.json(); // [] = no conflicts
-        },
-      },
-    });
+      retry: true,
+      heartbeat: 10000,
+      timeout: 60000,
+      batch_size: 100,
+      batches_limit: 10,
+    };
 
-    replicationState.error$.subscribe(function (err) {
-      console.warn('Replication error', err);
-    });
-
-    replicationState.active$.subscribe(function (active) {
-      if (active) updateSyncStatus();
-    });
-  }
-
-  function stopReplication() {
-    if (replicationState) {
-      try { replicationState.cancel(); } catch (e) {}
-      replicationState = null;
+    function startLiveReplication() {
+      repPush = PouchDB.replicate(local, remote, liveOpts).on('error', function (err) {
+        console.warn('Replication push error', err);
+      });
+      repPull = PouchDB.replicate(remote, local, liveOpts).on('error', function (err) {
+        console.warn('Replication pull error', err);
+      });
     }
+
+    // First replication to a remote tends to create many small requests.
+    // Run one-shot sync in larger batches first, then switch to live mode.
+    if (!hasBootstrapDone(remoteKey)) {
+      repBootstrap = PouchDB.sync(local, remote, {
+        live: false,
+        retry: false,
+        batch_size: INITIAL_REPL_BATCH_SIZE,
+        batches_limit: 20,
+      })
+        .on('complete', function () {
+          repBootstrap = null;
+          markBootstrapDone(remoteKey);
+          startLiveReplication();
+        })
+        .on('error', function (err) {
+          repBootstrap = null;
+          console.warn('Initial replication bootstrap error', err);
+          startLiveReplication();
+        });
+      return;
+    }
+
+    startLiveReplication();
   }
 
-  // Re-start replication when coming back online
   if (typeof window !== 'undefined' && window.addEventListener) {
     window.addEventListener('online', function () {
       try {
         if (onlineReplTimer) clearTimeout(onlineReplTimer);
         onlineReplTimer = setTimeout(function () {
           onlineReplTimer = null;
-          startReplication();
+          replicateToRemote();
         }, 1200);
       } catch (e) {}
     });
   }
 
-  // -------------------------------------------------------------------------
-  // Public API
-  // -------------------------------------------------------------------------
-  async function init(opts) {
-    await ensureInit();
-    startReplication();
-    return Promise.resolve();
+  function onChange(change) {
+    const doc = change.doc;
+    if (!doc || !doc._id) return;
+    const sep = doc._id.indexOf(':');
+    const table = sep === -1 ? doc._id : doc._id.slice(0, sep);
+    const id = sep === -1 ? '' : doc._id.slice(sep + 1);
+    invalidateTableCache(table);
+
+    // handle deletes
+    if (change.deleted || doc._deleted) {
+      updateSyncStatus(doc);
+      delete docCache[doc._id];
+      if (callbacks[table]) {
+        callbacks[table].forEach((listener) => {
+          const cb = listener.cb;
+          try {
+            cb(null, id);
+          } catch (e) {
+            console.error(e);
+          }
+        });
+      }
+      return;
+    }
+
+    // handle insert/update
+    let changed = true;
+    try {
+      const now = toStableSnapshot(doc.data);
+      const prev = docCache[doc._id];
+      if (prev === now) changed = false;
+      docCache[doc._id] = now;
+    } catch (e) {
+      /* ignore cache errors */
+    }
+
+    if (!changed) return; // no meaningful change
+
+    updateSyncStatus(doc);
+
+    if (callbacks[table]) {
+      callbacks[table].forEach((listener) => {
+        const cb = listener.cb;
+        try {
+          cb(doc.data, id);
+        } catch (e) {
+          console.error(e);
+        }
+      });
+    }
   }
 
   async function put(table, id, data) {
-    await ensureInit();
+    ensureLocal();
     invalidateTableCache(table);
-    const docId = table + ':' + id;
-    const now = new Date().toISOString();
+    const _id = makeId(table, id);
     try {
-      const existing = await collection.findOne(docId).exec();
+      const existing = await local.get(_id).catch(() => null);
       if (data === null) {
-        if (existing) await existing.remove();
+        if (existing) await local.remove(existing);
         return;
       }
-      if (existing) {
-        await existing.patch({ data: data, updated_at: now });
-      } else {
-        await collection.insert({ id: docId, table_name: table, data: data, updated_at: now });
+      const doc = existing || { _id: _id };
+      var toStore = data;
+      try {
+        var isEncryptedString =
+          typeof data === 'string' && data.startsWith('RSA{') && data.endsWith('}');
+        if (
+          !isEncryptedString &&
+          typeof TS_encrypt === 'function' &&
+          typeof SECRET !== 'undefined' &&
+          SECRET
+        ) {
+          toStore = await new Promise((resolve) => {
+            try {
+              TS_encrypt(data, SECRET, (enc) => resolve(enc));
+            } catch (e) {
+              resolve(data);
+            }
+          });
+        }
+      } catch (e) {
+        toStore = data;
       }
+      doc.data = toStore;
+      doc.table = table;
+      doc.ts = new Date().toISOString();
+      if (existing) doc._rev = existing._rev;
+      await local.put(doc);
     } catch (e) {
       console.error('DB.put error', e);
     }
   }
 
   async function get(table, id) {
-    await ensureInit();
-    const docId = table + ':' + id;
+    ensureLocal();
+    const _id = makeId(table, id);
     try {
-      const doc = await collection.findOne(docId).exec();
-      return doc ? doc.data : null;
+      const doc = await local.get(_id);
+      return doc.data;
     } catch (e) {
       return null;
     }
@@ -264,26 +346,35 @@ var DB = (function () {
   }
 
   async function list(table) {
-    await ensureInit();
+    ensureLocal();
     const now = Date.now();
     const cached = tableListCache[table];
-    if (cached && now - cached.ts <= LIST_CACHE_TTL_MS) return cached.rows;
-    if (tableListInFlight[table]) return tableListInFlight[table];
-
+    if (cached && now - cached.ts <= LIST_CACHE_TTL_MS) {
+      return cached.rows;
+    }
+    if (tableListInFlight[table]) {
+      return tableListInFlight[table];
+    }
     try {
-      tableListInFlight[table] = collection
-        .find({ selector: { table_name: { $eq: table } } })
-        .exec()
-        .then(function (docs) {
-          const rows = docs.map(function (doc) {
-            const sep = doc.id.indexOf(':');
-            const id = sep === -1 ? doc.id : doc.id.slice(sep + 1);
-            return { id: id, data: doc.data };
+      tableListInFlight[table] = local
+        .allDocs({
+          include_docs: true,
+          startkey: table + ':',
+          endkey: table + ':\uffff',
+        })
+        .then((res) => {
+          const rows = res.rows.map((r) => {
+            const sep = r.id.indexOf(':');
+            const id = sep === -1 ? r.id : r.id.slice(sep + 1);
+            try {
+              docCache[r.id] = toStableSnapshot(r.doc.data);
+            } catch (e) {}
+            return { id: id, data: r.doc.data };
           });
           tableListCache[table] = { ts: Date.now(), rows: rows };
           return rows;
         })
-        .finally(function () {
+        .finally(() => {
           delete tableListInFlight[table];
         });
       return await tableListInFlight[table];
@@ -293,50 +384,30 @@ var DB = (function () {
     }
   }
 
-  function map(table, cb) {
-    const callbackId = makeCallbackId(table);
-    callbacks[table] = callbacks[table] || [];
-    callbacks[table].push({ id: callbackId, cb: cb });
-
-    ensureInit().then(function () {
-      list(table).then(function (rows) {
-        const still = (callbacks[table] || []).some(function (l) { return l.id === callbackId; });
-        if (!still) return;
-        rows.forEach(function (r) { cb(r.data, r.id); });
-      });
-    });
-
-    return callbackId;
+  function dataURLtoBlob(dataurl) {
+    const arr = dataurl.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) u8arr[n] = bstr.charCodeAt(n);
+    return new Blob([u8arr], { type: mime });
   }
 
-  function unlisten(callbackId) {
-    if (!callbackId) return false;
-    for (const table of Object.keys(callbacks)) {
-      const before = callbacks[table].length;
-      callbacks[table] = callbacks[table].filter(function (l) { return l.id !== callbackId; });
-      if (callbacks[table].length !== before) return true;
-    }
-    return false;
-  }
-
-  // -------------------------------------------------------------------------
-  // Attachments (stored inline inside data._attachments as base64 data-URLs)
-  // -------------------------------------------------------------------------
   async function putAttachment(table, id, name, dataUrlOrBlob, contentType) {
+    ensureLocal();
+    const _id = makeId(table, id);
     try {
-      const existing = (await get(table, id)) || {};
-      const attachments = Object.assign({}, existing._attachments || {});
-      let dataUrl = dataUrlOrBlob;
-      if (dataUrlOrBlob instanceof Blob) {
-        dataUrl = await new Promise(function (resolve, reject) {
-          const reader = new FileReader();
-          reader.onload = function (e) { resolve(e.target.result); };
-          reader.onerror = reject;
-          reader.readAsDataURL(dataUrlOrBlob);
-        });
+      let doc = await local.get(_id).catch(() => null);
+      if (!doc) {
+        await local.put({ _id: _id, table: table, ts: new Date().toISOString(), data: {} });
+        doc = await local.get(_id);
       }
-      attachments[name] = { data: dataUrl, content_type: contentType || 'image/jpeg' };
-      await put(table, id, Object.assign({}, existing, { _attachments: attachments }));
+      let blob = dataUrlOrBlob;
+      if (typeof dataUrlOrBlob === 'string' && dataUrlOrBlob.indexOf('data:') === 0)
+        blob = dataURLtoBlob(dataUrlOrBlob);
+      const type = contentType || (blob && blob.type) || 'application/octet-stream';
+      await local.putAttachment(_id, name, doc._rev, blob, type);
       return true;
     } catch (e) {
       console.error('putAttachment error', e);
@@ -345,72 +416,144 @@ var DB = (function () {
   }
 
   async function getAttachment(table, id, name) {
+    ensureLocal();
+    const _id = makeId(table, id);
     try {
-      const data = await get(table, id);
-      return (
-        data && data._attachments && data._attachments[name] && data._attachments[name].data
-      ) || null;
+      const blob = await local.getAttachment(_id, name);
+      if (!blob) return null;
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = (e) => reject(e);
+        reader.readAsDataURL(blob);
+      });
     } catch (e) {
       return null;
     }
   }
 
   async function listAttachments(table, id) {
+    ensureLocal();
+    const _id = makeId(table, id);
     try {
-      const data = await get(table, id);
-      if (!data || !data._attachments) return [];
-      return Object.entries(data._attachments).map(function ([name, att]) {
-        return { name: name, dataUrl: att.data || null, content_type: att.content_type || null };
-      });
+      const doc = await local.get(_id, { attachments: true });
+      if (!doc || !doc._attachments) return [];
+      const out = [];
+      for (const name of Object.keys(doc._attachments)) {
+        try {
+          const att = doc._attachments[name];
+          if (att && att.data) {
+            const content_type = att.content_type || 'application/octet-stream';
+            const durl = 'data:' + content_type + ';base64,' + att.data;
+            out.push({ name: name, dataUrl: durl, content_type: content_type });
+            continue;
+          }
+        } catch (e) {}
+        try {
+          const durl = await getAttachment(table, id, name);
+          out.push({ name: name, dataUrl: durl, content_type: null });
+        } catch (e) {
+          out.push({ name: name, dataUrl: null, content_type: null });
+        }
+      }
+      return out;
     } catch (e) {
-      return [];
+      try {
+        const doc = await local.get(_id).catch(() => null);
+        if (!doc || !doc._attachments) return [];
+        const out = [];
+        for (const name of Object.keys(doc._attachments)) {
+          try {
+            const durl = await getAttachment(table, id, name);
+            out.push({ name: name, dataUrl: durl, content_type: null });
+          } catch (e) {
+            out.push({ name: name, dataUrl: null, content_type: null });
+          }
+        }
+        return out;
+      } catch (e2) {
+        return [];
+      }
     }
   }
 
   async function deleteAttachment(table, id, name) {
+    ensureLocal();
+    const _id = makeId(table, id);
     try {
-      const data = await get(table, id);
-      if (!data || !data._attachments || !data._attachments[name]) return false;
-      const attachments = Object.assign({}, data._attachments);
-      delete attachments[name];
-      await put(table, id, Object.assign({}, data, { _attachments: attachments }));
+      const doc = await local.get(_id);
+      if (!doc || !doc._attachments || !doc._attachments[name]) return false;
+      delete doc._attachments[name];
+      await local.put(doc);
       return true;
     } catch (e) {
+      console.error('deleteAttachment error', e);
       return false;
     }
   }
 
-  // -------------------------------------------------------------------------
-  // Auto-initialise on startup (non-blocking)
-  // -------------------------------------------------------------------------
-  ensureInit()
-    .then(function () {
-      const apiUrl = getApiUrl();
-      if (apiUrl && getAuthToken()) {
-        startReplication();
-      }
-    })
-    .catch(function (e) { console.warn('DB.autoInit error', e); });
+  function map(table, cb) {
+    ensureLocal();
+    const callbackId = makeCallbackId(table);
+    callbacks[table] = callbacks[table] || [];
+    callbacks[table].push({ id: callbackId, cb: cb });
+    list(table).then((rows) => {
+      const stillListening = (callbacks[table] || []).some((listener) => listener.id === callbackId);
+      if (!stillListening) return;
+      rows.forEach((r) => cb(r.data, r.id));
+    });
+    return callbackId;
+  }
+
+  function unlisten(callbackId) {
+    if (!callbackId) return false;
+    for (const table of Object.keys(callbacks)) {
+      const before = callbacks[table].length;
+      callbacks[table] = callbacks[table].filter((listener) => listener.id !== callbackId);
+      if (callbacks[table].length !== before) return true;
+    }
+    return false;
+  }
 
   return {
-    init: init,
-    put: put,
-    get: get,
-    del: del,
-    list: list,
-    map: map,
-    unlisten: unlisten,
-    startReplication: startReplication,
-    stopReplication: stopReplication,
-    putAttachment: putAttachment,
-    getAttachment: getAttachment,
-    listAttachments: listAttachments,
-    deleteAttachment: deleteAttachment,
+    init,
+    put,
+    get,
+    del,
+    list,
+    map,
+    unlisten,
+    replicateToRemote,
+    listAttachments,
+    deleteAttachment,
+    putAttachment,
+    getAttachment,
     _internal: {
-      get collection() { return collection; },
-      get db() { return rxdb; },
+      get local() {
+        return local;
+      },
     },
   };
 })();
 
 window.DB = DB;
+
+// Auto-initialize DB on startup using saved settings (non-blocking)
+(function autoInitDB() {
+  try {
+    const remoteServer = localStorage.getItem('TELESEC_COUCH_URL') || '';
+    const username = localStorage.getItem('TELESEC_COUCH_USER') || '';
+    const password = localStorage.getItem('TELESEC_COUCH_PASS') || '';
+    const dbname = localStorage.getItem('TELESEC_COUCH_DBNAME') || undefined;
+    try {
+      SECRET = localStorage.getItem('TELESEC_SECRET') || '';
+    } catch (e) {
+      SECRET = '';
+    }
+    DB.init({ remoteServer, username, password, dbname }).catch((e) =>
+      console.warn('DB.autoInit error', e)
+    );
+  } catch (e) {
+    console.warn('DB.autoInit unexpected error', e);
+  }
+})();
