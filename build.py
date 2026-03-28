@@ -1,8 +1,10 @@
 import json
 import os
 import shutil
+import subprocess
 import sys
 import time
+
 
 def get_all_files(directory):
     files = []
@@ -13,6 +15,7 @@ def get_all_files(directory):
             rel_path = os.path.relpath(path, directory)
             files.append(rel_path.replace('\\', '/'))
     return files
+
 
 PREFETCH = ""
 VERSIONCO = "2026-02-23_" + time.strftime("%Y%m%d%H%M%S")
@@ -31,7 +34,8 @@ for src in HANDLEPARSE:
 
 if os.path.exists("dist"):
     shutil.rmtree("dist")
-shutil.copytree("assets","dist", dirs_exist_ok=True)
+shutil.copytree("assets", "dist", dirs_exist_ok=True)
+
 
 def replace_handles(string):
     string = string.replace("%%PREFETCH%%", PREFETCH)
@@ -43,8 +47,54 @@ def replace_handles(string):
 
 
 for file in HANDLEPARSE:
+    # Skip the RxDB bundle entry – it's built by esbuild, not copied directly
+    if file == "rxdb-bundle.js":
+        continue
     print(file)
     with open("src/" + file, "r", encoding="utf-8") as f1:
         out = replace_handles(f1.read())
     with open("dist/" + file, "w", encoding="utf-8") as f2:
         f2.write(out)
+
+
+# ---------------------------------------------------------------------------
+# Bundle RxDB with esbuild → dist/static/rxdb.js
+# ---------------------------------------------------------------------------
+def bundle_rxdb():
+    """Build the RxDB browser bundle using esbuild."""
+    # Ensure npm dependencies are installed
+    if not os.path.exists("node_modules"):
+        print("Installing npm dependencies (first run)…")
+        result = subprocess.run(
+            ["npm", "install", "--prefer-offline"],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            print("npm install failed:", result.stderr, file=sys.stderr)
+            sys.exit(1)
+
+    print("Bundling RxDB…")
+    result = subprocess.run(
+        [
+            "npx",
+            "esbuild",
+            "src/rxdb-bundle.js",
+            "--bundle",
+            "--format=iife",
+            "--global-name=RxDB",
+            "--outfile=dist/static/rxdb.js",
+            "--minify",
+            "--log-level=warning",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        print("esbuild failed:", result.stderr, file=sys.stderr)
+        sys.exit(1)
+    size_kb = os.path.getsize("dist/static/rxdb.js") // 1024
+    print(f"RxDB bundled → dist/static/rxdb.js ({size_kb} KB)")
+
+
+bundle_rxdb()

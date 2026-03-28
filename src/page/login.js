@@ -1,431 +1,504 @@
-function makeCouchURLDisplay(host, user, pass, dbname) {
-  if (!host) return '';
-  var display = user + ':' + pass + '@' + host.replace(/^https?:\/\//, '') + '/' + dbname;
-  return display;
-}
+// login.js – TeleSec login page
+// New flow: tenant (group) + password → persona selection → JWT stored → replication started
+
 PAGES.login = {
   Esconder: true,
   Title: 'Login',
+
+  // ------------------------------------------------------------------
+  // Onboarding: register a new tenant + create first admin persona
+  // ------------------------------------------------------------------
   onboarding: function (step) {
-    // Multi-step onboarding flow
     step = step || 'config';
 
     if (step === 'config') {
-      // Step 1: "Configuración de datos"
-      var field_couch = safeuuid();
-      var field_secret = safeuuid();
-      var btn_existing_server = safeuuid();
-      var btn_new_server = safeuuid();
+      var field_api = safeuuid();
+      var field_tenant = safeuuid();
+      var field_pass = safeuuid();
+      var field_pass2 = safeuuid();
+      var btn_register = safeuuid();
       var btn_skip = safeuuid();
-      var div_server_config = safeuuid();
 
       container.innerHTML = html`
         <h1>¡Bienvenido a TeleSec! 🎉</h1>
-        <h2>Paso 1: Configuración de datos</h2>
-        <p>Para comenzar, elige cómo quieres configurar tu base de datos:</p>
+        <h2>Paso 1: Configurar el servidor</h2>
+        <p>Introduce la URL de tu servidor TeleSec y crea un nuevo grupo (tenant).</p>
         <fieldset>
-          <button id="${btn_existing_server}" class="btn5">Conectar a CouchDB existente</button>
-          <button id="${btn_new_server}" class="btn2">Solicitar un nuevo CouchDB</button>
-          <button id="${btn_skip}" class="btn3">No sincronizar (no recomendado)</button>
+          <label>
+            URL del servidor (ej: https://mi-servidor.com)
+            <input type="url" id="${field_api}" placeholder="https://mi-servidor.com" /><br /><br />
+          </label>
+          <label>
+            Nombre del grupo <span style="color:red">*</span>
+            <input type="text" id="${field_tenant}" placeholder="mi-grupo" /><br /><br />
+          </label>
+          <label>
+            Contraseña del grupo <span style="color:red">*</span>
+            <input type="password" id="${field_pass}" /><br /><br />
+          </label>
+          <label>
+            Repite la contraseña <span style="color:red">*</span>
+            <input type="password" id="${field_pass2}" /><br /><br />
+          </label>
+          <button id="${btn_register}" class="btn5">Registrar grupo y continuar</button>
+          <button id="${btn_skip}" class="btn3" style="margin-left:8px;">Ya tengo un grupo</button>
         </fieldset>
-        <div id="${div_server_config}" style="display:none;margin-top:20px;">
-          <h3>Configuración del servidor CouchDB</h3>
-          <fieldset>
-            <label
-              >Origen CouchDB (ej: usuario:contraseña@servidor/basededatos)
-              <input
-                type="text"
-                id="${field_couch}"
-                value="${makeCouchURLDisplay(
-                  localStorage.getItem('TELESEC_COUCH_URL'),
-                  localStorage.getItem('TELESEC_COUCH_USER'),
-                  localStorage.getItem('TELESEC_COUCH_PASS'),
-                  localStorage.getItem('TELESEC_COUCH_DBNAME')
-                )}"
-              /><br /><br />
-            </label>
-            <label
-              >Clave de encriptación <span style="color: red;">*</span>
-              <input
-                type="password"
-                id="${field_secret}"
-                value="${localStorage.getItem('TELESEC_SECRET') || ''}"
-                required
-              /><br /><br />
-            </label>
-            <button id="${btn_skip}-save" class="btn5">Guardar y Continuar</button>
-          </fieldset>
-        </div>
       `;
 
-      document.getElementById(btn_existing_server).onclick = () => {
-        document.getElementById(div_server_config).style.display = 'block';
-      };
-
-      document.getElementById(btn_new_server).onclick = () => {
-        window.open('https://tech.eus/telesec-signup.php', '_blank');
-        toastr.info(
-          'Una vez creado el servidor, vuelve aquí y conéctate usando el botón "Conectar a un servidor existente"'
-        );
-      };
-
       document.getElementById(btn_skip).onclick = () => {
-        // Continue to persona creation without server config
-        // Check if personas already exist (shouldn't happen but safety check)
-        var hasPersonas = Object.keys(SC_Personas).length > 0;
-        if (hasPersonas) {
-          toastr.info('Ya existen personas. Saltando creación de cuenta.');
-          localStorage.setItem('TELESEC_ONBOARDING_COMPLETE', 'true');
-          open_page('login');
-          setUrlHash('login');
-        } else {
-          open_page('login,onboarding-persona');
-          setUrlHash('login,onboarding-persona');
-        }
+        open_page('login');
+        setUrlHash('login');
       };
 
-      document.getElementById(btn_skip + '-save').onclick = () => {
-        var url = document.getElementById(field_couch).value.trim();
-        var secret = document.getElementById(field_secret).value.trim();
+      document.getElementById(btn_register).onclick = async () => {
+        var apiUrl = (document.getElementById(field_api).value || '').trim().replace(/\/$/, '');
+        var tenant = (document.getElementById(field_tenant).value || '').trim();
+        var pass = document.getElementById(field_pass).value;
+        var pass2 = document.getElementById(field_pass2).value;
 
-        if (!url) {
-          toastr.error('Por favor ingresa un servidor CouchDB');
-          return;
-        }
+        if (!apiUrl) { toastr.error('Introduce la URL del servidor'); return; }
+        if (!tenant) { toastr.error('Introduce el nombre del grupo'); return; }
+        if (!pass) { toastr.error('Introduce una contraseña'); return; }
+        if (pass !== pass2) { toastr.error('Las contraseñas no coinciden'); return; }
+        if (pass.length < 6) { toastr.error('La contraseña debe tener al menos 6 caracteres'); return; }
 
-        if (!secret) {
-          toastr.error('La clave de encriptación es obligatoria');
-          return;
-        }
-
-        // Normalize URL: add https:// if no protocol specified
-        var normalizedUrl = url;
-        if (!/^https?:\/\//i.test(url)) {
-          normalizedUrl = 'https://' + url;
-        }
-        var URL_PARSED = parseURL(normalizedUrl);
-        var user = URL_PARSED.username || '';
-        var pass = URL_PARSED.password || '';
-        var dbname = URL_PARSED.pathname ? URL_PARSED.pathname.replace(/^\//, '') : '';
-        var host = URL_PARSED.hostname || normalizedUrl;
-        localStorage.setItem('TELESEC_COUCH_URL', 'https://' + host);
-        localStorage.setItem('TELESEC_COUCH_DBNAME', dbname);
-        localStorage.setItem('TELESEC_COUCH_USER', user);
-        localStorage.setItem('TELESEC_COUCH_PASS', pass);
-        localStorage.setItem('TELESEC_SECRET', secret.toUpperCase());
-        SECRET = secret.toUpperCase();
+        var btn = document.getElementById(btn_register);
+        btn.disabled = true; btn.innerText = 'Registrando…';
 
         try {
-          DB.init({
-            secret: SECRET,
-            remoteServer: 'https://' + host,
-            username: user,
-            password: pass,
-            dbname: dbname || undefined,
+          var res = await fetch(apiUrl + '/api/auth/register-tenant', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: tenant, password: pass }),
           });
-          toastr.success('Servidor configurado correctamente');
-          document.getElementById('loading').style.display = 'block';
-          function waitForReplicationIdle(maxWaitMs, idleMs) {
-            var startTime = Date.now();
-            var lastSeenSync = window.TELESEC_LAST_SYNC || 0;
-            return new Promise((resolve) => {
-              var interval = setInterval(() => {
-                var now = Date.now();
-                var currentSync = window.TELESEC_LAST_SYNC || 0;
-                if (currentSync > lastSeenSync) {
-                  lastSeenSync = currentSync;
-                }
-                var lastActivity = Math.max(lastSeenSync, startTime);
-                var idleLongEnough = now - lastActivity >= idleMs;
-                var timedOut = now - startTime >= maxWaitMs;
-                if (idleLongEnough || timedOut) {
-                  clearInterval(interval);
-                  resolve();
-                }
-              }, 250);
-            });
+          var data = await res.json();
+          if (!res.ok) {
+            toastr.error(data.error || 'Error al registrar el grupo');
+            btn.disabled = false; btn.innerText = 'Registrar grupo y continuar';
+            return;
           }
-
-          // Wait until replication goes idle or timeout
-          waitForReplicationIdle(10000, 2500).then(() => {
-            // Check if personas were replicated from server
-            var hasPersonas = Object.keys(SC_Personas).length > 0;
-            document.getElementById('loading').style.display = 'none';
-            if (hasPersonas) {
-              // Personas found from server, skip persona creation step
-              toastr.info('Se encontraron personas en el servidor. Saltando creación de cuenta.');
-              localStorage.setItem('TELESEC_ONBOARDING_COMPLETE', 'true');
-              open_page('login');
-              setUrlHash('login');
-            } else {
-              // No personas found, continue to persona creation
-              open_page('login,onboarding-persona');
-              setUrlHash('login,onboarding-persona');
-            }
-          });
+          localStorage.setItem('TELESEC_API_URL', apiUrl);
+          toastr.success('Grupo creado. Ahora crea tu primera persona de administrador.');
+          open_page('login,onboarding-persona');
+          setUrlHash('login,onboarding-persona');
         } catch (e) {
-          document.getElementById('loading').style.display = 'none';
-          toastr.error('Error al configurar el servidor: ' + (e.message || e));
+          toastr.error('Error de conexión: ' + (e.message || e));
+          btn.disabled = false; btn.innerText = 'Registrar grupo y continuar';
         }
       };
     } else if (step === 'persona') {
-      // Step 2: "Crea una persona"
+      // After tenant creation: login with the new tenant to create the first admin persona
+      var field_tenant2 = safeuuid();
+      var field_pass3 = safeuuid();
       var field_nombre = safeuuid();
       var btn_crear = safeuuid();
-
-      // Check if personas already exist
-      var hasPersonas = Object.keys(SC_Personas).length > 0;
-      if (hasPersonas) {
-        toastr.info('Se detectaron personas existentes. Redirigiendo al login.');
-        localStorage.setItem('TELESEC_ONBOARDING_COMPLETE', 'true');
-        open_page('login');
-        setUrlHash('login');
-        return;
-      }
 
       container.innerHTML = html`
         <h1>¡Bienvenido a TeleSec! 🎉</h1>
         <h2>Paso 2: Crea tu cuenta de administrador</h2>
-        <p>Para continuar, necesitas crear una cuenta personal con permisos de administrador.</p>
+        <p>Autentícate con el grupo recién creado y añade tu primera persona.</p>
         <fieldset>
-          <label
-            >Tu nombre:
-            <input
-              type="text"
-              id="${field_nombre}"
-              placeholder="Ej: Juan Pérez"
-              autofocus
-            /><br /><br />
+          <label>
+            Nombre del grupo
+            <input type="text" id="${field_tenant2}" /><br /><br />
           </label>
-          <p>
-            <small
-              >ℹ️ Esta cuenta tendrá todos los permisos de administrador y podrás gestionar la
-              aplicación completamente.</small
-            >
-          </p>
+          <label>
+            Contraseña del grupo
+            <input type="password" id="${field_pass3}" /><br /><br />
+          </label>
+          <label>
+            Tu nombre (administrador)
+            <input type="text" id="${field_nombre}" placeholder="Ej: Juan Pérez" /><br /><br />
+          </label>
           <button id="${btn_crear}" class="btn5">Crear cuenta y empezar</button>
         </fieldset>
       `;
 
-      document.getElementById(btn_crear).onclick = () => {
-        var nombre = document.getElementById(field_nombre).value.trim();
-        if (!nombre) {
-          toastr.error('Por favor ingresa tu nombre');
-          return;
-        }
+      document.getElementById(btn_crear).onclick = async () => {
+        var apiUrl = (localStorage.getItem('TELESEC_API_URL') || '').replace(/\/$/, '');
+        var tenant = (document.getElementById(field_tenant2).value || '').trim();
+        var pass = document.getElementById(field_pass3).value;
+        var nombre = (document.getElementById(field_nombre).value || '').trim();
 
-        // Disable button to prevent duplicate creation
-        var btnElement = document.getElementById(btn_crear);
-        btnElement.disabled = true;
-        btnElement.style.opacity = '0.5';
-        btnElement.innerText = 'Creando...';
+        if (!tenant || !pass) { toastr.error('Introduce el grupo y la contraseña'); return; }
+        if (!nombre) { toastr.error('Introduce tu nombre'); return; }
 
-        // Create persona with all admin permissions from PERMS object
-        var allPerms = Object.keys(PERMS).join(',') + ',';
-        var personaId = safeuuid('admin-');
-        var persona = {
-          Nombre: nombre,
-          Roles: allPerms,
-          Region: '',
-          Monedero_Balance: 0,
-          markdown: 'Cuenta de administrador creada durante el onboarding',
-        };
+        var btn = document.getElementById(btn_crear);
+        btn.disabled = true; btn.innerText = 'Creando…';
 
-        DB.put('personas', personaId, persona)
-          .then(() => {
-            toastr.success('¡Cuenta creada exitosamente! 🎉');
-            localStorage.setItem('TELESEC_ONBOARDING_COMPLETE', 'true');
-            localStorage.setItem('TELESEC_ADMIN_ID', personaId);
-
-            // Auto-login
-            SUB_LOGGED_IN_ID = personaId;
-            SUB_LOGGED_IN_DETAILS = persona;
-            SUB_LOGGED_IN = true;
-            SetPages();
-
-            setTimeout(() => {
-              open_page('index');
-              setUrlHash('index');
-            }, 500);
-          })
-          .catch((e) => {
-            toastr.error('Error creando cuenta: ' + (e.message || e));
-            // Re-enable button on error
-            btnElement.disabled = false;
-            btnElement.style.opacity = '1';
-            btnElement.innerText = 'Crear cuenta y empezar';
+        try {
+          // Authenticate the tenant
+          var loginRes = await fetch(apiUrl + '/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tenant: tenant, password: pass }),
           });
+          var loginData = await loginRes.json();
+          if (!loginRes.ok) {
+            toastr.error(loginData.error || 'Credenciales incorrectas');
+            btn.disabled = false; btn.innerText = 'Crear cuenta y empezar';
+            return;
+          }
+
+          // We need a persona JWT to push to the backend.
+          // Create a temporary admin persona via the DB (will be pushed once replication starts)
+          var allPerms = Object.keys(PERMS).join(',') + ',';
+          var personaId = safeuuid('admin-');
+          var persona = {
+            Nombre: nombre,
+            Roles: allPerms,
+            Region: '',
+            Monedero_Balance: 0,
+            markdown: 'Cuenta de administrador creada durante el onboarding',
+          };
+
+          // Push the persona directly to the backend using the tenant token
+          var tenantToken = loginData.tenant_token;
+          var tenantId = loginData.tenant_id;
+
+          // Push persona doc via the replicate endpoint using tenant_token
+          // We create a temporary full JWT by selecting an empty persona (trick: pass empty id)
+          // Instead: just insert directly via a helper call, then do full login
+          // Use a POST to a special bootstrap endpoint doesn't exist – create persona via push
+          // after faking persona selection with a non-existing persona_id is not possible.
+          //
+          // Better approach: store the persona locally first, then after proper login the
+          // replication will push it to the server. We use the existing tenant login to get
+          // a full JWT by selecting a dummy persona that we'll create.
+          //
+          // Simplest approach: create persona locally in RxDB, then log in and trigger replication.
+          // The persona needs to be in the DB for select-persona to work.
+          // Since this is a brand-new tenant there are no personas yet → bootstrap:
+          // 1. Store persona locally
+          // 2. Push directly via /api/replicate/push using tenant_token (which has step=select_persona)
+          // The backend push endpoint requires a full persona token, so we need a different approach.
+          //
+          // Solution: add a bootstrap endpoint to the backend that allows creating the first admin
+          // persona using the tenant_token.
+
+          var pushRes = await fetch(apiUrl + '/api/auth/bootstrap-admin', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + tenantToken,
+            },
+            body: JSON.stringify({ persona_id: personaId, Nombre: nombre, Roles: allPerms }),
+          });
+
+          if (!pushRes.ok) {
+            var pushErr = await pushRes.json().catch(() => ({}));
+            toastr.error(pushErr.error || 'Error al crear la persona en el servidor');
+            btn.disabled = false; btn.innerText = 'Crear cuenta y empezar';
+            return;
+          }
+
+          // Now select the persona to get a full JWT
+          var selRes = await fetch(apiUrl + '/api/auth/select-persona', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + tenantToken,
+            },
+            body: JSON.stringify({ persona_id: personaId }),
+          });
+          var selData = await selRes.json();
+          if (!selRes.ok) {
+            toastr.error(selData.error || 'Error al seleccionar la persona');
+            btn.disabled = false; btn.innerText = 'Crear cuenta y empezar';
+            return;
+          }
+
+          _applyLogin(selData, persona);
+          localStorage.setItem('TELESEC_ONBOARDING_COMPLETE', 'true');
+          toastr.success('¡Cuenta de administrador creada! 🎉');
+          setTimeout(() => { open_page('index'); setUrlHash('index'); }, 500);
+        } catch (e) {
+          toastr.error('Error: ' + (e.message || e));
+          btn.disabled = false; btn.innerText = 'Crear cuenta y empezar';
+        }
       };
     }
   },
+
+  // ------------------------------------------------------------------
+  // Server configuration (settings page)
+  // ------------------------------------------------------------------
   edit: function (mid) {
-    // Handle onboarding routes
-    if (mid === 'onboarding-config') {
-      PAGES.login.onboarding('config');
-      return;
-    }
-    if (mid === 'onboarding-persona') {
-      PAGES.login.onboarding('persona');
-      return;
-    }
-    // Setup form to configure CouchDB remote and initial group/secret
-    var field_couch = safeuuid();
-    var field_secret = safeuuid();
+    if (mid === 'onboarding-config') { PAGES.login.onboarding('config'); return; }
+    if (mid === 'onboarding-persona') { PAGES.login.onboarding('persona'); return; }
+
+    var field_api = safeuuid();
     var btn_save = safeuuid();
+
     container.innerHTML = html`
-      <h1>Configuración del servidor CouchDB</h1>
-      <b
-        >Aviso: Después de guardar, la aplicación intentará sincronizar con el servidor CouchDB en
-        segundo plano. Puede que falten registros hasta que se termine. Tenga paciencia.</b
-      >
+      <h1>Configuración del servidor</h1>
       <fieldset>
-        <label
-          >Origen CouchDB (ej: usuario:contraseña@servidor/basededatos)
-          <input
-            type="text"
-            id="${field_couch}"
-            value="${makeCouchURLDisplay(
-              localStorage.getItem('TELESEC_COUCH_URL'),
-              localStorage.getItem('TELESEC_COUCH_USER'),
-              localStorage.getItem('TELESEC_COUCH_PASS'),
-              localStorage.getItem('TELESEC_COUCH_DBNAME')
-            )}"
-          /><br /><br />
-        </label>
-        <label
-          >Clave de encriptación (opcional) - usada para cifrar datos en reposo
-          <input
-            type="password"
-            id="${field_secret}"
-            value="${localStorage.getItem('TELESEC_SECRET') || ''}"
-          /><br /><br />
+        <label>
+          URL del servidor TeleSec (ej: https://mi-servidor.com)
+          <input type="url" id="${field_api}"
+            value="${localStorage.getItem('TELESEC_API_URL') || ''}" /><br /><br />
         </label>
         <button id="${btn_save}" class="btn5">Guardar y Conectar</button>
-        <button onclick="setUrlHash('login');" class="btn3">Cancelar</button>
+        <button onclick="setUrlHash('login');" class="btn3" style="margin-left:8px;">Cancelar</button>
       </fieldset>
-      <p>
-        Después de guardar, el navegador intentará sincronizar en segundo plano con el servidor.
-      </p>
     `;
-    // Helper: normalize and apply config object
+
     document.getElementById(btn_save).onclick = () => {
-      var url = document.getElementById(field_couch).value.trim();
-      var secret = document.getElementById(field_secret).value.trim();
-      var normalizedUrl = url;
-      if (!/^https?:\/\//i.test(url)) {
-        normalizedUrl = 'https://' + url;
-      }
-      var URL_PARSED = parseURL(normalizedUrl);
-      var host = URL_PARSED.hostname || url;
-      var user = URL_PARSED.username || '';
-      var pass = URL_PARSED.password || '';
-      var dbname = URL_PARSED.pathname ? URL_PARSED.pathname.replace(/^\//, '') : '';
-      console.log('Parsed URL:', { host, user, pass, dbname });
-      localStorage.setItem('TELESEC_COUCH_URL', 'https://' + host);
-      localStorage.setItem('TELESEC_COUCH_DBNAME', dbname);
-      localStorage.setItem('TELESEC_COUCH_USER', user);
-      localStorage.setItem('TELESEC_COUCH_PASS', pass);
-      localStorage.setItem('TELESEC_SECRET', secret.toUpperCase());
-      SECRET = secret.toUpperCase();
-      try {
-        DB.init({
-          secret: SECRET,
-          remoteServer: 'https://' + host,
-          username: user,
-          password: pass,
-          dbname: dbname || undefined,
-        });
-        toastr.success('Iniciando sincronización con CouchDB');
-        location.hash = '#login';
-        //location.reload();
-      } catch (e) {
-        toastr.error('Error al iniciar sincronización: ' + e.message);
-      }
+      var apiUrl = (document.getElementById(field_api).value || '').trim().replace(/\/$/, '');
+      if (!apiUrl) { toastr.error('Introduce la URL del servidor'); return; }
+      localStorage.setItem('TELESEC_API_URL', apiUrl);
+      toastr.success('URL guardada');
+      setUrlHash('login');
     };
   },
-  index: function (mid) {
-    // Check if onboarding is needed
-    var onboardingComplete = localStorage.getItem('TELESEC_ONBOARDING_COMPLETE');
-    var hasPersonas = Object.keys(SC_Personas).length > 0;
 
-    // If no personas exist and onboarding not complete, redirect to onboarding
-    if (!hasPersonas && !onboardingComplete && !AC_BYPASS) {
+  // ------------------------------------------------------------------
+  // Main login screen
+  // ------------------------------------------------------------------
+  index: function () {
+    var onboardingComplete = localStorage.getItem('TELESEC_ONBOARDING_COMPLETE');
+    var apiUrl = localStorage.getItem('TELESEC_API_URL') || '';
+
+    if (!apiUrl && !onboardingComplete && !AC_BYPASS) {
       open_page('login,onboarding-config');
       setUrlHash('login,onboarding-config');
       return;
     }
 
-    var field_persona = safeuuid();
-    var btn_guardar = safeuuid();
-    var btn_reload = safeuuid();
-    var div_actions = safeuuid();
-    container.innerHTML = html`
-      <h1>Iniciar sesión</h1>
-      <fieldset>
-        <legend>Valores</legend>
-        <input type="hidden" id="${field_persona}" />
-        <div id="${div_actions}"></div>
-        <button class="btn5" id="${btn_guardar}">Acceder</button>
-        <button class="btn3" id="${btn_reload}">Recargar lista</button>
-        <a class="button btn1" href="#login,setup">Configurar base de datos</a>
-      </fieldset>
-    `;
-    var divact = document.getElementById(div_actions);
-    addCategory_Personas(
-      divact,
-      SC_Personas,
-      '',
-      (value) => {
-        document.getElementById(field_persona).value = value;
-      },
-      '¿Quién eres?',
-      true,
-      "- Pulsa recargar o rellena los credenciales abajo, si quieres crear un nuevo grupo, pulsa el boton 'Desde cero' -"
-    );
-    document.getElementById(btn_guardar).onclick = () => {
-      if (document.getElementById(field_persona).value == '') {
-        alert('Tienes que elegir tu cuenta!');
-        return;
-      }
-      SUB_LOGGED_IN_ID = document.getElementById(field_persona).value;
-      SUB_LOGGED_IN_DETAILS = SC_Personas[SUB_LOGGED_IN_ID];
-      SUB_LOGGED_IN = true;
-      SetPages();
-      if (location.hash.replace('#', '').split("?")[0].startsWith('login')) {
-        open_page('index');
-        setUrlHash('index');
-      } else {
-        open_page(location.hash.replace('#', '').split("?")[0]);
-      }
-    };
+    var step = 'tenant'; // 'tenant' | 'persona'
+    var tenantToken = '';
+    var personasList = [];
 
-    document.getElementById(btn_reload).onclick = () => {
-      open_page('login');
-    };
+    var div_form = safeuuid();
+    var div_personas = safeuuid();
 
-    // AC_BYPASS: allow creating a local persona from the login screen
-    if (AC_BYPASS) {
-      var btn_bypass_create = safeuuid();
-      divact.innerHTML += `<button id="${btn_bypass_create}" class="btn2" style="margin-left:10px;">Crear persona local (bypass)</button>`;
-      document.getElementById(btn_bypass_create).onclick = () => {
-        var name = prompt('Nombre de la persona (ej: Admin):');
-        if (!name) return;
-        var id = 'bypass-' + Date.now();
-        var persona = { Nombre: name, Roles: 'ADMIN,' };
-        DB.put('personas', id, persona)
-          .then(() => {
-            toastr.success('Persona creada: ' + id);
-            localStorage.setItem('TELESEC_BYPASS_ID', id);
-            SUB_LOGGED_IN_ID = id;
-            SUB_LOGGED_IN_DETAILS = persona;
-            SUB_LOGGED_IN = true;
-            SetPages();
-            open_page('index');
-          })
-          .catch((e) => {
-            toastr.error('Error creando persona: ' + (e && e.message ? e.message : e));
+    function renderTenantForm() {
+      var field_tenant = safeuuid();
+      var field_pass = safeuuid();
+      var btn_login = safeuuid();
+
+      document.getElementById(div_form).innerHTML = html`
+        <h2>Iniciar sesión</h2>
+        <label>
+          Grupo (tenant)
+          <input type="text" id="${field_tenant}"
+            value="${localStorage.getItem('TELESEC_LAST_TENANT') || ''}"
+            autofocus /><br /><br />
+        </label>
+        <label>
+          Contraseña del grupo
+          <input type="password" id="${field_pass}" /><br /><br />
+        </label>
+        <button id="${btn_login}" class="btn5">Acceder</button>
+        <a class="button btn1" href="#login,setup" style="margin-left:8px;">Configurar servidor</a>
+        ${!onboardingComplete
+          ? '<a class="button btn2" href="#login,onboarding-config" style="margin-left:8px;">Crear nuevo grupo</a>'
+          : ''}
+      `;
+
+      document.getElementById(btn_login).onclick = async () => {
+        var tenant = (document.getElementById(field_tenant).value || '').trim();
+        var pass = document.getElementById(field_pass).value;
+        if (!tenant || !pass) { toastr.error('Introduce el grupo y la contraseña'); return; }
+
+        var btn = document.getElementById(btn_login);
+        btn.disabled = true; btn.innerText = 'Accediendo…';
+
+        try {
+          var currentApiUrl = (localStorage.getItem('TELESEC_API_URL') || '').replace(/\/$/, '');
+          if (!currentApiUrl) {
+            toastr.error('No hay servidor configurado. Usa "Configurar servidor".');
+            btn.disabled = false; btn.innerText = 'Acceder';
+            return;
+          }
+          var res = await fetch(currentApiUrl + '/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tenant: tenant, password: pass }),
           });
+          var data = await res.json();
+          if (!res.ok) {
+            toastr.error(data.error || 'Credenciales incorrectas');
+            btn.disabled = false; btn.innerText = 'Acceder';
+            return;
+          }
+          localStorage.setItem('TELESEC_LAST_TENANT', tenant);
+          tenantToken = data.tenant_token;
+          personasList = data.personas || [];
+
+          if (personasList.length === 0) {
+            toastr.warning('No hay personas en este grupo. Crea una desde la configuración.');
+            btn.disabled = false; btn.innerText = 'Acceder';
+            return;
+          }
+
+          step = 'persona';
+          renderPersonaStep(data.tenant_name || tenant);
+        } catch (e) {
+          toastr.error('Error de conexión: ' + (e.message || e));
+          btn.disabled = false; btn.innerText = 'Acceder';
+        }
+      };
+
+      // Allow pressing Enter in password field
+      setTimeout(() => {
+        var passEl = document.getElementById(field_pass);
+        if (passEl) passEl.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') document.getElementById(btn_login).click();
+        });
+      }, 50);
+    }
+
+    function renderPersonaStep(tenantName) {
+      var div_act = safeuuid();
+      var field_persona = safeuuid();
+      var btn_sel = safeuuid();
+      var btn_back = safeuuid();
+
+      document.getElementById(div_form).innerHTML = html`
+        <h2>¡Hola, ${tenantName}!</h2>
+        <p>Elige tu cuenta:</p>
+        <div id="${div_act}"></div>
+        <input type="hidden" id="${field_persona}" />
+        <button id="${btn_sel}" class="btn5" style="margin-top:10px;">Entrar</button>
+        <button id="${btn_back}" class="btn3" style="margin-left:8px;">← Volver</button>
+      `;
+
+      var divAct = document.getElementById(div_act);
+      addCategory_Personas(
+        divAct,
+        // Build a temporary SC_Personas-like object from the server list
+        personasList.reduce((acc, p) => { acc[p.id] = p; return acc; }, {}),
+        '',
+        (value) => { document.getElementById(field_persona).value = value; },
+        '¿Quién eres?',
+        true,
+        '— Selecciona tu cuenta —'
+      );
+
+      document.getElementById(btn_back).onclick = () => {
+        step = 'tenant';
+        renderTenantForm();
+      };
+
+      document.getElementById(btn_sel).onclick = async () => {
+        var personaId = document.getElementById(field_persona).value;
+        if (!personaId) { toastr.error('Elige tu cuenta'); return; }
+
+        var btn = document.getElementById(btn_sel);
+        btn.disabled = true; btn.innerText = 'Entrando…';
+
+        try {
+          var currentApiUrl = (localStorage.getItem('TELESEC_API_URL') || '').replace(/\/$/, '');
+          var res = await fetch(currentApiUrl + '/api/auth/select-persona', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + tenantToken,
+            },
+            body: JSON.stringify({ persona_id: personaId }),
+          });
+          var data = await res.json();
+          if (!res.ok) {
+            toastr.error(data.error || 'Error al seleccionar la persona');
+            btn.disabled = false; btn.innerText = 'Entrar';
+            return;
+          }
+          // Find persona details from the list for immediate use
+          var personaDetails = personasList.find((p) => p.id === personaId) || { Nombre: personaId };
+          _applyLogin(data, personaDetails);
+          if (location.hash.replace('#', '').split('?')[0].startsWith('login')) {
+            open_page('index');
+            setUrlHash('index');
+          } else {
+            open_page(location.hash.replace('#', '').split('?')[0]);
+          }
+        } catch (e) {
+          toastr.error('Error: ' + (e.message || e));
+          btn.disabled = false; btn.innerText = 'Entrar';
+        }
       };
     }
+
+    container.innerHTML = html`<div id="${div_form}"></div><div id="${div_personas}"></div>`;
+    renderTenantForm();
   },
 };
+
+// ------------------------------------------------------------------
+// Helper: store JWT + set global session state + kick off replication
+// ------------------------------------------------------------------
+function _applyLogin(data, personaDetails) {
+  localStorage.setItem('TELESEC_JWT', data.access_token);
+  if (data.refresh_token) localStorage.setItem('TELESEC_REFRESH_TOKEN', data.refresh_token);
+  localStorage.setItem('TELESEC_PERSONA_ID', data.persona_id || '');
+  localStorage.setItem('TELESEC_TENANT_ID', data.tenant_id || '');
+  localStorage.setItem('TELESEC_TENANT_NAME', data.tenant_name || '');
+
+  SUB_LOGGED_IN_ID = data.persona_id || '';
+  SUB_LOGGED_IN_DETAILS = Object.assign(
+    { Nombre: data.persona_id, Roles: (data.roles || []).join(',') + ',' },
+    personaDetails || {}
+  );
+  SUB_LOGGED_IN = true;
+  SetPages();
+
+  // Start DB replication with the new token
+  if (typeof DB !== 'undefined' && DB.startReplication) {
+    try { DB.startReplication(); } catch (e) {}
+  }
+}
+
+// ------------------------------------------------------------------
+// Restore session on page load (if JWT still valid)
+// ------------------------------------------------------------------
+(function restoreSession() {
+  var jwt = localStorage.getItem('TELESEC_JWT');
+  var personaId = localStorage.getItem('TELESEC_PERSONA_ID');
+  var tenantId = localStorage.getItem('TELESEC_TENANT_ID');
+  if (!jwt || !personaId) return;
+
+  // Minimal session restore without a network call (JWT may have expired,
+  // but we optimistically restore so the user sees the app; replication
+  // will fail with 401 if the token is expired, triggering a forced logout).
+  var roles = [];
+  try {
+    var payload = JSON.parse(atob(jwt.split('.')[1]));
+    if (payload.exp && payload.exp * 1000 < Date.now()) {
+      // Token expired – clear and force re-login
+      localStorage.removeItem('TELESEC_JWT');
+      return;
+    }
+    roles = payload.roles || [];
+  } catch (e) {}
+
+  SUB_LOGGED_IN_ID = personaId;
+  // SC_Personas will be populated by the DB.map() listener in app_modules.js;
+  // use a quick lookup once it becomes available.
+  var attempts = 0;
+  var timer = setInterval(function () {
+    attempts++;
+    var details = SC_Personas[personaId];
+    if (details) {
+      SUB_LOGGED_IN_DETAILS = details;
+      clearInterval(timer);
+    } else if (attempts > 20) {
+      // Fallback after ~5 s
+      SUB_LOGGED_IN_DETAILS = {
+        Nombre: localStorage.getItem('TELESEC_TENANT_NAME') || personaId,
+        Roles: roles.join(',') + ',',
+      };
+      clearInterval(timer);
+    }
+  }, 250);
+
+  SUB_LOGGED_IN_DETAILS = {
+    Nombre: localStorage.getItem('TELESEC_TENANT_NAME') || personaId,
+    Roles: roles.join(',') + ',',
+  };
+  SUB_LOGGED_IN = true;
+  SetPages();
+  if (typeof DB !== 'undefined' && DB.startReplication) {
+    try { DB.startReplication(); } catch (e) {}
+  }
+})();
