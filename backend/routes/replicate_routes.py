@@ -4,7 +4,8 @@ from datetime import datetime, timezone
 from flask import Blueprint, jsonify, request
 
 from ..models import Document, db
-from ..rbac import get_tenant_id, require_auth
+from ..auth import get_persona_roles
+from ..rbac import can_edit_table, get_persona_id, get_tenant_id, require_auth
 
 bp = Blueprint("replicate", __name__, url_prefix="/api/replicate")
 
@@ -90,18 +91,31 @@ def pull():
 def push():
     """Accept an array of documents from the RxDB client and persist them.
 
-    Returns an empty array on success (no conflicts).  Conflict handling is
-    last-write-wins: the server always accepts the incoming document.
+    Per-document RBAC is enforced by re-reading the persona's current roles
+    from the database (not the JWT) so that revoked permissions take effect
+    immediately.  Documents in tables where the authenticated persona lacks
+    edit permission are rejected: the server's current state is returned as a
+    conflict so that RxDB reverts those documents on the client.  Documents
+    the persona *is* allowed to write are persisted with last-write-wins
+    semantics.
+
+    Returns a (possibly empty) array of conflicting master-state documents.
     """
     tenant_id = get_tenant_id()
     if not tenant_id:
         return jsonify({"error": "No tenant context"}), 400
 
+    persona_id = get_persona_id()
+    if not persona_id:
+        return jsonify({"error": "No persona context"}), 400
+
     body = request.get_json(force=True) or []
     if not isinstance(body, list):
         body = [body]
 
+    roles = get_persona_roles(tenant_id, persona_id)
     now = _iso_now()
+    conflicts = []
 
     with db.atomic():
         for item in body:
@@ -112,6 +126,42 @@ def push():
             table_name = item.get("table_name") or (
                 doc_id.split(":", 1)[0] if ":" in doc_id else "unknown"
             )
+
+            # RBAC: check whether this persona may write to this table.
+            if not can_edit_table(table_name, roles):
+                # Return the server's authoritative state so RxDB reverts the
+                # client's change for this document.
+                try:
+                    existing = Document.get(
+                        (Document.id == doc_id) & (Document.tenant_id == tenant_id)
+                    )
+                    try:
+                        existing_data = json.loads(existing.data)
+                    except json.JSONDecodeError:
+                        existing_data = {}
+                    conflicts.append(
+                        {
+                            "id": existing.id,
+                            "table_name": existing.table_name,
+                            "data": existing_data,
+                            "updated_at": str(existing.updated_at),
+                            "_deleted": bool(existing.deleted),
+                        }
+                    )
+                except Document.DoesNotExist:
+                    # No server copy exists; signal a conflict with a
+                    # tombstone so the client discards its local write.
+                    conflicts.append(
+                        {
+                            "id": doc_id,
+                            "table_name": table_name,
+                            "data": {},
+                            "updated_at": now,
+                            "_deleted": True,
+                        }
+                    )
+                continue
+
             data = item.get("data") or {}
             deleted = bool(item.get("_deleted", False))
             data_json = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
@@ -135,4 +185,4 @@ def push():
                     updated_at=now,
                 )
 
-    return jsonify([])  # no conflicts
+    return jsonify(conflicts)
