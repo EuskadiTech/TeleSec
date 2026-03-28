@@ -62,9 +62,12 @@ for file in HANDLEPARSE:
 # ---------------------------------------------------------------------------
 def bundle_rxdb():
     """Build the RxDB browser bundle using esbuild."""
-    # Ensure npm dependencies are installed
-    if not os.path.exists("node_modules"):
-        print("Installing npm dependencies (first run)…")
+    # Check if node_modules is up-to-date by comparing package.json mtime
+    pkg_mtime = os.path.getmtime("package.json") if os.path.exists("package.json") else 0
+    nm_mtime = os.path.getmtime("node_modules/.package-lock.json") if os.path.exists("node_modules/.package-lock.json") else 0
+
+    if not os.path.exists("node_modules") or pkg_mtime > nm_mtime:
+        print("Installing npm dependencies…")
         result = subprocess.run(
             ["npm", "install", "--prefer-offline"],
             capture_output=True,

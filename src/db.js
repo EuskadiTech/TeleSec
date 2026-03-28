@@ -233,12 +233,11 @@ var DB = (function () {
     const docId = table + ':' + id;
     const now = new Date().toISOString();
     try {
+      const existing = await collection.findOne(docId).exec();
       if (data === null) {
-        const existing = await collection.findOne(docId).exec();
         if (existing) await existing.remove();
         return;
       }
-      const existing = await collection.findOne(docId).exec();
       if (existing) {
         await existing.patch({ data: data, updated_at: now });
       } else {

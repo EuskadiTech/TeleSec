@@ -15,6 +15,8 @@ def create_app(config: dict = None) -> Flask:
     if config:
         app.config.update(config)
 
+    Config.warn_if_insecure()
+
     origins = app.config.get("CORS_ORIGINS", "*")
     CORS(app, origins=origins, supports_credentials=True)
 

@@ -154,27 +154,6 @@ PAGES.login = {
 
           // Push the persona directly to the backend using the tenant token
           var tenantToken = loginData.tenant_token;
-          var tenantId = loginData.tenant_id;
-
-          // Push persona doc via the replicate endpoint using tenant_token
-          // We create a temporary full JWT by selecting an empty persona (trick: pass empty id)
-          // Instead: just insert directly via a helper call, then do full login
-          // Use a POST to a special bootstrap endpoint doesn't exist – create persona via push
-          // after faking persona selection with a non-existing persona_id is not possible.
-          //
-          // Better approach: store the persona locally first, then after proper login the
-          // replication will push it to the server. We use the existing tenant login to get
-          // a full JWT by selecting a dummy persona that we'll create.
-          //
-          // Simplest approach: create persona locally in RxDB, then log in and trigger replication.
-          // The persona needs to be in the DB for select-persona to work.
-          // Since this is a brand-new tenant there are no personas yet → bootstrap:
-          // 1. Store persona locally
-          // 2. Push directly via /api/replicate/push using tenant_token (which has step=select_persona)
-          // The backend push endpoint requires a full persona token, so we need a different approach.
-          //
-          // Solution: add a bootstrap endpoint to the backend that allows creating the first admin
-          // persona using the tenant_token.
 
           var pushRes = await fetch(apiUrl + '/api/auth/bootstrap-admin', {
             method: 'POST',
