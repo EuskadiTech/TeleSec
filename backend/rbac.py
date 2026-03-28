@@ -61,3 +61,34 @@ def get_persona_id() -> str:
 
 def get_roles() -> list:
     return get_jwt().get("roles", [])
+
+
+# ---------------------------------------------------------------------------
+# Table-level edit permissions
+# ---------------------------------------------------------------------------
+
+# Maps table_name (lowercase) → roles that grant write access to that table.
+# ADMIN always bypasses these checks.
+# Tables not listed here are restricted to ADMIN only.
+TABLE_EDIT_ROLES: dict[str, list[str]] = {
+    "materiales": ["MATERIALES_EDIT"],
+    "personas": ["PERSONAS_EDIT"],
+    "supercafe": ["SUPERCAFE_EDIT"],
+    "comedor": ["COMEDOR_EDIT"],
+    "notificaciones": ["NOTIFICACIONES_EDIT"],
+    "resumen_diario": ["RESUMEN_DIARIO_EDIT"],
+}
+
+
+def can_edit_table(table_name: str, roles: list) -> bool:
+    """Return True if *roles* grant edit access to *table_name*.
+
+    ADMIN always passes.  Tables not present in TABLE_EDIT_ROLES are
+    restricted to ADMIN only (deny-by-default for unknown tables).
+    """
+    if "ADMIN" in roles:
+        return True
+    required = TABLE_EDIT_ROLES.get(str(table_name or "").lower())
+    if required is None:
+        return False
+    return any(r in roles for r in required)
