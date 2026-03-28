@@ -53,8 +53,10 @@ PAGES.supercafe = {
           <input readonly disabled type="text" id="${field_estado}" value="%%" />
           <br />Modificar en el listado de comandas<br />
         </label>
-        <button id=${btn_guardar} class="btn5">Guardar</button>
-        <button id=${btn_borrar} class="rojo">Borrar</button>
+        <div>
+          <button id=${btn_guardar} class="btn5">Guardar</button>
+          <button id=${btn_borrar} class="rojo">Borrar</button>
+        </div>
       </fieldset>
     `;
     var currentData = {};
