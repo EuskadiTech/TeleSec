@@ -236,13 +236,6 @@ PAGES.login = {
   // ------------------------------------------------------------------
   index: function () {
     var onboardingComplete = localStorage.getItem('TELESEC_ONBOARDING_COMPLETE');
-    var apiUrl = localStorage.getItem('TELESEC_API_URL') || '';
-
-    if (!apiUrl && !onboardingComplete && !AC_BYPASS) {
-      open_page('login,onboarding-config');
-      setUrlHash('login,onboarding-config');
-      return;
-    }
 
     var step = 'tenant'; // 'tenant' | 'persona'
     var tenantToken = '';
