@@ -1,0 +1,27 @@
+{% extends "core/base.html" %}
+{% block title %}Ordenadores – TeleSec{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="fw-bold"><i class="bi bi-display text-primary me-2"></i>Ordenadores</h2>
+  <a href="{% url 'list_informes' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Volver</a>
+</div>
+<div class="row g-3">
+  {% for o in ordenadores %}
+  <div class="col-md-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h6 class="fw-bold mb-1"><i class="bi bi-pc me-1 text-primary"></i>{{ o.hostname }}</h6>
+        <div class="text-muted small">Aula: {{ o.aula|default:"—" }}</div>
+        <div class="text-muted small">Usuario: {{ o.usuario_actual|default:"—" }}</div>
+        <div class="text-muted small text-truncate" title="{{ o.app_actual_titulo }}">App: {{ o.app_actual_titulo|default:"—" }}</div>
+        {% if o.last_seen_at %}
+        <div class="text-muted" style="font-size: 0.7rem;">Visto: {{ o.last_seen_at|date:"d/m H:i" }}</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="col-12 text-center text-muted py-5">No hay ordenadores registrados.</div>
+  {% endfor %}
+</div>
+{% endblock %}

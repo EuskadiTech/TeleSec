@@ -1,0 +1,30 @@
+{% extends "core/base.html" %}
+{% block title %}SuperCafé – TeleSec{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="fw-bold"><i class="bi bi-cup-straw text-primary me-2"></i>SuperCafé</h2>
+  <a href="{% url 'create_pedido' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Nuevo pedido</a>
+</div>
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead class="table-light"><tr><th>Persona</th><th>Fecha</th><th>Total</th><th>Estado</th><th class="text-end">Acciones</th></tr></thead>
+      <tbody>
+        {% for p in pedidos %}
+        <tr>
+          <td class="fw-semibold">{{ p.persona.nombre }}</td>
+          <td class="text-muted small">{{ p.fecha|date:"d/m/Y H:i" }}</td>
+          <td>{{ p.total|floatformat:2 }} €</td>
+          <td><span class="badge {% if p.estado == 'Pagado' %}bg-success{% elif p.estado == 'Deuda' %}bg-danger{% else %}bg-warning text-dark{% endif %}">{{ p.estado }}</span></td>
+          <td class="text-end">
+            <a href="{% url 'edit_pedido' p.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="text-center text-muted py-4">No hay pedidos.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

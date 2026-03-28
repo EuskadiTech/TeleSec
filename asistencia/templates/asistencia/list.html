@@ -1,0 +1,36 @@
+{% extends "core/base.html" %}
+{% block title %}Asistencia – TeleSec{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="fw-bold"><i class="bi bi-calendar-check-fill text-primary me-2"></i>Asistencia</h2>
+  <a href="{% url 'create_asistencia' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Registrar</a>
+</div>
+<form class="mb-3 d-flex gap-2 align-items-center" method="get">
+  <label class="fw-semibold">Fecha:</label>
+  <input type="date" name="fecha" class="form-control" style="width:auto" value="{{ fecha|date:'Y-m-d' }}">
+  <button type="submit" class="btn btn-outline-primary">Ver</button>
+</form>
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead class="table-light"><tr><th>Persona</th><th>Estado</th><th>Notas</th><th class="text-end">Editar</th></tr></thead>
+      <tbody>
+        {% for r in registros %}
+        <tr>
+          <td class="fw-semibold">{{ r.persona.nombre }}</td>
+          <td>
+            <span class="badge {% if r.estado == 'Presente' %}bg-success{% elif r.estado == 'Ausente' %}bg-danger{% elif r.estado == 'Tarde' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+              {{ r.estado }}
+            </span>
+          </td>
+          <td class="text-muted small">{{ r.notas|default:"—" }}</td>
+          <td class="text-end"><a href="{% url 'edit_asistencia' r.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="text-center text-muted py-4">No hay registros para esta fecha.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

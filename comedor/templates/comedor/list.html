@@ -1,0 +1,34 @@
+{% extends "core/base.html" %}
+{% block title %}Menús Comedor – TeleSec{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="fw-bold"><i class="bi bi-cup-hot-fill text-primary me-2"></i>Comedor</h2>
+  <a href="{% url 'create_menu' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Nuevo menú</a>
+</div>
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr><th>Fecha</th><th>Tipo</th><th>1º</th><th>2º</th><th>Postre</th><th class="text-end">Acciones</th></tr>
+      </thead>
+      <tbody>
+        {% for m in menus %}
+        <tr>
+          <td>{{ m.fecha }}</td>
+          <td><span class="badge bg-info text-dark">{{ m.tipo }}</span></td>
+          <td>{{ m.primero|default:"—" }}</td>
+          <td>{{ m.segundo|default:"—" }}</td>
+          <td>{{ m.postre|default:"—" }}</td>
+          <td class="text-end">
+            <a href="{% url 'edit_menu' m.pk %}" class="btn btn-sm btn-outline-secondary me-1"><i class="bi bi-pencil"></i></a>
+            <a href="{% url 'delete_menu' m.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center text-muted py-4">No hay menús registrados.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

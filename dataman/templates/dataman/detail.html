@@ -1,0 +1,37 @@
+{% extends "core/base.html" %}
+{% block title %}{{ tabla.nombre }} – DataMan{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="fw-bold"><i class="bi bi-table text-primary me-2"></i>{{ tabla.nombre }}</h2>
+    <a href="{% url 'list_tablas' %}" class="text-muted small"><i class="bi bi-arrow-left me-1"></i>Volver</a>
+  </div>
+  <a href="{% url 'create_fila' tabla.pk %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Añadir fila</a>
+</div>
+{% if filas %}
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          {% for key in filas.0.datos.keys %}<th>{{ key }}</th>{% endfor %}
+          <th class="text-end">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for fila in filas %}
+        <tr>
+          {% for val in fila.datos.values %}<td>{{ val }}</td>{% endfor %}
+          <td class="text-end">
+            <a href="{% url 'delete_fila' fila.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="text-center text-muted py-5">No hay datos aún. <a href="{% url 'create_fila' tabla.pk %}">Añade la primera fila.</a></div>
+{% endif %}
+{% endblock %}

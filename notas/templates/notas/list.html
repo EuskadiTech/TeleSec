@@ -1,0 +1,30 @@
+{% extends "core/base.html" %}
+{% block title %}Notas – TeleSec{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="fw-bold"><i class="bi bi-journal-text text-primary me-2"></i>Notas</h2>
+  <a href="{% url 'create_nota' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Nueva nota</a>
+</div>
+<div class="row g-3">
+  {% for n in notas %}
+  <div class="col-md-6 col-lg-4">
+    <div class="card h-100 shadow-sm {% if n.tipo == 'Alerta' %}border-danger{% endif %}">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <h6 class="card-title fw-bold mb-1">{{ n.titulo }}</h6>
+          <span class="badge {% if n.tipo == 'Alerta' %}bg-danger{% else %}bg-secondary{% endif %}">{{ n.tipo }}</span>
+        </div>
+        <p class="card-text text-muted small">{{ n.contenido_md|truncatechars:120 }}</p>
+        {% if n.persona %}<div class="text-muted small"><i class="bi bi-person me-1"></i>{{ n.persona.nombre }}</div>{% endif %}
+      </div>
+      <div class="card-footer bg-transparent d-flex gap-2">
+        <a href="{% url 'edit_nota' n.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+        <a href="{% url 'delete_nota' n.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="col-12 text-center text-muted py-5">No hay notas.</div>
+  {% endfor %}
+</div>
+{% endblock %}

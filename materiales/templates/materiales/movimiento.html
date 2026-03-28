@@ -1,0 +1,26 @@
+{% extends "core/base.html" %}
+{% block title %}Movimiento – {{ material.nombre }}{% endblock %}
+{% block content %}
+<div class="mb-4">
+  <h2 class="fw-bold"><i class="bi bi-arrow-left-right text-primary me-2"></i>Movimiento: {{ material.nombre }}</h2>
+  <p class="text-muted">Cantidad actual: <strong>{{ material.cantidad }} {{ material.unidad }}</strong></p>
+</div>
+<div class="card shadow-sm" style="max-width: 400px;">
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      {% for field in form %}
+      <div class="mb-3">
+        <label class="form-label fw-semibold">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}<div class="text-danger small">{{ field.errors.0 }}</div>{% endif %}
+      </div>
+      {% endfor %}
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Registrar</button>
+        <a href="{% url 'list_materiales' %}" class="btn btn-outline-secondary">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
