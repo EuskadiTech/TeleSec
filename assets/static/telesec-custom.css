@@ -59,6 +59,12 @@
   margin-right: 8px;
   color: rgba(255, 255, 255, 0.55);
 }
+.nav-sidebar .nav-treeview .nav-link.active,
+.nav-sidebar .nav-treeview .nav-link:hover {
+  font-size: 0.65rem;
+  margin-right: 8px;
+  color: rgba(0, 0, 0, 1);
+}
 
 /* Sub-list hidden by default; AdminLTE toggles display via .menu-open */
 .nav-item .nav-treeview {
