@@ -3,6 +3,7 @@ PERMS['personas:edit'] = '&gt; Editar';
 PAGES.personas = {
   navcss: 'btn3',
   icon: 'static/appico/users.png',
+  faicon: 'fas fa-users',
   AccessControl: true,
   Title: 'Personas',
   navItems: [

@@ -1659,16 +1659,15 @@ function SetPages() {
   var nav = document.getElementById('appendApps2');
   nav.innerHTML = '';
 
-  function makePlainItem(href, iconSrc, label) {
+  function makePlainItem(href, faIcon, label) {
     var li = document.createElement('li');
     var a = document.createElement('a');
-    var icon = document.createElement('img');
+    var icon = document.createElement('i');
     var p = document.createElement('p');
     li.className = 'nav-item';
     a.className = 'nav-link';
     a.href = href;
-    icon.src = iconSrc;
-    icon.className = 'nav-icon ts-sidebar-icon';
+    icon.className = faIcon + ' nav-icon ts-sidebar-icon';
     p.innerText = label;
     a.append(icon, p);
     li.append(a);
@@ -1697,9 +1696,9 @@ function SetPages() {
       e.preventDefault();
     });
 
-    var icon = document.createElement('img');
-    icon.src = page.icon || 'static/appico/application_enterprise.png';
-    icon.className = 'nav-icon ts-sidebar-icon';
+    var faicon = document.createElement('i');
+    faicon.className = page.faicon || 'fas fa-cubes';
+    faicon.className += ' nav-icon ts-sidebar-icon';
 
     var p = document.createElement('p');
     p.innerText = page.Title;
@@ -1708,7 +1707,7 @@ function SetPages() {
     arrow.className = 'right fas fa-angle-left ts-treeview-arrow';
 
     p.append(arrow);
-    a.append(icon, p);
+    a.append(faicon, p);
     li.append(a);
 
     // Sub-items
@@ -1784,7 +1783,7 @@ function SetPages() {
     } else {
       li = makePlainItem(
         '#' + key,
-        page.icon || 'static/appico/application_enterprise.png',
+        page.faicon || 'fas fa-cubes',
         page.Title
       );
     }
@@ -1792,7 +1791,7 @@ function SetPages() {
   });
 
   // QR Scanner (always visible)
-  nav.append(makePlainItem('#index,qr', 'static/appico/barcode.png', 'Escanear QR'));
+  nav.append(makePlainItem('#index,qr', 'fas fa-qrcode', 'Escanear QR'));
 }
 var Booted = false;
 var TimeoutBoot = 3; // in loops of 750ms

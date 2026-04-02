@@ -1,6 +1,7 @@
 PAGES.index = {
   //navcss: "btn1",
   Title: 'Inicio',
+  faicon: 'fas fa-home',
   icon: 'static/appico/house.png',
   index: function () {
     var div_stats = safeuuid();

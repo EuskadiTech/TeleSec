@@ -4,6 +4,7 @@ PERMS['asistencia:esalumno'] = '> Es alumno';
 PAGES.asistencia = {
   Title: 'Asistencia',
   icon: 'static/appico/face_scan.png',
+  faicon: 'fas fa-user-check',
   AccessControl: true,
   index: function () {
     if (!checkRole('asistencia')) {

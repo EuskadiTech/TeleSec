@@ -3,6 +3,7 @@ PERMS['notas:edit'] = '&gt; Editar';
 PAGES.notas = {
   navcss: 'btn5',
   icon: 'static/appico/edit.png',
+  faicon: 'fas fa-sticky-note',
   AccessControl: true,
   Title: 'Notas',
   navItems: [

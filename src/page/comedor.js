@@ -3,6 +3,7 @@ PERMS['comedor:edit'] = '&gt; Editar';
 PAGES.comedor = {
   navcss: 'btn6',
   icon: 'static/appico/apple.png',
+  faicon: 'fas fa-utensils',
   AccessControl: true,
   Title: 'Comedor',
   __cleanupOldMenus: async function () {

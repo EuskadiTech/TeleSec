@@ -3,6 +3,7 @@ PERMS['supercafe:edit'] = '&gt; Editar';
 PAGES.supercafe = {
   navcss: 'btn4',
   icon: 'static/appico/cup.png',
+  faicon: 'fas fa-coffee',
   AccessControl: true,
   Title: 'Cafetería',
   navItems: [

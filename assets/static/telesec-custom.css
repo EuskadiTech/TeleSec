@@ -10,15 +10,20 @@
 }
 
 /* ---- Sidebar nav icon images ---- */
-.ts-sidebar-icon {
-  width: 22px;
-  height: 22px;
-  object-fit: contain;
-  /* filter: brightness(0) invert(1); */
-  margin-right: 6px;
-  flex-shrink: 0;
+.ts-sidebar-icon::before {
+  font-size: 30px;
 }
-
+.ts-sidebar-icon {
+  width: 32px !important;
+  height: 32px !important;
+  margin-left: -9px !important;
+  margin-right: 15px !important;
+  vertical-align: middle;
+  line-height: 32px;
+}
+.nav-sidebar .nav-link {
+  border: 1px solid gray;
+}
 /* ---- Active sidebar nav item ---- */
 .nav-sidebar .nav-link.active,
 .nav-sidebar .nav-link:hover {
@@ -38,7 +43,7 @@
 
 /* ---- Treeview sub-items ---- */
 .nav-sidebar .nav-treeview .nav-link {
-  padding-left: 2.5rem;
+  /* padding-left: 2.5rem; */
   font-size: 0.875rem;
   opacity: 0.85;
 }

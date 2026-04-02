@@ -5,6 +5,7 @@ PAGES.aulas = {
   //navcss: "btn1",
   Title: 'Gest-Aula',
   icon: 'static/appico/components.png',
+  faicon: 'fas fa-chalkboard-teacher',
   AccessControl: true,
   index: function () {
     if (!checkRole('aulas')) {

@@ -3,6 +3,7 @@ PERMS['pagos:edit'] = '&gt; Editar';
 PAGES.pagos = {
   navcss: 'btn7',
   icon: 'static/appico/credit_cards.png',
+  faicon: 'fas fa-credit-card',
   AccessControl: true,
   Title: 'Pagos',
   navItems: [

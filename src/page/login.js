@@ -1,6 +1,6 @@
 // login.js – TeleSec login page
 // New flow: tenant (group) + password → persona selection → JWT stored → replication started
-
+const DEFAULT_SERVER = 'https://tele.tech.eus';
 PAGES.login = {
   Esconder: true,
   Title: 'Login',
@@ -26,7 +26,7 @@ PAGES.login = {
         <fieldset>
           <label>
             URL del servidor (ej: https://mi-servidor.com)
-            <input type="url" id="${field_api}" placeholder="https://mi-servidor.com" /><br /><br />
+            <input type="url" id="${field_api}" placeholder="https://mi-servidor.com" value="https://tele.tech.eus" /><br /><br />
           </label>
           <label>
             Nombre del grupo <span style="color:red">*</span>
@@ -46,6 +46,8 @@ PAGES.login = {
       `;
 
       document.getElementById(btn_skip).onclick = () => {
+        var apiUrl = (document.getElementById(field_api).value || '').trim().replace(/\/$/, '');
+        localStorage.setItem("TELESEC_API_URL", apiUrl);
         open_page('login');
         setUrlHash('login');
       };
@@ -115,7 +117,7 @@ PAGES.login = {
       `;
 
       document.getElementById(btn_crear).onclick = async () => {
-        var apiUrl = (localStorage.getItem('TELESEC_API_URL') || '').replace(/\/$/, '');
+        var apiUrl = (localStorage.getItem('TELESEC_API_URL') || DEFAULT_SERVER).replace(/\/$/, '');
         var tenant = (document.getElementById(field_tenant2).value || '').trim();
         var pass = document.getElementById(field_pass3).value;
         var nombre = (document.getElementById(field_nombre).value || '').trim();
@@ -215,7 +217,7 @@ PAGES.login = {
         <label>
           URL del servidor TeleSec (ej: https://mi-servidor.com)
           <input type="url" id="${field_api}"
-            value="${localStorage.getItem('TELESEC_API_URL') || ''}" /><br /><br />
+            value="${localStorage.getItem('TELESEC_API_URL') || DEFAULT_SERVER}" /><br /><br />
         </label>
         <button id="${btn_save}" class="btn5">Guardar y Conectar</button>
         <button onclick="setUrlHash('login');" class="btn3" style="margin-left:8px;">Cancelar</button>
@@ -277,7 +279,7 @@ PAGES.login = {
         btn.disabled = true; btn.innerText = 'Accediendo…';
 
         try {
-          var currentApiUrl = (localStorage.getItem('TELESEC_API_URL') || '').replace(/\/$/, '');
+          var currentApiUrl = (localStorage.getItem('TELESEC_API_URL') || DEFAULT_SERVER).replace(/\/$/, '');
           if (!currentApiUrl) {
             toastr.error('No hay servidor configurado. Usa "Configurar servidor".');
             btn.disabled = false; btn.innerText = 'Acceder';
@@ -361,7 +363,7 @@ PAGES.login = {
         btn.disabled = true; btn.innerText = 'Entrando…';
 
         try {
-          var currentApiUrl = (localStorage.getItem('TELESEC_API_URL') || '').replace(/\/$/, '');
+          var currentApiUrl = (localStorage.getItem('TELESEC_API_URL') || DEFAULT_SERVER).replace(/\/$/, '');
           var res = await fetch(currentApiUrl + '/api/auth/select-persona', {
             method: 'POST',
             headers: {

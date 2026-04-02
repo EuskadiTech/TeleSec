@@ -1,6 +1,7 @@
 PAGES.dataman = {
   navcss: 'btn1',
   icon: 'static/appico/gear_edit.png',
+  faicon: 'fas fa-cogs',
   AccessControl: true,
   Title: 'Ajustes',
   navItems: [

@@ -3,6 +3,7 @@ PERMS['materiales:edit'] = '&gt; Editar';
 PAGES.materiales = {
   navcss: 'btn2',
   icon: 'static/appico/shelf.png',
+  faicon: 'fas fa-boxes',
   AccessControl: true,
   Title: 'Almacén',
   navItems: [

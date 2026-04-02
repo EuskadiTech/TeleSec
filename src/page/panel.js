@@ -2,6 +2,7 @@ PERMS['panel'] = 'Panel';
 PAGES.panel = {
   navcss: 'btn2',
   icon: 'static/appico/calendar.png',
+  faicon: 'fas fa-calendar-day',
   AccessControl: true,
   Title: 'Panel',
 
