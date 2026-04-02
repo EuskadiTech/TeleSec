@@ -3,7 +3,7 @@
 // Replaces PouchDB with RxDB + IndexedDB (Dexie) storage.
 // Replication to the Flask backend uses RxDB's custom pull/push protocol.
 // No at-rest encryption: data is stored in plaintext in IndexedDB.
-
+const DEFAULT_SERVER = 'https://tele.tech.eus';
 var DB = (function () {
   // -------------------------------------------------------------------------
   // State
@@ -45,7 +45,7 @@ var DB = (function () {
   // Helpers
   // -------------------------------------------------------------------------
   function getApiUrl() {
-    return (localStorage.getItem('TELESEC_API_URL') || '').replace(/\/$/, '');
+    return (localStorage.getItem('TELESEC_API_URL') || DEFAULT_SERVER).replace(/\/$/, '');
   }
 
   function getAuthToken() {

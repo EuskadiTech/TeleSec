@@ -1,6 +1,6 @@
 // login.js – TeleSec login page
 // New flow: tenant (group) + password → persona selection → JWT stored → replication started
-const DEFAULT_SERVER = 'https://tele.tech.eus';
+
 PAGES.login = {
   Esconder: true,
   Title: 'Login',
