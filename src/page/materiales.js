@@ -8,12 +8,15 @@ PAGES.materiales = {
   Title: 'Almacén',
   navItems: [
     { label: 'Ver materiales', hash: 'materiales', icon: 'fas fa-boxes' },
-    { label: 'Nuevo material', hash: 'materiales,nuevo', icon: 'fas fa-plus-circle' },
+    { label: 'Nuevo material', hash: 'materiales,$nuevo$', icon: 'fas fa-plus-circle' },
   ],
   edit: function (mid) {
     if (!checkRole('materiales:edit')) {
       setUrlHash('materiales');
       return;
+    }
+    if (mid === '$nuevo$') {
+      mid = safeuuid();
     }
     var nameh1 = safeuuid();
     var field_nombre = safeuuid();

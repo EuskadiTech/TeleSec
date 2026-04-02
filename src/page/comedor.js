@@ -6,6 +6,10 @@ PAGES.comedor = {
   faicon: 'fas fa-utensils',
   AccessControl: true,
   Title: 'Comedor',
+  navItems: [
+    { label: 'Ver menús', hash: 'comedor', icon: 'fas fa-list' },
+    { label: 'Nuevo menú', hash: 'comedor,$nuevo$', icon: 'fas fa-plus-circle' },
+  ],
   __cleanupOldMenus: async function () {
     try {
       var rows = await DB.list('comedor');
@@ -70,6 +74,9 @@ PAGES.comedor = {
     if (!checkRole('comedor:edit')) {
       setUrlHash('comedor');
       return;
+    }
+    if (mid === '$nuevo$') {
+      mid = safeuuid();
     }
     var nameh1 = safeuuid();
     var field_fecha = safeuuid();

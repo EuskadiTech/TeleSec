@@ -8,12 +8,15 @@ PAGES.notas = {
   Title: 'Notas',
   navItems: [
     { label: 'Ver notas', hash: 'notas', icon: 'fas fa-sticky-note' },
-    { label: 'Nueva nota', hash: 'notas,nuevo', icon: 'fas fa-plus-circle' },
+    { label: 'Nueva nota', hash: 'notas,$nuevo$', icon: 'fas fa-plus-circle' },
   ],
   edit: function (mid) {
     if (!checkRole('notas:edit')) {
       setUrlHash('notas');
       return;
+    }
+    if (mid === '$nuevo$') {
+      mid = safeuuid();
     }
     var nameh1 = safeuuid();
     var field_asunto = safeuuid();

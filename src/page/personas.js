@@ -8,12 +8,15 @@ PAGES.personas = {
   Title: 'Personas',
   navItems: [
     { label: 'Ver personas', hash: 'personas', icon: 'fas fa-list' },
-    { label: 'Nueva persona', hash: 'personas,nuevo', icon: 'fas fa-user-plus' },
+    { label: 'Nueva persona', hash: 'personas,$nuevo$', icon: 'fas fa-user-plus' },
   ],
   edit: function (mid) {
     if (!checkRole('personas:edit')) {
       setUrlHash('personas');
       return;
+    }
+    if (mid === '$nuevo$') {
+      mid = safeuuid();
     }
     var nameh1 = safeuuid();
     var permisosdet = safeuuid();

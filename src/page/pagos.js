@@ -9,7 +9,6 @@ PAGES.pagos = {
   navItems: [
     { label: 'Ver pagos', hash: 'pagos', icon: 'fas fa-list' },
     { label: 'Datafono', hash: 'pagos,datafono', icon: 'fas fa-credit-card' },
-    { label: 'Nuevo pago', hash: 'pagos,nuevo', icon: 'fas fa-plus-circle' },
   ],
 
   __getVisiblePersonas: function () {

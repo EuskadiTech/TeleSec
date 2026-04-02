@@ -5,9 +5,12 @@ PAGES.dataman = {
   AccessControl: true,
   Title: 'Ajustes',
   navItems: [
+    { label: 'Inicio', hash: 'dataman', icon: 'fas fa-home' },
     { label: 'Configuración', hash: 'dataman,config', icon: 'fas fa-cog' },
     { label: 'Exportar datos', hash: 'dataman,export', icon: 'fas fa-file-export' },
     { label: 'Importar datos', hash: 'dataman,import', icon: 'fas fa-file-import' },
+    { label: 'Imprimir etiquetas', hash: 'dataman,labels', icon: 'fas fa-qrcode' },
+    { label: 'Precios del café', hash: 'dataman,precios', icon: 'fas fa-coffee' },
   ],
   edit: function (mid) {
     switch (mid) {

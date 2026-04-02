@@ -8,12 +8,15 @@ PAGES.supercafe = {
   Title: 'Cafetería',
   navItems: [
     { label: 'Ver pedidos', hash: 'supercafe', icon: 'fas fa-coffee' },
-    { label: 'Nuevo pedido', hash: 'supercafe,nuevo', icon: 'fas fa-plus-circle' },
+    { label: 'Nuevo pedido', hash: 'supercafe,$nuevo$', icon: 'fas fa-plus-circle' },
   ],
   edit: function (mid) {
     if (!checkRole('supercafe:edit')) {
       setUrlHash('supercafe');
       return;
+    }
+    if (mid === '$nuevo$') {
+      mid = safeuuid();
     }
     var nameh1 = safeuuid();
     var field_fecha = safeuuid();
