@@ -116,7 +116,7 @@ PAGES.dataman = {
           }
         });
         toastr.success('Exportado todo, descargando!');
-        download(`Export %%TITLE%% ${getDBName()}.json.txt`, JSON.stringify(output));
+        download(`Export Axia4 ${getDBName()}.json.txt`, JSON.stringify(output));
       })();
     };
     document.getElementById(button_export_safe).onclick = () => {
@@ -131,7 +131,7 @@ PAGES.dataman = {
           result.personas[entry.id] = entry.data;
         });
         toastr.success('Exportado todo, descargado!');
-        download(`Export %%TITLE%% Encriptado ${getDBName()}.json.txt`, JSON.stringify(result));
+        download(`Export Axia4 Encriptado ${getDBName()}.json.txt`, JSON.stringify(result));
       })();
     };
   },

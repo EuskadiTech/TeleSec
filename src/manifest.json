@@ -21,8 +21,8 @@
   "lang": "es-ES",
   "start_url": "index.html",
   "scope": "/",
-  "description": "%%TITLE%% - Comunicación Hipersegura",
+  "description": "Axia4 - Comunicación Hipersegura",
   "id": "telesec.tech.eus",
-  "name": "%%TITLE%%",
-  "short_name": "%%TITLE%%"
+  "name": "Axia4",
+  "short_name": "Axia4"
 }

@@ -7,7 +7,7 @@ PAGES.index = {
     var div_stats = safeuuid();
 
     container.innerHTML = html`
-      <h1>¡Hola, ${SUB_LOGGED_IN_DETAILS.Nombre}!<br />Bienvenidx a %%TITLE%%</h1>
+      <h1>¡Hola, ${SUB_LOGGED_IN_DETAILS.Nombre}!<br />Bienvenidx a Axia4</h1>
       <h2>
         Tienes ${parseFloat(SUB_LOGGED_IN_DETAILS.Monedero_Balance).toPrecision(2)} € en el
         monedero.

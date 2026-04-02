@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="manifest" href="manifest.json" />
-  <title>%%TITLE%%</title>
+  <title>Axia4</title>
   <link rel="icon" type="image/png" href="static/logo.jpg" />
   <!-- Font Awesome 5 -->
   <link href="static/adminlte/fontawesome.min.css" rel="stylesheet" />
@@ -34,7 +34,7 @@
           </a>
         </li>
         <li class="nav-item d-none d-sm-inline-block">
-          <span class="nav-link ts-brand-name">%%TITLE%%</span>
+          <span class="nav-link ts-brand-name">Axia4</span>
         </li>
       </ul>
       <ul class="navbar-nav ml-auto align-items-center">
@@ -59,9 +59,11 @@
 
     <!-- Sidebar -->
     <aside class="main-sidebar sidebar-dark-primary elevation-4 no_print">
-      <a href="#index" class="brand-link">
-        <img src="static/logo.jpg" alt="%%TITLE%%" class="brand-image img-circle elevation-3" style="opacity: .8" />
-        <span class="brand-text font-weight-bold">%%TITLE%%</span>
+      <a href="#index" class="brand-link text-center">
+        <span class="brand-text font-weight-semibold">Axia4</span>
+        ·
+        <span class="brand-text font-weight-bold">%%EDITION%%</span><br>
+        <span class="brand-text" style="font-size: 13px; line-height: 1;">%%EDITION_LABEL%%</span>
       </a>
       <div class="sidebar">
         <!-- Búsqueda móvil -->
@@ -109,7 +111,7 @@
 
   <!-- Update snackbar -->
   <div id="snackbar">
-    Hay una nueva versión de %%TITLE%%.<br /><a id="reload">Pulsa aqui para actualizar.</a>
+    Hay una nueva versión de Axia4.<br /><a id="reload">Pulsa aqui para actualizar.</a>
   </div>
 
   <!-- Libraries -->
@@ -136,19 +138,7 @@
   <script src="db.js"></script>
   <script src="app_logic.js"></script>
   <script src="app_modules.js"></script>
-  <script src="page/login.js"></script>
-  <script src="page/index.js"></script>
-  <script src="page/dataman.js"></script>
-  <script src="page/aulas.js"></script>
-  <script src="page/materiales.js"></script>
-  <script src="page/personas.js"></script>
-  <script src="page/supercafe.js"></script>
-  <script src="page/comedor.js"></script>
-  <script src="page/notas.js"></script>
-  <script src="page/panel.js"></script>
-  <script src="page/buscar.js"></script>
-  <script src="page/asistencia.js"></script>
-  <script src="page/pagos.js"></script>
+  %%PAGES%%
 </body>
 
 </html>

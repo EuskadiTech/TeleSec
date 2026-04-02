@@ -1634,7 +1634,7 @@ function BuildQR(mid, label) {
   });
   return `
   <span style="border: 2px dashed black; padding: 10px; display: inline-block; background: white; border-radius: 7px; text-align: center; margin: 5px;">
-      <b>QR %%TITLE%%</b>
+      <b>QR Axia4</b>
       <br>${svgNode.outerHTML}<br>
       <small>${label || mid}</small>
   </span>

@@ -7,7 +7,7 @@ WORKDIR /app
 RUN python -m venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
 
-COPY backend/requirements.txt .
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 
@@ -24,7 +24,7 @@ COPY --from=builder /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy only what the application needs
-COPY backend/ ./backend/
+COPY ./ ./backend/
 
 # Data directory for SQLite
 RUN mkdir -p /data
