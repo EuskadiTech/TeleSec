@@ -20,9 +20,11 @@ var DB = (function () {
   let lastOrbAt = 0;
   let orbTimer = null;
   let onlineReplTimer = null;
+  let reSyncTimer = null;
 
   const LIST_CACHE_TTL_MS = 1500;
   const ORB_MIN_INTERVAL_MS = 400;
+  const RESYNC_INTERVAL_MS = 4000;
 
   // -------------------------------------------------------------------------
   // RxDB schema – single "documents" collection
@@ -137,68 +139,98 @@ var DB = (function () {
   // -------------------------------------------------------------------------
   // Replication
   // -------------------------------------------------------------------------
+  function triggerReSync() {
+    if (!replicationState || typeof replicationState.reSync !== 'function') return;
+    try {
+      replicationState.reSync();
+    } catch (e) {}
+  }
+
+  function startReSyncLoop() {
+    if (reSyncTimer) return;
+    reSyncTimer = setInterval(function () {
+      triggerReSync();
+    }, RESYNC_INTERVAL_MS);
+  }
+
+  function stopReSyncLoop() {
+    if (!reSyncTimer) return;
+    clearInterval(reSyncTimer);
+    reSyncTimer = null;
+  }
+
   function startReplication() {
-    const apiUrl = getApiUrl();
-    const token = getAuthToken();
-    if (!apiUrl || !token || !collection) return;
+    return ensureInit().then(function () {
+      const apiUrl = getApiUrl();
+      const token = getAuthToken();
+      if (!apiUrl || !token || !collection) return;
 
-    if (replicationState) {
-      try { replicationState.cancel(); } catch (e) {}
-      replicationState = null;
-    }
+      if (replicationState) {
+        try { replicationState.cancel(); } catch (e) {}
+        replicationState = null;
+      }
 
-    replicationState = RxDB.replicateRxCollection({
-      collection: collection,
-      replicationIdentifier: 'telesec-flask-v1',
-      live: true,
-      retryTime: 5000,
-      pull: {
-        batchSize: 50,
-        handler: async function (lastCheckpoint, batchSize) {
-          const params = new URLSearchParams({ limit: String(batchSize) });
-          if (lastCheckpoint && lastCheckpoint.updatedAt) {
-            params.set('updatedAt', lastCheckpoint.updatedAt);
-            params.set('id', lastCheckpoint.id || '');
-          }
-          const res = await fetch(getApiUrl() + '/api/replicate/pull?' + params.toString(), {
-            headers: {
-              Authorization: 'Bearer ' + getAuthToken(),
-              Accept: 'application/json',
-            },
-          });
-          if (!res.ok) throw new Error('Pull failed: ' + res.status);
-          const json = await res.json();
-          return { documents: json.documents, checkpoint: json.checkpoint };
+      replicationState = RxDB.replicateRxCollection({
+        collection: collection,
+        replicationIdentifier: 'telesec-flask-v1',
+        live: true,
+        retryTime: 5000,
+        autoStart: true,
+        waitForLeadership: false,
+        pull: {
+          batchSize: 50,
+          handler: async function (lastCheckpoint, batchSize) {
+            const params = new URLSearchParams({ limit: String(batchSize) });
+            if (lastCheckpoint && lastCheckpoint.updatedAt) {
+              params.set('updatedAt', lastCheckpoint.updatedAt);
+              params.set('id', lastCheckpoint.id || '');
+            }
+            const res = await fetch(getApiUrl() + '/api/replicate/pull?' + params.toString(), {
+              headers: {
+                Authorization: 'Bearer ' + getAuthToken(),
+                Accept: 'application/json',
+              },
+            });
+            if (!res.ok) throw new Error('Pull failed: ' + res.status);
+            const json = await res.json();
+            return { documents: json.documents, checkpoint: json.checkpoint };
+          },
         },
-      },
-      push: {
-        batchSize: 50,
-        handler: async function (rows) {
-          const body = rows.map(function (row) { return row.newDocumentState; });
-          const res = await fetch(getApiUrl() + '/api/replicate/push', {
-            method: 'POST',
-            headers: {
-              Authorization: 'Bearer ' + getAuthToken(),
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(body),
-          });
-          if (!res.ok) throw new Error('Push failed: ' + res.status);
-          return await res.json(); // [] = no conflicts
+        push: {
+          batchSize: 50,
+          handler: async function (rows) {
+            const body = rows.map(function (row) { return row.newDocumentState; });
+            const res = await fetch(getApiUrl() + '/api/replicate/push', {
+              method: 'POST',
+              headers: {
+                Authorization: 'Bearer ' + getAuthToken(),
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(body),
+            });
+            if (!res.ok) throw new Error('Push failed: ' + res.status);
+            return await res.json(); // [] = no conflicts
+          },
         },
-      },
-    });
+      });
 
-    replicationState.error$.subscribe(function (err) {
-      console.warn('Replication error', err);
-    });
+      replicationState.error$.subscribe(function (err) {
+        console.warn('Replication error', err);
+      });
 
-    replicationState.active$.subscribe(function (active) {
-      if (active) updateSyncStatus();
+      replicationState.active$.subscribe(function (active) {
+        if (active) updateSyncStatus();
+      });
+
+      startReSyncLoop();
+      triggerReSync();
+    }).catch(function (e) {
+      console.warn('startReplication error', e);
     });
   }
 
   function stopReplication() {
+    stopReSyncLoop();
     if (replicationState) {
       try { replicationState.cancel(); } catch (e) {}
       replicationState = null;
@@ -215,6 +247,16 @@ var DB = (function () {
           startReplication();
         }, 1200);
       } catch (e) {}
+    });
+
+    window.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible') {
+        triggerReSync();
+      }
+    });
+
+    window.addEventListener('focus', function () {
+      triggerReSync();
     });
   }
 
