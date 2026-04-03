@@ -152,7 +152,7 @@ PAGES.dataman = {
           <option value="materiales">Galileo - db.materiales.axd</option>
           <option value="personas">Galileo - db.personas.axd</option>
           <option value="comandas">Galileo - db.cafe.comandas.axd</option>
-          <option value="%telesec">TeleSec Exportado (encriptado o no)</option>
+          <option value="%telesec">Axia4 (prev. TeleSec) Exportado (encriptado o no)</option>
         </select>
         <textarea
           id="${textarea_content}"

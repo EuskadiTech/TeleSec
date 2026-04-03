@@ -16,7 +16,7 @@ PAGES.notas = {
       return;
     }
     if (mid === '$nuevo$') {
-      mid = safeuuid(""); // UID without html-safe prefix
+      mid = safeuuid(''); // UID without html-safe prefix
     }
     var nameh1 = safeuuid();
     var field_asunto = safeuuid();
@@ -28,48 +28,54 @@ PAGES.notas = {
     var btn_borrar = safeuuid();
     var div_actions = safeuuid();
     container.innerHTML = html`
-      <h1>Nota <code id="${nameh1}"></code></h1>
-      <fieldset style="float: none; width: calc(100% - 40px);max-width: none;">
-        <legend>Valores</legend>
-        <div style="max-width: 400px;">
-          <label>
-            Asunto<br />
-            <input type="text" id="${field_asunto}" value="" /><br /><br />
-          </label>
-          <input type="hidden" id="${field_autor}" value="" />
-          <div id="${div_actions}"></div>
+      <div class="card card-outline card-primary ts-index-card" style="width: 100%;">
+        <div class="card-header">
+          <h3 class="card-title" style="font-size: 25px;">
+            Nota <code style="font-size: 10px;" id="${nameh1}"></code>
+          </h3>
         </div>
-        <label>
-          Contenido<br />
-          <textarea
-            id="${field_contenido}"
-            style="width: calc(100% - 15px); height: 400px;"
-          ></textarea
-          ><br /><br />
-        </label>
-        <label>
-          Adjuntos (Fotos o archivos)<br />
-          <input type="file" id="${field_files}" multiple /><br /><br />
-          <div id="${attachments_list}"></div>
-        </label>
-        <hr />
-        <button class="saveico" id="${btn_guardar}">
-          <img src="static/floppy_disk_green.png" />
-          <br>Guardar
-        </button>
-        <button class="delico" id="${btn_borrar}">
-          <img src="static/garbage.png" />
-          <br>Borrar
-        </button>
-        <button class="opicon" onclick="setUrlHash('notas')" style="float: right;"> <!-- Align to the right -->
-          <img src="static/exit.png" />
-          <br>Salir
-        </button>
-        <button class="opicon" onclick="window.print()" style="float: right;"> <!-- Align to the right -->
-          <img src="static/printer2.png" />
-          <br>Imprimir
-        </button>
-      </fieldset>
+        <div class="card-body">
+          <div style="max-width: 400px;">
+            <input type="hidden" id="${field_autor}" value="" />
+            <div id="${div_actions}"></div>
+          </div>
+          <label style="display: block;">
+            Asunto<br />
+            <input type="text" id="${field_asunto}" value="" />
+          </label>
+          <label style="display: block; margin-top: 12px;">
+            Contenido<br />
+            <textarea
+              id="${field_contenido}"
+              style="width: calc(100% - 15px); height: 400px;"
+            ></textarea>
+          </label>
+          <label style="display: block; margin-top: 12px;">
+            Adjuntos (Fotos o archivos)<br />
+            <input type="file" id="${field_files}" multiple /><br /><br />
+            <div id="${attachments_list}"></div>
+          </label>
+          <hr />
+          <button class="saveico" id="${btn_guardar}">
+            <img src="static/floppy_disk_green.png" />
+            <br />Guardar
+          </button>
+          <button class="delico" id="${btn_borrar}">
+            <img src="static/garbage.png" />
+            <br />Borrar
+          </button>
+          <button class="opicon" onclick="setUrlHash('notas')" style="float: right;">
+            <!-- Align to the right -->
+            <img src="static/exit.png" />
+            <br />Salir
+          </button>
+          <button class="opicon" onclick="window.print()" style="float: right;">
+            <!-- Align to the right -->
+            <img src="static/printer2.png" />
+            <br />Imprimir
+          </button>
+        </div>
+      </div>
     `;
     var divact = document.getElementById(div_actions);
     addCategory_Personas(
@@ -284,18 +290,13 @@ PAGES.notas = {
       return;
     }
     const tablebody = safeuuid();
-    var btn_new = safeuuid();
-    container.innerHTML = html`
-      <h1>Notas</h1>
-      <button id="${btn_new}">Nueva nota</button>
-      <div id="cont"></div>
-    `;
+    container.innerHTML = html` <div id="${tablebody}"></div> `;
     TS_IndexElement(
       'notas',
       [
         {
           key: 'Autor',
-          type: 'persona-nombre',
+          type: 'persona-simple',
           default: '',
           label: 'Autor',
         },
@@ -307,14 +308,12 @@ PAGES.notas = {
         },
       ],
       'notas',
-      document.querySelector('#cont')
+      document.getElementById(tablebody),
+      undefined,
+      undefined,
+      true, // Enable global search bar
+      'Notas', // Title for the index page
+      'notas,$nuevo$' // Hash for the "Add New" button
     );
-    if (!checkRole('notas:edit')) {
-      document.getElementById(btn_new).style.display = 'none';
-    } else {
-      document.getElementById(btn_new).onclick = () => {
-        setUrlHash('notas,' + safeuuid(''));
-      };
-    }
   },
 };

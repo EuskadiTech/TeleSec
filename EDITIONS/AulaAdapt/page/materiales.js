@@ -111,8 +111,7 @@ PAGES.materiales = {
 
       if (!movimientos.length) {
         el.innerHTML = html`
-          <h3 style="margin: 0 0 8px 0;">Historial de movimientos por fecha</h3>
-          <small>Sin datos para graficar.</small>
+          <small>Sin datos para mostrar.</small>
         `;
         return;
       }
@@ -122,7 +121,7 @@ PAGES.materiales = {
       });
 
       var deltas = [];
-      var labelsShort = [];
+      var points = [];
 
       ordered.forEach((mov) => {
         var cantidad = parseNum(mov.Cantidad, 0);
@@ -137,9 +136,6 @@ PAGES.materiales = {
           delta = despues - antes;
         }
         deltas.push(Number(delta.toFixed(2)));
-
-        var fechaTxt = mov.Fecha ? new Date(mov.Fecha).toLocaleString('es-ES') : '-';
-        labelsShort.push(fechaTxt);
       });
 
       var currentStock = parseNum(document.getElementById(field_cantidad)?.value, 0);
@@ -151,14 +147,18 @@ PAGES.materiales = {
       }
 
       var acumulado = stockInicialInferido;
-      var values = deltas.map((neto) => {
+      deltas.forEach((neto, index) => {
         acumulado += neto;
-        return Number(acumulado.toFixed(2));
-      });
+        var stock = Number(acumulado.toFixed(2));
+        var fechaMs = new Date(ordered[index].Fecha || 0).getTime();
 
+        points.push({
+          x: Number.isFinite(fechaMs) ? fechaMs : index,
+          y: stock,
+        });
+      });
+      
       el.innerHTML = html`
-        <h3 style="margin: 0 0 8px 0;">Historial de movimientos por fecha</h3>
-        <small style="display: block;margin-bottom: 6px;">Stock por fecha (cierre diario)</small>
         <canvas id="${mov_chart_canvas}" style="width: 100%;height: 280px;"></canvas>
       `;
 
@@ -173,11 +173,10 @@ PAGES.materiales = {
       movimientosChartInstance = new Chart(chartCanvasEl, {
         type: 'line',
         data: {
-          labels: labelsShort,
           datasets: [
             {
               label: 'Stock diario',
-              data: values,
+              data: points,
               borderColor: '#2d7ef7',
               backgroundColor: 'rgba(45,126,247,0.16)',
               fill: true,
@@ -193,6 +192,8 @@ PAGES.materiales = {
           scales: {
             x: {
               display: false,
+              // Estirar por fecha real sin depender de adaptadores externos.
+              type: 'linear',
             },
             y: {
               title: {
@@ -220,8 +221,11 @@ PAGES.materiales = {
     }
 
     container.innerHTML = html`
-      <h1>Material <code id="${nameh1}"></code></h1>
-      <fieldset style="width: 100%;max-width: 980px;box-sizing: border-box;">
+      <div class="card card-outline card-primary ts-index-card" style="width: 100%;">
+        <div class="card-header">
+          <h3 class="card-title" style="font-size: 25px;">Material <code style="font-size: 10px;" id="${nameh1}"></code></h3>
+        </div>
+        <div class="card-body">
         <div style="display: flex;flex-wrap: wrap;gap: 10px 16px;align-items: flex-end;">
           <div style="display: flex;flex-direction: column;align-items: stretch;gap: 6px;min-width: 220px;flex: 1 1 280px;">
             <label for="${field_revision}">Fecha Revisión</label>
@@ -341,8 +345,16 @@ PAGES.materiales = {
           <img src="static/printer2.png" />
           <br>Imprimir
         </button>
-      </fieldset>
-      <div id="${mov_chart}" style="max-width: 980px;width: 100%;margin-top: 14px;min-height: 260px;height: min(400px, 52vh);"></div>
+        </div>
+      </div>
+      <div class="card card-outline card-primary ts-index-card" style="width: 100%;">
+        <div class="card-header">
+          <h3 class="card-title" style="font-size: 25px;">Movimientos por fecha</h3>
+        </div>
+        <div class="card-body" style="padding: 0 14px 14px 14px;">
+          <div id="${mov_chart}" style="width: 100%;margin-top: 14px;min-height: 260px;height: min(400px, 52vh);"></div>
+        </div>
+      </div>
     `;
     // Cargar ubicaciones existentes para autocompletar
     DB.map('materiales', (data) => {
@@ -525,20 +537,25 @@ PAGES.materiales = {
     var btn_new = safeuuid();
     var select_ubicacion = safeuuid();
     var check_lowstock = safeuuid();
+    var check_por_revisar = safeuuid();
     var tableContainer = safeuuid();
     container.innerHTML = html`
-      <h1>Materiales del Almacén</h1>
-      <label>
-        <b>Solo lo que falta:</b>
-        <input type="checkbox" id="${check_lowstock}" style="height: 25px;width: 25px;" /> </label
-      ><br />
-      <label
-        >Filtrar por ubicación:
-        <select id="${select_ubicacion}">
-          <option value="">(Todas)</option>
-        </select>
-      </label>
-      <button id="${btn_new}">Nuevo Material</button>
+      <div style="display: flex;gap: 16px;align-items: center;margin-bottom: 12px;">
+        <label style="display: inline-block;align-items: center;gap: 6px;">
+          <b>Faltante?</b><br />
+          <input type="checkbox" id="${check_lowstock}" style="height: 25px;width: 25px;" />
+        </label>
+        <label style="display: inline-block;align-items: center;gap: 6px;">
+          <b>Por revisar?</b><br />
+          <input type="checkbox" id="${check_por_revisar}" style="height: 25px;width: 25px;" />
+        </label>
+        <label style="display: inline-block;align-items: center;gap: 6px;">
+          Ubicación:<br />
+          <select id="${select_ubicacion}">
+            <option value="">(Todas)</option>
+          </select>
+        </label>
+      </div>
       <div id="${tableContainer}"></div>
     `;
 
@@ -628,12 +645,21 @@ PAGES.materiales = {
         function (data) {
           var is_low_stock =
             !document.getElementById(check_lowstock).checked ||
-            parseFloat(data.Cantidad) < parseFloat(data.Cantidad_Minima);
-
+            parseFloat(data.Cantidad) < parseFloat(data.Cantidad_Minima) || parseFloat(data.Cantidad) <= 0;
+            var f_revision = new Date(data.Revision);
+          var is_por_revisar =
+            !document.getElementById(check_por_revisar).checked ||
+            data.Revision === undefined ||
+            data.Revision === '' ||
+            isNaN(f_revision.getTime()) ||
+            f_revision < new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // Revisar si la última revisión fue hace más de 1 mes
           var is_region = filtroUbicacion === '' || data.Ubicacion === filtroUbicacion;
 
-          return !(is_low_stock && is_region);
-        }
+          return !(is_low_stock && is_por_revisar && is_region);
+        },
+        true,
+        "Materiales del Almacén",
+        "materiales,$nuevo$"
       );
     }
 
@@ -648,13 +674,8 @@ PAGES.materiales = {
     document.getElementById(check_lowstock).onchange = function () {
       renderTable(document.getElementById(select_ubicacion).value);
     };
-
-    if (!checkRole('materiales:edit')) {
-      document.getElementById(btn_new).style.display = 'none';
-    } else {
-      document.getElementById(btn_new).onclick = () => {
-        setUrlHash('materiales,' + safeuuid(''));
-      };
+    document.getElementById(check_por_revisar).onchange = function () {
+      renderTable(document.getElementById(select_ubicacion).value);
     }
   },
 };

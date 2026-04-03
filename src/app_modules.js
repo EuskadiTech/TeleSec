@@ -1295,6 +1295,8 @@ function TS_IndexElement(
           const tdRaw = document.createElement('td');
           const rawContent = (String(data[key.key]) || key.default || '').replace(/\n/g, '<br>');
           tdRaw.innerHTML = rawContent;
+          tdRaw.style.whiteSpace = 'normal';
+          tdRaw.style.fontSize = '20px';
           new_tr.appendChild(tdRaw);
           break;
         }
@@ -1542,8 +1544,40 @@ function TS_IndexElement(
           const tdPersonaNombre = document.createElement('td');
           tdPersonaNombre.style.textAlign = 'center';
           tdPersonaNombre.style.fontSize = '20px';
-          tdPersonaNombre.textContent = persona.Nombre || '';
+          var nombre = persona.Nombre || '';
+          var region = persona.Region ? ` (${persona.Region})` : '';
+          tdPersonaNombre.textContent = nombre + region;
           new_tr.appendChild(tdPersonaNombre);
+          break;
+        }
+        case 'persona-simple': {
+          // Nombre + foto sin recuadro ni región de fondo, para usar dentro de otras tablas (ej. pedidos)
+          let persona = key.self === true ? data : SC_Personas[data[key.key]] || {};
+          const tdPersonaNombre = document.createElement('td');
+          tdPersonaNombre.style.textAlign = 'center';
+          tdPersonaNombre.style.fontSize = '20px';
+          var nombre = persona.Nombre || '';
+          var region = persona.Region ? ` (${persona.Region})` : '';
+          tdPersonaNombre.textContent = nombre + region;
+          const img = document.createElement('img');
+          img.src = persona.Foto || 'static/ico/user_generic.png';
+          img.height = 48;
+          img.style.verticalAlign = 'middle';
+          img.style.marginRight = '5px';
+          try {
+            const personaId =
+              key.self === true ? data._key || data._id || data.id : data[key.key];
+            if (personaId) {
+              DB.getAttachment('personas', personaId, 'foto')
+                .then((durl) => {
+                  if (durl) img.src = durl;
+                })
+                .catch(() => {});
+            }
+          } catch (e) {}
+          tdPersonaNombre.prepend(img);
+          new_tr.appendChild(tdPersonaNombre);
+          tdPersonaNombre.style.width = '250px';
           break;
         }
         case 'attachment-persona': {

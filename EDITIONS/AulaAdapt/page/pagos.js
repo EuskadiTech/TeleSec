@@ -64,7 +64,7 @@ PAGES.pagos = {
         style="max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);"
       >
         <h1 style="color: white; text-align: center; margin-bottom: 20px;">
-          Terminal de pago TeleSec
+          Terminal de pago Axia4
         </h1>
 
         <div
@@ -685,7 +685,7 @@ PAGES.pagos = {
       return;
     }
     var tid = ftid.split(',')[0];
-    var tid2 = location.hash.split("?")[0].split(',');
+    var tid2 = location.hash.split('?')[0].split(',');
     if (tid == 'datafono') {
       PAGES.pagos.datafono();
       return;
@@ -726,10 +726,11 @@ PAGES.pagos = {
       <h1 class="no_print">Transacción <code id="${nameh1}"></code></h1>
       <button class="no_print" id="${btn_volver}">← Volver a Pagos</button>
       <button class="no_print" id="${btn_volver2}">← Volver a SuperCafé</button>
-      
+
       <h4>Ticket - ${tid}</h4>
       <b>Fecha</b>: <span id="${field_fecha}"></span><br />
-      <b>Operación</b>: <span id="${field_tipo}"></span> realizado por <span id="${field_persona}"></span><br />
+      <b>Operación</b>: <span id="${field_tipo}"></span> realizado por
+      <span id="${field_persona}"></span><br />
 
       <div id="${div_persona_destino}" style="display: none;">
         <b>Destino</b>: <span id="${field_persona_destino}"></span><br />
@@ -742,14 +743,18 @@ PAGES.pagos = {
       </div>
       <hr />
       <span id="${field_notas}"></span><br />
-      <hr>
+      <hr />
       <b>Estado</b>: <span id="${field_estado}"></span><br />
       <h1 id="${field_monto}" style="color: green; text-align: center;">0.00€</h1>
-      <hr>
+      <hr />
 
       <fieldset style="margin-top: 20px;" class="no_print">
         <legend>Acciones</legend>
-        <button onclick="window.print()" class="btn4" style="font-size: 16px; padding: 10px 20px; margin: 5px;">
+        <button
+          onclick="window.print()"
+          class="btn4"
+          style="font-size: 16px; padding: 10px 20px; margin: 5px;"
+        >
           🖨️ Imprimir Ticket
         </button>
         <button

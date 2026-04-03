@@ -3,7 +3,7 @@ PERMS['aulas:resumen_diario'] = '> Resumen diario';
 PERMS['aulas:puntos_interes'] = '> Puntos de interés';
 PAGES.aulas = {
   //navcss: "btn1",
-  Title: 'Gest-Aula',
+  Title: 'Gestión del Aula',
   icon: 'static/appico/components.png',
   faicon: 'fas fa-chalkboard-teacher',
   AccessControl: true,
@@ -12,14 +12,9 @@ PAGES.aulas = {
       setUrlHash('index');
       return;
     }
-    var data_Comedor = safeuuid();
-    var data_Tareas = safeuuid();
-    var data_Diario = safeuuid();
-    var data_Weather = safeuuid();
     var link_alertas = safeuuid();
     var link_diario = safeuuid();
     var link_actividades = safeuuid();
-    var link_puntos_interes = safeuuid();
     container.innerHTML = html`
       <h1>Gestión del Aula</h1>
       <div>

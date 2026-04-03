@@ -2,7 +2,7 @@
   "name": "telesec-frontend",
   "version": "2.0.0",
   "private": true,
-  "description": "TeleSec frontend bundle (RxDB)",
+  "description": " (Axia4) frontend bundle (RxDB)",
   "dependencies": {
     "rxdb": "^15.35.0"
   },
