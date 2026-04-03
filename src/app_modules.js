@@ -1846,87 +1846,82 @@ function updateStatusOrb() {
 updateStatusOrb();
 setInterval(updateStatusOrb, 250);
 
+function getCurrentBootHash() {
+  return location.hash.replace('#', '').split('?')[0];
+}
+
+function isLocalDBReady() {
+  // Fast readiness probe: DB API available + RxDB internals initialized
+  return !!(
+    window.DB &&
+    typeof DB.get === 'function' &&
+    DB._internal &&
+    (DB._internal.db || DB._internal.collection)
+  );
+}
+
 var BootIntervalID = setInterval(() => {
   BootLoops += 1;
 
   const isOnline = window.navigator ? window.navigator.onLine !== false : true;
 
-  // Check if local DB is initialized and responsive
-  const checkLocalDB = () => {
-    if (window.DB && DB._internal && DB._internal.local) {
-      return DB._internal.local
-        .info()
-        .then(() => true)
-        .catch(() => false);
+  // If offline, DB ready, or timeout reached, proceed to boot the UI
+  if ((isLocalDBReady() || !isOnline || BootLoops >= TimeoutBoot) && !Booted) {
+    Booted = true;
+    document.getElementById('loading').style.display = 'none';
+
+    if (!isOnline) {
+      toastr.error('Sin conexión! Los cambios se sincronizarán cuando vuelvas a estar en línea.');
     }
-    return Promise.resolve(false);
-  };
 
-  checkLocalDB().then((dbReady) => {
-    // If offline, or DB ready, or we've waited long enough, proceed to boot the UI
-    if ((dbReady || !isOnline || BootLoops >= TimeoutBoot) && !Booted) {
-      Booted = true;
-      document.getElementById('loading').style.display = 'none';
-
-      if (!isOnline) {
-        toastr.error('Sin conexión! Los cambios se sincronizarán cuando vuelvas a estar en línea.');
-      }
-
-      if (!SUB_LOGGED_IN) {
-        if (AC_BYPASS) {
-          // Auto-create or load a bypass persona and log in automatically
-          const bypassId = localStorage.getItem('TELESEC_BYPASS_ID') || 'bypass-admin';
-          if (window.DB && DB.get) {
-            DB.get('personas', bypassId)
-              .then((data) => {
-                function finish(pdata, id) {
-                  SUB_LOGGED_IN_ID = id || bypassId;
-                  SUB_LOGGED_IN_DETAILS = pdata || {};
-                  SUB_LOGGED_IN = true;
-                  localStorage.setItem('TELESEC_BYPASS_ID', SUB_LOGGED_IN_ID);
-                  SetPages();
-                  open_page(location.hash.replace('#', '').split('?')[0]);
-                }
-                if (!data) {
-                  const persona = { Nombre: 'Admin (bypass)', Roles: 'ADMIN,' };
-                  DB.put('personas', bypassId, persona)
-                    .then(() => finish(persona, bypassId))
-                    .catch((e) => {
-                      console.warn('AC_BYPASS create error', e);
-                      open_page('login');
-                    });
+    if (!SUB_LOGGED_IN) {
+      if (AC_BYPASS) {
+        // Auto-create or load a bypass persona and log in automatically
+        const bypassId = localStorage.getItem('TELESEC_BYPASS_ID') || 'bypass-admin';
+        if (window.DB && DB.get) {
+          DB.get('personas', bypassId)
+            .then((data) => {
+              function finish(pdata, id) {
+                SUB_LOGGED_IN_ID = id || bypassId;
+                SUB_LOGGED_IN_DETAILS = pdata || {};
+                SUB_LOGGED_IN = true;
+                localStorage.setItem('TELESEC_BYPASS_ID', SUB_LOGGED_IN_ID);
+                SetPages();
+                open_page(getCurrentBootHash());
+              }
+              if (!data) {
+                const persona = { Nombre: 'Admin (bypass)', Roles: 'ADMIN,' };
+                DB.put('personas', bypassId, persona)
+                  .then(() => finish(persona, bypassId))
+                  .catch((e) => {
+                    console.warn('AC_BYPASS create error', e);
+                    open_page('login');
+                  });
+              } else {
+                if (typeof data === 'string') {
+                  TS_decrypt(data, SECRET, (pdata) => finish(pdata, bypassId), 'personas', bypassId);
                 } else {
-                  if (typeof data === 'string') {
-                    TS_decrypt(
-                      data,
-                      SECRET,
-                      (pdata) => finish(pdata, bypassId),
-                      'personas',
-                      bypassId
-                    );
-                  } else {
-                    finish(data, bypassId);
-                  }
+                  finish(data, bypassId);
                 }
-              })
-              .catch((e) => {
-                console.warn('AC_BYPASS persona check error', e);
-                open_page('login');
-              });
-          } else {
-            // DB not ready, fallback to login page
-            open_page('login');
-          }
+              }
+            })
+            .catch((e) => {
+              console.warn('AC_BYPASS persona check error', e);
+              open_page('login');
+            });
         } else {
+          // DB not ready, fallback to login page
           open_page('login');
         }
       } else {
-        SetPages();
-        open_page(location.hash.replace('#', '').split('?')[0]);
+        open_page('login');
       }
-      clearInterval(BootIntervalID);
+    } else {
+      SetPages();
+      open_page(getCurrentBootHash());
     }
-  });
+    clearInterval(BootIntervalID);
+  }
 }, 750);
 
 // Global Search Functionality
