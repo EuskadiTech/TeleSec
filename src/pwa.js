@@ -127,7 +127,7 @@ async function ActualizarProgramaTeleSec() {
 }
 function showUpdateBar() {
   let snackbar = document.getElementById('snackbar');
-  snackbar.className = 'show';
+  // snackbar.className = 'show';
 }
 
 // The click event on the pop up notification
