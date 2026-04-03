@@ -16,7 +16,7 @@ PAGES.supercafe = {
       return;
     }
     if (mid === '$nuevo$') {
-      mid = safeuuid(""); // UID without html-safe prefix
+      mid = safeuuid(''); // UID without html-safe prefix
     }
     var nameh1 = safeuuid();
     var field_fecha = safeuuid();
@@ -71,36 +71,48 @@ PAGES.supercafe = {
       divact.innerHTML = '';
       addCategory_Personas(divact, SC_Personas, currentPersonaID, (value) => {
         document.getElementById(field_persona).value = value;
-        
+
         // Check for outstanding debts when person is selected
-        DB.list('supercafe').then((rows) => {
-          var deudasCount = 0;
-          var processed = 0;
-          var total = rows.length;
-          
-          if (total === 0) return;
-          
-          // Count debts for this person
-          rows.forEach((row) => {
-            TS_decrypt(row.data, SECRET, (data) => {
-              if (data.Persona == value && data.Estado == 'Deuda') {
-                deudasCount++;
-              }
-              processed++;
-              
-              // When all rows are processed, show warning if needed
-              if (processed === total && deudasCount >= 3) {
-                var tts_msg = `Atención: Esta persona tiene ${deudasCount} comandas en deuda. No se podrá guardar el pedido.`;
-                TS_SayTTS(tts_msg)
-                toastr.warning(`Esta persona tiene ${deudasCount} comandas en deuda. No se podrá guardar el pedido.`, '', {
-                  timeOut: 5000
-                });
-              }
-            }, 'supercafe', row.id);
+        DB.list('supercafe')
+          .then((rows) => {
+            var deudasCount = 0;
+            var processed = 0;
+            var total = rows.length;
+
+            if (total === 0) return;
+
+            // Count debts for this person
+            rows.forEach((row) => {
+              TS_decrypt(
+                row.data,
+                SECRET,
+                (data) => {
+                  if (data.Persona == value && data.Estado == 'Deuda') {
+                    deudasCount++;
+                  }
+                  processed++;
+
+                  // When all rows are processed, show warning if needed
+                  if (processed === total && deudasCount >= 3) {
+                    var tts_msg = `Atención: Esta persona tiene ${deudasCount} comandas en deuda. No se podrá guardar el pedido.`;
+                    TS_SayTTS(tts_msg);
+                    toastr.warning(
+                      `Esta persona tiene ${deudasCount} comandas en deuda. No se podrá guardar el pedido.`,
+                      '',
+                      {
+                        timeOut: 5000,
+                      }
+                    );
+                  }
+                },
+                'supercafe',
+                row.id
+              );
+            });
+          })
+          .catch((e) => {
+            console.warn('Error checking debts', e);
           });
-        }).catch((e) => {
-          console.warn('Error checking debts', e);
-        });
       });
       Object.entries(SC_actions).forEach((category) => {
         addCategory(
@@ -158,48 +170,58 @@ PAGES.supercafe = {
       var personaId = document.getElementById(field_persona).value;
 
       // Check for outstanding debts
-      DB.list('supercafe').then((rows) => {
-        var deudasCount = 0;
-        var processed = 0;
-        var total = rows.length;
-        
-        if (total === 0) {
-          // No commands, proceed to save
-          proceedToSave();
-          return;
-        }
-        
-        // Count debts for this person
-        rows.forEach((row) => {
-          TS_decrypt(row.data, SECRET, (data) => {
-            if (data.Persona == personaId && data.Estado == 'Deuda') {
-              deudasCount++;
-            }
-            processed++;
-            
-            // When all rows are processed, check if we can save
-            if (processed === total) {
-              if (deudasCount >= 3) {
-                toastr.error('Esta persona tiene más de 3 comandas en deuda. No se puede realizar el pedido.');
-                // Delete the comanda if it was created
-                if (mid) {
-                  DB.del('supercafe', mid).then(() => {
-                    setTimeout(() => {
-                      setUrlHash('supercafe');
-                    }, 1000);
-                  });
+      DB.list('supercafe')
+        .then((rows) => {
+          var deudasCount = 0;
+          var processed = 0;
+          var total = rows.length;
+
+          if (total === 0) {
+            // No commands, proceed to save
+            proceedToSave();
+            return;
+          }
+
+          // Count debts for this person
+          rows.forEach((row) => {
+            TS_decrypt(
+              row.data,
+              SECRET,
+              (data) => {
+                if (data.Persona == personaId && data.Estado == 'Deuda') {
+                  deudasCount++;
                 }
-              } else {
-                proceedToSave();
-              }
-            }
-          }, 'supercafe', row.id);
+                processed++;
+
+                // When all rows are processed, check if we can save
+                if (processed === total) {
+                  if (deudasCount >= 3) {
+                    toastr.error(
+                      'Esta persona tiene más de 3 comandas en deuda. No se puede realizar el pedido.'
+                    );
+                    // Delete the comanda if it was created
+                    if (mid) {
+                      DB.del('supercafe', mid).then(() => {
+                        setTimeout(() => {
+                          setUrlHash('supercafe');
+                        }, 1000);
+                      });
+                    }
+                  } else {
+                    proceedToSave();
+                  }
+                }
+              },
+              'supercafe',
+              row.id
+            );
+          });
+        })
+        .catch((e) => {
+          console.warn('Error checking debts', e);
+          toastr.error('Error al verificar las deudas');
         });
-      }).catch((e) => {
-        console.warn('Error checking debts', e);
-        toastr.error('Error al verificar las deudas');
-      });
-      
+
       function proceedToSave() {
         // Disable button after validation passes
         guardarBtn.disabled = true;
@@ -263,38 +285,50 @@ PAGES.supercafe = {
     const tablebody = safeuuid();
     const tablebody2 = safeuuid();
     var btn_new = safeuuid();
+    var btn_cobro_auto = safeuuid();
     var totalprecio = safeuuid();
     var tts_check = safeuuid();
     var old = {};
     container.innerHTML = html`
       <h1>Cafetería - Total: <span id="${totalprecio}">0</span>c</h1>
-      <button id="${btn_new}" style="${sc_nobtn};">Nueva comanda</button>
+      <button
+        id="${btn_new}"
+        style="font-size: 26px; background-color: #4CAF50; color: white; padding: 5px 10px; text-align: center; text-decoration: none; display: inline-block; margin: 4px 2px; cursor: pointer;"
+      >
+        <i class="fas fa-plus"></i> Nueva comanda
+      </button>
+      <button
+        id="${btn_cobro_auto}"
+        style="font-size: 26px; background-color: red; color: white; padding: 5px 10px; text-align: center; text-decoration: none; display: inline-block; margin: 4px 2px; cursor: pointer;"
+      >
+        <i class="fas fa-robot"></i> Cobro auto
+      </button>
+      <button
+        id=""
+        style="font-size: 26px; background-color: blue; color: white; padding: 5px 10px; text-align: center; text-decoration: none; display: inline-block; margin: 4px 2px; cursor: pointer;"
+      >
+        <i class="fas fa-coins"></i> Saldos
+      </button>
+      <a
+        class="button"
+        href="#pagos,datafono"
+        style="font-size: 26px; background-color: purple; color: white; padding: 5px 10px; text-align: center; text-decoration: none; display: inline-block; margin: 4px 2px; cursor: pointer;"
+        ><i class="fas fa-credit-card"></i> Datafono</a
+      >
       <br />
       <label>
-        <b>Habilitar avisos:</b>
+        <b>Avisos de voz:</b>
         <input type="checkbox" id="${tts_check}" style="height: 25px;width: 25px;" />
       </label>
 
-      <details
-        style="background: beige; padding: 15px; border-radius: 15px; border: 2px solid black"
-        open
-      >
-        <summary>Todas las comandas</summary>
-        <div id="${tablebody}"></div>
-      </details>
-      <br />
-      <details
-        style="background: lightpink; padding: 15px; border-radius: 15px; border: 2px solid black"
-        open
-      >
-        <summary>Deudas</summary>
-        <div id="${tablebody2}"></div>
-      </details>
+      <div id="${tablebody}"></div>
+      <div id="${tablebody2}"></div>
     `;
-    document.getElementById(tts_check).checked = localStorage.getItem('TELESEC_TTS_ENABLED') === 'true';
+    document.getElementById(tts_check).checked =
+      localStorage.getItem('TELESEC_TTS_ENABLED') === 'true';
     document.getElementById(tts_check).onchange = function () {
       localStorage.setItem('TELESEC_TTS_ENABLED', this.checked);
-    }
+    };
     var config = [
       {
         key: 'Persona',
@@ -389,28 +423,33 @@ PAGES.supercafe = {
             });
             if (allReady) {
               var msgRegion = `Hola, ${SC_Personas[data.Persona].Region}. - Vamos a entregar vuestro pedido. ¡Que aproveche!`;
-              TS_SayTTS(msgRegion)
-            } if (data.Estado == 'Entregado') {
+              TS_SayTTS(msgRegion);
+            }
+            if (data.Estado == 'Entregado') {
               var msgEntregado = `El pedido de ${SC_Personas[data.Persona].Nombre} en ${SC_Personas[data.Persona].Region} ha sido entregado.`;
-              TS_SayTTS(msgEntregado)
+              TS_SayTTS(msgEntregado);
             } else if (data.Estado == 'En preparación') {
               var msgPreparacion = `El pedido de ${SC_Personas[data.Persona].Nombre} en ${SC_Personas[data.Persona].Region} está en preparación.`;
-              TS_SayTTS(msgPreparacion)
+              TS_SayTTS(msgPreparacion);
             } else if (data.Estado == 'Listo') {
               var msgListo = `El pedido de ${SC_Personas[data.Persona].Nombre} en ${SC_Personas[data.Persona].Region} está listo para ser entregado.`;
-              TS_SayTTS(msgListo)
+              TS_SayTTS(msgListo);
             } else if (data.Estado == 'Pedido') {
               var msgPedido = `Se ha realizado un nuevo pedido para ${SC_Personas[data.Persona].Nombre} en ${SC_Personas[data.Persona].Region}.`;
-              TS_SayTTS(msgPedido)
+              TS_SayTTS(msgPedido);
             } else {
-              var msg = `Comanda de ${SC_Personas[data.Persona].Region}. - ${JSON.parse(data.Comanda)['Selección']
-                }. - ${SC_Personas[data.Persona].Nombre}. - ${data.Estado}`;
-              TS_SayTTS(msg)
+              var msg = `Comanda de ${SC_Personas[data.Persona].Region}. - ${
+                JSON.parse(data.Comanda)['Selección']
+              }. - ${SC_Personas[data.Persona].Nombre}. - ${data.Estado}`;
+              TS_SayTTS(msg);
             }
           }
         }
         old[key] = data.Estado;
-      }
+      },
+      true,
+      'Comandas (sin contar deudas)',
+      'supercafe,$nuevo$'
     );
 
     //Deudas
@@ -451,17 +490,142 @@ PAGES.supercafe = {
         if (old[key] != data.Estado) {
           if (tts && document.getElementById(tts_check).checked) {
             var msg = `La comanda de ${SC_Personas[data.Persona].Nombre} en ${SC_Personas[data.Persona].Region} ha pasado a deuda.`;
-            TS_SayTTS(msg)
+            TS_SayTTS(msg);
           }
         }
         old[key] = data.Estado;
-      }
+      },
+      true,
+      'Comandas en deuda',
+      null
     );
     if (!checkRole('supercafe:edit')) {
       document.getElementById(btn_new).style.display = 'none';
+      document.getElementById(btn_cobro_auto).style.display = 'none';
     } else {
       document.getElementById(btn_new).onclick = () => {
         setUrlHash('supercafe,' + safeuuid(''));
+      };
+
+      document.getElementById(btn_cobro_auto).onclick = () => {
+        if (!confirm('¿Cobrar automáticamente todas las comandas y deudas a quienes tengan saldo suficiente?')) return;
+
+        DB.list('supercafe').then((rows) => {
+          if (rows.length === 0) {
+            toastr.info('No hay comandas pendientes.');
+            return;
+          }
+
+          var pending = rows.length;
+          var toCharge = []; // { id, data }
+
+          rows.forEach((row) => {
+            TS_decrypt(
+              row.data,
+              SECRET,
+              (data) => {
+                toCharge.push({ id: row.id, data: data });
+                pending--;
+                if (pending === 0) {
+                  _ejecutarCobroAuto(toCharge);
+                }
+              },
+              'supercafe',
+              row.id
+            );
+          });
+        }).catch((e) => {
+          console.warn('Error listing supercafe', e);
+          toastr.error('Error al obtener las comandas');
+        });
+
+        function _ejecutarCobroAuto(comandas) {
+          var cobradas = 0;
+          var sinSaldo = 0;
+          var errores = 0;
+          var total = comandas.length;
+          var done = 0;
+
+          if (total === 0) {
+            toastr.info('No hay comandas para cobrar.');
+            return;
+          }
+
+          function checkDone() {
+            done++;
+            if (done === total) {
+              toastr.success(
+                `Cobro auto completado: ${cobradas} cobradas, ${sinSaldo} sin saldo suficiente, ${errores} errores.`
+              );
+            }
+          }
+
+          comandas.forEach(({ id, data }) => {
+            var personaId = data.Persona;
+            var persona = SC_Personas[personaId];
+            if (!persona) {
+              errores++;
+              checkDone();
+              return;
+            }
+
+            var precio = 0;
+            try {
+              precio = SC_priceCalc(JSON.parse(data.Comanda || '{}'))[0] / 100; // Convertir de centavos a euros
+            } catch (e) {
+              errores++;
+              checkDone();
+              return;
+            }
+
+            var balance = parseFloat(persona.Monedero_Balance || 0);
+
+            if (balance < precio) {
+              // Not enough balance — mark as Deuda if not already
+              if (data.Estado !== 'Deuda') {
+                var updatedData = Object.assign({}, data, { Estado: 'Deuda' });
+                DB.put('supercafe', id, updatedData).catch((e) => console.warn('Error updating deuda', e));
+              }
+              sinSaldo++;
+              checkDone();
+              return;
+            }
+
+            // Sufficient balance — charge
+            persona.Monedero_Balance = parseFloat((balance - precio).toFixed(2));
+            DB.put('personas', personaId, persona)
+              .then(() => {
+                // Save pagos transaction
+                var ticketId = safeuuid('');
+                var transactionData = {
+                  Ticket: ticketId,
+                  Fecha: CurrentISOTime(),
+                  Tipo: 'Gasto',
+                  Monto: precio,
+                  Persona: personaId,
+                  Metodo: 'Tarjeta',
+                  Notas: 'Cobro auto - ' + (SC_parse(JSON.parse(data.Comanda || '{}')) || id),
+                  Estado: 'Completado',
+                  Origen: 'SuperCafé',
+                  OrigenID: id,
+                };
+                return DB.put('pagos', ticketId, transactionData);
+              })
+              .then(() => {
+                // Delete the supercafe comanda
+                return DB.del('supercafe', id);
+              })
+              .then(() => {
+                cobradas++;
+                checkDone();
+              })
+              .catch((e) => {
+                console.warn('Error en cobro auto para', id, e);
+                errores++;
+                checkDone();
+              });
+          });
+        }
       };
     }
   },

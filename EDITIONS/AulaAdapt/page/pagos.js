@@ -114,9 +114,9 @@ PAGES.pagos = {
                   id="${numpad_display}"
                   step="0.01"
                   min="0"
-                  style="width: calc(100% - 24px); padding: 15px; font-size: 32px; text-align: right; 
+                  style="width: 100%; padding: 15px; font-size: 32px; text-align: right; 
                   border: 3px solid #667eea; border-radius: 5px; font-weight: bold;"
-                  value="0.00"
+                  value=""
                 />
               </label>
 
@@ -125,7 +125,7 @@ PAGES.pagos = {
                 <textarea
                   id="${field_notas}"
                   rows="3"
-                  style="width: calc(100% - 24px); padding: 10px; font-size: 14px; border: 2px solid #ddd; border-radius: 5px;"
+                  style="width: 100%; padding: 10px; font-size: 14px; border: 2px solid #ddd; border-radius: 5px;"
                   placeholder="Notas adicionales..."
                 ></textarea>
               </label>
