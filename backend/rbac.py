@@ -80,7 +80,7 @@ TABLE_EDIT_ROLES: dict[str, list[str]] = {
 }
 TABLE_ACCESS_ROLES: dict[str, list[str]] = {
     "materiales": ["MATERIALES_EDIT", "MATERIALES_ACCESS"],
-    "personas": ["PERSONAS_EDIT", "PERSONAS_ACCESS"],
+    "personas": ["*"],
     "supercafe": ["SUPERCAFE_EDIT", "SUPERCAFE_ACCESS"],
     "comedor": ["COMEDOR_EDIT", "COMEDOR_ACCESS"],
     "notificaciones": ["NOTIFICACIONES_EDIT", "NOTIFICACIONES_ACCESS"],
@@ -108,7 +108,9 @@ def can_access_table(table_name: str, roles: list) -> bool:
     """
     if "ADMIN" in roles:
         return True
-    required = TABLE_EDIT_ROLES.get(str(table_name or "").lower())
+    required = TABLE_ACCESS_ROLES.get(str(table_name or "").lower())
     if required is None:
         return False
+    if "*" in required:
+        return True
     return any(r in roles for r in required)
