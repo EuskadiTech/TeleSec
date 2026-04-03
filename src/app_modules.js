@@ -1229,7 +1229,7 @@ function TS_IndexElement(
       decimal: ',',
       thousands: '.',
       info: '_START_–_END_ de _TOTAL_',
-      infoEmpty: 'Sin registros',
+      infoEmpty: '',
       infoFiltered: '(de _MAX_ total)',
       lengthMenu: '_MENU_ por página',
       loadingRecords: 'Cargando…',
