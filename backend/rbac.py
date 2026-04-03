@@ -78,10 +78,30 @@ TABLE_EDIT_ROLES: dict[str, list[str]] = {
     "notificaciones": ["NOTIFICACIONES_EDIT"],
     "resumen_diario": ["RESUMEN_DIARIO_EDIT"],
 }
+TABLE_ACCESS_ROLES: dict[str, list[str]] = {
+    "materiales": ["MATERIALES_EDIT", "MATERIALES_ACCESS"],
+    "personas": ["PERSONAS_EDIT", "PERSONAS_ACCESS"],
+    "supercafe": ["SUPERCAFE_EDIT", "SUPERCAFE_ACCESS"],
+    "comedor": ["COMEDOR_EDIT", "COMEDOR_ACCESS"],
+    "notificaciones": ["NOTIFICACIONES_EDIT", "NOTIFICACIONES_ACCESS"],
+    "resumen_diario": ["RESUMEN_DIARIO_EDIT", "RESUMEN_DIARIO_ACCESS"],
+}
 
 
 def can_edit_table(table_name: str, roles: list) -> bool:
     """Return True if *roles* grant edit access to *table_name*.
+
+    ADMIN always passes.  Tables not present in TABLE_EDIT_ROLES are
+    restricted to ADMIN only (deny-by-default for unknown tables).
+    """
+    if "ADMIN" in roles:
+        return True
+    required = TABLE_EDIT_ROLES.get(str(table_name or "").lower())
+    if required is None:
+        return False
+    return any(r in roles for r in required)
+def can_access_table(table_name: str, roles: list) -> bool:
+    """Return True if *roles* grant any access to *table_name*.
 
     ADMIN always passes.  Tables not present in TABLE_EDIT_ROLES are
     restricted to ADMIN only (deny-by-default for unknown tables).

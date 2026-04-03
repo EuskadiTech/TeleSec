@@ -5,7 +5,7 @@ from flask import Blueprint, jsonify, request
 
 from ..models import Document, db
 from ..auth import get_persona_roles
-from ..rbac import can_edit_table, get_persona_id, get_tenant_id, require_auth
+from ..rbac import can_access_table, can_edit_table, get_persona_id, get_tenant_id, require_auth
 
 bp = Blueprint("replicate", __name__, url_prefix="/api/replicate")
 
@@ -15,23 +15,29 @@ def _iso_now() -> str:
 
 
 # ---------------------------------------------------------------------------
-# Pull – RxDB fetches documents from the server
+# Pull - RxDB fetches documents from the server
 # ---------------------------------------------------------------------------
 
 
 @bp.route("/pull", methods=["GET"])
 @require_auth
 def pull():
-    """Return documents newer than the supplied checkpoint (cursor-based pagination).
+    """Return authorized documents newer than the supplied checkpoint.
 
     Query parameters:
-      updatedAt  – ISO timestamp of the last seen document
-      id         – doc.id of the last seen document (tie-breaker)
-      limit      – max documents to return (default 50, max 500)
+      updatedAt  - ISO timestamp of the last seen document
+      id         - doc.id of the last seen document (tie-breaker)
+      limit      - max documents to return (default 50, max 500)
+
+    RBAC is enforced per-document using current roles from the database.
     """
     tenant_id = get_tenant_id()
     if not tenant_id:
         return jsonify({"error": "No tenant context"}), 400
+
+    persona_id = get_persona_id()
+    if not persona_id:
+        return jsonify({"error": "No persona context"}), 400
 
     checkpoint_updated_at = (request.args.get("updatedAt") or "").strip()
     checkpoint_id = (request.args.get("id") or "").strip()
@@ -39,6 +45,8 @@ def pull():
         limit = min(int(request.args.get("limit", 50)), 500)
     except ValueError:
         limit = 50
+
+    roles = get_persona_roles(tenant_id, persona_id)
 
     query = Document.select().where(Document.tenant_id == tenant_id)
 
@@ -56,7 +64,9 @@ def pull():
     docs = list(query)
     documents = []
     for doc in docs:
-        try:
+        if not can_access_table(doc.table_name, roles):
+            continue
+        try: 
             data = json.loads(doc.data)
         except Exception:
             data = {}
@@ -70,9 +80,9 @@ def pull():
             }
         )
 
-    if documents:
-        last = documents[-1]
-        checkpoint = {"updatedAt": last["updated_at"], "id": last["id"]}
+    if docs:
+        last_scanned = docs[-1]
+        checkpoint = {"updatedAt": str(last_scanned.updated_at), "id": last_scanned.id}
     elif checkpoint_updated_at:
         checkpoint = {"updatedAt": checkpoint_updated_at, "id": checkpoint_id}
     else:
@@ -82,7 +92,7 @@ def pull():
 
 
 # ---------------------------------------------------------------------------
-# Push – RxDB sends local writes to the server
+# Push - RxDB sends local writes to the server
 # ---------------------------------------------------------------------------
 
 
