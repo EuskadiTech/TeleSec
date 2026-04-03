@@ -209,12 +209,14 @@ REQUIRED_PAGES = parse_required_pages(os.environ.get("TELESEC_REQUIRED_PAGES", "
 PAGES_FILES = order_pages(get_js_files(PAGES_SRC_DIR), REQUIRED_PAGES)
 PAGES = ""
 APP_SCRIPTS = ""
+CACHE_URLS = ["./", "index.html", "manifest.json", "version.json"]
 # Combine assets from JSON and recursively found files
 ASSETS = get_all_files("assets")
 
 for asset in ASSETS:
     if asset != "sw.js":
         PREFETCH += f'<link rel="prefetch" href="{asset}" />\n'
+        CACHE_URLS.append(asset)
 for src in HANDLEPARSE:
     if src != "sw.js" and not src.startswith("page/") and not src.startswith("pages/"):
         PREFETCH += f'<link rel="prefetch" href="{src}" />\n'
@@ -231,21 +233,31 @@ if USE_APP_BUNDLE:
     app_bundle_path = bundle_application(CORE_SCRIPTS, PAGES_SRC_DIR, PAGES_FILES)
     PREFETCH += f'<link rel="prefetch" href="{app_bundle_path}" />\n'
     APP_SCRIPTS = f'<script src="{app_bundle_path}"></script>\n'
+    CACHE_URLS.append(app_bundle_path)
 elif PAGES_FILES and USE_PAGE_BUNDLE:
     pages_bundle_path = bundle_pages(PAGES_SRC_DIR, PAGES_FILES)
     if pages_bundle_path:
         PREFETCH += f'<link rel="prefetch" href="{pages_bundle_path}" />\n'
         PAGES += f'<script src="{pages_bundle_path}"></script>\n'
+        CACHE_URLS.append(pages_bundle_path)
 elif PAGES_FILES and not USE_APP_BUNDLE:
     for page_file in PAGES_FILES:
         page_path = f"{PAGES_DIST_DIR}/{page_file}"
         PREFETCH += f'<link rel="prefetch" href="{page_path}" />\n'
         PAGES += f'<script src="{page_path}"></script>\n'
+        CACHE_URLS.append(page_path)
 
 if not USE_APP_BUNDLE:
     for core_script in CORE_SCRIPTS:
         APP_SCRIPTS += f'<script src="{core_script}"></script>\n'
+        CACHE_URLS.append(core_script)
     APP_SCRIPTS += PAGES
+
+# RxDB bundle is generated into dist/static/rxdb.js and is required offline.
+CACHE_URLS.append("static/rxdb.js")
+
+# Preserve insertion order while removing duplicates.
+CACHE_URLS = list(dict.fromkeys(CACHE_URLS))
 
 
 def replace_handles(string):
@@ -253,6 +265,7 @@ def replace_handles(string):
     string = string.replace("%%VERSIONCO%%", VERSIONCO)
     string = string.replace("%%EDITION%%", EDITION)
     string = string.replace("%%ASSETSJSON%%", json.dumps(ASSETS, ensure_ascii=False))
+    string = string.replace("%%CACHE_URLS%%", json.dumps(CACHE_URLS, ensure_ascii=False))
     string = string.replace("%%PAGES%%", PAGES)
     string = string.replace("%%APP_SCRIPTS%%", APP_SCRIPTS)
     return string
