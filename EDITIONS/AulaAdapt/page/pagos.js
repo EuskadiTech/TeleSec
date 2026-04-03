@@ -9,12 +9,93 @@ PAGES.pagos = {
   navItems: [
     { label: 'Ver pagos', hash: 'pagos', icon: 'fas fa-list' },
     { label: 'Datafono', hash: 'pagos,datafono', icon: 'fas fa-credit-card' },
+    { label: 'Saldos', hash: 'pagos,saldos', icon: 'fas fa-coins' },
   ],
 
   __getVisiblePersonas: function () {
     return Object.fromEntries(
       Object.entries(SC_Personas).filter(([_, persona]) => !(persona && persona.Oculto === true))
     );
+  },
+  // Saldos (solo personas con saldo mayor que 0)
+  saldos: function () {
+    if (!checkRole('pagos')) {
+      setUrlHash('pagos');
+      return;
+    }
+
+    var visiblePersonas = PAGES.pagos.__getVisiblePersonas();
+    var personasConSaldo = Object.entries(visiblePersonas)
+      .map(([personaId, persona]) => {
+        return {
+          personaId,
+          persona,
+          balance: parseFloat(persona?.Monedero_Balance || 0),
+        };
+      })
+      .filter((item) => item.balance > 0)
+      .sort((a, b) => b.balance - a.balance);
+
+    var total = personasConSaldo.reduce((acc, item) => acc + item.balance, 0);
+    var btn_volver = safeuuid();
+    var tableId = safeuuid();
+
+    container.innerHTML = html`
+      <h1>💰 Saldos de Monederos</h1>
+      <button id="${btn_volver}" class="btn5">← Volver a Pagos</button>
+      <a href="#supercafe" class="button btn5" style="margin-left: 10px;">Ir a SuperCafé</a>
+
+      <div
+        style="margin: 12px 0; padding: 14px; border-radius: 10px; background: #f8f9fa; border: 1px solid #ddd;"
+      >
+        <b>Personas con saldo:</b> ${personasConSaldo.length}<br />
+        <b>Total acumulado:</b> ${total.toFixed(2)}€
+      </div>
+
+      <div id="${tableId}"></div>
+    `;
+
+    document.getElementById(btn_volver).onclick = () => {
+      setUrlHash('pagos');
+    };
+
+    if (personasConSaldo.length === 0) {
+      document.getElementById(tableId).innerHTML = html`
+        <div style="padding: 15px; background: #fff3cd; border-radius: 8px; color: #856404;">
+          No hay personas con saldo positivo.
+        </div>
+      `;
+      return;
+    }
+
+    var rows = personasConSaldo
+      .map(({ personaId, persona, balance }) => {
+        var nombre = persona?.Nombre || personaId;
+        var region = persona?.Region ? ` (${persona.Region})` : '';
+        return html`<tr>
+          <td style="padding: 10px; border-bottom: 1px solid #eee;">${nombre}${region}</td>
+          <td
+            style="padding: 10px; border-bottom: 1px solid #eee; text-align: right; font-weight: bold; color: #2ed573;"
+          >
+            ${balance.toFixed(2)}€
+          </td>
+        </tr>`;
+      })
+      .join('');
+
+    document.getElementById(tableId).innerHTML = html`
+      <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden;">
+        <thead>
+          <tr style="background: #667eea; color: white;">
+            <th style="padding: 10px; text-align: left;">Persona</th>
+            <th style="padding: 10px; text-align: right;">Saldo</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    `;
   },
 
   // Datafono view for creating/processing transactions
@@ -688,6 +769,10 @@ PAGES.pagos = {
     var tid2 = location.hash.split('?')[0].split(',');
     if (tid == 'datafono') {
       PAGES.pagos.datafono();
+      return;
+    }
+    if (tid == 'saldos') {
+      PAGES.pagos.saldos();
       return;
     }
     if (tid == 'datafono_prefill') {

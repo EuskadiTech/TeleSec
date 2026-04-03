@@ -303,12 +303,13 @@ PAGES.supercafe = {
       >
         <i class="fas fa-robot"></i> Cobro auto
       </button>
-      <button
-        id=""
+      <a
+        class="button"
+        href="#pagos,saldos"
         style="font-size: 26px; background-color: blue; color: white; padding: 5px 10px; text-align: center; text-decoration: none; display: inline-block; margin: 4px 2px; cursor: pointer;"
       >
         <i class="fas fa-coins"></i> Saldos
-      </button>
+      </a>
       <a
         class="button"
         href="#pagos,datafono"
@@ -448,8 +449,8 @@ PAGES.supercafe = {
         old[key] = data.Estado;
       },
       true,
-      'Comandas (sin contar deudas)',
-      'supercafe,$nuevo$'
+      'Comandas',
+      null
     );
 
     //Deudas
@@ -496,7 +497,7 @@ PAGES.supercafe = {
         old[key] = data.Estado;
       },
       true,
-      'Comandas en deuda',
+      'Deudas',
       null
     );
     if (!checkRole('supercafe:edit')) {
@@ -565,6 +566,13 @@ PAGES.supercafe = {
             var persona = SC_Personas[personaId];
             if (!persona) {
               errores++;
+              checkDone();
+              return;
+            }
+
+            var estado = data.Estado;
+            if (estado !== 'Entregado' && estado !== 'Deuda') {
+              // Solo cobrar comandas que estén entregadas o en deuda
               checkDone();
               return;
             }
