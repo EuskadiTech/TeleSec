@@ -1158,7 +1158,8 @@ function TS_IndexElement(
   rowCallback = undefined,
   canAddCallback = undefined,
   globalSearchBar = true,
-  title = "Tabla"
+  title = "Tabla",
+  addButtonHash = null,
 ) {
   var tableId = safeuuid();
   var filterId = safeuuid();
@@ -1178,10 +1179,11 @@ function TS_IndexElement(
   container.innerHTML = html`
     <div class="card card-outline card-primary ts-index-card">
       <div class="card-header p-2 d-flex align-items-center" style="gap: 6px; min-height: 38px;">
-        <h3 class="card-title">${title}</h3>
+        <h3 class="card-title" style="font-size: 25px;">${title}</h3>
         <div id="${filterId}" class="ts-filter-badge card-tools"></div>
+        ${addButtonHash ? html`<a href="#${addButtonHash}" class="btn btn-sm btn-success ml-auto">Añadir</a>` : ''}
       </div>
-      <div class="card-body p-0">
+      <div class="card-body p-2">
         <table id="${tableId}" class="table table-bordered table-hover table-sm ts-index-table mb-0" style="width:100%">
           <thead><tr></tr></thead>
           <tbody></tbody>

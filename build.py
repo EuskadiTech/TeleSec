@@ -38,7 +38,8 @@ def pick_pages_source(edition):
         return custom_dir
 
     candidates = [
-        os.path.join("src", "pages", edition),
+        os.path.join("EDITIONS", edition, "pages"),
+        os.path.join("EDITIONS", edition, "page"),
         os.path.join("src", "pages"),
         os.path.join("src", "page"),
     ]
@@ -200,6 +201,7 @@ CORE_SCRIPTS = [
     "app_modules.js",
     "login.js",
     "index.js",
+    "personas.js",
 ]
 USE_APP_BUNDLE = os.environ.get("TELESEC_USE_APP_BUNDLE", "1").strip().lower() not in {"0", "false", "no"}
 USE_PAGE_BUNDLE = os.environ.get("TELESEC_USE_PAGE_BUNDLE", "1").strip().lower() not in {"0", "false", "no"}

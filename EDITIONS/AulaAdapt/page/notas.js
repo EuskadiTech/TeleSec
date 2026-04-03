@@ -16,7 +16,7 @@ PAGES.notas = {
       return;
     }
     if (mid === '$nuevo$') {
-      mid = safeuuid();
+      mid = safeuuid(""); // UID without html-safe prefix
     }
     var nameh1 = safeuuid();
     var field_asunto = safeuuid();

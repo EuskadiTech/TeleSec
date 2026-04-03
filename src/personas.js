@@ -16,7 +16,7 @@ PAGES.personas = {
       return;
     }
     if (mid === '$nuevo$') {
-      mid = safeuuid();
+      mid = safeuuid(''); // UID without html-safe prefix
     }
     var nameh1 = safeuuid();
     var permisosdet = safeuuid();
@@ -32,76 +32,122 @@ PAGES.personas = {
     var btn_borrar = safeuuid();
     var btn_ver_monedero = safeuuid();
     container.innerHTML = html`
-      <h1>Persona <code id="${nameh1}"></code></h1>
-      <fieldset style="width: 100%;max-width: 980px;box-sizing: border-box;">
+      <div class="card card-outline card-primary ts-index-card" style="width: 100%;">
+        <div class="card-header">
+          <h3 class="card-title" style="font-size: 25px;">Persona <code style="font-size: 10px;" id="${nameh1}"></code></h3>
+        </div>
+        <div class="card-body">
           <div style="display: flex;flex-wrap: wrap;gap: 10px 16px;">
-            <label style="display: flex;flex-direction: column;gap: 6px;max-width: 105px;flex: 1 1 105px;">
-                Foto
-                <img id="${render_foto}" height="100px" style="border: 3px inset; min-width: 7px; width: fit-content;" src="static/ico/user_generic.png">
-                <input type="file" accept="image/*" id="${field_foto}" style="display: none;">
+            <label
+              style="display: flex;flex-direction: column;gap: 6px;max-width: 105px;flex: 1 1 105px;"
+            >
+              Foto
+              <img
+                id="${render_foto}"
+                height="100px"
+                style="border: 3px inset; min-width: 7px; width: fit-content;"
+                src="static/ico/user_generic.png"
+              />
+              <input type="file" accept="image/*" id="${field_foto}" style="display: none;" />
             </label>
-            <label style="display: flex;flex-direction: column;gap: 6px;min-width: 220px;flex: 1 1 280px;">
-                Nombre
-                <input type="text" id="${field_nombre}">
+            <label
+              style="display: flex;flex-direction: column;gap: 6px;min-width: 220px;flex: 1 1 280px;"
+            >
+              Nombre
+              <input type="text" id="${field_nombre}" />
             </label>
-            <label style="display: flex;flex-direction: column;gap: 6px;min-width: 170px;flex: 1 1 170px;">
-                Zona
-                <input type="text" id="${field_zona}">
+            <label
+              style="display: flex;flex-direction: column;gap: 6px;min-width: 170px;flex: 1 1 170px;"
+            >
+              Zona
+              <input type="text" id="${field_zona}" />
             </label>
-            <label style="display: flex;flex-direction: column;gap: 6px;max-width: 170px;flex: 1 1 170px;">
-                Saldo Monedero
-                <input type="number" step="0.01" id="${field_monedero_balance}" disabled style="color: #000; font-weight: bold;">
+            <label
+              style="display: flex;flex-direction: column;gap: 6px;max-width: 170px;flex: 1 1 170px;"
+            >
+              Saldo Monedero
+              <input
+                type="number"
+                step="0.01"
+                id="${field_monedero_balance}"
+                disabled
+                style="color: #000; font-weight: bold;"
+              />
             </label>
-            <label style="display: flex;flex-direction: column;gap: 6px;max-width: 50px;flex: 1 1 50px;">
-                Anilla
-                <input type="color" id="${field_anilla}">
+            <label
+              style="display: flex;flex-direction: column;gap: 6px;max-width: 50px;flex: 1 1 50px;"
+            >
+              Anilla
+              <input type="color" id="${field_anilla}" />
             </label>
-            <label style="display: flex;flex-direction: column;gap: 6px;max-width: 60px;flex: 1 1 60px;">
-                Ocultar?
-                <input type="checkbox" id="${field_oculto}" style="height: 50px; width: 50px; margin: 0;">
+            <label
+              style="display: flex;flex-direction: column;gap: 6px;max-width: 60px;flex: 1 1 60px;"
+            >
+              Ocultar
+              <input
+                type="checkbox"
+                id="${field_oculto}"
+                style="height: 50px; width: 50px; margin: 0;"
+              />
             </label>
-            <label style="display: flex;flex-direction: column;gap: 6px;min-width: 220px;flex: 1 1 100%;">
-                Notas
-                <textarea id="${field_notas}"></textarea>
+            <label
+              style="display: flex;flex-direction: column;gap: 6px;min-width: 220px;flex: 1 1 100%;"
+            >
+              Notas
+              <textarea id="${field_notas}"></textarea>
             </label>
-            <details style="flex: 1 1 100%;">
-              <summary>Permisos</summary>
-              <form id="${permisosdet}">
-              </form>
-            </details>
-            <details style="background: #e3fde3ff; border: 2px solid #21f328ff; border-radius: 8px; padding: 10px; margin: 15px 0; display: none; flex: 1 1 100%;">
-              <summary style="cursor: pointer; font-weight: bold; color: rgba(26, 141, 3, 1);">🔗 Generar enlaces</summary>
-              <div style="padding: 15px;display: flex;flex-wrap: wrap;gap: 10px 16px;align-items: flex-end;">
-                <label style="display: flex;flex-direction: column;gap: 6px;min-width: 220px;flex: 1 1 100%;">
-                    Este servidor
-                    <input type="url" value="${location.protocol}//${location.hostname}:${location.port}${location.pathname}?sublogin=${mid}" style="font-size: 10px; font-weight: bold; color: #000;">
-                </label>
-              </div>
-            </details>
           </div>
-          <hr>
+          <details style="flex: 1 1 100%;">
+            <summary>Permisos</summary>
+            <form id="${permisosdet}"></form>
+          </details>
+          <details
+            style="background: #e3fde3ff; border: 2px solid #21f328ff; border-radius: 8px; padding: 10px; margin: 15px 0; display: none; flex: 1 1 100%;"
+          >
+            <summary style="cursor: pointer; font-weight: bold; color: rgba(26, 141, 3, 1);">
+              🔗 Generar enlaces
+            </summary>
+            <div
+              style="padding: 15px;display: flex;flex-wrap: wrap;gap: 10px 16px;align-items: flex-end;"
+            >
+              <label
+                style="display: flex;flex-direction: column;gap: 6px;min-width: 220px;flex: 1 1 100%;"
+              >
+                Este servidor
+                <input
+                  type="url"
+                  value="${location.protocol}//${location.hostname}:${location.port}${location.pathname}?sublogin=${mid}"
+                  style="font-size: 10px; font-weight: bold; color: #000;"
+                />
+              </label>
+            </div>
+          </details>
+          <hr />
           <button class="saveico" id="${btn_guardar}">
             <img src="static/floppy_disk_green.png" />
-            <br>Guardar
+            <br />Guardar
           </button>
           <button class="delico" id="${btn_borrar}">
             <img src="static/garbage.png" />
-            <br>Borrar
+            <br />Borrar
           </button>
           <button type="button" id="${btn_ver_monedero}" class="opicon">
             <img src="static/cash_flow.png" />
-            <br>Movimientos
+            <br />Movimientos
           </button>
-          <button class="opicon" onclick="setUrlHash('personas')" style="float: right;"> <!-- Align to the right -->
+          <button class="opicon" onclick="setUrlHash('personas')" style="float: right;">
+            <!-- Align to the right -->
             <img src="static/exit.png" />
-            <br>Salir
+            <br />Salir
           </button>
-          <button class="opicon" onclick="window.print()" style="float: right;"> <!-- Align to the right -->
+          <button class="opicon" onclick="window.print()" style="float: right;">
+            <!-- Align to the right -->
             <img src="static/printer2.png" />
-            <br>Imprimir
+            <br />Imprimir
           </button>
-      </fieldset>
-      `;
+        </div>
+      </div>
+    `;
     var resized = '';
     var pdel = document.getElementById(permisosdet);
     DB.get('personas', mid).then((data) => {
@@ -241,12 +287,8 @@ PAGES.personas = {
       setUrlHash('index');
       return;
     }
-    var btn_new = safeuuid();
-    container.innerHTML = html`
-      <h1>Personas</h1>
-      <button id="${btn_new}">Nueva Persona</button>
-      <div id="tableContainer"></div>
-    `;
+    var table_id = safeuuid();
+    container.innerHTML = html` <div id="${table_id}"></div> `;
 
     const config = [
       // {
@@ -266,17 +308,12 @@ PAGES.personas = {
       'personas',
       config,
       'personas',
-      document.getElementById('tableContainer'),
+      document.getElementById(table_id),
       undefined,
       undefined,
-      true // Enable global search bar
+      true, // Enable global search bar
+      'Personas', // Title for the index page
+      'personas,$nuevo$' // Hash for the "Add New" button
     );
-    if (!checkRole('personas:edit')) {
-      document.getElementById(btn_new).style.display = 'none';
-    } else {
-      document.getElementById(btn_new).onclick = () => {
-        setUrlHash('personas,' + safeuuid(''));
-      };
-    }
   },
 };
