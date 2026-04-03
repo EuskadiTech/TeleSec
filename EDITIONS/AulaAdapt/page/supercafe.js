@@ -290,7 +290,7 @@ PAGES.supercafe = {
     var tts_check = safeuuid();
     var old = {};
     container.innerHTML = html`
-      <h1>Cafetería - Total: <span id="${totalprecio}">0</span>c</h1>
+      <h1>Cafetería <span style="font-size: 20px; color: #666;">Total: <span id="${totalprecio}">0</span>c</span></h1>
       <button
         id="${btn_new}"
         style="font-size: 26px; background-color: #4CAF50; color: white; padding: 5px 10px; text-align: center; text-decoration: none; display: inline-block; margin: 4px 2px; cursor: pointer;"
@@ -544,6 +544,7 @@ PAGES.supercafe = {
           var cobradas = 0;
           var sinSaldo = 0;
           var errores = 0;
+          var totalCentimos = 0;
           var total = comandas.length;
           var done = 0;
 
@@ -556,7 +557,8 @@ PAGES.supercafe = {
             done++;
             if (done === total) {
               toastr.success(
-                `Cobro auto completado: ${cobradas} cobradas, ${sinSaldo} sin saldo suficiente, ${errores} errores.`
+                `Cobro auto completado: ${cobradas} cobradas, ${sinSaldo} sin saldo suficiente, ${errores} errores.`,
+                `Total cobrado: ${(totalCentimos / 100).toFixed(2)}€`
               );
             }
           }
@@ -624,6 +626,7 @@ PAGES.supercafe = {
                 return DB.del('supercafe', id);
               })
               .then(() => {
+                totalCentimos += precio * 100; // Guardar en centavos para evitar problemas de float
                 cobradas++;
                 checkDone();
               })
