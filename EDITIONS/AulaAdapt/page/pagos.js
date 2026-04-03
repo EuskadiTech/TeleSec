@@ -195,7 +195,7 @@ PAGES.pagos = {
                   id="${numpad_display}"
                   step="0.01"
                   min="0"
-                  style="width: 100%; padding: 15px; font-size: 32px; text-align: right; 
+                  style="width: 100%; padding: 15px; font-size: 32px; line-height: 1; text-align: right; 
                   border: 3px solid #667eea; border-radius: 5px; font-weight: bold;"
                   value=""
                 />
@@ -1033,44 +1033,57 @@ PAGES.pagos = {
     var balance_total = safeuuid();
 
     container.innerHTML = html`
-      <h1>💳 Pagos y Transacciones</h1>
-
-      <div
-        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;"
-      >
-        <div
-          style="background: linear-gradient(135deg, #2ed573, #26d063); padding: 20px; border-radius: 10px; text-align: center; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"
-        >
-          <h3 style="margin: 0;">Total Ingresos</h3>
-          <div id="${total_ingresos}" style="font-size: 32px; font-weight: bold; margin-top: 10px;">
-            0.00€
+      <h1>Pagos y Transacciones</h1>
+      <div class="row">
+        <div class="col-md-3 col-sm-6 col-12">
+          <div class="info-box bg-success">
+            <span class="info-box-icon"><i class="far fa-arrow-alt-circle-up"></i></span>
+            <div class="overlay dark" id="${total_ingresos}_loading">
+              <i class="fas fa-3x fa-sync-alt fa-spin"></i>
+            </div>
+            <div class="info-box-content">
+              <span class="info-box-text">Ingresos</span>
+              <span class="info-box-number" style="font-size: 32px; line-height: 1;" id="${total_ingresos}">0.00€</span>
+              <span class="progress-description" id="${total_ingresos}_trend">
+                Sin cambios
+              </span>
+            </div>
           </div>
         </div>
-        <div
-          style="background: linear-gradient(135deg, #ff4757, #ff3838); padding: 20px; border-radius: 10px; text-align: center; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"
-        >
-          <h3 style="margin: 0;">Total Gastos</h3>
-          <div id="${total_gastos}" style="font-size: 32px; font-weight: bold; margin-top: 10px;">
-            0.00€
+        <div class="col-md-3 col-sm-6 col-12">
+          <div class="info-box bg-danger">
+            <span class="info-box-icon"><i class="far fa-arrow-alt-circle-down"></i></span>
+            <div class="overlay dark" id="${total_gastos}_loading">
+              <i class="fas fa-3x fa-sync-alt fa-spin"></i>
+            </div>
+            <div class="info-box-content">
+              <span class="info-box-text">Gastos</span>
+              <span class="info-box-number" style="font-size: 32px; line-height: 1;" id="${total_gastos}">0.00€</span>
+              <span class="progress-description" id="${total_gastos}_trend">
+                Sin cambios
+              </span>
+            </div>
           </div>
         </div>
-        <div
-          style="background: linear-gradient(135deg, #667eea, #764ba2); padding: 20px; border-radius: 10px; text-align: center; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"
-        >
-          <h3 style="margin: 0;">Balance Total</h3>
-          <div id="${balance_total}" style="font-size: 32px; font-weight: bold; margin-top: 10px;">
-            0.00€
+        <div class="col-md-3 col-sm-6 col-12">
+          <div class="info-box bg-info">
+            <span class="info-box-icon"><i class="far fa-arrow-alt-circle-up"></i></span>
+            <div class="overlay dark" id="${balance_total}_loading">
+              <i class="fas fa-3x fa-sync-alt fa-spin"></i>
+            </div>
+            <div class="info-box-content">
+              <span class="info-box-text">Saldo en monederos</span>
+              <span class="info-box-number" style="font-size: 32px; line-height: 1;" id="${balance_total}">0.00€</span>
+              <span class="progress-description" id="${balance_total}_trend">
+                Sin cambios
+              </span>
+            </div>
           </div>
         </div>
       </div>
-
-      <button id="${btn_datafono}" class="btn5">💳 Abrir Datafono</button>
-
-      <h2>Registro de Transacciones</h2>
+      
       <div id="tableContainer"></div>
     `;
-
-    var totals = { ingresos: 0, gastos: 0 };
 
     const config = [
       {
@@ -1159,29 +1172,134 @@ PAGES.pagos = {
       ingresos: {}, // { id: monto }
       gastos: {}, // { id: monto }
     };
-    var balance_real = 0;
-    EventListeners.Interval.push(
-      setInterval(() => {
-        balance_real = 0;
-        Object.values(SC_Personas).forEach((persona) => {
-          balance_real += parseFloat(persona.Monedero_Balance || 0);
-        });
-        document.getElementById(balance_total).innerText = balance_real.toFixed(2) + '€';
-        document.getElementById(balance_total).style.color =
-          balance_real >= 0 ? 'white' : '#ffcccc';
-      }, 1000)
-    );
+
+    var periodData = {
+      ingresosHoy: {}, // { id: monto }
+      ingresosAyer: {}, // { id: monto }
+      gastosHoy: {}, // { id: monto }
+      gastosAyer: {}, // { id: monto }
+    };
+
+    var now = new Date();
+    var startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    var startYesterday = new Date(startToday);
+    startYesterday.setDate(startYesterday.getDate() - 1);
+
+    var todayKey =
+      startToday.getFullYear() +
+      '-' +
+      String(startToday.getMonth() + 1).padStart(2, '0') +
+      '-' +
+      String(startToday.getDate()).padStart(2, '0');
+
+    var balanceBaseStorageKey = 'TELESEC_PAGOS_BALANCE_BASE_' + todayKey;
+    var hasTransactionData = false;
+
+    function setCardNoData(valueId, loadingId, trendId) {
+      var valueElement = document.getElementById(valueId);
+      var loadingElement = document.getElementById(loadingId);
+      var trendElement = document.getElementById(trendId);
+
+      if (valueElement) {
+        valueElement.innerText = '0.00€';
+      }
+      if (loadingElement) {
+        loadingElement.style.display = 'none';
+      }
+      if (trendElement) {
+        trendElement.innerText = 'Sin datos';
+      }
+    }
+
+    function buildTrendText(currentValue, referenceValue, suffix = '') {
+      if (referenceValue === null || referenceValue === undefined || isNaN(referenceValue)) {
+        return 'Sin datos';
+      }
+
+      var delta = currentValue - referenceValue;
+      if (Math.abs(delta) < 0.00001) {
+        return 'Sin cambios' + suffix;
+      }
+
+      var absDelta = Math.abs(delta);
+      var arrow = delta > 0 ? '↑' : '↓';
+      var percentText = '';
+
+      if (Math.abs(referenceValue) > 0.00001) {
+        var pct = (absDelta / Math.abs(referenceValue)) * 100;
+        percentText = ' (' + pct.toFixed(1) + '%)';
+      }
+
+      return `${arrow} ${absDelta.toFixed(2)}€${percentText}${suffix}`;
+    }
+
+    function updateMetricCard(valueId, loadingId, trendId, currentValue, trendText) {
+      var valueElement = document.getElementById(valueId);
+      var loadingElement = document.getElementById(loadingId);
+      var trendElement = document.getElementById(trendId);
+
+      if (!valueElement || !trendElement) return;
+
+      valueElement.innerText = currentValue.toFixed(2) + '€';
+
+      if (loadingElement) {
+        loadingElement.style.display = 'none';
+      }
+
+      trendElement.innerText = trendText;
+    }
+
+    function updateWalletBalanceMetric() {
+      var balanceMonedero = 0;
+      Object.values(SC_Personas).forEach((persona) => {
+        balanceMonedero += parseFloat(persona.Monedero_Balance || 0);
+      });
+
+      var balanceBaseRaw = localStorage.getItem(balanceBaseStorageKey);
+      var balanceBase = null;
+      if (balanceBaseRaw === null) {
+        localStorage.setItem(balanceBaseStorageKey, balanceMonedero.toFixed(2));
+      } else {
+        balanceBase = parseFloat(balanceBaseRaw);
+      }
+
+      var trendText = hasTransactionData
+        ? buildTrendText(balanceMonedero, balanceBase, ' (vs inicio del día)')
+        : 'Sin datos';
+
+      updateMetricCard(
+        balance_total,
+        balance_total + '_loading',
+        balance_total + '_trend',
+        balanceMonedero,
+        trendText
+      );
+
+      var balanceElement = document.getElementById(balance_total);
+      if (balanceElement) {
+        balanceElement.style.color = balanceMonedero >= 0 ? 'white' : '#ffcccc';
+      }
+
+    }
+
+    setCardNoData(total_ingresos, total_ingresos + '_loading', total_ingresos + '_trend');
+    setCardNoData(total_gastos, total_gastos + '_loading', total_gastos + '_trend');
+    setCardNoData(balance_total, balance_total + '_loading', balance_total + '_trend');
+
+    updateWalletBalanceMetric();
+    EventListeners.Interval.push(setInterval(updateWalletBalanceMetric, 1000));
+
     TS_IndexElement(
       'pagos',
       config,
       'pagos',
       document.getElementById('tableContainer'),
       (data, new_tr) => {
+        hasTransactionData = true;
         var id = data._key;
 
         const monto = parseFloat(data.Monto || 0) || 0;
         const tipo = data.Tipo;
-        const metodo = data.Metodo || '';
 
         // Count all Ingresos and Gastos in totals (excluding Transferencias)
         // Reset entries on every call for this ID
@@ -1199,15 +1317,66 @@ PAGES.pagos = {
           totalData.gastos[id] = 0;
         }
 
+        // Period-based trend data (hoy vs ayer)
+        periodData.ingresosHoy[id] = 0;
+        periodData.ingresosAyer[id] = 0;
+        periodData.gastosHoy[id] = 0;
+        periodData.gastosAyer[id] = 0;
+
+        var txDate = data.Fecha ? new Date(data.Fecha) : null;
+        var isValidDate = txDate && !isNaN(txDate.getTime());
+        if (isValidDate) {
+          var isToday = txDate >= startToday;
+          var isYesterday = txDate >= startYesterday && txDate < startToday;
+
+          if (tipo === 'Ingreso' && data.Origen != 'Promo Bono') {
+            if (isToday) {
+              periodData.ingresosHoy[id] = monto;
+            } else if (isYesterday) {
+              periodData.ingresosAyer[id] = monto;
+            }
+          }
+
+          if (tipo === 'Gasto') {
+            if (isToday) {
+              periodData.gastosHoy[id] = monto;
+            } else if (isYesterday) {
+              periodData.gastosAyer[id] = monto;
+            }
+          }
+        }
+
         // Compute totals by summing all objects
         const totalIngresos = Object.values(totalData.ingresos).reduce((a, b) => a + b, 0);
         const totalGastos = Object.values(totalData.gastos).reduce((a, b) => a + b, 0);
-        const balance = totalIngresos - totalGastos;
 
-        // Update UI
-        document.getElementById(total_ingresos).innerText = totalIngresos.toFixed(2) + '€';
-        document.getElementById(total_gastos).innerText = totalGastos.toFixed(2) + '€';
-      }
+        const ingresosHoy = Object.values(periodData.ingresosHoy).reduce((a, b) => a + b, 0);
+        const ingresosAyer = Object.values(periodData.ingresosAyer).reduce((a, b) => a + b, 0);
+        const gastosHoy = Object.values(periodData.gastosHoy).reduce((a, b) => a + b, 0);
+        const gastosAyer = Object.values(periodData.gastosAyer).reduce((a, b) => a + b, 0);
+
+        var trendIngresos = buildTrendText(ingresosHoy, ingresosAyer, ' hoy (vs ayer)');
+        var trendGastos = buildTrendText(gastosHoy, gastosAyer, ' hoy (vs ayer)');
+
+        updateMetricCard(
+          total_ingresos,
+          total_ingresos + '_loading',
+          total_ingresos + '_trend',
+          totalIngresos,
+          trendIngresos
+        );
+        updateMetricCard(
+          total_gastos,
+          total_gastos + '_loading',
+          total_gastos + '_trend',
+          totalGastos,
+          trendGastos
+        );
+      },
+      undefined,
+      true,
+      "Registro de Transacciones",
+      "pagos,datafono"
     );
 
     document.getElementById(btn_datafono).onclick = () => {
