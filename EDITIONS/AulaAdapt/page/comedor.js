@@ -237,10 +237,8 @@ PAGES.comedor = {
       return;
     }
     const cont = safeuuid();
-    var btn_new = safeuuid();
     container.innerHTML = html`
-      <h1>Menú del comedor</h1>
-      <button id="${btn_new}">Nueva entrada</button>
+      <h1><i class="fas fa-utensils"></i> Menú del comedor</h1>
       <div id="${cont}"></div>
     `;
     var renderList = () => {
@@ -288,18 +286,14 @@ PAGES.comedor = {
           if (data.Fecha == CurrentISODate()) {
             new_tr.style.backgroundColor = 'lightgreen';
           }
-        }
+        },
+        undefined,
+        true,
+        "Menú del comedor",
+        "comedor,$nuevo$"
       );
     };
 
     PAGES.comedor.__cleanupOldMenus().finally(renderList);
-
-    if (!checkRole('comedor:edit')) {
-      document.getElementById(btn_new).style.display = 'none';
-    } else {
-      document.getElementById(btn_new).onclick = () => {
-        setUrlHash('comedor,' + safeuuid(''));
-      };
-    }
   },
 };

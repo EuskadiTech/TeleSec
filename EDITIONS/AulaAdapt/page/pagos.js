@@ -3,7 +3,7 @@ PERMS['pagos:edit'] = '&gt; Editar';
 PAGES.pagos = {
   navcss: 'btn7',
   icon: 'static/appico/credit_cards.png',
-  faicon: 'fas fa-credit-card',
+  faicon: 'fas fa-euro-sign',
   AccessControl: true,
   Title: 'Pagos',
   navItems: [
@@ -1033,7 +1033,7 @@ PAGES.pagos = {
     var balance_total = safeuuid();
 
     container.innerHTML = html`
-      <h1>Pagos y Transacciones</h1>
+      <h1><i class="fas fa-euro-sign"></i> Pagos y Transacciones</h1>
       <div class="row">
         <div class="col-md-3 col-sm-6 col-12">
           <div class="info-box bg-success">
@@ -1378,14 +1378,6 @@ PAGES.pagos = {
       "Registro de Transacciones",
       "pagos,datafono"
     );
-
-    document.getElementById(btn_datafono).onclick = () => {
-      setUrlHash('pagos,datafono');
-    };
-
-    if (!checkRole('pagos:edit')) {
-      document.getElementById(btn_datafono).style.display = 'none';
-    }
   },
 
   // QR Scanner for selecting wallet/persona

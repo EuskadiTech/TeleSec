@@ -290,7 +290,7 @@ PAGES.supercafe = {
     var tts_check = safeuuid();
     var old = {};
     container.innerHTML = html`
-      <h1>Cafetería <span style="font-size: 20px; color: #666;">Total: <span id="${totalprecio}">0</span>c</span></h1>
+      <h1><i class="fas fa-coffee"></i> Cafetería <span style="font-size: 20px; color: #666;">Total: <span id="${totalprecio}">0</span>c</span></h1>
       <button
         id="${btn_new}"
         style="font-size: 26px; background-color: #4CAF50; color: white; padding: 5px 10px; text-align: center; text-decoration: none; display: inline-block; margin: 4px 2px; cursor: pointer;"

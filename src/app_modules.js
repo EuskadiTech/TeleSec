@@ -1587,6 +1587,8 @@ function TS_IndexElement(
           img.style.maxHeight = '80px';
           img.style.maxWidth = '80px';
           tdAttachment.appendChild(img);
+          tdAttachment.style.textAlign = 'center';
+          tdAttachment.style.width = '80px';
           new_tr.appendChild(tdAttachment);
           try {
             const personaId =

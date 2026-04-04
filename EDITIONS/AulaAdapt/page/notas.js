@@ -290,7 +290,7 @@ PAGES.notas = {
       return;
     }
     const tablebody = safeuuid();
-    container.innerHTML = html` <div id="${tablebody}"></div> `;
+    container.innerHTML = html`<h1><i class="fas fa-sticky-note"></i> Notas</h1> <div id="${tablebody}"></div> `;
     TS_IndexElement(
       'notas',
       [

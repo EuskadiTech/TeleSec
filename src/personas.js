@@ -288,7 +288,7 @@ PAGES.personas = {
       return;
     }
     var table_id = safeuuid();
-    container.innerHTML = html` <div id="${table_id}"></div> `;
+    container.innerHTML = html`<h1><i class="fas fa-user"></i> Personas</h1><div id="${table_id}"></div>`;
 
     const config = [
       // {

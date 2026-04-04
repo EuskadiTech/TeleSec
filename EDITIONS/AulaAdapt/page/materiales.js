@@ -3,11 +3,11 @@ PERMS['materiales:edit'] = '&gt; Editar';
 PAGES.materiales = {
   navcss: 'btn2',
   icon: 'static/appico/shelf.png',
-  faicon: 'fas fa-boxes',
+  faicon: 'fas fa-archive',
   AccessControl: true,
   Title: 'Almacén',
   navItems: [
-    { label: 'Ver materiales', hash: 'materiales', icon: 'fas fa-boxes' },
+    { label: 'Ver materiales', hash: 'materiales', icon: 'fas fa-archive' },
     { label: 'Nuevo material', hash: 'materiales,$nuevo$', icon: 'fas fa-plus-circle' },
   ],
   edit: function (mid) {
@@ -540,6 +540,7 @@ PAGES.materiales = {
     var check_por_revisar = safeuuid();
     var tableContainer = safeuuid();
     container.innerHTML = html`
+      <h1 style="margin-bottom: 16px;"><i class="fas fa-archive"></i> Almacén</h1>
       <div style="display: flex;gap: 16px;align-items: center;margin-bottom: 12px;">
         <label style="display: inline-block;align-items: center;gap: 6px;">
           <b>Faltante?</b><br />

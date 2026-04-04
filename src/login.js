@@ -250,6 +250,7 @@ PAGES.login = {
       var field_tenant = safeuuid();
       var field_pass = safeuuid();
       var btn_login = safeuuid();
+      var autoLoginDone = false;
 
       document.getElementById(div_form).innerHTML = html`
         <h2>Iniciar sesión</h2>
@@ -261,7 +262,8 @@ PAGES.login = {
         </label>
         <label>
           Contraseña del grupo
-          <input type="password" id="${field_pass}" /><br /><br />
+          <input type="password" id="${field_pass}"
+            value="${localStorage.getItem('TELESEC_LAST_TENANT_PASSWORD') || ''}" /><br /><br />
         </label>
         <button id="${btn_login}" class="btn5">Acceder</button>
         <a class="button btn1" href="#login,setup" style="margin-left:8px;">Configurar servidor</a>
@@ -270,10 +272,16 @@ PAGES.login = {
           : ''}
       `;
 
-      document.getElementById(btn_login).onclick = async () => {
+      async function loginWithTenantCredentials(showValidationError) {
         var tenant = (document.getElementById(field_tenant).value || '').trim();
         var pass = document.getElementById(field_pass).value;
-        if (!tenant || !pass) { toastr.error('Introduce el grupo y la contraseña'); return; }
+        if (!tenant || !pass) {
+          if (showValidationError) toastr.error('Introduce el grupo y la contraseña');
+          return;
+        }
+
+        localStorage.setItem('TELESEC_LAST_TENANT', tenant);
+        localStorage.setItem('TELESEC_LAST_TENANT_PASSWORD', pass);
 
         var btn = document.getElementById(btn_login);
         btn.disabled = true; btn.innerText = 'Accediendo…';
@@ -292,16 +300,15 @@ PAGES.login = {
           });
           var data = await res.json();
           if (!res.ok) {
-            toastr.error(data.error || 'Credenciales incorrectas');
+            if (showValidationError) toastr.error(data.error || 'Credenciales incorrectas');
             btn.disabled = false; btn.innerText = 'Acceder';
             return;
           }
-          localStorage.setItem('TELESEC_LAST_TENANT', tenant);
           tenantToken = data.tenant_token;
           personasList = data.personas || [];
 
           if (personasList.length === 0) {
-            toastr.warning('No hay personas en este grupo. Crea una desde la configuración.');
+            if (showValidationError) toastr.warning('No hay personas en este grupo. Crea una desde la configuración.');
             btn.disabled = false; btn.innerText = 'Acceder';
             return;
           }
@@ -309,9 +316,13 @@ PAGES.login = {
           step = 'persona';
           renderPersonaStep(data.tenant_name || tenant);
         } catch (e) {
-          toastr.error('Error de conexión: ' + (e.message || e));
+          if (showValidationError) toastr.error('Error de conexión: ' + (e.message || e));
           btn.disabled = false; btn.innerText = 'Acceder';
         }
+      }
+
+      document.getElementById(btn_login).onclick = async () => {
+        await loginWithTenantCredentials(true);
       };
 
       // Allow pressing Enter in password field
@@ -320,6 +331,12 @@ PAGES.login = {
         if (passEl) passEl.addEventListener('keydown', (e) => {
           if (e.key === 'Enter') document.getElementById(btn_login).click();
         });
+
+        // If credentials are already saved, try login automatically.
+        if (!autoLoginDone && localStorage.getItem('TELESEC_LAST_TENANT') && localStorage.getItem('TELESEC_LAST_TENANT_PASSWORD')) {
+          autoLoginDone = true;
+          loginWithTenantCredentials(false);
+        }
       }, 50);
     }
 
@@ -464,7 +481,7 @@ function _applyLogin(data, personaDetails) {
       };
       clearInterval(timer);
     }
-  }, 250);
+  }, 500);
 
   SUB_LOGGED_IN_DETAILS = {
     Nombre: localStorage.getItem('TELESEC_TENANT_NAME') || personaId,
