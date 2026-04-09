@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ instance_name }} — Acceso</title>
+  <link rel="stylesheet" href="/static/adminlte/bootstrap.min.css">
+  <link rel="stylesheet" href="/static/adminlte/fontawesome.min.css">
+  <link rel="stylesheet" href="/static/telesec-custom.css">
+  <style>
+    body { background: #1a1a2e; }
+    .login-card {
+      max-width: 440px;
+      margin: 80px auto;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.4);
+    }
+    .login-card .card-header {
+      border-radius: 12px 12px 0 0;
+      background: #16213e;
+      color: #e0e0e0;
+      text-align: center;
+      padding: 2rem 1rem 1.5rem;
+    }
+    .login-card .card-header h1 { font-size: 1.8rem; margin-bottom: .25rem; }
+    .login-card .card-header small { color: #8888aa; }
+    .persona-card {
+      cursor: pointer;
+      transition: transform .15s, box-shadow .15s;
+    }
+    .persona-card:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,.25); }
+    .persona-card.active { border: 2px solid #4a9eff; }
+    .persona-avatar {
+      width: 72px; height: 72px; border-radius: 50%;
+      object-fit: cover; background: #2c2c3e;
+    }
+    .persona-avatar-placeholder {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: #2c2c3e; display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; color: #888;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="card login-card">
+    <div class="card-header">
+      <h1><i class="fas fa-shield-alt"></i> {{ instance_name }}</h1>
+      <small>Acceso seguro</small>
+    </div>
+    <div class="card-body bg-dark text-light p-4">
+
+      {% if error %}
+      <div class="alert alert-danger">{{ error }}</div>
+      {% endif %}
+
+      {% if not personas %}
+        {# ── Step 1: password ── #}
+        {% if password_required %}
+        <form method="post" autocomplete="off">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="auth">
+          <div class="form-group">
+            <label for="password">Contraseña de instancia</label>
+            <input type="password" class="form-control bg-dark text-light border-secondary"
+                   id="password" name="password" autofocus required placeholder="Contraseña">
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">
+            <i class="fas fa-arrow-right"></i> Continuar
+          </button>
+        </form>
+        {% else %}
+          {# No password required — auto-redirect to persona selection via JS if has_personas #}
+          {% if has_personas %}
+          <form method="post" id="auto-auth-form" autocomplete="off">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="auth">
+            <input type="hidden" name="password" value="">
+          </form>
+          <p class="text-center text-muted">Cargando personas…</p>
+          <script>document.getElementById('auto-auth-form').submit();</script>
+          {% else %}
+          <div class="alert alert-warning">
+            No hay personas configuradas en esta instancia.
+            Utiliza la API para crear la primera persona administradora.
+          </div>
+          {% endif %}
+        {% endif %}
+
+      {% else %}
+        {# ── Step 2: select persona ── #}
+        <p class="text-center mb-3 text-muted">Selecciona tu perfil</p>
+        <form method="post" id="persona-form" autocomplete="off">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="select_persona">
+          <input type="hidden" name="persona_id" id="selected-persona-id" value="">
+
+          <div class="row justify-content-center">
+            {% for persona in personas %}
+            <div class="col-6 col-sm-4 mb-3">
+              <div class="card bg-secondary text-center p-3 persona-card"
+                   data-id="{{ persona.id }}"
+                   onclick="selectPersona('{{ persona.id }}')">
+                <div class="d-flex justify-content-center mb-2">
+                  {% if persona.Foto %}
+                  <img src="{{ persona.Foto }}" class="persona-avatar" alt="{{ persona.Nombre }}">
+                  {% else %}
+                  <div class="persona-avatar-placeholder"><i class="fas fa-user"></i></div>
+                  {% endif %}
+                </div>
+                <strong>{{ persona.Nombre }}</strong>
+                {% if persona.Region %}<br><small class="text-muted">{{ persona.Region }}</small>{% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+
+          <button type="submit" class="btn btn-success btn-block mt-2" id="confirm-btn" disabled>
+            <i class="fas fa-sign-in-alt"></i> Entrar
+          </button>
+        </form>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+
+<script src="/static/adminlte/bootstrap.bundle.min.js"></script>
+<script>
+function selectPersona(id) {
+  document.querySelectorAll('.persona-card').forEach(c => c.classList.remove('active'));
+  const card = document.querySelector('.persona-card[data-id="' + id + '"]');
+  if (card) card.classList.add('active');
+  document.getElementById('selected-persona-id').value = id;
+  document.getElementById('confirm-btn').disabled = false;
+}
+</script>
+</body>
+</html>

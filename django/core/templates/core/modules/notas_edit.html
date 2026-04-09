@@ -1,0 +1,47 @@
+{% extends "core/base.html" %}
+{% block title %}{% if is_new %}Nueva nota{% else %}Editar nota{% endif %}{% endblock %}
+{% block nav_notas %}active{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">
+      <i class="fas fa-sticky-note mr-2"></i>
+      {% if is_new %}Nueva nota{% else %}Editar: {{ item.Asunto }}{% endif %}
+    </h3>
+  </div>
+  <form method="post" autocomplete="off">
+    {% csrf_token %}
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-8">
+          <div class="form-group">
+            <label>Asunto <span class="text-danger">*</span></label>
+            <input type="text" name="Asunto" class="form-control" value="{{ item.Asunto }}" required>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <div class="form-group">
+            <label>Fecha</label>
+            <input type="date" name="Fecha" class="form-control" value="{{ item.Fecha }}">
+          </div>
+        </div>
+        <div class="col-md-2">
+          <div class="form-group">
+            <label>Autor</label>
+            <input type="text" name="Autor" class="form-control" value="{{ item.Autor }}">
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Contenido <small class="text-muted">(soporta Markdown)</small></label>
+        <textarea name="Contenido" class="form-control font-monospace" rows="14">{{ item.Contenido }}</textarea>
+      </div>
+    </div>
+    <div class="card-footer d-flex justify-content-between">
+      <a href="/app/notas/" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Volver</a>
+      <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Guardar</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

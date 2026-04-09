@@ -1,0 +1,123 @@
+{% extends "core/base.html" %}
+{% block title %}{% if is_new %}Nueva persona{% else %}Editar persona{% endif %}{% endblock %}
+{% block nav_personas %}active{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">
+      <i class="fas fa-users mr-2"></i>
+      {% if is_new %}Nueva persona{% else %}Editar: {{ item.Nombre }}{% endif %}
+    </h3>
+  </div>
+  <form method="post" enctype="multipart/form-data" autocomplete="off">
+    {% csrf_token %}
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-8">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Nombre <span class="text-danger">*</span></label>
+                <input type="text" name="Nombre" class="form-control" value="{{ item.Nombre }}" required>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Región</label>
+                <input type="text" name="Region" class="form-control" value="{{ item.Region }}">
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Roles <small class="text-muted">(separados por coma)</small></label>
+                <input type="text" name="Roles" class="form-control" value="{{ item.Roles }}" placeholder="ADMIN, USUARIO">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Email</label>
+                <input type="email" name="email" class="form-control" value="{{ item.email }}">
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>Monedero (balance)</label>
+                <input type="number" step="0.01" name="Monedero_Balance" class="form-control"
+                       value="{{ item.Monedero_Balance|default:'0' }}">
+              </div>
+            </div>
+            <div class="col-md-4 d-flex align-items-end pb-3">
+              <div class="form-check">
+                <input type="checkbox" name="Oculto" class="form-check-input" id="oculto-check"
+                       {% if item.Oculto %}checked{% endif %}>
+                <label class="form-check-label" for="oculto-check">Oculto</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4 text-center">
+          {% if item.Foto %}
+          <img src="{{ item.Foto }}" id="foto-preview"
+               style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid #ccc;"
+               alt="Foto actual">
+          {% else %}
+          <div id="foto-preview-placeholder"
+               style="width:120px;height:120px;border-radius:50%;background:#2c2c3e;display:flex;align-items:center;justify-content:center;font-size:3rem;color:#888;margin:0 auto;">
+            <i class="fas fa-user"></i>
+          </div>
+          {% endif %}
+          <div class="form-group mt-2">
+            <label class="btn btn-outline-secondary btn-sm">
+              <i class="fas fa-camera"></i> Cambiar foto
+              <input type="file" name="Foto_file" accept="image/*" style="display:none" id="foto-input"
+                     onchange="previewFoto(this)">
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Notas</label>
+        <textarea name="Notas" class="form-control" rows="3">{{ item.Notas }}</textarea>
+      </div>
+    </div>
+    <div class="card-footer d-flex justify-content-between">
+      <a href="/app/personas/" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Volver
+      </a>
+      <button type="submit" class="btn btn-success">
+        <i class="fas fa-save"></i> Guardar
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function previewFoto(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      let img = document.getElementById('foto-preview');
+      if (!img) {
+        img = document.createElement('img');
+        img.id = 'foto-preview';
+        img.style = 'width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid #ccc;';
+        const ph = document.getElementById('foto-preview-placeholder');
+        if (ph) ph.replaceWith(img);
+        else document.querySelector('.col-md-4.text-center').prepend(img);
+      }
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+</script>
+{% endblock %}

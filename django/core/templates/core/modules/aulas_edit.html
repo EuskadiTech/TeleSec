@@ -1,0 +1,75 @@
+{% extends "core/base.html" %}
+{% block title %}{% if is_new %}Nuevo registro{% else %}Editar registro{% endif %}{% endblock %}
+{% block nav_aulas %}active{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">
+      <i class="fas fa-door-open mr-2"></i>
+      {% if subtable == "aulas_solicitudes" %}
+        {% if is_new %}Nueva solicitud{% else %}Editar solicitud{% endif %}
+      {% else %}
+        {% if is_new %}Nuevo informe{% else %}Editar informe{% endif %}
+      {% endif %}
+    </h3>
+  </div>
+  <form method="post" autocomplete="off">
+    {% csrf_token %}
+    <input type="hidden" name="subtable" value="{{ subtable }}">
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>Asunto <span class="text-danger">*</span></label>
+            <input type="text" name="Asunto" class="form-control" value="{{ item.Asunto }}" required>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>Fecha</label>
+            <input type="date" name="Fecha" class="form-control" value="{{ item.Fecha }}">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>Estado</label>
+            <select name="Estado" class="form-control">
+              {% if subtable == "aulas_solicitudes" %}
+              <option {% if item.Estado == "Pendiente" %}selected{% endif %}>Pendiente</option>
+              <option {% if item.Estado == "Aprobada" %}selected{% endif %}>Aprobada</option>
+              <option {% if item.Estado == "Denegada" %}selected{% endif %}>Denegada</option>
+              {% else %}
+              <option {% if item.Estado == "Borrador" %}selected{% endif %}>Borrador</option>
+              <option {% if item.Estado == "Publicado" %}selected{% endif %}>Publicado</option>
+              <option {% if item.Estado == "Archivado" %}selected{% endif %}>Archivado</option>
+              {% endif %}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {% if subtable == "aulas_solicitudes" %}
+      <div class="form-group">
+        <label>Solicitante</label>
+        <input type="text" name="Solicitante" class="form-control" value="{{ item.Solicitante }}">
+      </div>
+      {% else %}
+      <div class="form-group">
+        <label>Autor</label>
+        <input type="text" name="Autor" class="form-control" value="{{ item.Autor }}">
+      </div>
+      {% endif %}
+
+      <div class="form-group">
+        <label>Contenido</label>
+        <textarea name="Contenido" class="form-control" rows="10">{{ item.Contenido }}</textarea>
+      </div>
+    </div>
+    <div class="card-footer d-flex justify-content-between">
+      <a href="/app/aulas/" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Volver</a>
+      <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Guardar</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

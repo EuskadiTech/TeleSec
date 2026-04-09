@@ -1,0 +1,167 @@
+{% extends "core/base.html" %}
+{% block title %}Tienda de módulos{% endblock %}
+{% block nav_tienda %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2><i class="fas fa-store mr-2"></i>Tienda de módulos</h2>
+  <small class="text-muted" id="store-status"></small>
+</div>
+
+<div class="row" id="catalog-grid">
+  {% for pkg in catalog %}
+  <div class="col-md-4 col-sm-6 mb-4" id="pkg-{{ pkg.package_id }}">
+    <div class="card h-100 {% if pkg.installed and pkg.enabled %}border-success{% elif pkg.installed %}border-secondary{% endif %}">
+      <div class="card-header">
+        <h5 class="card-title mb-0">
+          <i class="{{ pkg.icon }} mr-2"></i>{{ pkg.name }}
+          {% if pkg.bundled %}<span class="badge badge-dark ml-1">Integrado</span>{% endif %}
+          {% if pkg.free %}<span class="badge badge-success ml-1">Gratis</span>{% endif %}
+        </h5>
+        <small class="text-muted">v{{ pkg.version }}</small>
+      </div>
+      <div class="card-body">
+        <p class="card-text">{{ pkg.description }}</p>
+        <p class="mb-1"><small class="text-muted">Módulos: {{ pkg.modules|join:", " }}</small></p>
+      </div>
+      <div class="card-footer">
+        {% if not pkg.installed %}
+          {% if pkg.free or pkg.bundled %}
+          <button class="btn btn-primary btn-sm btn-install"
+                  data-pkg="{{ pkg.package_id }}" data-free="1">
+            <i class="fas fa-download"></i> Instalar
+          </button>
+          {% else %}
+          <div class="input-group input-group-sm">
+            <input type="text" class="form-control" id="key-{{ pkg.package_id }}"
+                   placeholder="Clave de licencia">
+            <div class="input-group-append">
+              <button class="btn btn-primary btn-install"
+                      data-pkg="{{ pkg.package_id }}" data-free="0">
+                <i class="fas fa-key"></i> Activar
+              </button>
+            </div>
+          </div>
+          {% endif %}
+
+        {% else %}
+          <div class="btn-group btn-group-sm w-100">
+            {% if pkg.enabled %}
+            <button class="btn btn-outline-warning btn-toggle"
+                    data-pkg="{{ pkg.package_id }}" data-enable="0">
+              <i class="fas fa-pause"></i> Deshabilitar
+            </button>
+            {% else %}
+            <button class="btn btn-outline-success btn-toggle"
+                    data-pkg="{{ pkg.package_id }}" data-enable="1">
+              <i class="fas fa-play"></i> Habilitar
+            </button>
+            {% endif %}
+            <button class="btn btn-outline-danger btn-uninstall"
+                    data-pkg="{{ pkg.package_id }}">
+              <i class="fas fa-trash"></i> Desinstalar
+            </button>
+          </div>
+        {% endif %}
+        <div class="mt-2 store-msg" id="msg-{{ pkg.package_id }}"></div>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="col-12">
+    <div class="alert alert-info">No hay paquetes en el catálogo.</div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const API = window.TELESEC_API_URL || '';
+const JWT = localStorage.getItem('TELESEC_JWT') || '';
+
+function showMsg(pkg, text, cls) {
+  const el = document.getElementById('msg-' + pkg);
+  if (el) {
+    el.innerHTML = '<span class="text-' + cls + ' small">' + text + '</span>';
+    setTimeout(() => { el.innerHTML = ''; }, 4000);
+  }
+}
+
+async function apiPost(path, body) {
+  const res = await fetch(API + path, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + JWT,
+    },
+    body: JSON.stringify(body),
+  });
+  return res.json();
+}
+
+document.querySelectorAll('.btn-install').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const pkg = btn.dataset.pkg;
+    const isFree = btn.dataset.free === '1';
+    const key = isFree ? '' : (document.getElementById('key-' + pkg)?.value || '');
+    btn.disabled = true;
+    try {
+      const data = await apiPost('/api/store/install', { package_id: pkg, license_key: key });
+      if (data.ok || data.modules) {
+        showMsg(pkg, 'Instalado. Recarga la página.', 'success');
+        setTimeout(() => location.reload(), 1500);
+      } else {
+        showMsg(pkg, data.error || 'Error al instalar.', 'danger');
+        btn.disabled = false;
+      }
+    } catch(e) {
+      showMsg(pkg, 'Error de conexión.', 'danger');
+      btn.disabled = false;
+    }
+  });
+});
+
+document.querySelectorAll('.btn-toggle').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const pkg = btn.dataset.pkg;
+    const enable = btn.dataset.enable === '1';
+    btn.disabled = true;
+    try {
+      const data = await apiPost('/api/store/toggle', { package_id: pkg, enabled: enable });
+      if (data.ok) {
+        showMsg(pkg, enable ? 'Habilitado.' : 'Deshabilitado.', 'success');
+        setTimeout(() => location.reload(), 1200);
+      } else {
+        showMsg(pkg, data.error || 'Error.', 'danger');
+        btn.disabled = false;
+      }
+    } catch(e) {
+      showMsg(pkg, 'Error de conexión.', 'danger');
+      btn.disabled = false;
+    }
+  });
+});
+
+document.querySelectorAll('.btn-uninstall').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    if (!confirm('¿Desinstalar este paquete?')) return;
+    const pkg = btn.dataset.pkg;
+    btn.disabled = true;
+    try {
+      const data = await apiPost('/api/store/uninstall', { package_id: pkg });
+      if (data.ok) {
+        showMsg(pkg, 'Desinstalado.', 'warning');
+        setTimeout(() => location.reload(), 1200);
+      } else {
+        showMsg(pkg, data.error || 'Error.', 'danger');
+        btn.disabled = false;
+      }
+    } catch(e) {
+      showMsg(pkg, 'Error de conexión.', 'danger');
+      btn.disabled = false;
+    }
+  });
+});
+</script>
+{% endblock %}

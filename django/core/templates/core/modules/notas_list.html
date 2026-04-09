@@ -1,0 +1,49 @@
+{% extends "core/base.html" %}
+{% block title %}Notas{% endblock %}
+{% block nav_notas %}active{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h3 class="card-title"><i class="fas fa-sticky-note mr-2"></i>Notas</h3>
+    <a href="/app/notas/nuevo/" class="btn btn-primary btn-sm">
+      <i class="fas fa-plus"></i> Nueva nota
+    </a>
+  </div>
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead class="thead-dark">
+        <tr>
+          <th>Asunto</th>
+          <th>Autor</th>
+          <th>Fecha</th>
+          <th class="text-right">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td><strong>{{ item.Asunto }}</strong></td>
+          <td>{{ item.Autor }}</td>
+          <td>{{ item.Fecha }}</td>
+          <td class="text-right text-nowrap">
+            <a href="/app/notas/{{ item.id }}/" class="btn btn-sm btn-outline-secondary">
+              <i class="fas fa-edit"></i>
+            </a>
+            {% if is_admin %}
+            <form method="post" action="/app/notas/{{ item.id }}/borrar/" style="display:inline"
+                  onsubmit="return confirm('¿Eliminar esta nota?')">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="text-center text-muted py-4">No hay notas registradas.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

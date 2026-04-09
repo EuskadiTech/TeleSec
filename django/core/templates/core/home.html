@@ -1,0 +1,131 @@
+{% extends "core/base.html" %}
+{% block title %}Inicio{% endblock %}
+{% block nav_home %}active{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <h2 class="mb-4"><i class="fas fa-tachometer-alt mr-2"></i>Bienvenido, <strong>{{ persona_id }}</strong></h2>
+    <p class="text-muted">Roles: {{ roles|join:", " }}</p>
+  </div>
+</div>
+
+<div class="row">
+  {% if "personas" in enabled_modules %}
+  <div class="col-md-4 col-sm-6 mb-4">
+    <a href="/app/personas/" class="text-decoration-none">
+      <div class="card card-widget widget-user-2 border-left-primary h-100">
+        <div class="card-header bg-gradient-primary">
+          <i class="fas fa-users fa-3x mb-2"></i>
+          <h5 class="card-title mb-0">Personas</h5>
+        </div>
+      </div>
+    </a>
+  </div>
+  {% endif %}
+
+  {% if "materiales" in enabled_modules %}
+  <div class="col-md-4 col-sm-6 mb-4">
+    <a href="/app/materiales/" class="text-decoration-none">
+      <div class="card border-left-warning h-100">
+        <div class="card-header bg-gradient-warning text-white">
+          <i class="fas fa-archive fa-3x mb-2"></i>
+          <h5 class="card-title mb-0">Materiales</h5>
+        </div>
+      </div>
+    </a>
+  </div>
+  {% endif %}
+
+  {% if "supercafe" in enabled_modules %}
+  <div class="col-md-4 col-sm-6 mb-4">
+    <a href="/app/supercafe/" class="text-decoration-none">
+      <div class="card border-left-success h-100">
+        <div class="card-header bg-gradient-success text-white">
+          <i class="fas fa-coffee fa-3x mb-2"></i>
+          <h5 class="card-title mb-0">SuperCafé</h5>
+        </div>
+      </div>
+    </a>
+  </div>
+  {% endif %}
+
+  {% if "comedor" in enabled_modules %}
+  <div class="col-md-4 col-sm-6 mb-4">
+    <a href="/app/comedor/" class="text-decoration-none">
+      <div class="card border-left-info h-100">
+        <div class="card-header bg-gradient-info text-white">
+          <i class="fas fa-utensils fa-3x mb-2"></i>
+          <h5 class="card-title mb-0">Comedor</h5>
+        </div>
+      </div>
+    </a>
+  </div>
+  {% endif %}
+
+  {% if "pagos" in enabled_modules %}
+  <div class="col-md-4 col-sm-6 mb-4">
+    <a href="/app/pagos/" class="text-decoration-none">
+      <div class="card border-left-danger h-100">
+        <div class="card-header bg-gradient-danger text-white">
+          <i class="fas fa-euro-sign fa-3x mb-2"></i>
+          <h5 class="card-title mb-0">Pagos</h5>
+        </div>
+      </div>
+    </a>
+  </div>
+  {% endif %}
+
+  {% if "notas" in enabled_modules %}
+  <div class="col-md-4 col-sm-6 mb-4">
+    <a href="/app/notas/" class="text-decoration-none">
+      <div class="card border-left-secondary h-100">
+        <div class="card-header bg-gradient-secondary text-white">
+          <i class="fas fa-sticky-note fa-3x mb-2"></i>
+          <h5 class="card-title mb-0">Notas</h5>
+        </div>
+      </div>
+    </a>
+  </div>
+  {% endif %}
+
+  {% if "asistencia" in enabled_modules %}
+  <div class="col-md-4 col-sm-6 mb-4">
+    <a href="/app/asistencia/" class="text-decoration-none">
+      <div class="card border-left-primary h-100">
+        <div class="card-header bg-gradient-primary text-white">
+          <i class="fas fa-user-check fa-3x mb-2"></i>
+          <h5 class="card-title mb-0">Asistencia</h5>
+        </div>
+      </div>
+    </a>
+  </div>
+  {% endif %}
+
+  {% if "aulas" in enabled_modules %}
+  <div class="col-md-4 col-sm-6 mb-4">
+    <a href="/app/aulas/" class="text-decoration-none">
+      <div class="card border-left-warning h-100">
+        <div class="card-header bg-gradient-warning text-white">
+          <i class="fas fa-door-open fa-3x mb-2"></i>
+          <h5 class="card-title mb-0">Aulas</h5>
+        </div>
+      </div>
+    </a>
+  </div>
+  {% endif %}
+
+  {% if is_admin %}
+  <div class="col-md-4 col-sm-6 mb-4">
+    <a href="/app/tienda/" class="text-decoration-none">
+      <div class="card border-left-dark h-100">
+        <div class="card-header bg-gradient-dark text-white">
+          <i class="fas fa-store fa-3x mb-2"></i>
+          <h5 class="card-title mb-0">Tienda de módulos</h5>
+        </div>
+      </div>
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

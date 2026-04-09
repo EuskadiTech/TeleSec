@@ -1,0 +1,91 @@
+{% extends "core/base.html" %}
+{% block title %}{% if is_new %}Nuevo material{% else %}Editar material{% endif %}{% endblock %}
+{% block nav_materiales %}active{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">
+      <i class="fas fa-archive mr-2"></i>
+      {% if is_new %}Nuevo material{% else %}Editar: {{ item.Nombre }}{% endif %}
+    </h3>
+  </div>
+  <form method="post" autocomplete="off">
+    {% csrf_token %}
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>Nombre <span class="text-danger">*</span></label>
+            <input type="text" name="Nombre" class="form-control" value="{{ item.Nombre }}" required>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>Unidad</label>
+            <input type="text" name="Unidad" class="form-control" value="{{ item.Unidad }}" placeholder="kg, uds, l…">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>Ubicación</label>
+            <input type="text" name="Ubicacion" class="form-control" value="{{ item.Ubicacion }}">
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>Cantidad</label>
+            <input type="number" step="any" name="Cantidad" class="form-control" value="{{ item.Cantidad|default:'0' }}">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>Cantidad mínima</label>
+            <input type="number" step="any" name="Cantidad_Minima" class="form-control" value="{{ item.Cantidad_Minima|default:'0' }}">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>Revisión</label>
+            <input type="date" name="Revision" class="form-control" value="{{ item.Revision }}">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Notas</label>
+        <textarea name="Notas" class="form-control" rows="3">{{ item.Notas }}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Movimientos <small class="text-muted">(JSON array)</small></label>
+        <textarea name="Movimientos" class="form-control font-monospace" rows="5"
+                  id="movimientos-json">{{ item.Movimientos|default:"[]" }}</textarea>
+        <small class="form-text text-muted">Formato: [{"fecha":"…","tipo":"Entrada","cantidad":10,"notas":""}]</small>
+      </div>
+    </div>
+    <div class="card-footer d-flex justify-content-between">
+      <a href="/app/materiales/" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Volver
+      </a>
+      <button type="submit" class="btn btn-success">
+        <i class="fas fa-save"></i> Guardar
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Pretty-print JSON if it's valid
+const ta = document.getElementById('movimientos-json');
+try {
+  const parsed = JSON.parse(ta.value);
+  ta.value = JSON.stringify(parsed, null, 2);
+} catch(e) {}
+</script>
+{% endblock %}

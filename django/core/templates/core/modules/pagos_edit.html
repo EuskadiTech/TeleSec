@@ -1,0 +1,66 @@
+{% extends "core/base.html" %}
+{% block title %}{% if is_new %}Nuevo pago{% else %}Editar pago{% endif %}{% endblock %}
+{% block nav_pagos %}active{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">
+      <i class="fas fa-euro-sign mr-2"></i>
+      {% if is_new %}Nuevo pago{% else %}Editar pago{% endif %}
+    </h3>
+  </div>
+  <form method="post" autocomplete="off">
+    {% csrf_token %}
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-4">
+          <div class="form-group">
+            <label>Persona</label>
+            <select name="Persona" class="form-control">
+              <option value="">— Sin persona —</option>
+              {% for p in personas %}
+              <option value="{{ p.id }}" {% if item.Persona == p.id %}selected{% endif %}>{{ p.Nombre }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>Fecha</label>
+            <input type="date" name="Fecha" class="form-control" value="{{ item.Fecha }}">
+          </div>
+        </div>
+        <div class="col-md-2">
+          <div class="form-group">
+            <label>Tipo</label>
+            <select name="Tipo" class="form-control">
+              <option {% if item.Tipo == "Cargo" %}selected{% endif %}>Cargo</option>
+              <option {% if item.Tipo == "Abono" %}selected{% endif %}>Abono</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>Importe (€)</label>
+            <input type="number" step="0.01" name="Importe" class="form-control"
+                   value="{{ item.Importe|default:'0' }}">
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Concepto</label>
+        <input type="text" name="Concepto" class="form-control" value="{{ item.Concepto }}">
+      </div>
+      <div class="form-group">
+        <label>Notas</label>
+        <textarea name="Notas" class="form-control" rows="2">{{ item.Notas }}</textarea>
+      </div>
+    </div>
+    <div class="card-footer d-flex justify-content-between">
+      <a href="/app/pagos/" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Volver</a>
+      <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Guardar</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

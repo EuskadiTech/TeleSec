@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.staticfiles",
+    "django.contrib.messages",
     "rest_framework",
     "corsheaders",
     "core",
@@ -48,6 +49,7 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
@@ -62,6 +64,7 @@ TEMPLATES = [
             "context_processors": [
                 "django.template.context_processors.debug",
                 "django.template.context_processors.request",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
@@ -154,6 +157,9 @@ USE_I18N = True
 USE_TZ = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Messages – use session storage (no django.contrib.auth required)
+MESSAGE_STORAGE = "django.contrib.messages.storage.session.SessionStorage"
 
 # ---------------------------------------------------------------------------
 # Production warnings

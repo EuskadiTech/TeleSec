@@ -1,9 +1,8 @@
-"""Server-side rendered views – login flow and app shell."""
+"""Server-side rendered views – login flow, app shell, and home dashboard."""
 import json
 
 from django.conf import settings
 from django.shortcuts import redirect, render
-from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import ensure_csrf_cookie
 
 from ..auth_helpers import get_persona_roles, get_personas, verify_instance_password
@@ -84,35 +83,21 @@ def login_view(request):
 
 
 # ---------------------------------------------------------------------------
-# App shell – SSR with JWT injected into the page
+# Home dashboard (replaces old app_view)
 # ---------------------------------------------------------------------------
 
 
-def app_view(request):
+def home_view(request):
+    from .module_views import app_context
     access_token = request.session.get("access_token")
     if not access_token:
         return redirect("/")
+    ctx = app_context(request)
+    return render(request, "core/home.html", ctx)
 
-    persona_id = request.session.get("persona_id", "")
-    roles = request.session.get("roles", [])
-    refresh_token = request.session.get("refresh_token", "")
 
-    enabled_modules = _get_enabled_modules()
-    api_url = request.build_absolute_uri("/").rstrip("/")
-
-    return render(
-        request,
-        "core/app.html",
-        {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "persona_id": persona_id,
-            "roles_json": json.dumps(roles),
-            "enabled_modules_json": json.dumps(enabled_modules),
-            "api_url": api_url,
-            "instance_name": getattr(settings, "INSTANCE_NAME", "TeleSec"),
-        },
-    )
+# Keep old app_view as alias for backward compatibility
+app_view = home_view
 
 
 # ---------------------------------------------------------------------------

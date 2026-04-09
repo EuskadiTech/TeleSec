@@ -1,0 +1,61 @@
+{% extends "core/base.html" %}
+{% block title %}Asistencia{% endblock %}
+{% block nav_asistencia %}active{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h3 class="card-title"><i class="fas fa-user-check mr-2"></i>Asistencia</h3>
+    <a href="/app/asistencia/nuevo/" class="btn btn-primary btn-sm">
+      <i class="fas fa-plus"></i> Registrar
+    </a>
+  </div>
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead class="thead-dark">
+        <tr>
+          <th>Fecha</th>
+          <th>Persona</th>
+          <th>Estado</th>
+          <th>Notas</th>
+          <th class="text-right">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td>{{ item.Fecha }}</td>
+          <td>{{ item._persona_nombre }}</td>
+          <td>
+            {% if item.Estado == "Presente" %}
+              <span class="badge badge-success">{{ item.Estado }}</span>
+            {% elif item.Estado == "Ausente" %}
+              <span class="badge badge-danger">{{ item.Estado }}</span>
+            {% elif item.Estado == "Tarde" %}
+              <span class="badge badge-warning">{{ item.Estado }}</span>
+            {% else %}
+              <span class="badge badge-info">{{ item.Estado }}</span>
+            {% endif %}
+          </td>
+          <td>{{ item.Notas|truncatechars:50 }}</td>
+          <td class="text-right text-nowrap">
+            <a href="/app/asistencia/{{ item.id }}/" class="btn btn-sm btn-outline-secondary">
+              <i class="fas fa-edit"></i>
+            </a>
+            {% if is_admin %}
+            <form method="post" action="/app/asistencia/{{ item.id }}/borrar/" style="display:inline"
+                  onsubmit="return confirm('¿Eliminar este registro?')">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="text-center text-muted py-4">No hay registros de asistencia.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
