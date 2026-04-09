@@ -22,6 +22,14 @@ _allowed = os.environ.get("ALLOWED_HOSTS", "")
 ALLOWED_HOSTS = _allowed.split(",") if _allowed.strip() else ["*"]
 
 # ---------------------------------------------------------------------------
+# Instance config – no multi-tenancy; each deployment is a single instance.
+# INSTANCE_PASSWORD is the shared login password for persona selection.
+# INSTANCE_NAME is displayed in the UI.
+# ---------------------------------------------------------------------------
+INSTANCE_PASSWORD = os.environ.get("INSTANCE_PASSWORD", "")
+INSTANCE_NAME = os.environ.get("INSTANCE_NAME", "TeleSec")
+
+# ---------------------------------------------------------------------------
 # Application
 # ---------------------------------------------------------------------------
 INSTALLED_APPS = [
@@ -62,7 +70,7 @@ TEMPLATES = [
 WSGI_APPLICATION = "telesec.wsgi.application"
 
 # ---------------------------------------------------------------------------
-# Database – same SQLite path convention as Flask backend
+# Database – SQLite; path configurable via DATABASE_PATH env var
 # ---------------------------------------------------------------------------
 DATABASE_PATH = os.environ.get("DATABASE_PATH", str(BASE_DIR.parent / "telesec.db"))
 
@@ -83,7 +91,7 @@ DATABASES = {
 }
 
 # ---------------------------------------------------------------------------
-# Sessions – stored in the database so no extra file I/O is needed
+# Sessions – stored in the database
 # ---------------------------------------------------------------------------
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 SESSION_COOKIE_HTTPONLY = True
@@ -91,18 +99,18 @@ SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_SECURE = not DEBUG
 
 # ---------------------------------------------------------------------------
-# Static files – WhiteNoise root serves the built dist/ at /
+# Static files – WhiteNoise root serves the built dist/ tree at /
 # ---------------------------------------------------------------------------
-STATIC_URL = "/static/"
+STATIC_URL = "/django-static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = []
 
-# Serve everything in dist/ at root (/, /static/, /load.gif, etc.)
+# dist/ is served verbatim at / (so /static/adminlte/... works as expected)
 WHITENOISE_ROOT = BASE_DIR.parent / "dist"
 WHITENOISE_MAX_AGE = 86400
 
 # ---------------------------------------------------------------------------
-# REST Framework – JWT-only, no session auth for the API
+# REST Framework – custom JWT auth, no Django User model required
 # ---------------------------------------------------------------------------
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
@@ -127,12 +135,13 @@ CORS_ALLOW_CREDENTIALS = True
 
 # ---------------------------------------------------------------------------
 # Licensing – Keygen.sh
+# KEYGEN_ACCOUNT_ID: your Keygen.sh account UUID (public)
 # ---------------------------------------------------------------------------
 KEYGEN_ACCOUNT_ID = os.environ.get("KEYGEN_ACCOUNT_ID", "")
 KEYGEN_API_URL = "https://api.keygen.sh/v1"
 
 # ---------------------------------------------------------------------------
-# Module catalog
+# Module catalog path
 # ---------------------------------------------------------------------------
 CATALOG_PATH = BASE_DIR.parent / "catalog" / "packages.json"
 
@@ -158,5 +167,10 @@ if not DEBUG:
     if JWT_SECRET_KEY == _DEV_JWT_SECRET:
         warnings.warn(
             "JWT_SECRET_KEY is the default development value. Set JWT_SECRET_KEY before deploying.",
+            stacklevel=1,
+        )
+    if not INSTANCE_PASSWORD:
+        warnings.warn(
+            "INSTANCE_PASSWORD is not set. The instance will be accessible without a password.",
             stacklevel=1,
         )
