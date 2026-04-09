@@ -1,20 +1,11 @@
-"""Server-side rendered views – login flow, app shell, and home dashboard."""
-import json
-
+"""Server-side rendered views – login flow and home dashboard."""
 from django.conf import settings
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import ensure_csrf_cookie
 
 from ..auth_helpers import get_persona_roles, get_personas, verify_instance_password
 from ..jwt_utils import create_access_token, create_refresh_token
-from ..models import Document, InstalledModule
-
-
-def _get_enabled_modules() -> list[str]:
-    modules: list[str] = []
-    for im in InstalledModule.objects.select_related("package").filter(enabled=True):
-        modules.extend(im.package.modules)
-    return list(dict.fromkeys(modules))  # deduplicated, insertion-ordered
+from ..models import Document
 
 
 # ---------------------------------------------------------------------------

@@ -4,8 +4,6 @@ GET  /api/replicate/pull   ?updatedAt=&id=&limit=
 POST /api/replicate/push   [ { id, table_name, data, _deleted } ]
 """
 import json
-from datetime import datetime, timezone
-
 from django.db import transaction
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -15,8 +13,11 @@ from ..models import Document
 from ..rbac import IsPersonaAuthenticated, can_access_table, can_edit_table
 
 
+from ..utils import iso_now
+
+
 def _iso_now() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+    return iso_now()
 
 
 class PullView(APIView):

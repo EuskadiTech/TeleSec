@@ -35,8 +35,8 @@ class JWTAuthentication(BaseAuthentication):
             claims = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=["HS256"])
         except jwt.ExpiredSignatureError:
             raise AuthenticationFailed("Token expirado")
-        except jwt.InvalidTokenError as exc:
-            raise AuthenticationFailed(f"Token inválido: {exc}")
+        except jwt.InvalidTokenError:
+            raise AuthenticationFailed("Token inválido")
         return (TeleSecPrincipal(claims), token)
 
     def authenticate_header(self, request):

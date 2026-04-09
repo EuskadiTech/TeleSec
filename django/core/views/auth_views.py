@@ -6,12 +6,10 @@ Flow:
   POST /api/auth/refresh        (refresh token) → new access token
   POST /api/auth/bootstrap-admin { persona_id, Nombre? }  → create first admin
 """
-import json
 import uuid
-from datetime import datetime, timezone
 
+import jwt
 from django.conf import settings
-from django.db import transaction
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -24,12 +22,6 @@ from ..auth_helpers import (
 from ..jwt_utils import create_access_token, create_refresh_token, decode_token
 from ..models import Document
 from ..rbac import IsPersonaAuthenticated, IsSelectPersonaStep
-
-import jwt as _jwt
-
-
-def _iso_now() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
 # ---------------------------------------------------------------------------
@@ -108,10 +100,10 @@ class RefreshView(APIView):
             return Response({"error": "refresh_token es requerido"}, status=400)
         try:
             claims = decode_token(token)
-        except _jwt.ExpiredSignatureError:
+        except jwt.ExpiredSignatureError:
             return Response({"error": "Token expirado"}, status=401)
-        except _jwt.InvalidTokenError as exc:
-            return Response({"error": f"Token inválido: {exc}"}, status=401)
+        except jwt.InvalidTokenError:
+            return Response({"error": "Token inválido"}, status=401)
 
         if claims.get("type") != "refresh":
             return Response({"error": "Token de tipo incorrecto"}, status=400)

@@ -1,0 +1,25 @@
+[
+  {
+    "package_id": "aulaadapt",
+    "name": "AulaAdapt",
+    "description": "Paquete completo para centros de atención especial: materiales, personas, cafetería, comedor, pagos, notas, asistencia y aulas.",
+    "version": "1.0.0",
+    "modules": [
+      "materiales",
+      "personas",
+      "supercafe",
+      "comedor",
+      "pagos",
+      "notas",
+      "asistencia",
+      "aulas",
+      "panel",
+      "buscar",
+      "dataman"
+    ],
+    "bundled": true,
+    "free": true,
+    "keygen_product_id": "",
+    "icon": "static/appico/shelf.png"
+  }
+]

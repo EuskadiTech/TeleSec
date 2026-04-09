@@ -1,4 +1,5 @@
 """Module CRUD views – SSR, session-authenticated."""
+import base64
 import json
 import uuid
 from datetime import datetime, timezone
@@ -8,6 +9,7 @@ from django.contrib import messages
 from django.shortcuts import redirect, render
 
 from ..models import Document, InstalledModule
+from ..utils import iso_now
 
 
 # ---------------------------------------------------------------------------
@@ -15,7 +17,7 @@ from ..models import Document, InstalledModule
 # ---------------------------------------------------------------------------
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+    return iso_now()
 
 
 def _get_enabled_modules() -> list:
@@ -56,19 +58,12 @@ def app_context(request) -> dict:
     from django.conf import settings
     persona_id = request.session.get("persona_id", "")
     roles = request.session.get("roles", [])
-    access_token = request.session.get("access_token", "")
-    refresh_token = request.session.get("refresh_token", "")
     enabled_modules = _get_enabled_modules()
-    api_url = request.build_absolute_uri("/").rstrip("/")
     return {
         "persona_id": persona_id,
         "roles": roles,
-        "access_token": access_token,
-        "refresh_token": refresh_token,
         "enabled_modules": enabled_modules,
-        "enabled_modules_json": json.dumps(enabled_modules),
         "nav_modules": enabled_modules,
-        "api_url": api_url,
         "instance_name": getattr(settings, "INSTANCE_NAME", "TeleSec"),
         "is_admin": "ADMIN" in roles,
     }
@@ -298,7 +293,6 @@ def personas_delete(request, doc_id):
 
 def _handle_foto(request, existing_foto) -> str:
     """Return base64 data-URI for foto. Keeps existing if no new file uploaded."""
-    import base64
     file = request.FILES.get("Foto_file")
     if file:
         content = file.read()
@@ -791,7 +785,7 @@ def aulas_delete(request, subtable, doc_id):
 def _parse_number(value: str):
     """Parse a numeric string, returning int if whole number else float."""
     try:
-        f = float(value.replace(",", "."))
+        f = float(str(value).replace(",", "."))
         return int(f) if f == int(f) else f
-    except Exception:
+    except (ValueError, TypeError):
         return 0

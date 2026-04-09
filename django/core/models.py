@@ -68,7 +68,7 @@ class InstalledModule(models.Model):
         db_table = "installed_modules"
 
     def __str__(self):
-        return f"{self.package_id} ({'on' if self.enabled else 'off'})"
+        return f"{self.package.package_id} ({'on' if self.enabled else 'off'})"
 
     @property
     def enabled_modules(self):

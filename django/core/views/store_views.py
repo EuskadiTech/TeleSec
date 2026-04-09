@@ -68,7 +68,7 @@ def _validate_keygen_license(license_key: str) -> dict:
         body = resp.json()
     except Exception as exc:
         logger.warning("Keygen request failed: %s", exc)
-        return {"valid": False, "error": f"Error de conexión con el servidor de licencias: {exc}"}
+        return {"valid": False, "error": "Error de conexión con el servidor de licencias"}
 
     meta = body.get("meta", {})
     data = body.get("data") or {}

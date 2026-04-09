@@ -24,11 +24,6 @@
     </ul>
     <ul class="navbar-nav ml-auto">
       <li class="nav-item">
-        <span class="nav-link text-muted small" id="sync-status-label">
-          <i class="fas fa-circle text-secondary" id="sync-orb"></i> Sync
-        </span>
-      </li>
-      <li class="nav-item">
         <a href="/logout/" class="nav-link"><i class="fas fa-sign-out-alt"></i> Salir</a>
       </li>
     </ul>
@@ -161,30 +156,14 @@
 
   <!-- Footer -->
   <footer class="main-footer">
-    <div class="float-right d-none d-sm-block">
-      <span id="rxdb-sync-status">
-        <i class="fas fa-circle text-secondary" id="footer-sync-orb"></i>
-        <small id="footer-sync-text">Sincronización inactiva</small>
-      </span>
-    </div>
     <strong>TeleSec</strong> &mdash; {{ instance_name }}
   </footer>
 
 </div><!-- /.wrapper -->
 
+<script src="/static/jquery.js"></script>
 <script src="/static/adminlte/bootstrap.bundle.min.js"></script>
 <script src="/static/adminlte/adminlte.min.js"></script>
-<script src="/static/jquery.js"></script>
-<script>
-window.TELESEC_API_URL = "{{ api_url }}";
-localStorage.setItem('TELESEC_JWT', '{{ access_token }}');
-localStorage.setItem('TELESEC_REFRESH_TOKEN', '{{ refresh_token }}');
-localStorage.setItem('TELESEC_API_URL', '{{ api_url }}');
-localStorage.setItem('TELESEC_PERSONA_ID', '{{ persona_id }}');
-window.__TELESEC_ENABLED_MODULES__ = {{ enabled_modules_json }};
-</script>
-<script src="/static/rxdb.js"></script>
-<script src="/static/app.bundle.js"></script>
 {% block extra_js %}{% endblock %}
 </body>
 </html>

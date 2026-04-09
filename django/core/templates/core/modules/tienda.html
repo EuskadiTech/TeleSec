@@ -77,8 +77,11 @@
 
 {% block extra_js %}
 <script>
-const API = window.TELESEC_API_URL || '';
-const JWT = localStorage.getItem('TELESEC_JWT') || '';
+// Store actions use Django session auth (CSRF cookie) — no JWT needed.
+function getCookie(name) {
+  const v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+  return v ? v[2] : '';
+}
 
 function showMsg(pkg, text, cls) {
   const el = document.getElementById('msg-' + pkg);
@@ -89,11 +92,12 @@ function showMsg(pkg, text, cls) {
 }
 
 async function apiPost(path, body) {
-  const res = await fetch(API + path, {
+  const res = await fetch(path, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + JWT,
+      'X-CSRFToken': getCookie('csrftoken'),
+      'Authorization': 'Bearer {{ request.session.access_token }}',
     },
     body: JSON.stringify(body),
   });
