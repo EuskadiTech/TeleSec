@@ -15,20 +15,15 @@ from flask_socketio import (
     emit,
     join_room,
     leave_room,
-    disconnect,
 )
-from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request, get_jwt
+from flask_jwt_extended import decode_token
 
-from .models import Document, db
-from .rbac import (
-    get_tenant_id,
-    get_persona_id,
-    get_roles,
-    TABLE_EDIT_ROLES,
-)
+from .models import Document
+from .rbac import TABLE_EDIT_ROLES
 
 
 socketio = SocketIO()
+SOCKET_CONTEXT: dict[str, dict] = {}
 
 
 def _iso_now() -> str:
@@ -69,20 +64,19 @@ def can_edit_table(table_name: str, roles: list) -> bool:
 
 
 def socketio_auth_required(f):
-    """Decorator: verify JWT and tenant context for SocketIO handlers."""
+    """Decorator: verify the socket has an authenticated context."""
 
     @wraps(f)
     def wrapper(*args, **kwargs):
-        try:
-            # For SocketIO, we verify JWT from the auth data sent during connection
-            verify_jwt_in_request(optional=False)
-            claims = get_jwt()
-            if claims.get("step") == "select_persona":
-                emit("error", {"message": "Se requiere seleccionar una persona primero"})
-                return
-        except Exception as e:
-            emit("error", {"message": f"Authentication failed: {str(e)}"})
+        sid = request.sid
+        ctx = SOCKET_CONTEXT.get(sid)
+        if not ctx:
+            emit("db:error", {"message": "Authentication failed: socket not authenticated"})
             return
+
+        request.sid_tenant_id = ctx.get("tenant_id", "")
+        request.sid_persona_id = ctx.get("persona_id", "")
+        request.sid_roles = ctx.get("roles", [])
 
         return f(*args, **kwargs)
 
@@ -102,8 +96,6 @@ def handle_connect(auth):
             emit("error", {"message": "Missing token"})
             return False
 
-        from flask_jwt_extended import decode_token
-
         token = auth["token"]
         try:
             claims = decode_token(token)
@@ -111,18 +103,33 @@ def handle_connect(auth):
             emit("error", {"message": "Invalid token"})
             return False
 
+        if claims.get("step") == "select_persona":
+            emit("error", {"message": "Se requiere seleccionar una persona primero"})
+            return False
+
+        tenant_id = claims.get("tenant_id", "")
+        persona_id = claims.get("sub", "")
+        if not tenant_id or not persona_id:
+            emit("error", {"message": "Invalid token context"})
+            return False
+
+        roles = get_persona_roles(tenant_id, persona_id)
+        SOCKET_CONTEXT[request.sid] = {
+            "tenant_id": tenant_id,
+            "persona_id": persona_id,
+            "roles": roles,
+        }
+
         # Store tenant and persona in request context for this socket
-        request.sid_tenant_id = claims.get("tenant_id", "")
-        request.sid_persona_id = claims.get("sub", "")  # JWT 'sub' claim = persona_id
-        request.sid_roles = get_persona_roles(
-            request.sid_tenant_id, request.sid_persona_id
-        )
+        request.sid_tenant_id = tenant_id
+        request.sid_persona_id = persona_id
+        request.sid_roles = roles
 
         # Join a room for this tenant so we can broadcast changes
-        tenant_room = f"tenant:{request.sid_tenant_id}"
+        tenant_room = f"tenant:{tenant_id}"
         join_room(tenant_room)
 
-        emit("connected", {"tenant_id": request.sid_tenant_id})
+        emit("connected", {"tenant_id": tenant_id})
         return True
     except Exception as e:
         emit("error", {"message": str(e)})
@@ -132,7 +139,7 @@ def handle_connect(auth):
 @socketio.on("disconnect")
 def handle_disconnect():
     """Client disconnects."""
-    print(f"Client disconnected")
+    SOCKET_CONTEXT.pop(request.sid, None)
 
 
 # ============================================================================
