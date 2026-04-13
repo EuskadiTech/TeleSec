@@ -38,7 +38,7 @@ def get_persona_roles(tenant_id: str, persona_id: str) -> list:
             & (Document.tenant_id == tenant_id)
         )
         data = json.loads(doc.data) if doc.data else {}
-        return data.get("Roles", [])
+        return data.get("Roles", "").split(",") if data.get("Roles") else []
     except Document.DoesNotExist:
         return []
 
