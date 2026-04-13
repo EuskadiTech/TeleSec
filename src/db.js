@@ -63,8 +63,16 @@ var DB = (function () {
       const apiUrl = getApiUrl();
       const token = getAuthToken();
 
-      if (!apiUrl || !token) {
-        reject(new Error('No API URL or JWT token available'));
+      // More tolerant: allow retry later if token becomes available
+      if (!apiUrl) {
+        console.warn('DB: No API URL set yet');
+        reject(new Error('API URL not configured'));
+        return;
+      }
+
+      if (!token) {
+        console.warn('DB: No JWT token available yet (user not logged in)');
+        reject(new Error('JWT token not available (user not logged in)'));
         return;
       }
 
@@ -182,7 +190,12 @@ var DB = (function () {
 
   function ensureInit() {
     if (!initPromise) {
-      initPromise = _connectSocket();
+      // Create a new promise for this initialization attempt
+      initPromise = _connectSocket().catch(function (err) {
+        // Reset so next call tries again
+        initPromise = null;
+        throw err;
+      });
     }
     return initPromise;
   }
@@ -195,18 +208,37 @@ var DB = (function () {
     opts = opts || {};
     if (opts.jwt) {
       jwt_token = opts.jwt;
+      // Reset connection if token changed (e.g., after login)
+      if (socket) {
+        try {
+          socket.disconnect();
+        } catch (e) {}
+        socket = null;
+        connected = false;
+        initPromise = null; // Force reconnection
+      }
     }
-    await ensureInit();
-    return Promise.resolve();
+    try {
+      await ensureInit();
+      console.debug('DB.init: Connected successfully');
+      return Promise.resolve();
+    } catch (e) {
+      console.warn('DB.init error:', e.message);
+      // Return resolved promise anyway - user might not be logged in yet
+      // Subsequent operations will handle the lack of connection
+      return Promise.resolve();
+    }
   }
 
   async function put(table, id, data) {
-    await ensureInit();
+    await ensureInit().catch(function (e) {
+      // Continue even if init fails - will fail with better error below
+    });
     invalidateTableCache(table);
 
     return new Promise(function (resolve, reject) {
-      if (!socket) {
-        reject(new Error('Socket not connected'));
+      if (!socket || !connected) {
+        reject(new Error('Not connected to server. Please log in.'));
         return;
       }
 
@@ -262,12 +294,14 @@ var DB = (function () {
   }
 
   async function del(table, id) {
-    await ensureInit();
+    await ensureInit().catch(function (e) {
+      // Continue even if init fails - will fail with better error below
+    });
     invalidateTableCache(table);
 
     return new Promise(function (resolve, reject) {
-      if (!socket) {
-        reject(new Error('Socket not connected'));
+      if (!socket || !connected) {
+        reject(new Error('Not connected to server. Please log in.'));
         return;
       }
 
@@ -297,7 +331,9 @@ var DB = (function () {
   }
 
   async function list(table) {
-    await ensureInit();
+    await ensureInit().catch(function (e) {
+      // Continue even if init fails - will fail with better error below
+    });
 
     const now = Date.now();
     const cached = tableListCache[table];
@@ -310,8 +346,8 @@ var DB = (function () {
     }
 
     tableListInFlight[table] = new Promise(function (resolve, reject) {
-      if (!socket) {
-        resolve([]);
+      if (!socket || !connected) {
+        reject(new Error('Not connected to server. Please log in.'));
         return;
       }
 
@@ -472,9 +508,19 @@ var DB = (function () {
   // -------------------------------------------------------------------------
   // Auto-initialise on startup (non-blocking)
   // -------------------------------------------------------------------------
-  ensureInit().catch(function (e) {
-    console.warn('DB.autoInit error', e);
-  });
+  // Try to initialize, but don't fail if token isn't available yet
+  // The token will be available after user logs in and DB.init() is called
+  setTimeout(function () {
+    ensureInit().catch(function (e) {
+      // Non-blocking: just log if initial connection fails
+      // This is expected if user hasn't logged in yet
+      if (e.message.includes('not logged in') || e.message.includes('not configured')) {
+        console.debug('DB: Waiting for login before connecting to SocketIO');
+      } else {
+        console.warn('DB.autoInit error:', e.message);
+      }
+    });
+  }, 500);
 
   return {
     init: init,

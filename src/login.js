@@ -434,9 +434,13 @@ function _applyLogin(data, personaDetails) {
   SUB_LOGGED_IN = true;
   SetPages();
 
-  // Start DB replication with the new token
-  if (typeof DB !== 'undefined' && DB.startReplication) {
-    try { DB.startReplication(); } catch (e) {}
+  // Initialize SocketIO DB connection with the new token
+  if (typeof DB !== 'undefined' && DB.init) {
+    try { 
+      DB.init({ jwt: data.access_token }).catch(function(e) {
+        console.warn('DB init after login:', e.message);
+      });
+    } catch (e) {}
   }
 }
 
@@ -489,7 +493,11 @@ function _applyLogin(data, personaDetails) {
   };
   SUB_LOGGED_IN = true;
   SetPages();
-  if (typeof DB !== 'undefined' && DB.startReplication) {
-    try { DB.startReplication(); } catch (e) {}
+  if (typeof DB !== 'undefined' && DB.init) {
+    try { 
+      DB.init({ jwt: jwt }).catch(function(e) {
+        console.warn('DB init on restore session:', e.message);
+      });
+    } catch (e) {}
   }
 })();
