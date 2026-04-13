@@ -1,47 +1,29 @@
-// db.js – RxDB-based local-first database wrapper for TeleSec
+// db.js – SocketIO-based real-time database client for TeleSec
 //
-// Replaces PouchDB with RxDB + IndexedDB (Dexie) storage.
-// Replication to the Flask backend uses RxDB's custom pull/push protocol.
-// No at-rest encryption: data is stored in plaintext in IndexedDB.
+// Replaces RxDB with SocketIO for real-time data access with RBAC enforcement.
+// All operations are protected by JWT authentication and role-based access control.
+
 const DEFAULT_SERVER = 'https://tele.tech.eus';
+
 var DB = (function () {
   // -------------------------------------------------------------------------
   // State
   // -------------------------------------------------------------------------
-  let rxdb = null;
-  let collection = null;
-  let replicationState = null;
+  let socket = null;
+  let connected = false;
   let initPromise = null;
+  let jwt_token = null;
 
   let callbacks = {}; // table -> [{ id, cb }]
   let callbackSeq = 0;
   let tableListCache = {}; // table -> { ts, rows }
   let tableListInFlight = {}; // table -> Promise<rows>
-  let lastOrbAt = 0;
-  let orbTimer = null;
-  let onlineReplTimer = null;
-  let reSyncTimer = null;
+  let subscriptions = {}; // table -> boolean (subscribed)
+  let lastSyncCheck = 0;
+  let syncTimer = null;
 
   const LIST_CACHE_TTL_MS = 1500;
-  const ORB_MIN_INTERVAL_MS = 400;
-  const RESYNC_INTERVAL_MS = 4000;
-
-  // -------------------------------------------------------------------------
-  // RxDB schema – single "documents" collection
-  // -------------------------------------------------------------------------
-  const DOCUMENTS_SCHEMA = {
-    version: 0,
-    type: 'object',
-    primaryKey: 'id',
-    properties: {
-      id: { type: 'string', maxLength: 500 },
-      table_name: { type: 'string', maxLength: 100 },
-      data: { type: 'object' },
-      updated_at: { type: 'string', maxLength: 50 },
-    },
-    required: ['id', 'table_name', 'data'],
-    indexes: ['table_name', 'updated_at'],
-  };
+  const SYNC_CHECK_INTERVAL_MS = 5000;
 
   // -------------------------------------------------------------------------
   // Helpers
@@ -51,7 +33,7 @@ var DB = (function () {
   }
 
   function getAuthToken() {
-    return localStorage.getItem('TELESEC_JWT') || '';
+    return jwt_token || localStorage.getItem('TELESEC_JWT') || '';
   }
 
   function makeCallbackId(table) {
@@ -67,272 +49,290 @@ var DB = (function () {
     try {
       window.TELESEC_LAST_SYNC = Date.now();
       if (typeof updateStatusOrb !== 'function') return;
-      const now = Date.now();
-      const elapsed = now - lastOrbAt;
-      if (elapsed >= ORB_MIN_INTERVAL_MS) {
-        lastOrbAt = now;
-        updateStatusOrb();
-        return;
-      }
-      if (orbTimer) return;
-      orbTimer = setTimeout(function () {
-        orbTimer = null;
-        lastOrbAt = Date.now();
-        try { updateStatusOrb(); } catch (e) {}
-      }, ORB_MIN_INTERVAL_MS - elapsed);
+      updateStatusOrb();
     } catch (e) {}
   }
 
   // -------------------------------------------------------------------------
-  // RxDB initialisation (lazy, called once)
+  // SocketIO connection
   // -------------------------------------------------------------------------
-  async function _initRxDB() {
-    if (rxdb) return;
+  async function _connectSocket() {
+    if (socket) return socket;
 
-    rxdb = await RxDB.createRxDatabase({
-      name: 'telesec',
-      storage: RxDB.getRxStorageDexie(),
-      ignoreDuplicate: true,
+    return new Promise(function (resolve, reject) {
+      const apiUrl = getApiUrl();
+      const token = getAuthToken();
+
+      if (!apiUrl || !token) {
+        reject(new Error('No API URL or JWT token available'));
+        return;
+      }
+
+      // Load socket.io client if not already loaded
+      if (typeof io === 'undefined') {
+        const script = document.createElement('script');
+        script.src = apiUrl + '/socket.io/socket.io.js';
+        script.onload = function () {
+          _createSocketConnection(apiUrl, token, resolve, reject);
+        };
+        script.onerror = function () {
+          reject(new Error('Failed to load socket.io client'));
+        };
+        document.head.appendChild(script);
+      } else {
+        _createSocketConnection(apiUrl, token, resolve, reject);
+      }
+    });
+  }
+
+  function _createSocketConnection(apiUrl, token, resolve, reject) {
+    socket = io(apiUrl, {
+      auth: {
+        token: token,
+      },
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: Infinity,
+      transports: ['websocket', 'polling'],
     });
 
-    const cols = await rxdb.addCollections({
-      documents: { schema: DOCUMENTS_SCHEMA },
+    socket.on('connect', function () {
+      connected = true;
+      updateSyncStatus();
+      _resubscribeAll();
+      resolve(socket);
     });
-    collection = cols.documents;
 
-    // Subscribe to all document changes so map() callbacks fire reactively
-    collection.$.subscribe(function (changeEvent) {
+    socket.on('connect_error', function (error) {
+      console.warn('Socket connection error:', error);
+    });
+
+    socket.on('disconnect', function () {
+      connected = false;
+      console.warn('Socket disconnected');
+    });
+
+    socket.on('error', function (error) {
+      console.error('Socket error:', error);
+    });
+
+    // Listen for real-time data changes
+    socket.on('db:changed', function (data) {
       try {
-        const doc = changeEvent.documentData;
-        if (!doc || !doc.id) return;
-
-        const sep = doc.id.indexOf(':');
-        const table = sep === -1 ? doc.id : doc.id.slice(0, sep);
-        const id = sep === -1 ? '' : doc.id.slice(sep + 1);
+        const table = data.table;
+        const id = data.id;
 
         invalidateTableCache(table);
         updateSyncStatus();
 
-        if (changeEvent.operation === 'DELETE') {
+        if (data.event === 'del') {
           (callbacks[table] || []).forEach(function (l) {
-            try { l.cb(null, id); } catch (e) { console.error(e); }
+            try {
+              l.cb(null, id);
+            } catch (e) {
+              console.error(e);
+            }
           });
           return;
         }
 
-        (callbacks[table] || []).forEach(function (l) {
-          try { l.cb(doc.data || {}, id); } catch (e) { console.error(e); }
-        });
+        if (data.event === 'put' && data.data) {
+          (callbacks[table] || []).forEach(function (l) {
+            try {
+              l.cb(data.data, id);
+            } catch (e) {
+              console.error(e);
+            }
+          });
+        }
       } catch (e) {
         console.warn('DB change handler error', e);
       }
     });
   }
 
+  function _resubscribeAll() {
+    for (const table of Object.keys(subscriptions)) {
+      if (subscriptions[table]) {
+        _subscribe(table);
+      }
+    }
+  }
+
+  function _subscribe(table) {
+    if (!socket || !connected) return;
+    socket.emit('db:subscribe', { table: table });
+  }
+
+  function _unsubscribe(table) {
+    if (!socket || !connected) return;
+    socket.emit('db:unsubscribe', { table: table });
+  }
+
   function ensureInit() {
     if (!initPromise) {
-      initPromise = _initRxDB();
+      initPromise = _connectSocket();
     }
     return initPromise;
   }
 
   // -------------------------------------------------------------------------
-  // Replication
-  // -------------------------------------------------------------------------
-  function triggerReSync() {
-    if (!replicationState || typeof replicationState.reSync !== 'function') return;
-    try {
-      replicationState.reSync();
-    } catch (e) {}
-  }
-
-  function startReSyncLoop() {
-    if (reSyncTimer) return;
-    reSyncTimer = setInterval(function () {
-      triggerReSync();
-    }, RESYNC_INTERVAL_MS);
-  }
-
-  function stopReSyncLoop() {
-    if (!reSyncTimer) return;
-    clearInterval(reSyncTimer);
-    reSyncTimer = null;
-  }
-
-  function startReplication() {
-    return ensureInit().then(function () {
-      const apiUrl = getApiUrl();
-      const token = getAuthToken();
-      if (!apiUrl || !token || !collection) return;
-
-      if (replicationState) {
-        try { replicationState.cancel(); } catch (e) {}
-        replicationState = null;
-      }
-
-      replicationState = RxDB.replicateRxCollection({
-        collection: collection,
-        replicationIdentifier: 'telesec-flask-v1',
-        live: true,
-        retryTime: 5000,
-        autoStart: true,
-        waitForLeadership: false,
-        pull: {
-          batchSize: 50,
-          handler: async function (lastCheckpoint, batchSize) {
-            const params = new URLSearchParams({ limit: String(batchSize) });
-            if (lastCheckpoint && lastCheckpoint.updatedAt) {
-              params.set('updatedAt', lastCheckpoint.updatedAt);
-              params.set('id', lastCheckpoint.id || '');
-            }
-            const res = await fetch(getApiUrl() + '/api/replicate/pull?' + params.toString(), {
-              headers: {
-                Authorization: 'Bearer ' + getAuthToken(),
-                Accept: 'application/json',
-              },
-            });
-            if (!res.ok) throw new Error('Pull failed: ' + res.status);
-            const json = await res.json();
-            return { documents: json.documents, checkpoint: json.checkpoint };
-          },
-        },
-        push: {
-          batchSize: 50,
-          handler: async function (rows) {
-            const body = rows.map(function (row) { return row.newDocumentState; });
-            const res = await fetch(getApiUrl() + '/api/replicate/push', {
-              method: 'POST',
-              headers: {
-                Authorization: 'Bearer ' + getAuthToken(),
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(body),
-            });
-            if (!res.ok) throw new Error('Push failed: ' + res.status);
-            return await res.json(); // [] = no conflicts
-          },
-        },
-      });
-
-      replicationState.error$.subscribe(function (err) {
-        console.warn('Replication error', err);
-      });
-
-      replicationState.active$.subscribe(function (active) {
-        if (active) updateSyncStatus();
-      });
-
-      startReSyncLoop();
-      triggerReSync();
-    }).catch(function (e) {
-      console.warn('startReplication error', e);
-    });
-  }
-
-  function stopReplication() {
-    stopReSyncLoop();
-    if (replicationState) {
-      try { replicationState.cancel(); } catch (e) {}
-      replicationState = null;
-    }
-  }
-
-  // Re-start replication when coming back online
-  if (typeof window !== 'undefined' && window.addEventListener) {
-    window.addEventListener('online', function () {
-      try {
-        if (onlineReplTimer) clearTimeout(onlineReplTimer);
-        onlineReplTimer = setTimeout(function () {
-          onlineReplTimer = null;
-          startReplication();
-        }, 1200);
-      } catch (e) {}
-    });
-
-    window.addEventListener('visibilitychange', function () {
-      if (document.visibilityState === 'visible') {
-        triggerReSync();
-      }
-    });
-
-    window.addEventListener('focus', function () {
-      triggerReSync();
-    });
-  }
-
-  // -------------------------------------------------------------------------
   // Public API
   // -------------------------------------------------------------------------
+
   async function init(opts) {
+    opts = opts || {};
+    if (opts.jwt) {
+      jwt_token = opts.jwt;
+    }
     await ensureInit();
-    startReplication();
     return Promise.resolve();
   }
 
   async function put(table, id, data) {
     await ensureInit();
     invalidateTableCache(table);
-    const docId = table + ':' + id;
-    const now = new Date().toISOString();
-    try {
-      const existing = await collection.findOne(docId).exec();
-      if (data === null) {
-        if (existing) await existing.remove();
+
+    return new Promise(function (resolve, reject) {
+      if (!socket) {
+        reject(new Error('Socket not connected'));
         return;
       }
-      if (existing) {
-        await existing.patch({ data: data, updated_at: now });
-      } else {
-        await collection.insert({ id: docId, table_name: table, data: data, updated_at: now });
-      }
-    } catch (e) {
-      console.error('DB.put error', e);
-    }
+
+      const timeout = setTimeout(function () {
+        reject(new Error('db:put timeout'));
+      }, 10000);
+
+      socket.once('db:put', function (response) {
+        clearTimeout(timeout);
+        if (response.status === 'ok') {
+          resolve();
+        } else {
+          reject(new Error(response.message || 'Unknown error'));
+        }
+      });
+
+      socket.once('db:error', function (response) {
+        clearTimeout(timeout);
+        reject(new Error(response.message || 'Unknown error'));
+      });
+
+      socket.emit('db:put', {
+        table: table,
+        id: id,
+        data: data,
+      });
+    });
   }
 
   async function get(table, id) {
     await ensureInit();
-    const docId = table + ':' + id;
-    try {
-      const doc = await collection.findOne(docId).exec();
-      return doc ? doc.data : null;
-    } catch (e) {
-      return null;
-    }
+
+    return new Promise(function (resolve, reject) {
+      if (!socket) {
+        resolve(null);
+        return;
+      }
+
+      const timeout = setTimeout(function () {
+        resolve(null);
+      }, 5000);
+
+      socket.once('db:get', function (response) {
+        clearTimeout(timeout);
+        resolve(response.data);
+      });
+
+      socket.emit('db:get', {
+        table: table,
+        id: id,
+      });
+    });
   }
 
   async function del(table, id) {
-    return put(table, id, null);
+    await ensureInit();
+    invalidateTableCache(table);
+
+    return new Promise(function (resolve, reject) {
+      if (!socket) {
+        reject(new Error('Socket not connected'));
+        return;
+      }
+
+      const timeout = setTimeout(function () {
+        reject(new Error('db:del timeout'));
+      }, 10000);
+
+      socket.once('db:del', function (response) {
+        clearTimeout(timeout);
+        if (response.status === 'ok') {
+          resolve();
+        } else {
+          reject(new Error(response.message || 'Unknown error'));
+        }
+      });
+
+      socket.once('db:error', function (response) {
+        clearTimeout(timeout);
+        reject(new Error(response.message || 'Unknown error'));
+      });
+
+      socket.emit('db:del', {
+        table: table,
+        id: id,
+      });
+    });
   }
 
   async function list(table) {
     await ensureInit();
+
     const now = Date.now();
     const cached = tableListCache[table];
-    if (cached && now - cached.ts <= LIST_CACHE_TTL_MS) return cached.rows;
-    if (tableListInFlight[table]) return tableListInFlight[table];
-
-    try {
-      tableListInFlight[table] = collection
-        .find({ selector: { table_name: { $eq: table } } })
-        .exec()
-        .then(function (docs) {
-          const rows = docs.map(function (doc) {
-            const sep = doc.id.indexOf(':');
-            const id = sep === -1 ? doc.id : doc.id.slice(sep + 1);
-            return { id: id, data: doc.data };
-          });
-          tableListCache[table] = { ts: Date.now(), rows: rows };
-          return rows;
-        })
-        .finally(function () {
-          delete tableListInFlight[table];
-        });
-      return await tableListInFlight[table];
-    } catch (e) {
-      delete tableListInFlight[table];
-      return [];
+    if (cached && now - cached.ts <= LIST_CACHE_TTL_MS) {
+      return cached.rows;
     }
+
+    if (tableListInFlight[table]) {
+      return tableListInFlight[table];
+    }
+
+    tableListInFlight[table] = new Promise(function (resolve, reject) {
+      if (!socket) {
+        resolve([]);
+        return;
+      }
+
+      const timeout = setTimeout(function () {
+        resolve([]);
+      }, 10000);
+
+      socket.once('db:list', function (response) {
+        clearTimeout(timeout);
+        if (response.table === table) {
+          const rows = response.rows || [];
+          tableListCache[table] = { ts: Date.now(), rows: rows };
+          resolve(rows);
+        } else {
+          resolve([]);
+        }
+      });
+
+      socket.once('db:error', function (response) {
+        clearTimeout(timeout);
+        resolve([]);
+      });
+
+      socket.emit('db:list', {
+        table: table,
+      });
+    }).finally(function () {
+      delete tableListInFlight[table];
+    });
+
+    return tableListInFlight[table];
   }
 
   function map(table, cb) {
@@ -340,12 +340,25 @@ var DB = (function () {
     callbacks[table] = callbacks[table] || [];
     callbacks[table].push({ id: callbackId, cb: cb });
 
+    // Subscribe to real-time updates if socket is ready
     ensureInit().then(function () {
-      list(table).then(function (rows) {
-        const still = (callbacks[table] || []).some(function (l) { return l.id === callbackId; });
-        if (!still) return;
-        rows.forEach(function (r) { cb(r.data, r.id); });
-      });
+      _subscribe(table);
+      subscriptions[table] = true;
+
+      // Fetch current list
+      list(table)
+        .then(function (rows) {
+          const still = (callbacks[table] || []).some(function (l) {
+            return l.id === callbackId;
+          });
+          if (!still) return;
+          rows.forEach(function (r) {
+            cb(r.data, r.id);
+          });
+        })
+        .catch(function (e) {
+          console.error('Error loading table:', e);
+        });
     });
 
     return callbackId;
@@ -355,8 +368,17 @@ var DB = (function () {
     if (!callbackId) return false;
     for (const table of Object.keys(callbacks)) {
       const before = callbacks[table].length;
-      callbacks[table] = callbacks[table].filter(function (l) { return l.id !== callbackId; });
-      if (callbacks[table].length !== before) return true;
+      callbacks[table] = callbacks[table].filter(function (l) {
+        return l.id !== callbackId;
+      });
+      if (callbacks[table].length !== before) {
+        // If no more callbacks for this table, unsubscribe
+        if (callbacks[table].length === 0) {
+          _unsubscribe(table);
+          subscriptions[table] = false;
+        }
+        return true;
+      }
     }
     return false;
   }
@@ -369,15 +391,22 @@ var DB = (function () {
       const existing = (await get(table, id)) || {};
       const attachments = Object.assign({}, existing._attachments || {});
       let dataUrl = dataUrlOrBlob;
+
       if (dataUrlOrBlob instanceof Blob) {
         dataUrl = await new Promise(function (resolve, reject) {
           const reader = new FileReader();
-          reader.onload = function (e) { resolve(e.target.result); };
+          reader.onload = function (e) {
+            resolve(e.target.result);
+          };
           reader.onerror = reject;
           reader.readAsDataURL(dataUrlOrBlob);
         });
       }
-      attachments[name] = { data: dataUrl, content_type: contentType || 'image/jpeg' };
+
+      attachments[name] = {
+        data: dataUrl,
+        content_type: contentType || 'image/jpeg',
+      };
       await put(table, id, Object.assign({}, existing, { _attachments: attachments }));
       return true;
     } catch (e) {
@@ -390,8 +419,12 @@ var DB = (function () {
     try {
       const data = await get(table, id);
       return (
-        data && data._attachments && data._attachments[name] && data._attachments[name].data
-      ) || null;
+        (data &&
+          data._attachments &&
+          data._attachments[name] &&
+          data._attachments[name].data) ||
+        null
+      );
     } catch (e) {
       return null;
     }
@@ -402,7 +435,11 @@ var DB = (function () {
       const data = await get(table, id);
       if (!data || !data._attachments) return [];
       return Object.entries(data._attachments).map(function ([name, att]) {
-        return { name: name, dataUrl: att.data || null, content_type: att.content_type || null };
+        return {
+          name: name,
+          dataUrl: att.data || null,
+          content_type: att.content_type || null,
+        };
       });
     } catch (e) {
       return [];
@@ -425,14 +462,9 @@ var DB = (function () {
   // -------------------------------------------------------------------------
   // Auto-initialise on startup (non-blocking)
   // -------------------------------------------------------------------------
-  ensureInit()
-    .then(function () {
-      const apiUrl = getApiUrl();
-      if (apiUrl && getAuthToken()) {
-        startReplication();
-      }
-    })
-    .catch(function (e) { console.warn('DB.autoInit error', e); });
+  ensureInit().catch(function (e) {
+    console.warn('DB.autoInit error', e);
+  });
 
   return {
     init: init,
@@ -442,15 +474,19 @@ var DB = (function () {
     list: list,
     map: map,
     unlisten: unlisten,
-    startReplication: startReplication,
-    stopReplication: stopReplication,
+    startReplication: function () {},
+    stopReplication: function () {},
     putAttachment: putAttachment,
     getAttachment: getAttachment,
     listAttachments: listAttachments,
     deleteAttachment: deleteAttachment,
     _internal: {
-      get collection() { return collection; },
-      get db() { return rxdb; },
+      get socket() {
+        return socket;
+      },
+      get isConnected() {
+        return connected;
+      },
     },
   };
 })();

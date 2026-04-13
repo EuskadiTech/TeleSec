@@ -7,6 +7,7 @@ from .config import Config
 from .extensions import jwt
 from .models import init_db
 from .routes import register_routes
+from .socketio_server import socketio
 
 
 def create_app(config: dict = None) -> Flask:
@@ -23,5 +24,8 @@ def create_app(config: dict = None) -> Flask:
     jwt.init_app(app)
     init_db()
     register_routes(app)
+    
+    # Initialize SocketIO for real-time data access
+    socketio.init_app(app, cors_allowed_origins=origins)
 
     return app
