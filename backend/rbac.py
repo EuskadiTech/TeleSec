@@ -31,6 +31,7 @@ def require_role(*roles):
             if claims.get("step") == "select_persona":
                 return jsonify({"error": "Se requiere seleccionar una persona primero"}), 403
             user_roles = claims.get("roles", [])
+            print(f"Checking roles for {get_jwt_identity()}: has {user_roles}, requires {roles}")
             if "ADMIN" in user_roles or any(r in user_roles for r in roles):
                 return f(*args, **kwargs)
             return jsonify(
