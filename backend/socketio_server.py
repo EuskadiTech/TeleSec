@@ -38,7 +38,7 @@ def get_persona_roles(tenant_id: str, persona_id: str) -> list:
             & (Document.tenant_id == tenant_id)
         )
         data = json.loads(doc.data) if doc.data else {}
-        return data.get("roles", [])
+        return data.get("Roles", [])
     except Document.DoesNotExist:
         return []
 
@@ -58,7 +58,6 @@ def can_edit_table(table_name: str, roles: list) -> bool:
     if "ADMIN" in roles:
         return True
     required_roles = TABLE_EDIT_ROLES.get(table_lower, [])
-    print(f"Checking edit access for table '{table_name}' with roles {roles}, requires {required_roles}")
     if not required_roles:
         # If not in TABLE_EDIT_ROLES, only ADMIN can edit
         return False
