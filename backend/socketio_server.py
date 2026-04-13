@@ -47,6 +47,7 @@ def can_access_table(table_name: str, roles: list) -> bool:
     """Check if roles can read from this table."""
     if "ADMIN" in roles:
         return True
+    print(f"Checking access for table '{table_name}' with roles {roles}")
     # For now: all tables are readable; only write is restricted
     return True
 
@@ -57,6 +58,7 @@ def can_edit_table(table_name: str, roles: list) -> bool:
     if "ADMIN" in roles:
         return True
     required_roles = TABLE_EDIT_ROLES.get(table_lower, [])
+    print(f"Checking edit access for table '{table_name}' with roles {roles}, requires {required_roles}")
     if not required_roles:
         # If not in TABLE_EDIT_ROLES, only ADMIN can edit
         return False
