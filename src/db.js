@@ -269,22 +269,49 @@ var DB = (function () {
   }
 
   async function get(table, id) {
-    await ensureInit();
+    await ensureInit().catch(function () {
+      // Continue and surface a clear connection error below.
+    });
 
     return new Promise(function (resolve, reject) {
-      if (!socket) {
-        resolve(null);
+      if (!socket || !connected) {
+        reject(new Error('Not connected to server. Please log in.'));
         return;
       }
 
-      const timeout = setTimeout(function () {
-        resolve(null);
-      }, 5000);
+      let settled = false;
 
-      socket.once('db:get', function (response) {
+      function cleanup() {
+        socket.off('db:get', onGet);
+        socket.off('db:error', onError);
+      }
+
+      function onGet(response) {
+        if (response && response.id && String(response.id) !== String(id)) return;
+        if (settled) return;
+        settled = true;
         clearTimeout(timeout);
-        resolve(response.data);
-      });
+        cleanup();
+        resolve(response ? response.data : null);
+      }
+
+      function onError(response) {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+        cleanup();
+        reject(new Error((response && response.message) || 'Unknown error'));
+      }
+
+      const timeout = setTimeout(function () {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        reject(new Error('db:get timeout'));
+      }, 10000);
+
+      socket.on('db:get', onGet);
+      socket.on('db:error', onError);
 
       socket.emit('db:get', {
         table: table,
