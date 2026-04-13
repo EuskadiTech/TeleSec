@@ -76,7 +76,17 @@ var DB = (function () {
           _createSocketConnection(apiUrl, token, resolve, reject);
         };
         script.onerror = function () {
-          reject(new Error('Failed to load socket.io client'));
+          // Use CDN fallback if loading from server fails
+          console.warn('Failed to load socket.io from server, falling back to CDN');
+          const cdnScript = document.createElement('script');
+          cdnScript.src = 'https://cdn.socket.io/4.5.4/socket.io.min.js';
+          cdnScript.onload = function () {
+            _createSocketConnection(apiUrl, token, resolve, reject);
+          };
+          cdnScript.onerror = function () {
+            reject(new Error('Failed to load socket.io client library'));
+          };
+          document.head.appendChild(cdnScript);
         };
         document.head.appendChild(script);
       } else {
