@@ -71,20 +71,20 @@ def get_roles() -> list:
 # ADMIN always bypasses these checks.
 # Tables not listed here are restricted to ADMIN only.
 TABLE_EDIT_ROLES: dict[str, list[str]] = {
-    "materiales": ["MATERIALES_EDIT"],
-    "personas": ["PERSONAS_EDIT"],
-    "supercafe": ["SUPERCAFE_EDIT"],
-    "comedor": ["COMEDOR_EDIT"],
-    "notificaciones": ["NOTIFICACIONES_EDIT"],
-    "resumen_diario": ["RESUMEN_DIARIO_EDIT"],
+    "materiales": ["materiales:edit"],
+    "personas": ["personas:edit"],
+    "supercafe": ["supercafe:edit"],
+    "comedor": ["comedor:edit"],
+    "notificaciones": ["notificaciones:edit"],
+    "resumen_diario": ["resumen_diario:edit"],
 }
 TABLE_ACCESS_ROLES: dict[str, list[str]] = {
-    "materiales": ["MATERIALES_EDIT", "MATERIALES_ACCESS"],
+    "materiales": ["materiales:edit", "materiales:access"],
     "personas": ["*"],
-    "supercafe": ["SUPERCAFE_EDIT", "SUPERCAFE_ACCESS"],
-    "comedor": ["COMEDOR_EDIT", "COMEDOR_ACCESS"],
-    "notificaciones": ["NOTIFICACIONES_EDIT", "NOTIFICACIONES_ACCESS"],
-    "resumen_diario": ["RESUMEN_DIARIO_EDIT", "RESUMEN_DIARIO_ACCESS"],
+    "supercafe": ["supercafe:edit", "supercafe:access"],
+    "comedor": ["comedor:edit", "comedor:access"],
+    "notificaciones": ["notificaciones:edit", "notificaciones:access"],
+    "resumen_diario": ["resumen_diario:edit", "resumen_diario:access"],
 }
 
 
