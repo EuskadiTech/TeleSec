@@ -12,8 +12,7 @@ PAGES.login = {
     step = step || 'config';
 
     if (step === 'config') {
-      var field_api = safeuuid();
-      var field_tenant = safeuuid();
+      var field_credential = safeuuid();
       var field_pass = safeuuid();
       var field_pass2 = safeuuid();
       var btn_register = safeuuid();
@@ -22,15 +21,11 @@ PAGES.login = {
       container.innerHTML = html`
         <h1>¡Bienvenido a TeleSec! 🎉</h1>
         <h2>Paso 1: Configurar el servidor</h2>
-        <p>Introduce la URL de tu servidor TeleSec y crea un nuevo grupo (tenant).</p>
+        <p>Introduce tu grupo y servidor en el formato <strong>grupo@servidor</strong> y crea una contraseña.</p>
         <fieldset>
           <label>
-            URL del servidor (ej: https://mi-servidor.com)
-            <input type="url" id="${field_api}" placeholder="https://mi-servidor.com" value="https://tele.tech.eus" /><br /><br />
-          </label>
-          <label>
-            Nombre del grupo <span style="color:red">*</span>
-            <input type="text" id="${field_tenant}" placeholder="mi-grupo" /><br /><br />
+            Grupo@servidor <span style="color:red">*</span>
+            <input type="text" id="${field_credential}" placeholder="mi-grupo@tele.tech.eus" /><br /><br />
           </label>
           <label>
             Contraseña del grupo <span style="color:red">*</span>
@@ -46,20 +41,21 @@ PAGES.login = {
       `;
 
       document.getElementById(btn_skip).onclick = () => {
-        var apiUrl = (document.getElementById(field_api).value || '').trim().replace(/\/$/, '');
-        localStorage.setItem("TELESEC_API_URL", apiUrl);
+        var parsed = parseTenantAtHost(document.getElementById(field_credential).value || '');
+        if (parsed.apiUrl) localStorage.setItem('TELESEC_API_URL', parsed.apiUrl);
         open_page('login');
         setUrlHash('login');
       };
 
       document.getElementById(btn_register).onclick = async () => {
-        var apiUrl = (document.getElementById(field_api).value || '').trim().replace(/\/$/, '');
-        var tenant = (document.getElementById(field_tenant).value || '').trim();
+        var parsed = parseTenantAtHost(document.getElementById(field_credential).value || '');
+        var apiUrl = parsed.apiUrl;
+        var tenant = parsed.tenant;
         var pass = document.getElementById(field_pass).value;
         var pass2 = document.getElementById(field_pass2).value;
 
-        if (!apiUrl) { toastr.error('Introduce la URL del servidor'); return; }
-        if (!tenant) { toastr.error('Introduce el nombre del grupo'); return; }
+        if (!tenant) { toastr.error('Introduce el nombre del grupo (formato: grupo@servidor)'); return; }
+        if (!apiUrl) { toastr.error('Introduce el servidor (formato: grupo@servidor, ej: mi-grupo@tele.tech.eus)'); return; }
         if (!pass) { toastr.error('Introduce una contraseña'); return; }
         if (pass !== pass2) { toastr.error('Las contraseñas no coinciden'); return; }
         if (pass.length < 6) { toastr.error('La contraseña debe tener al menos 6 caracteres'); return; }
@@ -208,29 +204,12 @@ PAGES.login = {
     if (mid === 'onboarding-config') { PAGES.login.onboarding('config'); return; }
     if (mid === 'onboarding-persona') { PAGES.login.onboarding('persona'); return; }
 
-    var field_api = safeuuid();
-    var btn_save = safeuuid();
-
     container.innerHTML = html`
       <h1>Configuración del servidor</h1>
-      <fieldset>
-        <label>
-          URL del servidor TeleSec (ej: https://mi-servidor.com)
-          <input type="url" id="${field_api}"
-            value="${localStorage.getItem('TELESEC_API_URL') || DEFAULT_SERVER}" /><br /><br />
-        </label>
-        <button id="${btn_save}" class="btn5">Guardar y Conectar</button>
-        <button onclick="setUrlHash('login');" class="btn3" style="margin-left:8px;">Cancelar</button>
-      </fieldset>
+      <p>El servidor se especifica directamente en el campo de acceso usando el formato <strong>grupo@servidor</strong>.</p>
+      <p>Ejemplo: <code>mi-grupo@tele.tech.eus</code></p>
+      <button onclick="setUrlHash('login');" class="btn5">Volver al inicio de sesión</button>
     `;
-
-    document.getElementById(btn_save).onclick = () => {
-      var apiUrl = (document.getElementById(field_api).value || '').trim().replace(/\/$/, '');
-      if (!apiUrl) { toastr.error('Introduce la URL del servidor'); return; }
-      localStorage.setItem('TELESEC_API_URL', apiUrl);
-      toastr.success('URL guardada');
-      setUrlHash('login');
-    };
   },
 
   // ------------------------------------------------------------------
@@ -255,9 +234,10 @@ PAGES.login = {
       document.getElementById(div_form).innerHTML = html`
         <h2>Iniciar sesión</h2>
         <label>
-          Grupo (tenant)
+          Grupo@servidor
           <input type="text" id="${field_tenant}"
-            value="${localStorage.getItem('TELESEC_LAST_TENANT') || ''}"
+            placeholder="mi-grupo@tele.tech.eus"
+            value="${getStoredCredential()}"
             autofocus /><br /><br />
         </label>
         <label>
@@ -266,33 +246,34 @@ PAGES.login = {
             value="${localStorage.getItem('TELESEC_LAST_TENANT_PASSWORD') || ''}" /><br /><br />
         </label>
         <button id="${btn_login}" class="btn5">Acceder</button>
-        <a class="button btn1" href="#login,setup" style="margin-left:8px;">Configurar servidor</a>
         ${!onboardingComplete
           ? '<a class="button btn2" href="#login,onboarding-config" style="margin-left:8px;">Crear nuevo grupo</a>'
           : ''}
       `;
 
       async function loginWithTenantCredentials(showValidationError) {
-        var tenant = (document.getElementById(field_tenant).value || '').trim();
+        var credentialRaw = (document.getElementById(field_tenant).value || '').trim();
+        var parsed = parseTenantAtHost(credentialRaw);
+        var tenant = parsed.tenant;
         var pass = document.getElementById(field_pass).value;
         if (!tenant || !pass) {
-          if (showValidationError) toastr.error('Introduce el grupo y la contraseña');
+          if (showValidationError) toastr.error('Introduce el grupo@servidor y la contraseña');
+          return;
+        }
+        if (!parsed.apiUrl) {
+          if (showValidationError) toastr.error('Especifica el servidor con el formato grupo@servidor (ej: mi-grupo@tele.tech.eus)');
           return;
         }
 
-        localStorage.setItem('TELESEC_LAST_TENANT', tenant);
+        localStorage.setItem('TELESEC_LAST_TENANT_AT', credentialRaw);
         localStorage.setItem('TELESEC_LAST_TENANT_PASSWORD', pass);
+        localStorage.setItem('TELESEC_API_URL', parsed.apiUrl);
 
         var btn = document.getElementById(btn_login);
         btn.disabled = true; btn.innerText = 'Accediendo…';
 
         try {
-          var currentApiUrl = (localStorage.getItem('TELESEC_API_URL') || DEFAULT_SERVER).replace(/\/$/, '');
-          if (!currentApiUrl) {
-            toastr.error('No hay servidor configurado. Usa "Configurar servidor".');
-            btn.disabled = false; btn.innerText = 'Acceder';
-            return;
-          }
+          var currentApiUrl = parsed.apiUrl;
           var res = await fetch(currentApiUrl + '/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -333,7 +314,7 @@ PAGES.login = {
         });
 
         // If credentials are already saved, try login automatically.
-        if (!autoLoginDone && localStorage.getItem('TELESEC_LAST_TENANT') && localStorage.getItem('TELESEC_LAST_TENANT_PASSWORD')) {
+        if (!autoLoginDone && localStorage.getItem('TELESEC_LAST_TENANT_AT') && localStorage.getItem('TELESEC_LAST_TENANT_PASSWORD')) {
           autoLoginDone = true;
           loginWithTenantCredentials(false);
         }
@@ -415,6 +396,46 @@ PAGES.login = {
     renderTenantForm();
   },
 };
+
+// ------------------------------------------------------------------
+// Helpers: parse TENANT@API_HOST_DOMAIN credential format
+// ------------------------------------------------------------------
+
+/**
+ * Splits a "tenant@host" credential string.
+ * The host part has https:// prepended if no scheme is present.
+ * Examples:
+ *   "mi-grupo@tele.tech.eus"      → { tenant: "mi-grupo", apiUrl: "https://tele.tech.eus" }
+ *   "mi-grupo@https://my.host"    → { tenant: "mi-grupo", apiUrl: "https://my.host" }
+ *   "mi-grupo"                    → { tenant: "mi-grupo", apiUrl: "" }
+ */
+function parseTenantAtHost(value) {
+  var str = (value || '').trim();
+  var at = str.indexOf('@');
+  if (at === -1) return { tenant: str, apiUrl: '' };
+  var tenant = str.substring(0, at).trim();
+  var host = str.substring(at + 1).trim().replace(/\/$/, '');
+  if (!host) return { tenant: tenant, apiUrl: '' };
+  var apiUrl = /^https?:\/\//i.test(host) ? host : 'https://' + host;
+  return { tenant: tenant, apiUrl: apiUrl };
+}
+
+/**
+ * Returns the stored TENANT@HOST credential, migrating from the
+ * legacy separate TELESEC_LAST_TENANT + TELESEC_API_URL keys if needed.
+ */
+function getStoredCredential() {
+  var stored = localStorage.getItem('TELESEC_LAST_TENANT_AT');
+  if (stored) return stored;
+  // Migrate legacy format
+  var oldTenant = localStorage.getItem('TELESEC_LAST_TENANT') || '';
+  var oldApiUrl = localStorage.getItem('TELESEC_API_URL') || DEFAULT_SERVER;
+  if (oldTenant) {
+    var domain = oldApiUrl.replace(/^https?:\/\//i, '').replace(/\/$/, '');
+    return oldTenant + '@' + domain;
+  }
+  return '';
+}
 
 // ------------------------------------------------------------------
 // Helper: store JWT + set global session state + kick off replication
