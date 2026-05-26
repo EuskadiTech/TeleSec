@@ -1,39 +1,69 @@
-// db.js – SocketIO-based real-time database client for TeleSec
-//
-// Replaces RxDB with SocketIO for real-time data access with RBAC enforcement.
-// All operations are protected by JWT authentication and role-based access control.
-
-const DEFAULT_SERVER = 'https://tele.tech.eus';
+// Simple PouchDB wrapper for TeleSec
+// - Uses PouchDB for local storage and optional replication to a CouchDB server
+// - Stores records as docs with _id = "<table>:<id>" and field `data` containing either plain object or encrypted string
+// - Exposes: init, put, get, del, map, list, replicate
 
 var DB = (function () {
-  // -------------------------------------------------------------------------
-  // State
-  // -------------------------------------------------------------------------
-  let socket = null;
-  let connected = false;
-  let initPromise = null;
-  let jwt_token = null;
-
+  let local = null;
+  let remote = null;
+  let changes = null;
+  let repPush = null;
+  let repPull = null;
+  let repBootstrap = null;
+  let remoteKey = '';
+  let onlineReplTimer = null;
   let callbacks = {}; // table -> [{ id, cb }]
   let callbackSeq = 0;
+  let docCache = {}; // _id -> last data snapshot (stringified)
   let tableListCache = {}; // table -> { ts, rows }
   let tableListInFlight = {}; // table -> Promise<rows>
-  let subscriptions = {}; // table -> boolean (subscribed)
-  let lastSyncCheck = 0;
-  let syncTimer = null;
+  let lastOrbAt = 0;
+  let orbTimer = null;
 
   const LIST_CACHE_TTL_MS = 1500;
-  const SYNC_CHECK_INTERVAL_MS = 5000;
+  const ORB_MIN_INTERVAL_MS = 400;
+  const INITIAL_REPL_BATCH_SIZE = 500;
 
-  // -------------------------------------------------------------------------
-  // Helpers
-  // -------------------------------------------------------------------------
-  function getApiUrl() {
-    return (localStorage.getItem('TELESEC_API_URL') || DEFAULT_SERVER).replace(/\/$/, '');
+  function bootstrapFlagKey(key) {
+    return 'TELESEC_REPL_BOOTSTRAP_DONE:' + key;
   }
 
-  function getAuthToken() {
-    return jwt_token || localStorage.getItem('TELESEC_JWT') || '';
+  function hasBootstrapDone(key) {
+    if (!key) return true;
+    try {
+      return localStorage.getItem(bootstrapFlagKey(key)) === '1';
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function markBootstrapDone(key) {
+    if (!key) return;
+    try {
+      localStorage.setItem(bootstrapFlagKey(key), '1');
+    } catch (e) {}
+  }
+
+  function ensureLocal() {
+    if (local) return;
+    try {
+      const localName = 'telesec';
+      local = new PouchDB(localName);
+      if (changes) {
+        try {
+          changes.cancel();
+        } catch (e) {}
+      }
+      changes = local
+        .changes({ live: true, since: 'now', include_docs: true })
+        .on('change', onChange);
+    } catch (e) {
+      console.warn('ensureLocal error', e);
+    }
+  }
+
+  function makeId(table, id) {
+    return table + ':' + id;
   }
 
   function makeCallbackId(table) {
@@ -41,446 +71,343 @@ var DB = (function () {
     return table + '#' + callbackSeq;
   }
 
+  function makeRemoteKey(opts, localName) {
+    if (!opts || !opts.remoteServer) return '';
+    const server = String(opts.remoteServer || '').replace(/\/$/, '');
+    const dbname = encodeURIComponent(opts.dbname || localName);
+    const username = opts.username || '';
+    return server + '|' + dbname + '|' + username;
+  }
+
   function invalidateTableCache(table) {
     if (table && tableListCache[table]) delete tableListCache[table];
   }
 
-  function updateSyncStatus() {
+  function toStableSnapshot(data) {
+    if (typeof data === 'string') return data;
+    try {
+      return JSON.stringify(data);
+    } catch (e) {
+      return String(data);
+    }
+  }
+
+  function updateSyncStatus(doc) {
     try {
       window.TELESEC_LAST_SYNC = Date.now();
+
+      // Keep hash work bounded on low-end devices: sample payload and include length.
+      let payload = '';
+      try {
+        payload = typeof doc.data === 'string' ? doc.data : JSON.stringify(doc.data || {});
+      } catch (e) {
+        payload = String(doc._id || '');
+      }
+      const sample = payload.length > 512 ? payload.slice(0, 512) + ':' + payload.length : payload;
+      let hash = 0;
+      for (let i = 0; i < sample.length; i++) {
+        hash = (hash * 31 + sample.charCodeAt(i)) >>> 0;
+      }
+      const hue = hash % 360;
+      window.TELESEC_LAST_SYNC_COLOR = `hsl(${hue}, 70%, 50%)`;
+
       if (typeof updateStatusOrb !== 'function') return;
-      updateStatusOrb();
+      const now = Date.now();
+      const elapsed = now - lastOrbAt;
+      if (elapsed >= ORB_MIN_INTERVAL_MS) {
+        lastOrbAt = now;
+        updateStatusOrb();
+        return;
+      }
+      if (orbTimer) return;
+      orbTimer = setTimeout(function () {
+        orbTimer = null;
+        lastOrbAt = Date.now();
+        try {
+          updateStatusOrb();
+        } catch (e) {}
+      }, ORB_MIN_INTERVAL_MS - elapsed);
     } catch (e) {}
   }
 
-  // -------------------------------------------------------------------------
-  // SocketIO connection
-  // -------------------------------------------------------------------------
-  async function _connectSocket() {
-    if (socket) return socket;
-
-    return new Promise(function (resolve, reject) {
-      const apiUrl = getApiUrl();
-      const token = getAuthToken();
-
-      // More tolerant: allow retry later if token becomes available
-      if (!apiUrl) {
-        console.warn('DB: No API URL set yet');
-        reject(new Error('API URL not configured'));
-        return;
+  function init(opts) {
+    const localName = 'telesec';
+    try {
+      if (opts && opts.secret) {
+        SECRET = opts.secret;
+        try {
+          localStorage.setItem('TELESEC_SECRET', SECRET);
+        } catch (e) {}
       }
+    } catch (e) {}
+    local = new PouchDB(localName);
 
-      if (!token) {
-        console.warn('DB: No JWT token available yet (user not logged in)');
-        reject(new Error('JWT token not available (user not logged in)'));
-        return;
-      }
-
-      // Load socket.io client if not already loaded
-      if (typeof io === 'undefined') {
-        const script = document.createElement('script');
-        script.src = apiUrl + '/socket.io/socket.io.js';
-        script.onload = function () {
-          _createSocketConnection(apiUrl, token, resolve, reject);
-        };
-        script.onerror = function () {
-          // Use CDN fallback if loading from server fails
-          console.warn('Failed to load socket.io from server, falling back to CDN');
-          const cdnScript = document.createElement('script');
-          cdnScript.src = 'https://cdn.socket.io/4.5.4/socket.io.min.js';
-          cdnScript.onload = function () {
-            _createSocketConnection(apiUrl, token, resolve, reject);
-          };
-          cdnScript.onerror = function () {
-            reject(new Error('Failed to load socket.io client library'));
-          };
-          document.head.appendChild(cdnScript);
-        };
-        document.head.appendChild(script);
-      } else {
-        _createSocketConnection(apiUrl, token, resolve, reject);
-      }
-    });
-  }
-
-  function _createSocketConnection(apiUrl, token, resolve, reject) {
-    socket = io(apiUrl, {
-      auth: {
-        token: token,
-      },
-      reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      reconnectionAttempts: Infinity,
-      transports: ['websocket', 'polling'],
-    });
-
-    socket.on('connect', function () {
-      connected = true;
-      updateSyncStatus();
-      _resubscribeAll();
-      resolve(socket);
-    });
-
-    socket.on('connect_error', function (error) {
-      console.warn('Socket connection error:', error);
-    });
-
-    socket.on('disconnect', function () {
-      connected = false;
-      console.warn('Socket disconnected');
-    });
-
-    socket.on('error', function (error) {
-      console.error('Socket error:', error);
-    });
-
-    // Listen for real-time data changes
-    socket.on('db:changed', function (data) {
+    const nextRemoteKey = makeRemoteKey(opts, localName);
+    if (opts.remoteServer) {
       try {
-        const table = data.table;
-        const id = data.id;
-
-        invalidateTableCache(table);
-        updateSyncStatus();
-
-        if (data.event === 'del') {
-          (callbacks[table] || []).forEach(function (l) {
-            try {
-              l.cb(null, id);
-            } catch (e) {
-              console.error(e);
-            }
-          });
-          return;
-        }
-
-        if (data.event === 'put' && data.data) {
-          (callbacks[table] || []).forEach(function (l) {
-            try {
-              l.cb(data.data, id);
-            } catch (e) {
-              console.error(e);
-            }
-          });
+        if (nextRemoteKey !== remoteKey || !remote) {
+          const server = opts.remoteServer.replace(/\/$/, '');
+          const dbname = encodeURIComponent(opts.dbname || localName);
+          let authPart = '';
+          if (opts.username) authPart = opts.username + ':' + (opts.password || '') + '@';
+          const remoteUrl = server.replace(/https?:\/\//, (m) => m) + '/' + dbname;
+          if (opts.username) remote = new PouchDB(remoteUrl.replace(/:\/\//, '://' + authPart));
+          else remote = new PouchDB(remoteUrl);
+          remoteKey = nextRemoteKey;
+          replicateToRemote();
         }
       } catch (e) {
-        console.warn('DB change handler error', e);
+        console.warn('Remote DB init error', e);
       }
+    }
+
+    if (changes) changes.cancel();
+    changes = local
+      .changes({ live: true, since: 'now', include_docs: true })
+      .on('change', onChange);
+    return Promise.resolve();
+  }
+
+  function replicateToRemote() {
+    ensureLocal();
+    if (!local || !remote) return;
+    try {
+      if (repPush && repPush.cancel) repPush.cancel();
+    } catch (e) {}
+    try {
+      if (repPull && repPull.cancel) repPull.cancel();
+    } catch (e) {}
+    try {
+      if (repBootstrap && repBootstrap.cancel) repBootstrap.cancel();
+    } catch (e) {}
+
+    const liveOpts = {
+      live: true,
+      retry: true,
+      heartbeat: 10000,
+      timeout: 60000,
+      batch_size: 100,
+      batches_limit: 10,
+    };
+
+    function startLiveReplication() {
+      repPush = PouchDB.replicate(local, remote, liveOpts).on('error', function (err) {
+        console.warn('Replication push error', err);
+      });
+      repPull = PouchDB.replicate(remote, local, liveOpts).on('error', function (err) {
+        console.warn('Replication pull error', err);
+      });
+    }
+
+    // First replication to a remote tends to create many small requests.
+    // Run one-shot sync in larger batches first, then switch to live mode.
+    if (!hasBootstrapDone(remoteKey)) {
+      repBootstrap = PouchDB.sync(local, remote, {
+        live: false,
+        retry: false,
+        batch_size: INITIAL_REPL_BATCH_SIZE,
+        batches_limit: 20,
+      })
+        .on('complete', function () {
+          repBootstrap = null;
+          markBootstrapDone(remoteKey);
+          startLiveReplication();
+        })
+        .on('error', function (err) {
+          repBootstrap = null;
+          console.warn('Initial replication bootstrap error', err);
+          startLiveReplication();
+        });
+      return;
+    }
+
+    startLiveReplication();
+  }
+
+  if (typeof window !== 'undefined' && window.addEventListener) {
+    window.addEventListener('online', function () {
+      try {
+        if (onlineReplTimer) clearTimeout(onlineReplTimer);
+        onlineReplTimer = setTimeout(function () {
+          onlineReplTimer = null;
+          replicateToRemote();
+        }, 1200);
+      } catch (e) {}
     });
   }
 
-  function _resubscribeAll() {
-    for (const table of Object.keys(subscriptions)) {
-      if (subscriptions[table]) {
-        _subscribe(table);
+  function onChange(change) {
+    const doc = change.doc;
+    if (!doc || !doc._id) return;
+    const sep = doc._id.indexOf(':');
+    const table = sep === -1 ? doc._id : doc._id.slice(0, sep);
+    const id = sep === -1 ? '' : doc._id.slice(sep + 1);
+    invalidateTableCache(table);
+
+    // handle deletes
+    if (change.deleted || doc._deleted) {
+      updateSyncStatus(doc);
+      delete docCache[doc._id];
+      if (callbacks[table]) {
+        callbacks[table].forEach((listener) => {
+          const cb = listener.cb;
+          try {
+            cb(null, id);
+          } catch (e) {
+            console.error(e);
+          }
+        });
       }
+      return;
     }
-  }
 
-  function _subscribe(table) {
-    if (!socket || !connected) return;
-    socket.emit('db:subscribe', { table: table });
-  }
-
-  function _unsubscribe(table) {
-    if (!socket || !connected) return;
-    socket.emit('db:unsubscribe', { table: table });
-  }
-
-  function ensureInit() {
-    if (!initPromise) {
-      // Create a new promise for this initialization attempt
-      initPromise = _connectSocket().catch(function (err) {
-        // Reset so next call tries again
-        initPromise = null;
-        throw err;
-      });
-    }
-    return initPromise;
-  }
-
-  // -------------------------------------------------------------------------
-  // Public API
-  // -------------------------------------------------------------------------
-
-  async function init(opts) {
-    opts = opts || {};
-    if (opts.jwt) {
-      jwt_token = opts.jwt;
-      // Reset connection if token changed (e.g., after login)
-      if (socket) {
-        try {
-          socket.disconnect();
-        } catch (e) {}
-        socket = null;
-        connected = false;
-        initPromise = null; // Force reconnection
-      }
-    }
+    // handle insert/update
+    let changed = true;
     try {
-      await ensureInit();
-      console.debug('DB.init: Connected successfully');
-      return Promise.resolve();
+      const now = toStableSnapshot(doc.data);
+      const prev = docCache[doc._id];
+      if (prev === now) changed = false;
+      docCache[doc._id] = now;
     } catch (e) {
-      console.warn('DB.init error:', e.message);
-      // Return resolved promise anyway - user might not be logged in yet
-      // Subsequent operations will handle the lack of connection
-      return Promise.resolve();
+      /* ignore cache errors */
+    }
+
+    if (!changed) return; // no meaningful change
+
+    updateSyncStatus(doc);
+
+    if (callbacks[table]) {
+      callbacks[table].forEach((listener) => {
+        const cb = listener.cb;
+        try {
+          cb(doc.data, id);
+        } catch (e) {
+          console.error(e);
+        }
+      });
     }
   }
 
   async function put(table, id, data) {
-    await ensureInit().catch(function (e) {
-      // Continue even if init fails - will fail with better error below
-    });
+    ensureLocal();
     invalidateTableCache(table);
-
-    return new Promise(function (resolve, reject) {
-      if (!socket || !connected) {
-        reject(new Error('Not connected to server. Please log in.'));
+    const _id = makeId(table, id);
+    try {
+      const existing = await local.get(_id).catch(() => null);
+      if (data === null) {
+        if (existing) await local.remove(existing);
         return;
       }
-
-      const timeout = setTimeout(function () {
-        reject(new Error('db:put timeout'));
-      }, 10000);
-
-      socket.once('db:put', function (response) {
-        clearTimeout(timeout);
-        if (response.status === 'ok') {
-          resolve();
-        } else {
-          reject(new Error(response.message || 'Unknown error'));
+      const doc = existing || { _id: _id };
+      var toStore = data;
+      try {
+        var isEncryptedString =
+          typeof data === 'string' && data.startsWith('RSA{') && data.endsWith('}');
+        if (
+          !isEncryptedString &&
+          typeof TS_encrypt === 'function' &&
+          typeof SECRET !== 'undefined' &&
+          SECRET
+        ) {
+          toStore = await new Promise((resolve) => {
+            try {
+              TS_encrypt(data, SECRET, (enc) => resolve(enc));
+            } catch (e) {
+              resolve(data);
+            }
+          });
         }
-      });
-
-      socket.once('db:error', function (response) {
-        clearTimeout(timeout);
-        reject(new Error(response.message || 'Unknown error'));
-      });
-
-      socket.emit('db:put', {
-        table: table,
-        id: id,
-        data: data,
-      });
-    });
+      } catch (e) {
+        toStore = data;
+      }
+      doc.data = toStore;
+      doc.table = table;
+      doc.ts = new Date().toISOString();
+      if (existing) doc._rev = existing._rev;
+      await local.put(doc);
+    } catch (e) {
+      console.error('DB.put error', e);
+    }
   }
 
   async function get(table, id) {
-    await ensureInit().catch(function () {
-      // Continue and surface a clear connection error below.
-    });
-
-    return new Promise(function (resolve, reject) {
-      if (!socket || !connected) {
-        reject(new Error('Not connected to server. Please log in.'));
-        return;
-      }
-
-      let settled = false;
-
-      function cleanup() {
-        socket.off('db:get', onGet);
-        socket.off('db:error', onError);
-      }
-
-      function onGet(response) {
-        if (response && response.id && String(response.id) !== String(id)) return;
-        if (settled) return;
-        settled = true;
-        clearTimeout(timeout);
-        cleanup();
-        resolve(response ? response.data : null);
-      }
-
-      function onError(response) {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timeout);
-        cleanup();
-        reject(new Error((response && response.message) || 'Unknown error'));
-      }
-
-      const timeout = setTimeout(function () {
-        if (settled) return;
-        settled = true;
-        cleanup();
-        reject(new Error('db:get timeout'));
-      }, 10000);
-
-      socket.on('db:get', onGet);
-      socket.on('db:error', onError);
-
-      socket.emit('db:get', {
-        table: table,
-        id: id,
-      });
-    });
+    ensureLocal();
+    const _id = makeId(table, id);
+    try {
+      const doc = await local.get(_id);
+      return doc.data;
+    } catch (e) {
+      return null;
+    }
   }
 
   async function del(table, id) {
-    await ensureInit().catch(function (e) {
-      // Continue even if init fails - will fail with better error below
-    });
-    invalidateTableCache(table);
-
-    return new Promise(function (resolve, reject) {
-      if (!socket || !connected) {
-        reject(new Error('Not connected to server. Please log in.'));
-        return;
-      }
-
-      const timeout = setTimeout(function () {
-        reject(new Error('db:del timeout'));
-      }, 10000);
-
-      socket.once('db:del', function (response) {
-        clearTimeout(timeout);
-        if (response.status === 'ok') {
-          resolve();
-        } else {
-          reject(new Error(response.message || 'Unknown error'));
-        }
-      });
-
-      socket.once('db:error', function (response) {
-        clearTimeout(timeout);
-        reject(new Error(response.message || 'Unknown error'));
-      });
-
-      socket.emit('db:del', {
-        table: table,
-        id: id,
-      });
-    });
+    return put(table, id, null);
   }
 
   async function list(table) {
-    await ensureInit().catch(function (e) {
-      // Continue even if init fails - will fail with better error below
-    });
-
+    ensureLocal();
     const now = Date.now();
     const cached = tableListCache[table];
     if (cached && now - cached.ts <= LIST_CACHE_TTL_MS) {
       return cached.rows;
     }
-
     if (tableListInFlight[table]) {
       return tableListInFlight[table];
     }
-
-    tableListInFlight[table] = new Promise(function (resolve, reject) {
-      if (!socket || !connected) {
-        reject(new Error('Not connected to server. Please log in.'));
-        return;
-      }
-
-      const timeout = setTimeout(function () {
-        resolve([]);
-      }, 10000);
-
-      socket.once('db:list', function (response) {
-        clearTimeout(timeout);
-        if (response.table === table) {
-          const rows = response.rows || [];
-          tableListCache[table] = { ts: Date.now(), rows: rows };
-          resolve(rows);
-        } else {
-          resolve([]);
-        }
-      });
-
-      socket.once('db:error', function (response) {
-        clearTimeout(timeout);
-        resolve([]);
-      });
-
-      socket.emit('db:list', {
-        table: table,
-      });
-    }).finally(function () {
-      delete tableListInFlight[table];
-    });
-
-    return tableListInFlight[table];
-  }
-
-  function map(table, cb) {
-    const callbackId = makeCallbackId(table);
-    callbacks[table] = callbacks[table] || [];
-    callbacks[table].push({ id: callbackId, cb: cb });
-
-    // Subscribe to real-time updates if socket is ready
-    ensureInit().then(function () {
-      _subscribe(table);
-      subscriptions[table] = true;
-
-      // Fetch current list
-      list(table)
-        .then(function (rows) {
-          const still = (callbacks[table] || []).some(function (l) {
-            return l.id === callbackId;
-          });
-          if (!still) return;
-          rows.forEach(function (r) {
-            cb(r.data, r.id);
-          });
-        })
-        .catch(function (e) {
-          console.error('Error loading table:', e);
-        });
-    });
-
-    return callbackId;
-  }
-
-  function unlisten(callbackId) {
-    if (!callbackId) return false;
-    for (const table of Object.keys(callbacks)) {
-      const before = callbacks[table].length;
-      callbacks[table] = callbacks[table].filter(function (l) {
-        return l.id !== callbackId;
-      });
-      if (callbacks[table].length !== before) {
-        // If no more callbacks for this table, unsubscribe
-        if (callbacks[table].length === 0) {
-          _unsubscribe(table);
-          subscriptions[table] = false;
-        }
-        return true;
-      }
-    }
-    return false;
-  }
-
-  // -------------------------------------------------------------------------
-  // Attachments (stored inline inside data._attachments as base64 data-URLs)
-  // -------------------------------------------------------------------------
-  async function putAttachment(table, id, name, dataUrlOrBlob, contentType) {
     try {
-      const existing = (await get(table, id)) || {};
-      const attachments = Object.assign({}, existing._attachments || {});
-      let dataUrl = dataUrlOrBlob;
-
-      if (dataUrlOrBlob instanceof Blob) {
-        dataUrl = await new Promise(function (resolve, reject) {
-          const reader = new FileReader();
-          reader.onload = function (e) {
-            resolve(e.target.result);
-          };
-          reader.onerror = reject;
-          reader.readAsDataURL(dataUrlOrBlob);
+      tableListInFlight[table] = local
+        .allDocs({
+          include_docs: true,
+          startkey: table + ':',
+          endkey: table + ':\uffff',
+        })
+        .then((res) => {
+          const rows = res.rows.map((r) => {
+            const sep = r.id.indexOf(':');
+            const id = sep === -1 ? r.id : r.id.slice(sep + 1);
+            try {
+              docCache[r.id] = toStableSnapshot(r.doc.data);
+            } catch (e) {}
+            return { id: id, data: r.doc.data };
+          });
+          tableListCache[table] = { ts: Date.now(), rows: rows };
+          return rows;
+        })
+        .finally(() => {
+          delete tableListInFlight[table];
         });
-      }
+      return await tableListInFlight[table];
+    } catch (e) {
+      delete tableListInFlight[table];
+      return [];
+    }
+  }
 
-      attachments[name] = {
-        data: dataUrl,
-        content_type: contentType || 'image/jpeg',
-      };
-      await put(table, id, Object.assign({}, existing, { _attachments: attachments }));
+  function dataURLtoBlob(dataurl) {
+    const arr = dataurl.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) u8arr[n] = bstr.charCodeAt(n);
+    return new Blob([u8arr], { type: mime });
+  }
+
+  async function putAttachment(table, id, name, dataUrlOrBlob, contentType) {
+    ensureLocal();
+    const _id = makeId(table, id);
+    try {
+      let doc = await local.get(_id).catch(() => null);
+      if (!doc) {
+        await local.put({ _id: _id, table: table, ts: new Date().toISOString(), data: {} });
+        doc = await local.get(_id);
+      }
+      let blob = dataUrlOrBlob;
+      if (typeof dataUrlOrBlob === 'string' && dataUrlOrBlob.indexOf('data:') === 0)
+        blob = dataURLtoBlob(dataUrlOrBlob);
+      const type = contentType || (blob && blob.type) || 'application/octet-stream';
+      await local.putAttachment(_id, name, doc._rev, blob, type);
       return true;
     } catch (e) {
       console.error('putAttachment error', e);
@@ -489,89 +416,144 @@ var DB = (function () {
   }
 
   async function getAttachment(table, id, name) {
+    ensureLocal();
+    const _id = makeId(table, id);
     try {
-      const data = await get(table, id);
-      return (
-        (data &&
-          data._attachments &&
-          data._attachments[name] &&
-          data._attachments[name].data) ||
-        null
-      );
+      const blob = await local.getAttachment(_id, name);
+      if (!blob) return null;
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = (e) => reject(e);
+        reader.readAsDataURL(blob);
+      });
     } catch (e) {
       return null;
     }
   }
 
   async function listAttachments(table, id) {
+    ensureLocal();
+    const _id = makeId(table, id);
     try {
-      const data = await get(table, id);
-      if (!data || !data._attachments) return [];
-      return Object.entries(data._attachments).map(function ([name, att]) {
-        return {
-          name: name,
-          dataUrl: att.data || null,
-          content_type: att.content_type || null,
-        };
-      });
+      const doc = await local.get(_id, { attachments: true });
+      if (!doc || !doc._attachments) return [];
+      const out = [];
+      for (const name of Object.keys(doc._attachments)) {
+        try {
+          const att = doc._attachments[name];
+          if (att && att.data) {
+            const content_type = att.content_type || 'application/octet-stream';
+            const durl = 'data:' + content_type + ';base64,' + att.data;
+            out.push({ name: name, dataUrl: durl, content_type: content_type });
+            continue;
+          }
+        } catch (e) {}
+        try {
+          const durl = await getAttachment(table, id, name);
+          out.push({ name: name, dataUrl: durl, content_type: null });
+        } catch (e) {
+          out.push({ name: name, dataUrl: null, content_type: null });
+        }
+      }
+      return out;
     } catch (e) {
-      return [];
+      try {
+        const doc = await local.get(_id).catch(() => null);
+        if (!doc || !doc._attachments) return [];
+        const out = [];
+        for (const name of Object.keys(doc._attachments)) {
+          try {
+            const durl = await getAttachment(table, id, name);
+            out.push({ name: name, dataUrl: durl, content_type: null });
+          } catch (e) {
+            out.push({ name: name, dataUrl: null, content_type: null });
+          }
+        }
+        return out;
+      } catch (e2) {
+        return [];
+      }
     }
   }
 
   async function deleteAttachment(table, id, name) {
+    ensureLocal();
+    const _id = makeId(table, id);
     try {
-      const data = await get(table, id);
-      if (!data || !data._attachments || !data._attachments[name]) return false;
-      const attachments = Object.assign({}, data._attachments);
-      delete attachments[name];
-      await put(table, id, Object.assign({}, data, { _attachments: attachments }));
+      const doc = await local.get(_id);
+      if (!doc || !doc._attachments || !doc._attachments[name]) return false;
+      delete doc._attachments[name];
+      await local.put(doc);
       return true;
     } catch (e) {
+      console.error('deleteAttachment error', e);
       return false;
     }
   }
 
-  // -------------------------------------------------------------------------
-  // Auto-initialise on startup (non-blocking)
-  // -------------------------------------------------------------------------
-  // Try to initialize, but don't fail if token isn't available yet
-  // The token will be available after user logs in and DB.init() is called
-  setTimeout(function () {
-    ensureInit().catch(function (e) {
-      // Non-blocking: just log if initial connection fails
-      // This is expected if user hasn't logged in yet
-      if (e.message.includes('not logged in') || e.message.includes('not configured')) {
-        console.debug('DB: Waiting for login before connecting to SocketIO');
-      } else {
-        console.warn('DB.autoInit error:', e.message);
-      }
+  function map(table, cb) {
+    ensureLocal();
+    const callbackId = makeCallbackId(table);
+    callbacks[table] = callbacks[table] || [];
+    callbacks[table].push({ id: callbackId, cb: cb });
+    list(table).then((rows) => {
+      const stillListening = (callbacks[table] || []).some((listener) => listener.id === callbackId);
+      if (!stillListening) return;
+      rows.forEach((r) => cb(r.data, r.id));
     });
-  }, 500);
+    return callbackId;
+  }
+
+  function unlisten(callbackId) {
+    if (!callbackId) return false;
+    for (const table of Object.keys(callbacks)) {
+      const before = callbacks[table].length;
+      callbacks[table] = callbacks[table].filter((listener) => listener.id !== callbackId);
+      if (callbacks[table].length !== before) return true;
+    }
+    return false;
+  }
 
   return {
-    init: init,
-    put: put,
-    get: get,
-    del: del,
-    list: list,
-    map: map,
-    unlisten: unlisten,
-    startReplication: function () {},
-    stopReplication: function () {},
-    putAttachment: putAttachment,
-    getAttachment: getAttachment,
-    listAttachments: listAttachments,
-    deleteAttachment: deleteAttachment,
+    init,
+    put,
+    get,
+    del,
+    list,
+    map,
+    unlisten,
+    replicateToRemote,
+    listAttachments,
+    deleteAttachment,
+    putAttachment,
+    getAttachment,
     _internal: {
-      get socket() {
-        return socket;
-      },
-      get isConnected() {
-        return connected;
+      get local() {
+        return local;
       },
     },
   };
 })();
 
 window.DB = DB;
+
+// Auto-initialize DB on startup using saved settings (non-blocking)
+(function autoInitDB() {
+  try {
+    const remoteServer = localStorage.getItem('TELESEC_COUCH_URL') || '';
+    const username = localStorage.getItem('TELESEC_COUCH_USER') || '';
+    const password = localStorage.getItem('TELESEC_COUCH_PASS') || '';
+    const dbname = localStorage.getItem('TELESEC_COUCH_DBNAME') || undefined;
+    try {
+      SECRET = localStorage.getItem('TELESEC_SECRET') || '';
+    } catch (e) {
+      SECRET = '';
+    }
+    DB.init({ remoteServer, username, password, dbname }).catch((e) =>
+      console.warn('DB.autoInit error', e)
+    );
+  } catch (e) {
+    console.warn('DB.autoInit unexpected error', e);
+  }
+})();
