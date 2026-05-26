@@ -253,9 +253,6 @@ if not USE_APP_BUNDLE:
         CACHE_URLS.append(core_script)
     APP_SCRIPTS += PAGES
 
-# RxDB bundle is generated into dist/static/rxdb.js and is required offline.
-CACHE_URLS.append("static/rxdb.js")
-
 # Preserve insertion order while removing duplicates.
 CACHE_URLS = list(dict.fromkeys(CACHE_URLS))
 
@@ -272,44 +269,8 @@ def replace_handles(string):
 
 
 for file in HANDLEPARSE:
-    # Skip the RxDB bundle entry – it's built by esbuild, not copied directly
-    if file == "rxdb-bundle.js" or file.startswith("page/") or file.startswith("pages/"):
-        continue
     print(file)
     with open("src/" + file, "r", encoding="utf-8") as f1:
         out = replace_handles(f1.read())
     with open("dist/" + file, "w", encoding="utf-8") as f2:
         f2.write(out)
-
-
-# ---------------------------------------------------------------------------
-# Bundle RxDB with esbuild → dist/static/rxdb.js
-# ---------------------------------------------------------------------------
-def bundle_rxdb():
-    """Build the RxDB browser bundle using esbuild."""
-    ensure_npm_dependencies()
-
-    print("Bundling RxDB…")
-    result = subprocess.run(
-        [
-            "npx",
-            "esbuild",
-            "src/rxdb-bundle.js",
-            "--bundle",
-            "--format=iife",
-            "--global-name=RxDB",
-            "--outfile=dist/static/rxdb.js",
-            "--minify",
-            "--log-level=warning",
-        ],
-        capture_output=True,
-        text=True,
-    )
-    if result.returncode != 0:
-        print("esbuild failed:", result.stderr, file=sys.stderr)
-        sys.exit(1)
-    size_kb = os.path.getsize("dist/static/rxdb.js") // 1024
-    print(f"RxDB bundled → dist/static/rxdb.js ({size_kb} KB)")
-
-
-bundle_rxdb()
