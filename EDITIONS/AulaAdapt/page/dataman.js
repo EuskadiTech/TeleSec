@@ -116,7 +116,7 @@ PAGES.dataman = {
           }
         });
         toastr.success('Exportado todo, descargando!');
-        download(`Export Axia4 ${getDBName()}.json.txt`, JSON.stringify(output));
+        download(`Export TeleSec ${getDBName()}.json.txt`, JSON.stringify(output));
       })();
     };
     document.getElementById(button_export_safe).onclick = () => {
@@ -131,7 +131,7 @@ PAGES.dataman = {
           result.personas[entry.id] = entry.data;
         });
         toastr.success('Exportado todo, descargado!');
-        download(`Export Axia4 Encriptado ${getDBName()}.json.txt`, JSON.stringify(result));
+        download(`Export TeleSec Encriptado ${getDBName()}.json.txt`, JSON.stringify(result));
       })();
     };
   },
@@ -152,7 +152,7 @@ PAGES.dataman = {
           <option value="materiales">Galileo - db.materiales.axd</option>
           <option value="personas">Galileo - db.personas.axd</option>
           <option value="comandas">Galileo - db.cafe.comandas.axd</option>
-          <option value="%telesec">Axia4 (prev. TeleSec) Exportado (encriptado o no)</option>
+          <option value="%telesec">TeleSec (prev. TeleSec) Exportado (encriptado o no)</option>
         </select>
         <textarea
           id="${textarea_content}"

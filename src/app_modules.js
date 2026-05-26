@@ -1672,7 +1672,7 @@ function BuildQR(mid, label) {
   });
   return `
   <span style="border: 2px dashed black; padding: 10px; display: inline-block; background: white; border-radius: 7px; text-align: center; margin: 5px;">
-      <b>QR Axia4</b>
+      <b>QR TeleSec</b>
       <br>${svgNode.outerHTML}<br>
       <small>${label || mid}</small>
   </span>

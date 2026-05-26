@@ -145,7 +145,7 @@ PAGES.pagos = {
         style="max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);"
       >
         <h1 style="color: white; text-align: center; margin-bottom: 20px;">
-          Terminal de pago Axia4
+          Terminal de pago TeleSec
         </h1>
 
         <div

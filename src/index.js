@@ -11,7 +11,7 @@ PAGES.index = {
       is_pagos_cargado = true;
     }
     container.innerHTML = html`
-      <h2>¡Bienvenidx a Axia4!</h2>
+      <h2>¡Bienvenidx a TeleSec!</h2>
       <!-- Card con el avatar del usuario con su nombre y su saldo -->
       <div class="card card-outline card-primary ts-index-card" style="max-width: 520px;">
         <div class="card-body box-profile" style="display: flex; align-items: center; gap: 20px;">
