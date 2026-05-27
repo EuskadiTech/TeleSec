@@ -114,12 +114,6 @@ function CurrentISOTime() {
   return new Date().toISOString();
 }
 
-function fixGunLocalStorage() {
-  localStorage.removeItem('radata');
-  removeCache();
-  location.reload();
-}
-
 // Heartbeat: store a small "last seen" doc locally and replicate to remote when available
 // setInterval(() => {
 //   if (typeof DB !== 'undefined') {

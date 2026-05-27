@@ -173,7 +173,6 @@ if ('serviceWorker' in navigator) {
   let refreshing;
   navigator.serviceWorker.addEventListener('controllerchange', function () {
     if (refreshing) return;
-    window.location.reload();
     refreshing = true;
   });
 
