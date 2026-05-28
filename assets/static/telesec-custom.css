@@ -16,16 +16,27 @@
 .ts-sidebar-icon {
   width: 32px !important;
   height: 32px !important;
-  margin-left: -9px !important;
-  margin-right: 15px !important;
+  /* margin-left: -9px !important;
+  margin-right: 15px !important; */
   vertical-align: middle;
   line-height: 32px;
 }
 .nav-sidebar .nav-link {
   border: 1px solid gray;
+  width: 100% !important;
+  text-align: center;
+  padding: 10px 0;
+  height: 100% !important;
+}
+.nav-sidebar>.nav-item {
+  width: calc(100% / 2 - 5px);
+  margin: 2.5px;
+  height: 75px;
+  display: inline-block;
+  vertical-align: middle;
 }
 /* ---- Active sidebar nav item ---- */
-.nav-sidebar .nav-link.active,
+.nav-sidebar .nav-link.clactive,
 .nav-sidebar .nav-link:hover {
   background-color: rgba(255, 255, 255, 0.12);
   border-radius: 4px;

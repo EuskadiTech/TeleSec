@@ -10,6 +10,117 @@ PAGES.supercafe = {
     { label: 'Ver pedidos', hash: 'supercafe', icon: 'fas fa-coffee' },
     { label: 'Nuevo pedido', hash: 'supercafe,$nuevo$', icon: 'fas fa-plus-circle' },
   ],
+  __precios: function () {
+    var form = safeuuid();
+
+    var defaults = {
+      servicio_base: 10,
+      leche_pequena: 15,
+      leche_grande: 25,
+      cafe: 25,
+      colacao: 25,
+    };
+
+    function asPrice(value, fallback) {
+      var parsed = parseInt(value, 10);
+      if (!Number.isFinite(parsed) || parsed < 0) return fallback;
+      return parsed;
+    }
+
+    function normalizePrices(input) {
+      var src = input && typeof input === 'object' ? input : {};
+      return {
+        servicio_base: asPrice(src.servicio_base, defaults.servicio_base),
+        leche_pequena: asPrice(src.leche_pequena, defaults.leche_pequena),
+        leche_grande: asPrice(src.leche_grande, defaults.leche_grande),
+        cafe: asPrice(src.cafe, defaults.cafe),
+        colacao: asPrice(src.colacao, defaults.colacao),
+      };
+    }
+
+    function render(precios) {
+      container.innerHTML = html`
+        <h1>Configuración de Precios del Café</h1>
+        <form id="${form}">
+          <fieldset>
+            <legend>Precios Base (en céntimos)</legend>
+            <label>
+              <b>Servicio base:</b>
+              <input type="number" name="servicio_base" value="${precios.servicio_base}" min="0" step="1" />
+              céntimos
+            </label>
+            <br><br>
+            <label>
+              <b>Leche pequeña:</b>
+              <input type="number" name="leche_pequena" value="${precios.leche_pequena}" min="0" step="1" />
+              céntimos
+            </label>
+            <br><br>
+            <label>
+              <b>Leche grande:</b>
+              <input type="number" name="leche_grande" value="${precios.leche_grande}" min="0" step="1" />
+              céntimos
+            </label>
+            <br><br>
+            <label>
+              <b>Café:</b>
+              <input type="number" name="cafe" value="${precios.cafe}" min="0" step="1" />
+              céntimos
+            </label>
+            <br><br>
+            <label>
+              <b>ColaCao:</b>
+              <input type="number" name="colacao" value="${precios.colacao}" min="0" step="1" />
+              céntimos
+            </label>
+          </fieldset>
+          <br>
+          <button type="submit">💾 Guardar precios</button>
+          <button type="button" onclick="setUrlHash('dataman')">🔙 Volver</button>
+        </form>
+      `;
+
+      document.getElementById(form).onsubmit = (ev) => {
+        ev.preventDefault();
+        var formData = new FormData(document.getElementById(form));
+        var nuevosPrecios = normalizePrices({
+          servicio_base: formData.get('servicio_base'),
+          leche_pequena: formData.get('leche_pequena'),
+          leche_grande: formData.get('leche_grande'),
+          cafe: formData.get('cafe'),
+          colacao: formData.get('colacao'),
+        });
+
+        DB.put('config', 'precios_cafe', nuevosPrecios)
+          .then(() => {
+            toastr.success('Precios guardados correctamente');
+            if (window.PRECIOS_CAFE) {
+              Object.assign(window.PRECIOS_CAFE, nuevosPrecios);
+            }
+            setTimeout(() => setUrlHash('dataman'), 1000);
+          })
+          .catch((e) => {
+            toastr.error('Error al guardar precios: ' + e.message);
+          });
+      };
+    }
+
+    // Cargar precios desde DB soportando objeto plano y payload cifrado heredado
+    DB.get('config', 'precios_cafe')
+      .then((raw) => {
+        if (raw == null) {
+          render(normalizePrices(window.PRECIOS_CAFE || defaults));
+          return;
+        }
+        TS_decrypt(raw, SECRET, (precios) => {
+          render(normalizePrices(precios));
+        });
+      })
+      .catch((e) => {
+        console.warn('No se pudieron cargar precios_cafe', e);
+        render(normalizePrices(window.PRECIOS_CAFE || defaults));
+      });
+  },
   edit: function (mid) {
     if (!checkRole('supercafe:edit')) {
       setUrlHash('supercafe');
@@ -321,6 +432,7 @@ PAGES.supercafe = {
         <b>Avisos de voz:</b>
         <input type="checkbox" id="${tts_check}" style="height: 25px;width: 25px;" />
       </label>
+      <a class="button" href="#supercafe,precios">⚙️ Precios del café</a>
 
       <div id="${tablebody}"></div>
       <div id="${tablebody2}"></div>

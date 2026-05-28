@@ -5,7 +5,7 @@ PAGES.pagos = {
   icon: 'static/appico/credit_cards.png',
   faicon: 'fas fa-euro-sign',
   AccessControl: true,
-  Title: 'Pagos',
+  Title: 'Monederos',
   navItems: [
     { label: 'Ver pagos', hash: 'pagos', icon: 'fas fa-list' },
     { label: 'Datafono', hash: 'pagos,datafono', icon: 'fas fa-credit-card' },
@@ -1304,10 +1304,8 @@ PAGES.pagos = {
         // Count all Ingresos and Gastos in totals (excluding Transferencias)
         // Reset entries on every call for this ID
         if (tipo === 'Ingreso') {
-          if (data.Origen != 'Promo Bono') {
-            totalData.gastos[id] = 0;
-            totalData.ingresos[id] = monto;
-          }
+          totalData.gastos[id] = 0;
+          totalData.ingresos[id] = monto;
         } else if (tipo === 'Gasto') {
           totalData.ingresos[id] = 0;
           totalData.gastos[id] = monto;
@@ -1328,8 +1326,7 @@ PAGES.pagos = {
         if (isValidDate) {
           var isToday = txDate >= startToday;
           var isYesterday = txDate >= startYesterday && txDate < startToday;
-
-          if (tipo === 'Ingreso' && data.Origen != 'Promo Bono') {
+          if (tipo === 'Ingreso') {
             if (isToday) {
               periodData.ingresosHoy[id] = monto;
             } else if (isYesterday) {
@@ -1354,6 +1351,8 @@ PAGES.pagos = {
         const ingresosAyer = Object.values(periodData.ingresosAyer).reduce((a, b) => a + b, 0);
         const gastosHoy = Object.values(periodData.gastosHoy).reduce((a, b) => a + b, 0);
         const gastosAyer = Object.values(periodData.gastosAyer).reduce((a, b) => a + b, 0);
+        
+        console.log('Totals:', { totalIngresos, totalGastos, ingresosHoy, ingresosAyer, gastosHoy, gastosAyer });
 
         var trendIngresos = buildTrendText(ingresosHoy, ingresosAyer, ' hoy (vs ayer)');
         var trendGastos = buildTrendText(gastosHoy, gastosAyer, ' hoy (vs ayer)');
@@ -1362,14 +1361,14 @@ PAGES.pagos = {
           total_ingresos,
           total_ingresos + '_loading',
           total_ingresos + '_trend',
-          totalIngresos,
+          ingresosHoy,
           trendIngresos
         );
         updateMetricCard(
           total_gastos,
           total_gastos + '_loading',
           total_gastos + '_trend',
-          totalGastos,
+          gastosHoy,
           trendGastos
         );
       },

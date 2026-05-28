@@ -28,7 +28,7 @@ PAGES.index = {
       <em>Utiliza el menú superior para abrir un modulo</em>
       <br /><br />
       <button class="btn1" onclick="ActualizarProgramaTeleSec()">Actualizar programa</button>
-      <button class="btn1" onclick="LogOutTeleSec()">Cerrar sesión</button>
+      <button class="btn1" onclick="ResetTeleSec()">Restablecer TeleSec</button>
     `;
     DB.getAttachment('personas', SUB_LOGGED_IN, 'Foto').then((foto) => {
       if (foto) {

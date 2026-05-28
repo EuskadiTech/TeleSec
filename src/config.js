@@ -44,29 +44,10 @@ if (urlParams.get('hidenav') != undefined) {
   var cw = document.querySelector('.content-wrapper');
   if (cw) cw.style.marginLeft = '0';
 }
-// Auto-configure backend API URL from ?api=<url> query parameter
-if (urlParams.get('api') != null) {
-  try {
-    var apiUrl = (urlParams.get('api') || '').trim().replace(/\/$/, '');
-    if (apiUrl) {
-      localStorage.setItem('TELESEC_API_URL', apiUrl);
-      localStorage.setItem('TELESEC_ONBOARDING_COMPLETE', 'true');
-    }
-    urlParams.delete('api');
-    history.replaceState(
-      null,
-      '',
-      location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '') + location.hash.split('?')[0]
-    );
-    console.log('Backend API URL auto-configured from URL parameter');
-  } catch (e) {
-    console.error('Error auto-configuring API URL:', e);
-  }
-}
+
 
 // Backward-compat: if old CouchDB URL is set but no API URL, prompt user to reconfigure
 // (no automatic migration – user must login fresh)
-var SECRET = ''; // kept for backward-compat with any remaining TS_decrypt calls
 var SUB_LOGGED_IN = false;
 var SUB_LOGGED_IN_DETAILS = false;
 var SUB_LOGGED_IN_ID = false;
@@ -99,8 +80,33 @@ function LogOutTeleSec() {
   localStorage.removeItem('TELESEC_TENANT_NAME');
   // Stop background replication
   if (typeof DB !== 'undefined' && DB.stopReplication) {
-    try { DB.stopReplication(); } catch (e) {}
+    try {
+      DB.stopReplication();
+    } catch (e) {}
   }
+  document.getElementById('loading').style.display = 'block';
+  location.reload();
+}
+// Logouts and resets pouchdb and localStorage, then reloads the page
+function ResetTeleSec() {
+  if (
+    !confirm(
+      '¿Estás seguro de que quieres Restablecer TeleSec? Esto eliminará todos los datos locales y cerrará la sesión.'
+    )
+  ) {
+    return;
+  }
+  localStorage.clear();
+  if (typeof DB !== 'undefined' && DB.destroy) {
+    DB.destroy().catch(() => {
+      // Ignore errors during DB destruction
+    });
+  }
+  indexedDB.databases().then((dbs) => {
+    dbs.forEach((db) => {
+      indexedDB.deleteDatabase(db.name);
+    });
+  });
   document.getElementById('loading').style.display = 'block';
   location.reload();
 }
@@ -112,7 +118,9 @@ function TS_SayTTS(msg) {
       utterance.rate = TTS_RATE;
       speechSynthesis.speak(utterance);
     }
-  } catch { console.warn('TTS error'); }
+  } catch {
+    console.warn('TTS error');
+  }
 }
 
 function createElementFromHTML(htmlString) {

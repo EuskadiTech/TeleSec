@@ -1701,13 +1701,14 @@ function SetPages() {
     var li = document.createElement('li');
     var a = document.createElement('a');
     var icon = document.createElement('i');
+    var br = document.createElement('br');
     var p = document.createElement('p');
     li.className = 'nav-item';
     a.className = 'nav-link';
     a.href = href;
     icon.className = faIcon + ' nav-icon ts-sidebar-icon';
     p.innerText = label;
-    a.append(icon, p);
+    a.append(icon, br, p);
     li.append(a);
     function updateActive() {
       var current = location.hash.replace('#', '').split('?')[0];
@@ -1738,6 +1739,7 @@ function SetPages() {
     faicon.className = page.faicon || 'fas fa-cubes';
     faicon.className += ' nav-icon ts-sidebar-icon';
 
+    var br = document.createElement('br');
     var p = document.createElement('p');
     p.innerText = page.Title;
 
@@ -1745,7 +1747,7 @@ function SetPages() {
     arrow.className = 'right fas fa-angle-left ts-treeview-arrow';
 
     p.append(arrow);
-    a.append(faicon, p);
+    a.append(faicon, br, p);
     li.append(a);
 
     // Sub-items
@@ -1816,7 +1818,7 @@ function SetPages() {
     }
 
     var li;
-    if (Array.isArray(page.navItems) && page.navItems.length > 0) {
+    if (Array.isArray(page.navItems) && page.navItems.length > 0 && false) {
       li = makeTreeviewItem(key, page);
     } else {
       li = makePlainItem(
