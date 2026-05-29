@@ -9,6 +9,7 @@ PAGES.supercafe = {
   navItems: [
     { label: 'Ver pedidos', hash: 'supercafe', icon: 'fas fa-coffee' },
     { label: 'Nuevo pedido', hash: 'supercafe,$nuevo$', icon: 'fas fa-plus-circle' },
+    { label: 'Precios', hash: 'supercafe,precios', icon: 'fas fa-tag' },
   ],
   __precios: function () {
     var form = safeuuid();
@@ -124,6 +125,10 @@ PAGES.supercafe = {
   edit: function (mid) {
     if (!checkRole('supercafe:edit')) {
       setUrlHash('supercafe');
+      return;
+    }
+    if (mid === "precios") {
+      PAGES.supercafe.__precios();
       return;
     }
     if (mid === '$nuevo$') {
