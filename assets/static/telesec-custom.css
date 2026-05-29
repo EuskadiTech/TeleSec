@@ -35,6 +35,10 @@
   display: inline-block;
   vertical-align: middle;
 }
+.sidebar-collapse .nav-item {
+  width: calc(100% - 5px);
+  height: 50px;
+}
 /* ---- Active sidebar nav item ---- */
 .nav-sidebar .nav-link.clactive,
 .nav-sidebar .nav-link:hover {
@@ -336,6 +340,8 @@ details.supermesh-indicator summary { font-size: unset; }
   }
 
   #container { padding: 0 !important; }
+  .card {border: 2.5px solid black;}
+  .content-wrapper { background-color: #fff !important; }
 }
 
 /* ============================================================
