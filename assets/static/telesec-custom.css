@@ -342,6 +342,10 @@ details.supermesh-indicator summary { font-size: unset; }
   #container { padding: 0 !important; }
   .card {border: 2.5px solid black;}
   .content-wrapper { background-color: #fff !important; }
+  .salto-pagina {
+    break-after: page; /* Estándar moderno */
+    page-break-after: always; /* Compatibilidad con navegadores antiguos */
+  }
 }
 
 /* ============================================================

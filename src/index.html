@@ -125,6 +125,12 @@
   <!-- Socket.IO client (served by Flask at /socket.io/socket.io.js) -->
   <!-- db.js will load it dynamically when needed -->
   <script src="static/toastr.min.js"></script>
+  <script>
+    window.onerror = (msg, url, linenumber) => {
+      toastr.error('Error message: ' + msg + '<br>Path: ' + url + '<br>Line Number: ' + linenumber);
+      return true;
+    }
+  </script>
   <script src="static/doublescroll.js"></script>
   <script src="static/chart.umd.min.js"></script>
   <!-- AdminLTE 3 -->

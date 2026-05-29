@@ -102,7 +102,7 @@ PAGES.personas = {
             <form id="${permisosdet}"></form>
           </details>
           <details
-            style="background: #e3fde3ff; border: 2px solid #21f328ff; border-radius: 8px; padding: 10px; margin: 15px 0; display: none; flex: 1 1 100%;"
+            style="background: #e3fde3ff; border: 2px solid #21f328ff; border-radius: 8px; padding: 10px; margin: 15px 0; flex: 1 1 100%;"
           >
             <summary style="cursor: pointer; font-weight: bold; color: rgba(26, 141, 3, 1);">
               🔗 Generar enlaces
