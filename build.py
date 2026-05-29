@@ -188,6 +188,7 @@ def esbuild(input_file: Path, output_file: Path, *, bundle: bool = False) -> Non
         "esbuild",
         str(input_file),
         "--minify",
+        "--target=es2017",
         f"--outfile={output_file}",
         "--log-level=warning",
     ]
