@@ -1024,12 +1024,85 @@ function TS_decrypt(input, secret, callback, table, id) {
     }
   }
 }
-function TS_encrypt(input, secret, callback, mode = 'RSA') {
-  // Encryption disabled – data is stored in plaintext (no at-rest encryption).
+
+function TS_decrypt(input, secret, callback, table, id) {
+  // Accept objects or plaintext strings. Support AES-encrypted entries wrapped as RSA{...}.
+  if (typeof input !== "string") {
+    try { callback(input, false); } catch (e) { console.error(e); }
+    return;
+  }
+
+  // Encrypted format marker: RSA{<ciphertext>} where <ciphertext> is CryptoJS AES output
+  if (input.startsWith("RSA{") && input.endsWith("}") && typeof CryptoJS !== 'undefined') {
+    try {
+      var data = input.slice(4, -1);
+      var words = CryptoJS.AES.decrypt(data, secret);
+      var decryptedUtf8 = null;
+      try {
+        decryptedUtf8 = words.toString(CryptoJS.enc.Utf8);
+      } catch (utfErr) {
+        try {
+          decryptedUtf8 = words.toString(CryptoJS.enc.Latin1);
+        } catch (latinErr) {
+          console.warn('TS_decrypt: failed to decode decrypted bytes', utfErr, latinErr);
+          try { callback(input, "error"); } catch (ee) { }
+          return;
+        }
+      }
+      var parsed = null;
+        try { 
+          parsed = JSON.parse(decryptedUtf8); 
+        } catch (pe) { 
+          parsed = decryptedUtf8; 
+          try { callback(parsed, "error2"); } catch (ee) { console.error(ee); }
+          return; 
+        }
+      try { callback(parsed, true); } catch (e) { console.error(e); }
+      // Keep encrypted at-rest: if table/id provided, ensure DB stores encrypted payload (input)
+      // if (table && id && window.DB && DB.put) {
+      //   DB.put(table, id, input).catch(() => {});
+      // }
+      return;
+    } catch (e) {
+      console.error('TS_decrypt: invalid encrypted payload', e);
+        try { callback(input, "error"); } catch (ee) { }
+      return;
+    }
+  }
+
+  // Plain JSON stored as text -> parse and return, then re-encrypt in DB for at-rest protection
   try {
-    callback(input);
+    var parsed = JSON.parse(input);
+    try { callback(parsed, false); } catch (e) { console.error(e); }
+    if (table && id && window.DB && DB.put && typeof SECRET !== 'undefined') {
+      TS_encrypt(parsed, SECRET, function (enc) {
+        DB.put(table, id, enc).catch(() => {});
+      });
+    }
   } catch (e) {
-    console.error(e);
+    // Not JSON, return raw string
+    try { callback(input, false); } catch (err) { console.error(err); }
+  }
+} 
+function TS_encrypt(input, secret, callback, mode = "RSA") {
+  // Encrypt given value for at-rest storage using CryptoJS AES.
+  // Always return string of form RSA{<ciphertext>} via callback.
+  try {
+    if (typeof CryptoJS === 'undefined') {
+      // CryptoJS not available — return plaintext
+      try { callback(input); } catch (e) { console.error(e); }
+      return;
+    }
+    var payload = input;
+    if (typeof input !== 'string') {
+      try { payload = JSON.stringify(input); } catch (e) { payload = String(input); }
+    }
+    var encrypted = CryptoJS.AES.encrypt(payload, secret).toString();
+    var out = 'RSA{' + encrypted + '}';
+    try { callback(out); } catch (e) { console.error(e); }
+  } catch (e) {
+    console.error('TS_encrypt: encryption failed', e);
+    try { callback(input); } catch (err) { console.error(err); }
   }
 }
 // Listado precargado de personas:
@@ -1613,46 +1686,140 @@ function TS_IndexElement(
     };
     return new_tr;
   }
+  // ================================
+  // INCREMENTAL DATATABLES ENGINE
+  // ================================
 
-  function render() {
-    if (!dtInstance) return;
-    const sorted = Object.values(rows).filter(applyUrlFilters).sort(betterSorter);
-    const trs = sorted.map(buildRow).filter(Boolean);
-    dtInstance.clear();
-    trs.forEach((tr) => dtInstance.row.add(tr));
-    dtInstance.draw(false);
+  let drawPending = false;
+
+  function scheduleDraw() {
+    if (drawPending) return;
+
+    drawPending = true;
+
+    requestAnimationFrame(() => {
+      drawPending = false;
+      if (dtInstance) dtInstance.draw(false);
+    });
   }
+
+  // busca índice de fila por dataset.key
+  function findRowIndex(key) {
+    if (!dtInstance) return null;
+
+    const nodes = dtInstance.rows().nodes();
+
+    for (let i = 0; i < nodes.length; i++) {
+      if (nodes[i].dataset.key === key) {
+        return i;
+      }
+    }
+
+    return null;
+  }
+
+  // ADD
+  function addRow(key, data) {
+    if (!dtInstance) return;
+
+    const tr = buildRow(data);
+    if (!tr) return;
+
+    const row = dtInstance.row.add(tr);
+    const node = row.node();
+
+    if (node) node.dataset.key = key;
+
+    scheduleDraw();
+  }
+
+  // UPDATE (replace data, no recreate full table)
+  function updateRow(key, data) {
+    if (!dtInstance) return;
+
+    const index = findRowIndex(key);
+
+    if (index == null) {
+      addRow(key, data);
+      return;
+    }
+
+    const tr = buildRow(data);
+    if (!tr) return;
+
+    dtInstance
+      .row(index)
+      .data(tr);
+
+    scheduleDraw();
+  }
+
+  // REMOVE
+  function removeRow(key) {
+    if (!dtInstance) return;
+
+    const index = findRowIndex(key);
+    if (index == null) return;
+
+    dtInstance.row(index).remove();
+
+    scheduleDraw();
+  }
+
+  // UPSERT (fuente de verdad: rows)
+  function upsertRow(data, key) {
+    const exists = rows[key] != null;
+
+    if (data != null) {
+      data._key = key;
+      rows[key] = data;
+
+      if (exists) {
+        updateRow(key, data);
+      } else {
+        addRow(key, data);
+      }
+
+    } else {
+      delete rows[key];
+      removeRow(key);
+    }
+  }
+
+  // ================================
+  // DB BINDING (incremental safe)
+  // ================================
 
   if (typeof ref === 'string') {
     EventListeners.DB.push(
       DB.map(ref, (data, key) => {
-        function add_row(data, key) {
-          if (data != null) {
-            data['_key'] = key;
-            rows[key] = data;
-          } else {
-            delete rows[key];
-          }
-          debounce(debounce_load, render, 200);
+
+        function handleRow(data, key) {
+          upsertRow(data, key);
         }
-        if (typeof data == 'string') {
+
+        if (typeof data === 'string') {
           TS_decrypt(
             data,
             SECRET,
-            (data, wasEncrypted) => {
-              if (data != null && typeof data === 'object') {
-                data['_encrypted__'] = wasEncrypted;
-                add_row(data, key);
+            (decoded, wasEncrypted) => {
+              if (decoded && typeof decoded === 'object') {
+                decoded._encrypted__ = wasEncrypted;
+                handleRow(decoded, key);
+              } else {
+                handleRow(null, key);
               }
             },
             ref,
             key
           );
+
         } else {
-          if (data != null && typeof data === 'object') {
-            data['_encrypted__'] = false;
+          if (data && typeof data === 'object') {
+            data._encrypted__ = false;
           }
-          add_row(data, key);
+
+          handleRow(data, key);
         }
       })
     );
