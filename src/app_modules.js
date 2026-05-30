@@ -1356,7 +1356,7 @@ function TS_IndexElement(
             data['_encrypted__'] === 'error2' ||
             data['_encrypted__'] === undefined
           ) {
-            tdEncrypted.innerText = '⚠️ Error';
+            tdEncrypted.innerText = '⚠️';
           } else {
             tdEncrypted.innerText = '';
           }
@@ -1489,6 +1489,7 @@ function TS_IndexElement(
           }
           const td = document.createElement('td');
           td.style.fontSize = '17px';
+          td.style.maxWidth = '100px';
           if (sc_nobtn) {
             td.style.pointerEvents = 'none';
             td.style.opacity = '0.5';
@@ -1570,6 +1571,7 @@ function TS_IndexElement(
           tdPersona.style.backgroundColor = regco;
           tdPersona.style.padding = '0';
           tdPersona.style.color = colorIsDarkAdvanced(regco);
+          tdPersona.style.maxWidth = '200px';
           const regionSpan = document.createElement('span');
           regionSpan.style.fontSize = '40px';
           regionSpan.style.textTransform = 'capitalize';

@@ -47,37 +47,55 @@ PAGES.supercafe = {
             <legend>Precios Base (en céntimos)</legend>
             <label>
               <b>Servicio base:</b>
-              <input type="number" name="servicio_base" value="${precios.servicio_base}" min="0" step="1" />
+              <input
+                type="number"
+                name="servicio_base"
+                value="${precios.servicio_base}"
+                min="0"
+                step="1"
+              />
               céntimos
             </label>
-            <br><br>
+            <br /><br />
             <label>
               <b>Leche pequeña:</b>
-              <input type="number" name="leche_pequena" value="${precios.leche_pequena}" min="0" step="1" />
+              <input
+                type="number"
+                name="leche_pequena"
+                value="${precios.leche_pequena}"
+                min="0"
+                step="1"
+              />
               céntimos
             </label>
-            <br><br>
+            <br /><br />
             <label>
               <b>Leche grande:</b>
-              <input type="number" name="leche_grande" value="${precios.leche_grande}" min="0" step="1" />
+              <input
+                type="number"
+                name="leche_grande"
+                value="${precios.leche_grande}"
+                min="0"
+                step="1"
+              />
               céntimos
             </label>
-            <br><br>
+            <br /><br />
             <label>
               <b>Café:</b>
               <input type="number" name="cafe" value="${precios.cafe}" min="0" step="1" />
               céntimos
             </label>
-            <br><br>
+            <br /><br />
             <label>
               <b>ColaCao:</b>
               <input type="number" name="colacao" value="${precios.colacao}" min="0" step="1" />
               céntimos
             </label>
           </fieldset>
-          <br>
+          <br />
           <button type="submit">💾 Guardar precios</button>
-          <button type="button" onclick="setUrlHash('dataman')">🔙 Volver</button>
+          <button type="button" onclick="setUrlHash('supercafe')">🔙 Volver</button>
         </form>
       `;
 
@@ -98,7 +116,7 @@ PAGES.supercafe = {
             if (window.PRECIOS_CAFE) {
               Object.assign(window.PRECIOS_CAFE, nuevosPrecios);
             }
-            setTimeout(() => setUrlHash('dataman'), 1000);
+            setTimeout(() => setUrlHash('supercafe'), 1000);
           })
           .catch((e) => {
             toastr.error('Error al guardar precios: ' + e.message);
@@ -127,7 +145,7 @@ PAGES.supercafe = {
       setUrlHash('supercafe');
       return;
     }
-    if (mid === "precios") {
+    if (mid === 'precios') {
       PAGES.supercafe.__precios();
       return;
     }
@@ -406,38 +424,60 @@ PAGES.supercafe = {
     var tts_check = safeuuid();
     var old = {};
     container.innerHTML = html`
-      <h1><i class="fas fa-coffee"></i> Cafetería <span style="font-size: 20px; color: #666;">Total: <span id="${totalprecio}">0</span>c</span></h1>
+      <h1>
+        <i class="fas fa-coffee"></i> Cafetería
+        <span style="font-size: 20px; color: #666;"
+          >Total: <span id="${totalprecio}">0</span>c</span
+        >
+      </h1>
       <button
         id="${btn_new}"
         style="font-size: 26px; background-color: #4CAF50; color: white; padding: 5px 10px; text-align: center; text-decoration: none; display: inline-block; margin: 4px 2px; cursor: pointer;"
       >
         <i class="fas fa-plus"></i> Nueva comanda
       </button>
-      <button
-        id="${btn_cobro_auto}"
-        style="font-size: 26px; background-color: red; color: white; padding: 5px 10px; text-align: center; text-decoration: none; display: inline-block; margin: 4px 2px; cursor: pointer;"
-      >
-        <i class="fas fa-robot"></i> Cobro auto
-      </button>
-      <a
-        class="button"
-        href="#pagos,saldos"
-        style="font-size: 26px; background-color: blue; color: white; padding: 5px 10px; text-align: center; text-decoration: none; display: inline-block; margin: 4px 2px; cursor: pointer;"
-      >
-        <i class="fas fa-coins"></i> Saldos
-      </a>
-      <a
-        class="button"
-        href="#pagos,datafono"
-        style="font-size: 26px; background-color: purple; color: white; padding: 5px 10px; text-align: center; text-decoration: none; display: inline-block; margin: 4px 2px; cursor: pointer;"
-        ><i class="fas fa-credit-card"></i> Datafono</a
-      >
+      <div style="vertical-align: baseline;">
+        <button
+          title="Cobro auto"
+          class="btn button"
+          id="${btn_cobro_auto}"
+          style="font-size: 20px; background-color: red; color: white; padding: 5px 10px; text-align: center; text-decoration: none; display: inline-block; margin: 0; cursor: pointer;"
+        >
+          <i class="fas fa-robot"></i> Cobro auto
+        </button>
+        <label
+          class="btn button"
+          style="font-size: 20px;background-color: red;color: white;padding: 5px 10px;text-align: center;text-decoration: none;display: inline-block;margin: 0;cursor: pointer;font-weight: normal; padding-left: 3.5px !important"
+        >
+          <input type="checkbox" id="${tts_check}" style="height: 30px;width: 30px;vertical-align: bottom;">
+          Avisos de voz
+        </label>
+        <a
+          title="Saldos"
+          class="btn button"
+          href="#pagos,saldos"
+          style="font-size: 20px; background-color: blue; color: white; padding: 5px 10px; text-align: center; text-decoration: none; display: inline-block; margin: 0; cursor: pointer;"
+        >
+          <i class="fas fa-coins"></i> Saldos
+        </a>
+        <a
+          title="Datafono"
+          class="btn button"
+          href="#pagos,datafono"
+          style="font-size: 20px; background-color: purple; color: white; padding: 5px 10px; text-align: center; text-decoration: none; display: inline-block; margin: 0; cursor: pointer;"
+        >
+          <i class="fas fa-credit-card"></i> Datafono
+        </a>
+        <a
+          title="Precios del café"
+          class="btn button"
+          href="#supercafe,precios"
+          style="font-size: 20px; background-color: purple; color: white; padding: 5px 10px; text-align: center; text-decoration: none; display: inline-block; margin: 0; cursor: pointer;"
+        >
+          <i class="fas fa-cogs"></i> Precios
+        </a>
+      </div>
       <br />
-      <label>
-        <b>Avisos de voz:</b>
-        <input type="checkbox" id="${tts_check}" style="height: 25px;width: 25px;" />
-      </label>
-      <a class="button" href="#supercafe,precios">⚙️ Precios del café</a>
 
       <div id="${tablebody}"></div>
       <div id="${tablebody2}"></div>
@@ -626,36 +666,43 @@ PAGES.supercafe = {
       };
 
       document.getElementById(btn_cobro_auto).onclick = () => {
-        if (!confirm('¿Cobrar automáticamente todas las comandas y deudas a quienes tengan saldo suficiente?')) return;
+        if (
+          !confirm(
+            '¿Cobrar automáticamente todas las comandas y deudas a quienes tengan saldo suficiente?'
+          )
+        )
+          return;
 
-        DB.list('supercafe').then((rows) => {
-          if (rows.length === 0) {
-            toastr.info('No hay comandas pendientes.');
-            return;
-          }
+        DB.list('supercafe')
+          .then((rows) => {
+            if (rows.length === 0) {
+              toastr.info('No hay comandas pendientes.');
+              return;
+            }
 
-          var pending = rows.length;
-          var toCharge = []; // { id, data }
+            var pending = rows.length;
+            var toCharge = []; // { id, data }
 
-          rows.forEach((row) => {
-            TS_decrypt(
-              row.data,
-              SECRET,
-              (data) => {
-                toCharge.push({ id: row.id, data: data });
-                pending--;
-                if (pending === 0) {
-                  _ejecutarCobroAuto(toCharge);
-                }
-              },
-              'supercafe',
-              row.id
-            );
+            rows.forEach((row) => {
+              TS_decrypt(
+                row.data,
+                SECRET,
+                (data) => {
+                  toCharge.push({ id: row.id, data: data });
+                  pending--;
+                  if (pending === 0) {
+                    _ejecutarCobroAuto(toCharge);
+                  }
+                },
+                'supercafe',
+                row.id
+              );
+            });
+          })
+          .catch((e) => {
+            console.warn('Error listing supercafe', e);
+            toastr.error('Error al obtener las comandas');
           });
-        }).catch((e) => {
-          console.warn('Error listing supercafe', e);
-          toastr.error('Error al obtener las comandas');
-        });
 
         function _ejecutarCobroAuto(comandas) {
           var cobradas = 0;
@@ -711,7 +758,9 @@ PAGES.supercafe = {
               // Not enough balance — mark as Deuda if not already
               if (data.Estado !== 'Deuda') {
                 var updatedData = Object.assign({}, data, { Estado: 'Deuda' });
-                DB.put('supercafe', id, updatedData).catch((e) => console.warn('Error updating deuda', e));
+                DB.put('supercafe', id, updatedData).catch((e) =>
+                  console.warn('Error updating deuda', e)
+                );
               }
               sinSaldo++;
               checkDone();

@@ -1061,36 +1061,10 @@ Cargando...</pre
 Cargando...</pre
         >
       </span>
-      <br /><span
-        class="btn4"
-        style="display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; border: 2px solid black;"
-        ><b>Clima:</b> <br /><img
-          loading="lazy"
-          style="padding: 15px; background-color: white; height: 75px;"
-          id="${data_Weather}"
-      /></span>
     `;
 
-    //#region Cargar Clima
-    // Get location from DB settings.weather_location; if missing ask user and save it
-    // url format: https://wttr.in/<loc>?F0m
-    DB.get('settings', 'weather_location').then((loc) => {
-      if (!loc) {
-        loc = prompt('Introduce tu ubicación para el clima (ciudad, país):', 'Madrid, Spain');
-        if (loc) {
-          DB.put('settings', 'weather_location', loc);
-        }
-      }
-      if (loc) {
-        document.getElementById(data_Weather).src =
-          'https://wttr.in/' + encodeURIComponent(loc) + '_IF0m_background=FFFFFF.png';
-      } else {
-        document.getElementById(data_Weather).src = 'https://wttr.in/_IF0m_background=FFFFFF.png';
-      }
-    });
-    //#endregion Cargar Clima
     //#region Cargar Comedor
-    DB.get('comedor', CurrentISODate()).then((data) => {
+    DB.get('comedor', CurrentISODate() + ",Basal").then((data) => {
       function add_row(data) {
         if (!data.Primero) {
           var result = 'No hay información del comedor para hoy.';
