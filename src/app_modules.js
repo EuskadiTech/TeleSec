@@ -1238,26 +1238,57 @@ function TS_IndexElement(
 
   function renderCell(col, data) {
     const td = document.createElement('td');
-
     const val = col.key ? data[col.key] : undefined;
 
     switch (col.type) {
 
-      // ---------------- TEXT ----------------
+      // =========================
+      // _encrypted
+      // =========================
+      case '_encrypted': {
+        if (data._encrypted__ === true) {
+          td.textContent = '🔒';
+        } else if (
+          data._encrypted__ === 'error' ||
+          data._encrypted__ === 'error2' ||
+          data._encrypted__ === undefined
+        ) {
+          td.textContent = '⚠️';
+        } else {
+          td.textContent = '';
+        }
+        return td;
+      }
+
+      // =========================
+      // TEXT / RAW
+      // =========================
       case 'text':
       case 'raw': {
-        td.innerHTML = String(val ?? col.default ?? '').replace(/\n/g, '<br>');
+        td.innerHTML = String(val ?? col.default ?? '')
+          .replace(/\n/g, '<br>');
+
+        td.style.whiteSpace = 'normal';
+        td.style.fontSize = '20px';
+
         return td;
       }
 
-      // ---------------- MONEY ----------------
+      // =========================
+      // MONEY
+      // =========================
       case 'moneda': {
         const v = parseFloat(val);
-        td.textContent = isNaN(v) ? (col.default || '') : v.toFixed(2) + ' €';
+        td.textContent = !isNaN(v)
+          ? v.toFixed(2) + ' €'
+          : (col.default || '');
+
         return td;
       }
 
-      // ---------------- DATE ----------------
+      // =========================
+      // FECHA
+      // =========================
       case 'fecha':
       case 'fecha-iso': {
         if (val) {
@@ -1267,31 +1298,40 @@ function TS_IndexElement(
         return td;
       }
 
-      // ---------------- DATE DIFF ----------------
+      // =========================
+      // FECHA DIFF
+      // =========================
       case 'fecha-diff': {
         if (!val) return td;
 
-        const d = new Date(val);
+        const fecha = new Date(val);
         const now = new Date();
 
-        const diffDays = Math.floor((now - d) / (1000 * 60 * 60 * 24));
+        const diffDays = Math.floor((now - fecha) / (1000 * 60 * 60 * 24));
         const diffMonths = Math.floor(diffDays / 30);
+        const diffYears = Math.floor(diffDays / 365);
 
-        td.textContent = `${diffMonths} meses`;
+        let out = '';
 
-        if (diffMonths >= 3) td.style.background = 'rgb(255,192,192)';
-        else if (diffMonths >= 1) td.style.background = 'rgb(252,252,176)';
+        if (diffYears > 0) {
+          out += diffYears + ' año' + (diffYears > 1 ? 's ' : ' ');
+        }
+
+        if (diffMonths % 12 > 0) {
+          out += (diffMonths % 12) + ' mes' + ((diffMonths % 12) > 1 ? 'es ' : ' ');
+        }
+
+        if (diffMonths >= 3) td.style.backgroundColor = 'rgb(255, 192, 192)';
+        else if (diffMonths >= 1) td.style.backgroundColor = 'rgb(252, 252, 176)';
+
+        td.textContent = out.trim();
 
         return td;
       }
 
-      // ---------------- TEMPLATE ----------------
-      case 'template': {
-        col.template(data, td);
-        return td;
-      }
-
-      // ---------------- PICTO ----------------
+      // =========================
+      // PICTO
+      // =========================
       case 'picto': {
         const plate = TS_normalizePictoValue(val);
 
@@ -1303,42 +1343,169 @@ function TS_IndexElement(
         if (plate?.arasaacId) {
           const img = document.createElement('img');
           img.src = TS_buildArasaacPictogramUrl(plate.arasaacId);
-          img.width = 40;
+          img.alt = plate.text || 'Pictograma';
+          img.width = 48;
+          img.height = 48;
+          img.loading = 'lazy';
+          img.style.objectFit = 'contain';
           wrapper.appendChild(img);
         }
 
-        const span = document.createElement('span');
-        span.textContent = plate?.text || '';
-        wrapper.appendChild(span);
+        if (plate?.text) {
+          const span = document.createElement('span');
+          span.textContent = data[col.labelkey] || plate.text || '';
+          wrapper.appendChild(span);
+        }
 
         td.appendChild(wrapper);
         return td;
       }
 
-      // ---------------- PERSONA FULL ----------------
+      // =========================
+      // TEMPLATE CUSTOM
+      // =========================
+      case 'template': {
+        col.template(data, td);
+        return td;
+      }
+
+      // =========================
+      // COMANDA (complejo)
+      // =========================
+      case 'comanda': {
+        const parsed = JSON.parse(data.Comanda || '[]');
+        const precio = SC_priceCalc(parsed)[0];
+
+        const wrapper = document.createElement('div');
+
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = setLayeredImages(parsed, data._key);
+        if (tempDiv.firstChild) wrapper.appendChild(tempDiv.firstChild);
+
+        const pre = document.createElement('pre');
+        pre.style.fontSize = '15px';
+        pre.style.display = 'inline-block';
+        pre.style.margin = '0';
+        pre.style.padding = '5px';
+
+        pre.innerHTML =
+          '<b>Ticket de compra</b><br>' +
+          SC_parse_short(parsed) +
+          '<hr>' +
+          (data.Notas || '') +
+          '<hr>' +
+          `<b>Total: ${precio}c</b>`;
+
+        wrapper.appendChild(pre);
+
+        td.appendChild(wrapper);
+        return td;
+      }
+
+      // =========================
+      // COMANDA STATUS
+      // =========================
+      case 'comanda-status': {
+        const wrapper = document.createElement('div');
+
+        const estados = [
+          'Pedido',
+          'En preparación',
+          'Listo',
+          'Entregado',
+          'Deuda'
+        ];
+
+        estados.forEach(state => {
+          const btn = document.createElement('button');
+          btn.textContent = state;
+
+          if (data.Estado === state) {
+            btn.className = 'rojo';
+          }
+
+          btn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            data.Estado = state;
+
+            if (typeof ref === 'string') {
+              DB.put(ref, data._key, data);
+            } else {
+              try {
+                ref.get(data._key).put(data);
+              } catch (err) {
+                console.warn(err);
+              }
+            }
+          };
+
+          wrapper.appendChild(btn);
+          wrapper.appendChild(document.createElement('br'));
+        });
+
+        const paid = document.createElement('button');
+        paid.textContent = 'Pagado';
+        paid.className = 'btn5';
+
+        paid.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+
+          const parsed = JSON.parse(data.Comanda || '[]');
+          const precio = SC_priceCalc(parsed)[0];
+
+          const payload = {
+            tipo: 'Gasto',
+            monto: precio / 100,
+            persona: data.Persona,
+            notas: 'Pago de comanda SuperCafé\n' + SC_parse(parsed),
+            origen: 'SuperCafé',
+            origen_id: data._key
+          };
+
+          setUrlHash('pagos,datafono_prefill,' + btoa(JSON.stringify(payload)));
+        };
+
+        wrapper.appendChild(paid);
+
+        td.appendChild(wrapper);
+        return td;
+      }
+
+      // =========================
+      // PERSONA FULL
+      // =========================
       case 'persona': {
         const persona = col.self ? data : SC_Personas[val] || {};
 
+        const wrapper = document.createElement('div');
+        wrapper.style.textAlign = 'center';
+
         const img = document.createElement('img');
         img.src = persona.Foto || 'static/ico/user_generic.png';
-        img.height = 60;
+        img.height = 70;
 
         const name = document.createElement('div');
         name.textContent = persona.Nombre || '';
 
-        td.appendChild(img);
-        td.appendChild(name);
+        wrapper.appendChild(img);
+        wrapper.appendChild(name);
 
+        td.appendChild(wrapper);
         return td;
       }
 
-      // ---------------- PERSONA SIMPLE ----------------
+      // =========================
+      // PERSONA SIMPLE
+      // =========================
       case 'persona-simple': {
         const persona = col.self ? data : SC_Personas[val] || {};
 
         const img = document.createElement('img');
         img.src = persona.Foto || 'static/ico/user_generic.png';
-        img.height = 40;
+        img.height = 48;
 
         const span = document.createElement('span');
         span.textContent = persona.Nombre || '';
@@ -1349,32 +1516,22 @@ function TS_IndexElement(
         return td;
       }
 
-      // ---------------- COMANDA STATUS ----------------
-      case 'comanda-status': {
-        const btns = ['Pedido','En preparación','Listo','Entregado','Deuda'];
+      // =========================
+      // ATTACHMENT PERSONA
+      // =========================
+      case 'attachment-persona': {
+        const img = document.createElement('img');
+        img.src = val || 'static/ico/user_generic.png';
+        img.style.maxHeight = '80px';
+        img.style.maxWidth = '80px';
 
-        const wrapper = document.createElement('div');
-
-        btns.forEach(state => {
-          const b = document.createElement('button');
-          b.textContent = state;
-
-          if (data.Estado === state) b.className = 'rojo';
-
-          b.onclick = () => {
-            data.Estado = state;
-            DB.put(ref, data._key, data);
-          };
-
-          wrapper.appendChild(b);
-          wrapper.appendChild(document.createElement('br'));
-        });
-
-        td.appendChild(wrapper);
+        td.appendChild(img);
         return td;
       }
 
-      // ---------------- DEFAULT ----------------
+      // =========================
+      // DEFAULT
+      // =========================
       default: {
         td.textContent = val ?? '';
         return td;
