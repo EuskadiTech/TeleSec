@@ -1424,7 +1424,6 @@ function TS_IndexElement(
                 DB.put(ref, data._key, data)
                   .then(() => {
                     toastr.success('Guardado!');
-                    render();
                   })
                   .catch((e) => {
                     console.warn('DB.put error', e);
