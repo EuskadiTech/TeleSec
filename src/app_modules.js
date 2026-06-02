@@ -1413,8 +1413,8 @@ function TS_IndexElement(
       // =========================
       case 'template': {
         const td = createTd();
+        col.template(data, td);
         return td;
-        key.template(data, td);
         break;
       }
 
@@ -1693,10 +1693,11 @@ function TS_IndexElement(
 
   function buildRow(data) {
     if (canAddCallback && canAddCallback(data)) return null;
-
+    console.debug("buildRow called", data)
     const tr = document.createElement('tr');
 
     tr._key = data._key; // internal
+    tr.id = data._key
 
     config.forEach(col => {
       tr.appendChild(renderCell(col, data));
@@ -1714,22 +1715,21 @@ function TS_IndexElement(
   function upsert(data, key) {
     data._key = key;
     rowsCache[key] = data;
-
+    
     const existing = dtInstance.row('#' + key);
 
     if (existing.node()) {
-      // 🔥 UPDATE IN PLACE (FAST)
-      const tr = buildRow(data);
-      existing.data(tr);
-    } else {
-      const tr = buildRow(data);
-      if (!tr) return;
-
-      dtInstance.row.add(tr);
+      // 🔥 Remover fila vieja
+      existing.remove();
     }
 
-    dtInstance.draw(false);
+    const tr = buildRow(data);
+    if (!tr) return;
+
+    // Añadir nueva fila (el ID ya va dentro gracias a buildRow)
+    dtInstance.row.add(tr).draw(false);
   }
+
 
   function remove(key) {
     dtInstance.row('#' + key).remove().draw(false);
