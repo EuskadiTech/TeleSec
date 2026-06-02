@@ -1150,30 +1150,40 @@ function TS_IndexElement(
   title = "Tabla",
   addButtonHash = null,
 ) {
-  var tableId = safeuuid();
-  var filterId = safeuuid();
-  var debounce_load = safeuuid();
-  var rows = {};
-  var dtInstance = null;
+  const tableId = safeuuid();
+  const filterId = safeuuid();
 
-  var hashQuery = new URLSearchParams(window.location.hash.split('?')[1]);
-  var filters = {};
+  const rowsCache = {};
+  let dtInstance = null;
+
+  // -------------------------
+  // FILTERS
+  // -------------------------
+
+  const hashQuery = new URLSearchParams(window.location.hash.split('?')[1]);
+  const filters = {};
+
   if (hashQuery.has('filter')) {
-    hashQuery.getAll('filter').forEach((filter) => {
-      var parts = filter.split(':');
+    hashQuery.getAll('filter').forEach(f => {
+      const parts = f.split(':');
       filters[parts[0]] = parts[1];
     });
   }
 
+  // -------------------------
+  // HTML
+  // -------------------------
+
   container.innerHTML = html`
     <div class="card card-outline card-primary ts-index-card">
-      <div class="card-header d-flex align-items-center" style="gap: 6px; min-height: 38px;">
-        <h3 class="card-title" style="font-size: 25px;">${title}</h3>
+      <div class="card-header d-flex align-items-center" style="gap:6px">
+        <h3 class="card-title">${title}</h3>
         <div id="${filterId}" class="ts-filter-badge card-tools"></div>
-        ${addButtonHash ? html`<a href="#${addButtonHash}" class="btn btn-sm btn-success ml-auto">Añadir</a>` : ''}
+        ${addButtonHash ? html`<a href="#${addButtonHash}" class="btn btn-success btn-sm ml-auto">Añadir</a>` : ''}
       </div>
+
       <div class="card-body p-2">
-        <table id="${tableId}" class="table table-bordered table-hover table-sm ts-index-table mb-0" style="width:100%">
+        <table id="${tableId}" class="table table-bordered table-hover table-sm" style="width:100%">
           <thead><tr></tr></thead>
           <tbody></tbody>
         </table>
@@ -1181,555 +1191,273 @@ function TS_IndexElement(
     </div>
   `;
 
-  var theadTr = container.querySelector('#' + tableId + ' thead tr');
-  config.forEach((key) => {
-    var th = document.createElement('th');
-    th.textContent = key.label || '';
+  const theadTr = container.querySelector(`#${tableId} thead tr`);
+
+  config.forEach(c => {
+    const th = document.createElement('th');
+    th.textContent = c.label || '';
     theadTr.appendChild(th);
   });
 
-  if (Object.keys(filters).length > 0) {
-    var filterKeys = Object.keys(filters).join(', ');
-    var clearHref = window.location.hash.split('?')[0];
-    document.getElementById(filterId).innerHTML =
-      '<span class="badge badge-warning mr-1"><i class="fas fa-filter mr-1"></i>' +
-      filterKeys +
-      '</span>' +
-      '<a href="' +
-      clearHref +
-      '" class="badge badge-secondary">Limpiar filtros</a>';
-  }
-
-  if (typeof $ === 'undefined' || !$.fn || !$.fn.DataTable) {
-    console.warn('DataTables no está cargado.');
-    return;
-  }
+  // -------------------------
+  // DATATABLE INIT (IMPORTANT: rowId)
+  // -------------------------
 
   dtInstance = $('#' + tableId).DataTable({
     paging: true,
     pageLength: 25,
-    lengthMenu: [10, 25, 50, 100, 250],
     searching: globalSearchBar !== false,
-    ordering: true,
     autoWidth: false,
     processing: true,
     deferRender: true,
+
+    // 🔥 CLAVE REAL
+    rowId: '_key',
+
     language: {
-      decimal: ',',
-      thousands: '.',
-      info: '_START_–_END_ de _TOTAL_',
-      infoEmpty: '',
-      infoFiltered: '(de _MAX_ total)',
-      lengthMenu: '_MENU_ por página',
-      loadingRecords: 'Cargando…',
-      processing: '<i class="fas fa-spinner fa-spin"></i>',
-      search: '<i class="fas fa-search"></i>',
-      searchPlaceholder: 'Buscar…',
-      zeroRecords: 'Sin resultados',
-      paginate: {
-        first: '<i class="fas fa-angle-double-left"></i>',
-        last: '<i class="fas fa-angle-double-right"></i>',
-        next: '<i class="fas fa-angle-right"></i>',
-        previous: '<i class="fas fa-angle-left"></i>',
-      },
-    },
+      search: "Buscar",
+      zeroRecords: "Sin resultados",
+      loadingRecords: "Cargando..."
+    }
   });
+
+  // -------------------------
+  // CLEANUP
+  // -------------------------
 
   EventListeners.Custom.push(() => {
     if (dtInstance) {
-      try {
-        dtInstance.destroy();
-      } catch (e) {}
+      dtInstance.destroy();
       dtInstance = null;
     }
   });
 
-  function applyUrlFilters(data) {
-    for (var fkey in filters) {
-      if (data[fkey] != filters[fkey]) return false;
+  // -------------------------
+  // RENDER CELDA (FULL TYPE SYSTEM)
+  // -------------------------
+
+  function renderCell(col, data) {
+    const td = document.createElement('td');
+
+    const val = col.key ? data[col.key] : undefined;
+
+    switch (col.type) {
+
+      // ---------------- TEXT ----------------
+      case 'text':
+      case 'raw': {
+        td.innerHTML = String(val ?? col.default ?? '').replace(/\n/g, '<br>');
+        return td;
+      }
+
+      // ---------------- MONEY ----------------
+      case 'moneda': {
+        const v = parseFloat(val);
+        td.textContent = isNaN(v) ? (col.default || '') : v.toFixed(2) + ' €';
+        return td;
+      }
+
+      // ---------------- DATE ----------------
+      case 'fecha':
+      case 'fecha-iso': {
+        if (val) {
+          const p = val.split('-');
+          td.textContent = `${p[2]}/${p[1]}/${p[0]}`;
+        }
+        return td;
+      }
+
+      // ---------------- DATE DIFF ----------------
+      case 'fecha-diff': {
+        if (!val) return td;
+
+        const d = new Date(val);
+        const now = new Date();
+
+        const diffDays = Math.floor((now - d) / (1000 * 60 * 60 * 24));
+        const diffMonths = Math.floor(diffDays / 30);
+
+        td.textContent = `${diffMonths} meses`;
+
+        if (diffMonths >= 3) td.style.background = 'rgb(255,192,192)';
+        else if (diffMonths >= 1) td.style.background = 'rgb(252,252,176)';
+
+        return td;
+      }
+
+      // ---------------- TEMPLATE ----------------
+      case 'template': {
+        col.template(data, td);
+        return td;
+      }
+
+      // ---------------- PICTO ----------------
+      case 'picto': {
+        const plate = TS_normalizePictoValue(val);
+
+        const wrapper = document.createElement('div');
+        wrapper.style.display = 'flex';
+        wrapper.style.alignItems = 'center';
+        wrapper.style.gap = '8px';
+
+        if (plate?.arasaacId) {
+          const img = document.createElement('img');
+          img.src = TS_buildArasaacPictogramUrl(plate.arasaacId);
+          img.width = 40;
+          wrapper.appendChild(img);
+        }
+
+        const span = document.createElement('span');
+        span.textContent = plate?.text || '';
+        wrapper.appendChild(span);
+
+        td.appendChild(wrapper);
+        return td;
+      }
+
+      // ---------------- PERSONA FULL ----------------
+      case 'persona': {
+        const persona = col.self ? data : SC_Personas[val] || {};
+
+        const img = document.createElement('img');
+        img.src = persona.Foto || 'static/ico/user_generic.png';
+        img.height = 60;
+
+        const name = document.createElement('div');
+        name.textContent = persona.Nombre || '';
+
+        td.appendChild(img);
+        td.appendChild(name);
+
+        return td;
+      }
+
+      // ---------------- PERSONA SIMPLE ----------------
+      case 'persona-simple': {
+        const persona = col.self ? data : SC_Personas[val] || {};
+
+        const img = document.createElement('img');
+        img.src = persona.Foto || 'static/ico/user_generic.png';
+        img.height = 40;
+
+        const span = document.createElement('span');
+        span.textContent = persona.Nombre || '';
+
+        td.appendChild(img);
+        td.appendChild(span);
+
+        return td;
+      }
+
+      // ---------------- COMANDA STATUS ----------------
+      case 'comanda-status': {
+        const btns = ['Pedido','En preparación','Listo','Entregado','Deuda'];
+
+        const wrapper = document.createElement('div');
+
+        btns.forEach(state => {
+          const b = document.createElement('button');
+          b.textContent = state;
+
+          if (data.Estado === state) b.className = 'rojo';
+
+          b.onclick = () => {
+            data.Estado = state;
+            DB.put(ref, data._key, data);
+          };
+
+          wrapper.appendChild(b);
+          wrapper.appendChild(document.createElement('br'));
+        });
+
+        td.appendChild(wrapper);
+        return td;
+      }
+
+      // ---------------- DEFAULT ----------------
+      default: {
+        td.textContent = val ?? '';
+        return td;
+      }
     }
-    return true;
   }
+
+  // -------------------------
+  // ROW BUILDER (IMPORTANT)
+  // -------------------------
 
   function buildRow(data) {
-    if (canAddCallback != undefined && canAddCallback(data) === true) {
-      return null;
-    }
+    if (canAddCallback && canAddCallback(data)) return null;
 
-    const new_tr = document.createElement('tr');
-    if (rowCallback != undefined) {
-      rowCallback(data, new_tr);
-    }
+    const tr = document.createElement('tr');
 
-    config.forEach((key) => {
-      switch (key.type) {
-        case '_encrypted': {
-          const tdEncrypted = document.createElement('td');
-          if (data['_encrypted__'] === true) {
-            tdEncrypted.innerText = '🔒';
-          } else if (
-            data['_encrypted__'] === 'error' ||
-            data['_encrypted__'] === 'error2' ||
-            data['_encrypted__'] === undefined
-          ) {
-            tdEncrypted.innerText = '⚠️';
-          } else {
-            tdEncrypted.innerText = '';
-          }
-          new_tr.appendChild(tdEncrypted);
-          break;
-        }
-        case 'raw':
-        case 'text': {
-          const tdRaw = document.createElement('td');
-          const rawContent = (String(data[key.key]) || key.default || '').replace(/\n/g, '<br>');
-          tdRaw.innerHTML = rawContent;
-          tdRaw.style.whiteSpace = 'normal';
-          tdRaw.style.fontSize = '20px';
-          new_tr.appendChild(tdRaw);
-          break;
-        }
-        case 'moneda': {
-          const tdMoneda = document.createElement('td');
-          const valor = parseFloat(data[key.key]);
-          if (!isNaN(valor)) {
-            tdMoneda.innerText = valor.toFixed(2) + ' €';
-          } else {
-            tdMoneda.innerText = key.default || '';
-          }
-          new_tr.appendChild(tdMoneda);
-          break;
-        }
-        case 'fecha':
-        case 'fecha-iso': {
-          const tdFechaISO = document.createElement('td');
-          if (data[key.key]) {
-            const fechaArray = data[key.key].split('-');
-            tdFechaISO.innerText = fechaArray[2] + '/' + fechaArray[1] + '/' + fechaArray[0];
-          }
-          new_tr.appendChild(tdFechaISO);
-          break;
-        }
-        case 'fecha-diff': {
-          const tdFechaISO = document.createElement('td');
-          if (data[key.key]) {
-            const fecha = new Date(data[key.key]);
-            const now = new Date();
-            const diffTime = Math.abs(now - fecha);
-            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-            const diffMonths = Math.floor(diffDays / 30);
-            const diffYears = Math.floor(diffDays / 365);
-            let diffString = '';
-            if (diffYears > 0) {
-              diffString += diffYears + ' año' + (diffYears > 1 ? 's ' : ' ');
-            }
-            if (diffMonths % 12 > 0) {
-              diffString += (diffMonths % 12) + ' mes' + (diffMonths % 12 > 1 ? 'es ' : ' ');
-            }
-            if (diffMonths >= 3) {
-              tdFechaISO.style.backgroundColor = 'rgb(255, 192, 192)';
-            } else if (diffMonths >= 1) {
-              tdFechaISO.style.backgroundColor = 'rgb(252, 252, 176)';
-            }
-            tdFechaISO.innerText = diffString.trim();
-          }
-          new_tr.appendChild(tdFechaISO);
-          break;
-        }
-        case 'picto': {
-          const tdPicto = document.createElement('td');
-          const plate = TS_normalizePictoValue(data[key.key]);
-          const wrapper = document.createElement('div');
-          wrapper.style.display = 'flex';
-          wrapper.style.alignItems = 'center';
-          wrapper.style.gap = '8px';
-          if (plate.arasaacId) {
-            const img = document.createElement('img');
-            img.src = TS_buildArasaacPictogramUrl(plate.arasaacId);
-            img.alt = plate.text || 'Pictograma';
-            img.width = 48;
-            img.height = 48;
-            img.loading = 'lazy';
-            img.style.objectFit = 'contain';
-            wrapper.appendChild(img);
-          }
-          if (plate.text) {
-            const text = document.createElement('span');
-            text.textContent = data[key.labelkey] || plate.text || '';
-            wrapper.appendChild(text);
-          }
-          tdPicto.appendChild(wrapper);
-          new_tr.appendChild(tdPicto);
-          break;
-        }
-        case 'template': {
-          const tdCustomTemplate = document.createElement('td');
-          new_tr.appendChild(tdCustomTemplate);
-          key.template(data, tdCustomTemplate);
-          break;
-        }
-        case 'comanda': {
-          const tdComanda = document.createElement('td');
-          tdComanda.style.verticalAlign = 'top';
-          const parsedComanda = JSON.parse(data.Comanda);
-          const precio = SC_priceCalc(parsedComanda)[0];
-          const tempDiv = document.createElement('div');
-          tempDiv.innerHTML = setLayeredImages(parsedComanda, data._key);
-          tdComanda.appendChild(tempDiv.firstChild);
-          const pre = document.createElement('pre');
-          pre.style.fontSize = '15px';
-          pre.style.display = 'inline-block';
-          pre.style.margin = '0';
-          pre.style.verticalAlign = 'top';
-          pre.style.padding = '5px';
-          pre.style.background = 'rgba(255, 255, 0, 0.5)';
-          pre.style.border = '1px solid rgba(0, 0, 0, 0.2)';
-          pre.style.borderRadius = '5px';
-          pre.style.boxShadow = '2px 2px 5px rgba(0, 0, 0, 0.1)';
-          pre.style.height = '100%';
-          const spanPrecio = document.createElement('span');
-          spanPrecio.style.fontSize = '20px';
-          spanPrecio.innerHTML = html`Total: ${precio}c`;
-          pre.innerHTML = '<b>Ticket de compra</b> ';
-          pre.appendChild(document.createTextNode('\n'));
-          pre.innerHTML += SC_parse_short(parsedComanda) + '<hr>' + data.Notas + '<hr>';
-          pre.appendChild(spanPrecio);
-          tdComanda.appendChild(pre);
-          new_tr.appendChild(tdComanda);
-          break;
-        }
-        case 'comanda-status': {
-          var sc_nobtn = '';
-          if (urlParams.get('sc_nobtn') == 'yes') {
-            sc_nobtn = 'pointer-events: none; opacity: 0.5';
-          }
-          const td = document.createElement('td');
-          td.style.fontSize = '17px';
-          td.style.maxWidth = '100px';
-          if (sc_nobtn) {
-            td.style.pointerEvents = 'none';
-            td.style.opacity = '0.5';
-          }
-          const createButton = (text, state) => {
-            const button = document.createElement('button');
-            button.textContent = text;
-            if (data.Estado === state) {
-              button.className = 'rojo';
-            }
-            button.onclick = (event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              data.Estado = state;
-              if (typeof ref === 'string') {
-                DB.put(ref, data._key, data)
-                  .then(() => {
-                    toastr.success('Guardado!');
-                  })
-                  .catch((e) => {
-                    console.warn('DB.put error', e);
-                  });
-              } else {
-                try {
-                  ref.get(data._key).put(data);
-                  toastr.success('Guardado!');
-                } catch (e) {
-                  console.warn('Could not save item', e);
-                }
-              }
-              return false;
-            };
-            return button;
-          };
-          const buttons = [
-            createButton('Pedido', 'Pedido'),
-            createButton('En preparación', 'En preparación'),
-            createButton('Listo', 'Listo'),
-            createButton('Entregado', 'Entregado'),
-            createButton('Deuda', 'Deuda'),
-          ];
-          const paidButton = document.createElement('button');
-          paidButton.textContent = 'Pagado';
-          paidButton.className = 'btn5';
-          paidButton.onclick = (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            var precio = SC_priceCalc(JSON.parse(data.Comanda))[0];
-            var personaId = data.Persona;
-            var comandaId = data._key;
-            var sdata = JSON.stringify({
-              tipo: 'Gasto',
-              monto: precio / 100,
-              persona: personaId,
-              notas: 'Pago de comanda SuperCafé\n' + SC_parse(JSON.parse(data.Comanda)),
-              origen: 'SuperCafé',
-              origen_id: comandaId,
-            });
-            setUrlHash('pagos,datafono_prefill,' + btoa(sdata));
-            return false;
-          };
-          td.append(data.Fecha);
-          td.append(document.createElement('br'));
-          buttons.forEach((button) => {
-            td.appendChild(button);
-            td.appendChild(document.createElement('br'));
-          });
-          td.appendChild(paidButton);
-          new_tr.appendChild(td);
-          break;
-        }
-        case 'persona': {
-          let persona = key.self === true ? data : SC_Personas[data[key.key]] || {};
-          const regco = stringToColour((persona.Region || '?').toLowerCase());
-          const tdPersona = document.createElement('td');
-          tdPersona.style.textAlign = 'center';
-          tdPersona.style.fontSize = '20px';
-          tdPersona.style.backgroundColor = regco;
-          tdPersona.style.padding = '0';
-          tdPersona.style.color = colorIsDarkAdvanced(regco);
-          tdPersona.style.maxWidth = '200px';
-          const regionSpan = document.createElement('span');
-          regionSpan.style.fontSize = '40px';
-          regionSpan.style.textTransform = 'capitalize';
-          regionSpan.textContent = (persona.Region || '?').toLowerCase();
-          tdPersona.appendChild(regionSpan);
-          tdPersona.appendChild(document.createElement('br'));
-          const infoSpan = document.createElement('span');
-          infoSpan.style.backgroundColor = 'white';
-          infoSpan.style.border = '2px solid black';
-          infoSpan.style.borderRadius = '5px';
-          infoSpan.style.display = 'inline-block';
-          infoSpan.style.padding = '5px';
-          infoSpan.style.color = 'black';
-          const img = document.createElement('img');
-          img.src = persona.Foto || 'static/ico/user_generic.png';
-          try {
-            const personaId =
-              key.self === true ? data._key || data._id || data.id : data[key.key];
-            if (personaId) {
-              DB.getAttachment('personas', personaId, 'foto')
-                .then((durl) => {
-                  if (durl) img.src = durl;
-                })
-                .catch(() => {});
-            }
-          } catch (e) {}
-          img.height = 70;
-          infoSpan.appendChild(img);
-          infoSpan.appendChild(document.createElement('br'));
-          infoSpan.appendChild(document.createTextNode(persona.Nombre || ''));
-          infoSpan.appendChild(document.createElement('br'));
-          if (parseFloat(persona.Monedero_Balance || '0') != 0) {
-            const pointsSpan = document.createElement('span');
-            pointsSpan.style.fontSize = '17px';
-            pointsSpan.textContent =
-              parseFloat(persona.Monedero_Balance || '0').toPrecision(2) + ' €';
-            infoSpan.appendChild(pointsSpan);
-          }
-          tdPersona.appendChild(infoSpan);
-          new_tr.appendChild(tdPersona);
-          break;
-        }
-        case 'persona-nombre': {
-          let persona = key.self === true ? data : SC_Personas[data[key.key]] || {};
-          const tdPersonaNombre = document.createElement('td');
-          tdPersonaNombre.style.textAlign = 'center';
-          tdPersonaNombre.style.fontSize = '20px';
-          var nombre = persona.Nombre || '';
-          var region = persona.Region ? ` (${persona.Region})` : '';
-          tdPersonaNombre.textContent = nombre + region;
-          new_tr.appendChild(tdPersonaNombre);
-          break;
-        }
-        case 'persona-simple': {
-          // Nombre + foto sin recuadro ni región de fondo, para usar dentro de otras tablas (ej. pedidos)
-          let persona = key.self === true ? data : SC_Personas[data[key.key]] || {};
-          const tdPersonaNombre = document.createElement('td');
-          tdPersonaNombre.style.textAlign = 'center';
-          tdPersonaNombre.style.fontSize = '20px';
-          var nombre = persona.Nombre || '';
-          var region = persona.Region ? ` (${persona.Region})` : '';
-          tdPersonaNombre.textContent = nombre + region;
-          const img = document.createElement('img');
-          img.src = persona.Foto || 'static/ico/user_generic.png';
-          img.height = 48;
-          img.style.verticalAlign = 'middle';
-          img.style.marginRight = '5px';
-          try {
-            const personaId =
-              key.self === true ? data._key || data._id || data.id : data[key.key];
-            if (personaId) {
-              DB.getAttachment('personas', personaId, 'foto')
-                .then((durl) => {
-                  if (durl) img.src = durl;
-                })
-                .catch(() => {});
-            }
-          } catch (e) {}
-          tdPersonaNombre.prepend(img);
-          new_tr.appendChild(tdPersonaNombre);
-          tdPersonaNombre.style.width = '250px';
-          break;
-        }
-        case 'attachment-persona': {
-          const tdAttachment = document.createElement('td');
-          const img = document.createElement('img');
-          img.src = data[key.key] || 'static/ico/user_generic.png';
-          img.style.maxHeight = '80px';
-          img.style.maxWidth = '80px';
-          tdAttachment.appendChild(img);
-          tdAttachment.style.textAlign = 'center';
-          tdAttachment.style.width = '80px';
-          new_tr.appendChild(tdAttachment);
-          try {
-            const personaId =
-              key.self === true ? data._key || data._id || data.id : data[key.key];
-            if (personaId) {
-              DB.getAttachment('personas', personaId, 'foto')
-                .then((durl) => {
-                  if (durl) img.src = durl;
-                })
-                .catch(() => {});
-            }
-          } catch (e) {}
-          break;
-        }
-        default:
-          break;
-      }
+    tr._key = data._key; // internal
+
+    config.forEach(col => {
+      tr.appendChild(renderCell(col, data));
     });
 
-    new_tr.onclick = () => {
-      setUrlHash(pageco + ',' + data._key);
-    };
-    if (new_tr.children.length !== config.length) {
-      console.error(
-        'Column mismatch',
-        data,
-        'expected:',
-        config.length,
-        'got:',
-        new_tr.children.length
-      );
-    }
-    return new_tr;
-  }
-  // ================================
-  // INCREMENTAL DATATABLES ENGINE
-  // ================================
+    if (rowCallback) rowCallback(data, tr);
 
-  let drawPending = false;
-
-  function scheduleDraw() {
-    if (drawPending) return;
-
-    drawPending = true;
-
-    requestAnimationFrame(() => {
-      drawPending = false;
-
-      if (dtInstance) {
-        dtInstance.draw(false);
-      }
-    });
+    return tr;
   }
 
-  // busca índice de fila por dataset.key
-  function findRowIndex(key) {
-    if (!dtInstance) return null;
+  // -------------------------
+  // UPDATE SAFE (NO REBUILD IF NOT NEEDED)
+  // -------------------------
 
-    const nodes = dtInstance.rows().nodes();
+  function upsert(data, key) {
+    data._key = key;
+    rowsCache[key] = data;
 
-    for (let i = 0; i < nodes.length; i++) {
-      if (nodes[i] && nodes[i].dataset.key === key) {
-        return i;
-      }
-    }
+    const existing = dtInstance.row('#' + key);
 
-    return null;
-  }
-
-  // reemplaza un TR existente por otro manteniendo DataTables feliz
-  function replaceRowNode(index, newTr, key) {
-    const oldNode = dtInstance.row(index).node();
-
-    if (!oldNode || !oldNode.parentNode) {
-      return false;
-    }
-
-    newTr.dataset.key = key;
-
-    oldNode.parentNode.replaceChild(newTr, oldNode);
-
-    return true;
-  }
-
-  // ADD
-  function addRow(key, data) {
-    if (!dtInstance) return;
-
-    const tr = buildRow(data);
-    if (!tr) return;
-
-    tr.dataset.key = key;
-
-    dtInstance.row.add(tr);
-
-    scheduleDraw();
-  }
-
-  // UPDATE
-  function updateRow(key, data) {
-    if (!dtInstance) return;
-
-    const index = findRowIndex(key);
-
-    if (index == null) {
-      addRow(key, data);
-      return;
-    }
-
-    const tr = buildRow(data);
-    if (!tr) return;
-
-    replaceRowNode(index, tr, key);
-
-    scheduleDraw();
-  }
-
-  // REMOVE
-  function removeRow(key) {
-    if (!dtInstance) return;
-
-    const index = findRowIndex(key);
-
-    if (index == null) return;
-
-    dtInstance.row(index).remove();
-
-    scheduleDraw();
-  }
-
-  // UPSERT (fuente de verdad: rows)
-  function upsertRow(data, key) {
-    const exists = rows[key] != null;
-
-    if (data != null) {
-      data._key = key;
-
-      rows[key] = data;
-
-      if (exists) {
-        updateRow(key, data);
-      } else {
-        addRow(key, data);
-      }
-
+    if (existing.node()) {
+      // 🔥 UPDATE IN PLACE (FAST)
+      const tr = buildRow(data);
+      existing.data(tr);
     } else {
-      delete rows[key];
-      removeRow(key);
+      const tr = buildRow(data);
+      if (!tr) return;
+
+      dtInstance.row.add(tr);
     }
+
+    dtInstance.draw(false);
+  }
+
+  function remove(key) {
+    dtInstance.row('#' + key).remove().draw(false);
+    delete rowsCache[key];
+  }
+
+  // -------------------------
+  // DB BINDING
+  // -------------------------
+
+  if (typeof ref === 'string') {
+    EventListeners.DB.push(
+      DB.map(ref, (data, key) => {
+
+        if (typeof data === 'string') {
+          TS_decrypt(data, SECRET, (decoded, ok) => {
+            if (decoded) {
+              decoded._encrypted__ = ok;
+              upsert(decoded, key);
+            } else {
+              remove(key);
+            }
+          }, ref, key);
+
+        } else {
+          if (data) data._encrypted__ = false;
+          upsert(data, key);
+        }
+      })
+    );
   }
 }
+
 function BuildQR(mid, label) {
   var svgNode = QRCode({
     msg: mid,
