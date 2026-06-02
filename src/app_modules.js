@@ -1265,6 +1265,7 @@ function TS_IndexElement(
       }
     } catch (e) {}
   }
+  
   function renderCell(col, data) {
     const td = document.createElement('td');
     const val = col.key ? data[col.key] : undefined;
@@ -1287,7 +1288,7 @@ function TS_IndexElement(
           td.innerText = '';
         }
 
-        new_tr.appendChild(td);
+        return td;
         break;
       }
       // =========================
@@ -1303,7 +1304,7 @@ function TS_IndexElement(
         td.style.whiteSpace = 'normal';
         td.style.fontSize = '20px'; // 🔥 se mantiene EXACTO
 
-        new_tr.appendChild(td);
+        return td;
         break;
       }
 
@@ -1319,7 +1320,7 @@ function TS_IndexElement(
           ? valor.toFixed(2) + ' €'
           : (key.default || '');
 
-        new_tr.appendChild(td);
+        return td;
         break;
       }
 
@@ -1335,7 +1336,7 @@ function TS_IndexElement(
           td.innerText = `${d}/${m}/${y}`;
         }
 
-        new_tr.appendChild(td);
+        return td;
         break;
       }
 
@@ -1364,7 +1365,7 @@ function TS_IndexElement(
           td.innerText = txt.trim();
         }
 
-        new_tr.appendChild(td);
+        return td;
         break;
       }
 
@@ -1398,7 +1399,7 @@ function TS_IndexElement(
         }
 
         td.appendChild(wrapper);
-        new_tr.appendChild(td);
+        return td;
         break;
       }
 
@@ -1407,7 +1408,7 @@ function TS_IndexElement(
       // =========================
       case 'template': {
         const td = createTd();
-        new_tr.appendChild(td);
+        return td;
         key.template(data, td);
         break;
       }
@@ -1450,7 +1451,7 @@ function TS_IndexElement(
         pre.appendChild(span);
         td.appendChild(pre);
 
-        new_tr.appendChild(td);
+        return td;
         break;
       }
 
@@ -1524,7 +1525,7 @@ function TS_IndexElement(
         td.append(document.createElement('br'));
         td.appendChild(paid);
 
-        new_tr.appendChild(td);
+        return td;
         break;
       }
 
@@ -1586,7 +1587,7 @@ function TS_IndexElement(
         }
 
         td.appendChild(box);
-        new_tr.appendChild(td);
+        return td;
         break;
       }
       // =========================
@@ -1605,7 +1606,7 @@ function TS_IndexElement(
 
         td.textContent = nombre + region;
 
-        new_tr.appendChild(td);
+        return td;
         break;
       }
       // =========================
@@ -1639,7 +1640,7 @@ function TS_IndexElement(
 
         td.prepend(img);
 
-        new_tr.appendChild(td);
+        return td;
         break;
       }
 
@@ -1666,7 +1667,7 @@ function TS_IndexElement(
 
         loadPersonaPhoto(img, personaId);
 
-        new_tr.appendChild(td);
+        return td;
         break;
       }
 
