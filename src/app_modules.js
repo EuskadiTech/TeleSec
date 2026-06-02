@@ -941,92 +941,6 @@ const SC_actions = {
 };
 function TS_decrypt(input, secret, callback, table, id) {
   // Accept objects or plaintext strings. Support AES-encrypted entries wrapped as RSA{...}.
-  if (typeof input !== 'string') {
-    try {
-      callback(input, false);
-    } catch (e) {
-      console.error(e);
-    }
-    return;
-  }
-
-  // Encrypted format marker: RSA{<ciphertext>} where <ciphertext> is CryptoJS AES output
-  // console.debug(input);
-  if (input.startsWith('RSA{') && input.endsWith('}') && typeof CryptoJS !== 'undefined') {
-    try {
-      var data = input.slice(4, -1);
-      // console.debug("TS_decrypt secret:", ">" + secret + "<", typeof secret, secret?.length);
-      var words = CryptoJS.AES.decrypt(data, secret);
-      var decryptedUtf8 = null;
-      try {
-        decryptedUtf8 = words.toString(CryptoJS.enc.Utf8);
-      } catch (utfErr) {
-        try {
-          decryptedUtf8 = words.toString(CryptoJS.enc.Latin1);
-        } catch (latinErr) {
-          console.warn('TS_decrypt: failed to decode decrypted bytes', utfErr, latinErr);
-          try {
-            callback(input, 'error');
-          } catch (ee) {}
-          return;
-        }
-      }
-      var parsed = null;
-      try {
-        parsed = JSON.parse(decryptedUtf8);
-      } catch (pe) {
-        parsed = decryptedUtf8;
-        try {
-          callback(parsed, 'error2');
-        } catch (ee) {
-          console.error(ee);
-        }
-        return;
-      }
-      try {
-        callback(parsed, true);
-      } catch (e) {
-        console.error(e);
-      }
-      // Keep encrypted at-rest: if table/id provided, ensure DB stores encrypted payload (input)
-      // if (table && id && window.DB && DB.put) {
-      //   DB.put(table, id, input).catch(() => {});
-      // }
-      return;
-    } catch (e) {
-      console.error('TS_decrypt: invalid encrypted payload', e);
-      try {
-        callback(input, 'error');
-      } catch (ee) {}
-      return;
-    }
-  }
-
-  // Plain JSON stored as text -> parse and return, then re-encrypt in DB for at-rest protection
-  try {
-    var parsed = JSON.parse(input);
-    try {
-      callback(parsed, false);
-    } catch (e) {
-      console.error(e);
-    }
-    if (table && id && window.DB && DB.put && typeof SECRET !== 'undefined') {
-      TS_encrypt(parsed, SECRET, function (enc) {
-        DB.put(table, id, enc).catch(() => {});
-      });
-    }
-  } catch (e) {
-    // Not JSON, return raw string
-    try {
-      callback(input, false);
-    } catch (err) {
-      console.error(err);
-    }
-  }
-}
-
-function TS_decrypt(input, secret, callback, table, id) {
-  // Accept objects or plaintext strings. Support AES-encrypted entries wrapped as RSA{...}.
   if (typeof input !== "string") {
     try { callback(input, false); } catch (e) { console.error(e); }
     return;
@@ -1107,12 +1021,14 @@ function TS_encrypt(input, secret, callback, mode = "RSA") {
 }
 // Listado precargado de personas:
 DB.map('personas', (data, key) => {
-  if (data != null) {
-    data['_key'] = key;
-    SC_Personas[key] = data;
-  } else {
-    delete SC_Personas[key];
-  }
+  TS_decrypt(data, SECRET, (value) => {
+    if (data != null) {
+      data['_key'] = key;
+      SC_Personas[key] = value;
+    } else {
+      delete SC_Personas[key];
+    }
+  })
 });
 
 function SC_parse(json) {
