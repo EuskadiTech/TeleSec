@@ -1235,7 +1235,36 @@ function TS_IndexElement(
   // -------------------------
   // RENDER CELDA (FULL TYPE SYSTEM)
   // -------------------------
+  function createTd() {
+    return document.createElement('td');
+  }
 
+  function setTextTd(td, text) {
+    td.textContent = text;
+    return td;
+  }
+
+  function setHtmlTd(td, html) {
+    td.innerHTML = html;
+    return td;
+  }
+  function resolvePersona(data, key) {
+    return key.self === true
+      ? data
+      : (SC_Personas[data[key.key]] || {});
+  }
+
+  function loadPersonaPhoto(img, personaId) {
+    try {
+      if (personaId) {
+        DB.getAttachment('personas', personaId, 'foto')
+          .then((durl) => {
+            if (durl) img.src = durl;
+          })
+          .catch(() => {});
+      }
+    } catch (e) {}
+  }
   function renderCell(col, data) {
     const td = document.createElement('td');
     const val = col.key ? data[col.key] : undefined;
@@ -1246,44 +1275,52 @@ function TS_IndexElement(
       // _encrypted
       // =========================
       case '_encrypted': {
-        if (data._encrypted__ === true) {
-          td.textContent = '🔒';
-        } else if (
-          data._encrypted__ === 'error' ||
-          data._encrypted__ === 'error2' ||
-          data._encrypted__ === undefined
-        ) {
-          td.textContent = '⚠️';
-        } else {
-          td.textContent = '';
-        }
-        return td;
-      }
+        const td = createTd();
 
+        const state = data['_encrypted__'];
+
+        if (state === true) {
+          td.innerText = '🔒';
+        } else if (state === 'error' || state === 'error2' || state === undefined) {
+          td.innerText = '⚠️';
+        } else {
+          td.innerText = '';
+        }
+
+        new_tr.appendChild(td);
+        break;
+      }
       // =========================
       // TEXT / RAW
       // =========================
-      case 'text':
-      case 'raw': {
-        td.innerHTML = String(val ?? col.default ?? '')
-          .replace(/\n/g, '<br>');
+      case 'raw':
+      case 'text': {
+        const td = createTd();
 
+        const rawContent = String(data[key.key] || key.default || '').replace(/\n/g, '<br>');
+
+        td.innerHTML = rawContent;
         td.style.whiteSpace = 'normal';
-        td.style.fontSize = '20px';
+        td.style.fontSize = '20px'; // 🔥 se mantiene EXACTO
 
-        return td;
+        new_tr.appendChild(td);
+        break;
       }
 
       // =========================
       // MONEY
       // =========================
       case 'moneda': {
-        const v = parseFloat(val);
-        td.textContent = !isNaN(v)
-          ? v.toFixed(2) + ' €'
-          : (col.default || '');
+        const td = createTd();
 
-        return td;
+        const valor = parseFloat(data[key.key]);
+
+        td.innerText = !isNaN(valor)
+          ? valor.toFixed(2) + ' €'
+          : (key.default || '');
+
+        new_tr.appendChild(td);
+        break;
       }
 
       // =========================
@@ -1291,59 +1328,62 @@ function TS_IndexElement(
       // =========================
       case 'fecha':
       case 'fecha-iso': {
-        if (val) {
-          const p = val.split('-');
-          td.textContent = `${p[2]}/${p[1]}/${p[0]}`;
+        const td = createTd();
+
+        if (data[key.key]) {
+          const [y, m, d] = data[key.key].split('-');
+          td.innerText = `${d}/${m}/${y}`;
         }
-        return td;
+
+        new_tr.appendChild(td);
+        break;
       }
 
       // =========================
       // FECHA DIFF
       // =========================
       case 'fecha-diff': {
-        if (!val) return td;
+        const td = createTd();
 
-        const fecha = new Date(val);
-        const now = new Date();
+        if (data[key.key]) {
+          const fecha = new Date(data[key.key]);
+          const now = new Date();
 
-        const diffDays = Math.floor((now - fecha) / (1000 * 60 * 60 * 24));
-        const diffMonths = Math.floor(diffDays / 30);
-        const diffYears = Math.floor(diffDays / 365);
+          const diffDays = Math.floor(Math.abs(now - fecha) / 86400000);
+          const diffMonths = Math.floor(diffDays / 30);
+          const diffYears = Math.floor(diffDays / 365);
 
-        let out = '';
+          let txt = '';
 
-        if (diffYears > 0) {
-          out += diffYears + ' año' + (diffYears > 1 ? 's ' : ' ');
+          if (diffYears > 0) txt += `${diffYears} año${diffYears > 1 ? 's ' : ' '}`;
+          if (diffMonths % 12 > 0) txt += `${diffMonths % 12} mes${diffMonths % 12 > 1 ? 'es ' : ' '}`;
+
+          if (diffMonths >= 3) td.style.backgroundColor = 'rgb(255, 192, 192)';
+          else if (diffMonths >= 1) td.style.backgroundColor = 'rgb(252, 252, 176)';
+
+          td.innerText = txt.trim();
         }
 
-        if (diffMonths % 12 > 0) {
-          out += (diffMonths % 12) + ' mes' + ((diffMonths % 12) > 1 ? 'es ' : ' ');
-        }
-
-        if (diffMonths >= 3) td.style.backgroundColor = 'rgb(255, 192, 192)';
-        else if (diffMonths >= 1) td.style.backgroundColor = 'rgb(252, 252, 176)';
-
-        td.textContent = out.trim();
-
-        return td;
+        new_tr.appendChild(td);
+        break;
       }
 
       // =========================
       // PICTO
       // =========================
       case 'picto': {
-        const plate = TS_normalizePictoValue(val);
+        const td = createTd();
+
+        const plate = TS_normalizePictoValue(data[key.key]);
 
         const wrapper = document.createElement('div');
         wrapper.style.display = 'flex';
         wrapper.style.alignItems = 'center';
         wrapper.style.gap = '8px';
 
-        if (plate?.arasaacId) {
+        if (plate.arasaacId) {
           const img = document.createElement('img');
           img.src = TS_buildArasaacPictogramUrl(plate.arasaacId);
-          img.alt = plate.text || 'Pictograma';
           img.width = 48;
           img.height = 48;
           img.loading = 'lazy';
@@ -1351,99 +1391,112 @@ function TS_IndexElement(
           wrapper.appendChild(img);
         }
 
-        if (plate?.text) {
+        if (plate.text) {
           const span = document.createElement('span');
-          span.textContent = data[col.labelkey] || plate.text || '';
+          span.textContent = data[key.labelkey] || plate.text;
           wrapper.appendChild(span);
         }
 
         td.appendChild(wrapper);
-        return td;
+        new_tr.appendChild(td);
+        break;
       }
 
       // =========================
       // TEMPLATE CUSTOM
       // =========================
       case 'template': {
-        col.template(data, td);
-        return td;
+        const td = createTd();
+        new_tr.appendChild(td);
+        key.template(data, td);
+        break;
       }
 
       // =========================
       // COMANDA (complejo)
       // =========================
       case 'comanda': {
-        const parsed = JSON.parse(data.Comanda || '[]');
-        const precio = SC_priceCalc(parsed)[0];
+        const td = createTd();
+        td.style.verticalAlign = 'top';
 
-        const wrapper = document.createElement('div');
+        const parsed = JSON.parse(data.Comanda);
+        const precio = SC_priceCalc(parsed)[0];
 
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = setLayeredImages(parsed, data._key);
-        if (tempDiv.firstChild) wrapper.appendChild(tempDiv.firstChild);
+        td.appendChild(tempDiv.firstChild);
 
         const pre = document.createElement('pre');
         pre.style.fontSize = '15px';
         pre.style.display = 'inline-block';
         pre.style.margin = '0';
+        pre.style.verticalAlign = 'top';
         pre.style.padding = '5px';
+        pre.style.background = 'rgba(255, 255, 0, 0.5)';
+        pre.style.border = '1px solid rgba(0, 0, 0, 0.2)';
+        pre.style.borderRadius = '5px';
 
         pre.innerHTML =
-          '<b>Ticket de compra</b><br>' +
+          `<b>Ticket de compra</b>\n` +
           SC_parse_short(parsed) +
           '<hr>' +
           (data.Notas || '') +
-          '<hr>' +
-          `<b>Total: ${precio}c</b>`;
+          '<hr>';
 
-        wrapper.appendChild(pre);
+        const span = document.createElement('span');
+        span.style.fontSize = '20px';
+        span.innerHTML = html`Total: ${precio}c`;
 
-        td.appendChild(wrapper);
-        return td;
+        pre.appendChild(span);
+        td.appendChild(pre);
+
+        new_tr.appendChild(td);
+        break;
       }
 
       // =========================
       // COMANDA STATUS
       // =========================
       case 'comanda-status': {
-        const wrapper = document.createElement('div');
+        const td = createTd();
 
-        const estados = [
-          'Pedido',
-          'En preparación',
-          'Listo',
-          'Entregado',
-          'Deuda'
-        ];
+        td.style.fontSize = '17px';
+        td.style.maxWidth = '100px';
 
-        estados.forEach(state => {
-          const btn = document.createElement('button');
-          btn.textContent = state;
+        if (urlParams.get('sc_nobtn') === 'yes') {
+          td.style.pointerEvents = 'none';
+          td.style.opacity = '0.5';
+        }
 
-          if (data.Estado === state) {
-            btn.className = 'rojo';
+        const save = (data) => {
+          if (typeof ref === 'string') {
+            return DB.put(ref, data._key, data);
           }
+          return ref.get(data._key).put(data);
+        };
 
-          btn.onclick = (e) => {
+        const mkBtn = (label, state) => {
+          const b = document.createElement('button');
+          b.textContent = label;
+
+          if (data.Estado === state) b.className = 'rojo';
+
+          b.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();
 
             data.Estado = state;
 
-            if (typeof ref === 'string') {
-              DB.put(ref, data._key, data);
-            } else {
-              try {
-                ref.get(data._key).put(data);
-              } catch (err) {
-                console.warn(err);
-              }
-            }
+            save(data)
+              .then(() => toastr.success('Guardado!'))
+              .catch(console.warn);
           };
 
-          wrapper.appendChild(btn);
-          wrapper.appendChild(document.createElement('br'));
-        });
+          return b;
+        };
+
+        ['Pedido', 'En preparación', 'Listo', 'Entregado', 'Deuda']
+          .forEach(s => td.appendChild(mkBtn(s, s)), td.appendChild(document.createElement('br')));
 
         const paid = document.createElement('button');
         paid.textContent = 'Pagado';
@@ -1453,80 +1506,168 @@ function TS_IndexElement(
           e.preventDefault();
           e.stopPropagation();
 
-          const parsed = JSON.parse(data.Comanda || '[]');
-          const precio = SC_priceCalc(parsed)[0];
+          const precio = SC_priceCalc(JSON.parse(data.Comanda))[0];
 
-          const payload = {
+          const payload = btoa(JSON.stringify({
             tipo: 'Gasto',
             monto: precio / 100,
             persona: data.Persona,
-            notas: 'Pago de comanda SuperCafé\n' + SC_parse(parsed),
+            notas: 'Pago de comanda SuperCafé\n' + SC_parse(JSON.parse(data.Comanda)),
             origen: 'SuperCafé',
-            origen_id: data._key
-          };
+            origen_id: data._key,
+          }));
 
-          setUrlHash('pagos,datafono_prefill,' + btoa(JSON.stringify(payload)));
+          setUrlHash('pagos,datafono_prefill,' + payload);
         };
 
-        wrapper.appendChild(paid);
+        td.append(data.Fecha);
+        td.append(document.createElement('br'));
+        td.appendChild(paid);
 
-        td.appendChild(wrapper);
-        return td;
+        new_tr.appendChild(td);
+        break;
       }
 
       // =========================
       // PERSONA FULL
       // =========================
       case 'persona': {
-        const persona = col.self ? data : SC_Personas[val] || {};
+        const persona = resolvePersona(data, key);
 
-        const wrapper = document.createElement('div');
-        wrapper.style.textAlign = 'center';
+        const regco = stringToColour((persona.Region || '?').toLowerCase());
+
+        const td = document.createElement('td');
+
+        // 🔥 estilos EXACTOS reutilizados
+        td.style.textAlign = 'center';
+        td.style.fontSize = '20px';
+        td.style.backgroundColor = regco;
+        td.style.padding = '0';
+        td.style.color = colorIsDarkAdvanced(regco);
+        td.style.maxWidth = '200px';
+
+        const regionSpan = document.createElement('span');
+        regionSpan.style.fontSize = '40px';
+        regionSpan.style.textTransform = 'capitalize';
+        regionSpan.textContent = (persona.Region || '?').toLowerCase();
+
+        td.appendChild(regionSpan);
+        td.appendChild(document.createElement('br'));
+
+        const box = document.createElement('span');
+        box.style.backgroundColor = 'white';
+        box.style.border = '2px solid black';
+        box.style.borderRadius = '5px';
+        box.style.display = 'inline-block';
+        box.style.padding = '5px';
+        box.style.color = 'black';
 
         const img = document.createElement('img');
         img.src = persona.Foto || 'static/ico/user_generic.png';
         img.height = 70;
 
-        const name = document.createElement('div');
-        name.textContent = persona.Nombre || '';
+        const personaId = key.self === true
+          ? (data._key || data._id || data.id)
+          : data[key.key];
 
-        wrapper.appendChild(img);
-        wrapper.appendChild(name);
+        loadPersonaPhoto(img, personaId);
 
-        td.appendChild(wrapper);
-        return td;
+        box.appendChild(img);
+        box.appendChild(document.createElement('br'));
+        box.appendChild(document.createTextNode(persona.Nombre || ''));
+        box.appendChild(document.createElement('br'));
+
+        const balance = parseFloat(persona.Monedero_Balance || '0');
+        if (balance != 0) {
+          const span = document.createElement('span');
+          span.style.fontSize = '17px';
+          span.textContent = balance.toPrecision(2) + ' €';
+          box.appendChild(span);
+        }
+
+        td.appendChild(box);
+        new_tr.appendChild(td);
+        break;
       }
+      // =========================
+      // PERSONA NOMBRE
+      // =========================
+      case 'persona-nombre': {
+        const persona = resolvePersona(data, key);
 
+        const td = document.createElement('td');
+
+        td.style.textAlign = 'center';
+        td.style.fontSize = '20px';
+
+        const nombre = persona.Nombre || '';
+        const region = persona.Region ? ` (${persona.Region})` : '';
+
+        td.textContent = nombre + region;
+
+        new_tr.appendChild(td);
+        break;
+      }
       // =========================
       // PERSONA SIMPLE
       // =========================
       case 'persona-simple': {
-        const persona = col.self ? data : SC_Personas[val] || {};
+        const persona = resolvePersona(data, key);
+
+        const td = document.createElement('td');
+
+        td.style.textAlign = 'center';
+        td.style.fontSize = '20px';
+        td.style.width = '250px';
+
+        const nombre = persona.Nombre || '';
+        const region = persona.Region ? ` (${persona.Region})` : '';
+
+        td.textContent = nombre + region;
 
         const img = document.createElement('img');
         img.src = persona.Foto || 'static/ico/user_generic.png';
         img.height = 48;
+        img.style.verticalAlign = 'middle';
+        img.style.marginRight = '5px';
 
-        const span = document.createElement('span');
-        span.textContent = persona.Nombre || '';
+        const personaId = key.self === true
+          ? (data._key || data._id || data.id)
+          : data[key.key];
 
-        td.appendChild(img);
-        td.appendChild(span);
+        loadPersonaPhoto(img, personaId);
 
-        return td;
+        td.prepend(img);
+
+        new_tr.appendChild(td);
+        break;
       }
 
       // =========================
       // ATTACHMENT PERSONA
       // =========================
       case 'attachment-persona': {
+        const td = document.createElement('td');
+
+        td.style.textAlign = 'center';
+        td.style.width = '80px';
+
         const img = document.createElement('img');
-        img.src = val || 'static/ico/user_generic.png';
+
+        img.src = data[key.key] || 'static/ico/user_generic.png';
         img.style.maxHeight = '80px';
         img.style.maxWidth = '80px';
 
         td.appendChild(img);
-        return td;
+
+        const personaId = key.self === true
+          ? (data._key || data._id || data.id)
+          : data[key.key];
+
+        loadPersonaPhoto(img, personaId);
+
+        new_tr.appendChild(td);
+        break;
       }
 
       // =========================
