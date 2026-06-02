@@ -1269,6 +1269,11 @@ function TS_IndexElement(
   function renderCell(col, data) {
     const td = document.createElement('td');
     const val = col.key ? data[col.key] : undefined;
+    console.debug("renderCell called", {
+      data: data,
+      val: val,
+      col: col,
+    })
     const key = col.key
     switch (col.type) {
 
