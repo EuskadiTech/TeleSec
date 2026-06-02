@@ -1601,6 +1601,16 @@ function TS_IndexElement(
     new_tr.onclick = () => {
       setUrlHash(pageco + ',' + data._key);
     };
+    if (new_tr.children.length !== config.length) {
+      console.error(
+        'Column mismatch',
+        data,
+        'expected:',
+        config.length,
+        'got:',
+        new_tr.children.length
+      );
+    }
     return new_tr;
   }
   // ================================
@@ -1616,7 +1626,10 @@ function TS_IndexElement(
 
     requestAnimationFrame(() => {
       drawPending = false;
-      if (dtInstance) dtInstance.draw(false);
+
+      if (dtInstance) {
+        dtInstance.draw(false);
+      }
     });
   }
 
@@ -1627,12 +1640,27 @@ function TS_IndexElement(
     const nodes = dtInstance.rows().nodes();
 
     for (let i = 0; i < nodes.length; i++) {
-      if (nodes[i].dataset.key === key) {
+      if (nodes[i] && nodes[i].dataset.key === key) {
         return i;
       }
     }
 
     return null;
+  }
+
+  // reemplaza un TR existente por otro manteniendo DataTables feliz
+  function replaceRowNode(index, newTr, key) {
+    const oldNode = dtInstance.row(index).node();
+
+    if (!oldNode || !oldNode.parentNode) {
+      return false;
+    }
+
+    newTr.dataset.key = key;
+
+    oldNode.parentNode.replaceChild(newTr, oldNode);
+
+    return true;
   }
 
   // ADD
@@ -1642,15 +1670,14 @@ function TS_IndexElement(
     const tr = buildRow(data);
     if (!tr) return;
 
-    const row = dtInstance.row.add(tr);
-    const node = row.node();
+    tr.dataset.key = key;
 
-    if (node) node.dataset.key = key;
+    dtInstance.row.add(tr);
 
     scheduleDraw();
   }
 
-  // UPDATE (replace data, no recreate full table)
+  // UPDATE
   function updateRow(key, data) {
     if (!dtInstance) return;
 
@@ -1664,9 +1691,7 @@ function TS_IndexElement(
     const tr = buildRow(data);
     if (!tr) return;
 
-    dtInstance
-      .row(index)
-      .data(tr);
+    replaceRowNode(index, tr, key);
 
     scheduleDraw();
   }
@@ -1676,6 +1701,7 @@ function TS_IndexElement(
     if (!dtInstance) return;
 
     const index = findRowIndex(key);
+
     if (index == null) return;
 
     dtInstance.row(index).remove();
@@ -1689,6 +1715,7 @@ function TS_IndexElement(
 
     if (data != null) {
       data._key = key;
+
       rows[key] = data;
 
       if (exists) {
@@ -1702,47 +1729,7 @@ function TS_IndexElement(
       removeRow(key);
     }
   }
-
-  // ================================
-  // DB BINDING (incremental safe)
-  // ================================
-
-  if (typeof ref === 'string') {
-    EventListeners.DB.push(
-      DB.map(ref, (data, key) => {
-
-        function handleRow(data, key) {
-          upsertRow(data, key);
-        }
-
-        if (typeof data === 'string') {
-          TS_decrypt(
-            data,
-            SECRET,
-            (decoded, wasEncrypted) => {
-              if (decoded && typeof decoded === 'object') {
-                decoded._encrypted__ = wasEncrypted;
-                handleRow(decoded, key);
-              } else {
-                handleRow(null, key);
-              }
-            },
-            ref,
-            key
-          );
-
-        } else {
-          if (data && typeof data === 'object') {
-            data._encrypted__ = false;
-          }
-
-          handleRow(data, key);
-        }
-      })
-    );
-  }
 }
-
 function BuildQR(mid, label) {
   var svgNode = QRCode({
     msg: mid,
