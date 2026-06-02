@@ -1690,9 +1690,8 @@ function TS_IndexElement(
   // -------------------------
   // ROW BUILDER (IMPORTANT)
   // -------------------------
-
   function buildRow(data) {
-    if (canAddCallback && canAddCallback(data)) return null;
+    //if (canAddCallback && canAddCallback(data)) return null;
     console.debug("buildRow called", data)
     const tr = document.createElement('tr');
 
@@ -1711,23 +1710,47 @@ function TS_IndexElement(
   // -------------------------
   // UPDATE SAFE (NO REBUILD IF NOT NEEDED)
   // -------------------------
-
   function upsert(data, key) {
     data._key = key;
     rowsCache[key] = data;
     
     const existing = dtInstance.row('#' + key);
+    const existingNode = existing.node();
 
-    if (existing.node()) {
-      // 🔥 Remover fila vieja
-      existing.remove();
+    // 🛑 CONTROL DE FILTRO: Si devuelve true, no se debe permitir en la tabla
+    if (canAddCallback && canAddCallback(data)) {
+      console.debug("canAddCallback result", data, canAddCallback(data))
+      if (existingNode) {
+        // Si ya existía pero ya no cumple las condiciones, lo borramos
+        existing.remove();
+        delete rowsCache[key];
+        dtInstance.draw(false);
+      }
+      console.debug("upsert skipped/removed due to canAddCallback", key);
+      return; // Detiene la ejecución aquí
     }
 
-    const tr = buildRow(data);
-    if (!tr) return;
+    console.debug("upsert proceeding", {
+      data: data,
+      key: key,
+      existingNode: existingNode,
+    });
 
-    // Añadir nueva fila (el ID ya va dentro gracias a buildRow)
-    dtInstance.row.add(tr).draw(false);
+    if (existingNode) {
+      // 🔥 UPDATE IN PLACE (FAST)
+      const tr = buildRow(data);
+      // Nota: buildRow ya no devolverá null aquí porque validamos canAddCallback arriba
+      
+      // Reemplazo seguro en el DOM para evitar el error "unknown parameter '0'"
+      existingNode.parentNode.replaceChild(tr, existingNode);
+      
+      // Invalidamos el caché interno de DataTables para que lea el nuevo TR
+      existing.invalidate().draw(false);
+    } else {
+      // ➕ INSERT
+      const tr = buildRow(data);
+      dtInstance.row.add(tr).draw(false);
+    }
   }
 
 

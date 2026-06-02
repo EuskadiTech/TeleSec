@@ -560,50 +560,66 @@ PAGES.supercafe = {
         }
       },
       (data) => {
+        // 1. Sincronización inmediata del historial de estados antes de cualquier salida
+        const key = data._key;
+        const estadoAnterior = old[key] || ''; // Evita el undefined de forma limpia
+        old[key] = data.Estado; // Guardamos el estado actual SIEMPRE
+
+        // 2. Control de filtro para DataTables
         if (data.Estado == 'Deuda') {
           return true;
         }
-        var key = data._key;
-        if (old[key] == undefined) {
-          old[key] = '';
-        }
-        if (old[key] != data.Estado) {
-          if (tts && document.getElementById(tts_check).checked) {
-            if (ttS_data[data.Region] == undefined) {
+
+        // 3. Verificar si el estado realmente cambió para activar las alertas
+        if (estadoAnterior !== data.Estado) {
+          
+          // Verificación de seguridad: Evita que el código rompa si la persona no existe
+          const personaInfo = SC_Personas[data.Persona] || { Nombre: 'Desconocido', Region: data.Region || 'General' };
+
+          if (tts && document.getElementById(tts_check)?.checked) {
+            
+            // Inicializar almacén TTS regional si no existe
+            if (!ttS_data[data.Region]) {
               ttS_data[data.Region] = {};
             }
-            ttS_data[data.Region][data._key] = data.Estado;
-            var allReady = true;
-            Object.values(ttS_data[data.Region]).forEach((estado) => {
-              if (estado != 'Listo') {
-                allReady = false;
-              }
-            });
-            if (allReady) {
-              var msgRegion = `Hola, ${SC_Personas[data.Persona].Region}. - Vamos a entregar vuestro pedido. ¡Que aproveche!`;
+            ttS_data[data.Region][key] = data.Estado;
+
+            // Comprobar si toda la región está en estado 'Listo'
+            const todosListos = Object.values(ttS_data[data.Region]).every(estado => estado === 'Listo');
+
+            if (todosListos) {
+              // Si todo está listo, priorizamos el mensaje grupal y evitamos el individual
+              const msgRegion = `Hola, ${personaInfo.Region}. - Vamos a entregar vuestro pedido. ¡Que aproveche!`;
               TS_SayTTS(msgRegion);
-            }
-            if (data.Estado == 'Entregado') {
-              var msgEntregado = `El pedido de ${SC_Personas[data.Persona].Nombre} en ${SC_Personas[data.Persona].Region} ha sido entregado.`;
-              TS_SayTTS(msgEntregado);
-            } else if (data.Estado == 'En preparación') {
-              var msgPreparacion = `El pedido de ${SC_Personas[data.Persona].Nombre} en ${SC_Personas[data.Persona].Region} está en preparación.`;
-              TS_SayTTS(msgPreparacion);
-            } else if (data.Estado == 'Listo') {
-              var msgListo = `El pedido de ${SC_Personas[data.Persona].Nombre} en ${SC_Personas[data.Persona].Region} está listo para ser entregado.`;
-              TS_SayTTS(msgListo);
-            } else if (data.Estado == 'Pedido') {
-              var msgPedido = `Se ha realizado un nuevo pedido para ${SC_Personas[data.Persona].Nombre} en ${SC_Personas[data.Persona].Region}.`;
-              TS_SayTTS(msgPedido);
             } else {
-              var msg = `Comanda de ${SC_Personas[data.Persona].Region}. - ${
-                JSON.parse(data.Comanda)['Selección']
-              }. - ${SC_Personas[data.Persona].Nombre}. - ${data.Estado}`;
-              TS_SayTTS(msg);
+              // Mensajes individuales (Solo se ejecutan si NO se anunció la entrega completa)
+              if (data.Estado == 'Entregado') {
+                const msgEntregado = `El pedido de ${personaInfo.Nombre} en ${personaInfo.Region} ha sido entregado.`;
+                TS_SayTTS(msgEntregado);
+              } else if (data.Estado == 'En preparación') {
+                const msgPreparacion = `El pedido de ${personaInfo.Nombre} en ${personaInfo.Region} está en preparación.`;
+                TS_SayTTS(msgPreparacion);
+              } else if (data.Estado == 'Listo') {
+                const msgListo = `El pedido de ${personaInfo.Nombre} en ${personaInfo.Region} está listo para ser entregado.`;
+                TS_SayTTS(msgListo);
+              } else if (data.Estado == 'Pedido') {
+                const msgPedido = `Se ha realizado un nuevo pedido para ${personaInfo.Nombre} en ${personaInfo.Region}.`;
+                TS_SayTTS(msgPedido);
+              } else {
+                // Fallback para otros estados leyendo de la comanda de forma segura
+                try {
+                  const comandaObj = JSON.parse(data.Comanda || '{}');
+                  const seleccion = comandaObj['Selección'] || 'Sin selección';
+                  const msg = `Comanda de ${personaInfo.Region}. - ${seleccion}. - ${personaInfo.Nombre}. - ${data.Estado}`;
+                  TS_SayTTS(msg);
+                } catch (e) {
+                  console.error("Error al parsear la comanda de", key, e);
+                }
+              }
             }
           }
         }
-        old[key] = data.Estado;
+
       },
       true,
       'Comandas',
