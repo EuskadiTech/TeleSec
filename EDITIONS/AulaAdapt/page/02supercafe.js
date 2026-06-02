@@ -560,66 +560,62 @@ PAGES.supercafe = {
         }
       },
       (data) => {
-        // 1. Sincronización inmediata del historial de estados antes de cualquier salida
         const key = data._key;
-        const estadoAnterior = old[key] || ''; // Evita el undefined de forma limpia
-        old[key] = data.Estado; // Guardamos el estado actual SIEMPRE
+        const estadoAnterior = old[key] || 'NINGUNO';
+        
+        console.debug(`[FILTRO] Evaluando registro: ${key} | Estado Anterior: ${estadoAnterior} -> Estado Nuevo: ${data.Estado}`);
+        
+        // Guardamos el estado actual en el historial
+        old[key] = data.Estado; 
 
-        // 2. Control de filtro para DataTables
         if (data.Estado == 'Deuda') {
-          return true;
+          console.debug(`[FILTRO] 🛑 Excluyendo ${key} porque su estado es 'Deuda'`);
+          return true; // Excluir de la tabla
         }
 
-        // 3. Verificar si el estado realmente cambió para activar las alertas
         if (estadoAnterior !== data.Estado) {
+          console.debug(`[FILTRO] 🔄 Cambio de estado detectado para ${key}. Ejecutando lógica TTS...`);
           
-          // Verificación de seguridad: Evita que el código rompa si la persona no existe
-          const personaInfo = SC_Personas[data.Persona] || { Nombre: 'Desconocido', Region: data.Region || 'General' };
-
+          // --- Tu lógica de TTS ---
           if (tts && document.getElementById(tts_check)?.checked) {
-            
-            // Inicializar almacén TTS regional si no existe
             if (!ttS_data[data.Region]) {
               ttS_data[data.Region] = {};
             }
             ttS_data[data.Region][key] = data.Estado;
 
-            // Comprobar si toda la región está en estado 'Listo'
             const todosListos = Object.values(ttS_data[data.Region]).every(estado => estado === 'Listo');
 
             if (todosListos) {
-              // Si todo está listo, priorizamos el mensaje grupal y evitamos el individual
-              const msgRegion = `Hola, ${personaInfo.Region}. - Vamos a entregar vuestro pedido. ¡Que aproveche!`;
-              TS_SayTTS(msgRegion);
+              const personaInfo = SC_Personas[data.Persona] || { Region: data.Region };
+              TS_SayTTS(`Hola, ${personaInfo.Region}. - Vamos a entregar vuestro pedido. ¡Que aproveche!`);
             } else {
-              // Mensajes individuales (Solo se ejecutan si NO se anunció la entrega completa)
+              const personaInfo = SC_Personas[data.Persona] || { Nombre: 'Desconocido', Region: data.Region };
               if (data.Estado == 'Entregado') {
-                const msgEntregado = `El pedido de ${personaInfo.Nombre} en ${personaInfo.Region} ha sido entregado.`;
-                TS_SayTTS(msgEntregado);
+                TS_SayTTS(`El pedido de ${personaInfo.Nombre} en ${personaInfo.Region} ha sido entregado.`);
               } else if (data.Estado == 'En preparación') {
-                const msgPreparacion = `El pedido de ${personaInfo.Nombre} en ${personaInfo.Region} está en preparación.`;
-                TS_SayTTS(msgPreparacion);
+                TS_SayTTS(`El pedido de ${personaInfo.Nombre} en ${personaInfo.Region} está en preparación.`);
               } else if (data.Estado == 'Listo') {
-                const msgListo = `El pedido de ${personaInfo.Nombre} en ${personaInfo.Region} está listo para ser entregado.`;
-                TS_SayTTS(msgListo);
+                TS_SayTTS(`El pedido de ${personaInfo.Nombre} en ${personaInfo.Region} está listo para ser entregado.`);
               } else if (data.Estado == 'Pedido') {
-                const msgPedido = `Se ha realizado un nuevo pedido para ${personaInfo.Nombre} en ${personaInfo.Region}.`;
-                TS_SayTTS(msgPedido);
+                TS_SayTTS(`Se ha realizado un nuevo pedido para ${personaInfo.Nombre} en ${personaInfo.Region}.`);
               } else {
-                // Fallback para otros estados leyendo de la comanda de forma segura
                 try {
                   const comandaObj = JSON.parse(data.Comanda || '{}');
                   const seleccion = comandaObj['Selección'] || 'Sin selección';
-                  const msg = `Comanda de ${personaInfo.Region}. - ${seleccion}. - ${personaInfo.Nombre}. - ${data.Estado}`;
-                  TS_SayTTS(msg);
+                  TS_SayTTS(`Comanda de ${personaInfo.Region}. - ${seleccion}. - ${personaInfo.Nombre}. - ${data.Estado}`);
                 } catch (e) {
-                  console.error("Error al parsear la comanda de", key, e);
+                  console.error("[FILTRO] Error al parsear comanda", e);
                 }
               }
             }
           }
+          // ------------------------
+        } else {
+          console.debug(`[FILTRO] ⏸️ El estado no cambió para ${key}. Se omite TTS.`);
         }
 
+        console.debug(`[FILTRO] ✅ Permitido en la tabla: ${key}`);
+        return false; // Permitir en la tabla
       },
       true,
       'Comandas',
@@ -668,6 +664,7 @@ PAGES.supercafe = {
           }
         }
         old[key] = data.Estado;
+        return false;
       },
       true,
       'Deudas',
@@ -706,6 +703,10 @@ PAGES.supercafe = {
                 (data) => {
                   toCharge.push({ id: row.id, data: data });
                   pending--;
+                  console.debug("cobroauto", {
+                    toCharge: toCharge,
+                    pending: pending
+                  })
                   if (pending === 0) {
                     _ejecutarCobroAuto(toCharge);
                   }
@@ -721,6 +722,9 @@ PAGES.supercafe = {
           });
 
         function _ejecutarCobroAuto(comandas) {
+          console.debug("_ejecutarCobroAuto called", {
+            comandas: comandas
+          })
           var cobradas = 0;
           var sinSaldo = 0;
           var errores = 0;

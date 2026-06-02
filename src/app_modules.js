@@ -1711,48 +1711,86 @@ function TS_IndexElement(
   // UPDATE SAFE (NO REBUILD IF NOT NEEDED)
   // -------------------------
   function upsert(data, key) {
+    console.debug(`\n--- [UPSERT INICIO] Procesando Key: ${key} ---`);
     data._key = key;
     rowsCache[key] = data;
     
     const existing = dtInstance.row('#' + key);
     const existingNode = existing.node();
+    
+    console.debug(`[UPSERT] ¿Existe ya en el DOM?:`, !!existingNode);
 
-    // 🛑 CONTROL DE FILTRO: Si devuelve true, no se debe permitir en la tabla
-    if (canAddCallback && canAddCallback(data)) {
-      console.debug("canAddCallback result", data, canAddCallback(data))
+    // 1. Ejecutar el filtro una sola vez para procesar estados y alertas TTS
+    const esExcluido = canAddCallback ? canAddCallback(data) : false;
+    console.debug(`[UPSERT] Resultado del filtro (esExcluido):`, esExcluido);
+
+    // 2. Control de exclusión (Ej: Si el estado pasó a 'Deuda')
+    if (esExcluido) {
       if (existingNode) {
-        // Si ya existía pero ya no cumple las condiciones, lo borramos
+        console.debug(`[UPSERT] 🗑️ Removiendo del DOM el registro excluido: ${key}`);
         existing.remove();
         delete rowsCache[key];
         dtInstance.draw(false);
       }
-      console.debug("upsert skipped/removed due to canAddCallback", key);
-      return; // Detiene la ejecución aquí
+      console.debug(`--- [UPSERT FIN] Salida temprana por exclusión ---`);
+      return;
     }
 
-    console.debug("upsert proceeding", {
-      data: data,
-      key: key,
-      existingNode: existingNode,
-    });
-
+    // 3. Renderizado y actualización en DataTables
     if (existingNode) {
-      // 🔥 UPDATE IN PLACE (FAST)
-      const tr = buildRow(data);
-      // Nota: buildRow ya no devolverá null aquí porque validamos canAddCallback arriba
+      console.debug(`[UPSERT] ⚙️ Actualizando celdas internas y CSS de la fila existente...`);
       
-      // Reemplazo seguro en el DOM para evitar el error "unknown parameter '0'"
-      existingNode.parentNode.replaceChild(tr, existingNode);
-      
-      // Invalidamos el caché interno de DataTables para que lea el nuevo TR
-      existing.invalidate().draw(false);
-    } else {
-      // ➕ INSERT
-      const tr = buildRow(data);
-      dtInstance.row.add(tr).draw(false);
-    }
-  }
+      // Generamos el TR con el nuevo diseño
+      const nuevoTrTemp = buildRow(data);
+      console.debug(`[UPSERT] Nuevo TR temporal generado:`, nuevoTrTemp);
 
+      if (nuevoTrTemp) {
+        // 🎨 COPIAR CSS Y ATRIBUTOS AL TR REAL
+        // Copiar clases CSS nuevas (reemplaza las anteriores)
+        existingNode.className = nuevoTrTemp.className;
+        
+        // Copiar estilos inline nuevos (si los hubiera)
+        existingNode.style.cssText = nuevoTrTemp.style.cssText;
+        
+        // Sincronizar todos los atributos HTML (como data-*, etc.)
+        Array.from(nuevoTrTemp.attributes).forEach(attr => {
+          existingNode.setAttribute(attr.name, attr.value);
+        });
+
+        // Sincronizar metadatos internos de JS
+        existingNode.id = nuevoTrTemp.id;
+        if (nuevoTrTemp._key) {
+          existingNode._key = nuevoTrTemp._key;
+        }
+
+        // 🔄 ACTUALIZAR CELDAS HIJAS (TD)
+        existingNode.innerHTML = '';
+        while (nuevoTrTemp.firstChild) {
+          existingNode.appendChild(nuevoTrTemp.firstChild);
+        }
+
+        // Le decimos a DataTables que re-lea el DOM actualizado
+        existing.invalidate('dom').draw(false);
+        console.debug(`[UPSERT] Contenido y CSS de fila actualizados con éxito.`);
+      } else {
+        console.error(`[UPSERT] ❌ Error: buildRow devolvió null.`);
+      }
+
+    } else {
+      // ➕ Inserción de un registro completamente nuevo
+      console.debug(`[UPSERT] ➕ Insertando nueva fila en DataTables...`);
+      const tr = buildRow(data);
+      
+      if (tr) {
+        dtInstance.row.add(tr).draw(false);
+        console.debug(`[UPSERT] Fila nueva añadida correctamente.`);
+      } else {
+        console.warn(`[UPSERT] buildRow devolvió null. No se añade nada.`);
+      }
+    }
+    
+    console.debug(`--- [UPSERT FIN] Procesamiento completado para: ${key} ---\n`);
+  }
 
   function remove(key) {
     dtInstance.row('#' + key).remove().draw(false);
