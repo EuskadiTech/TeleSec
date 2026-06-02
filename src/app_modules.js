@@ -1235,36 +1235,6 @@ function TS_IndexElement(
   // -------------------------
   // RENDER CELDA (FULL TYPE SYSTEM)
   // -------------------------
-  function createTd() {
-    return document.createElement('td');
-  }
-
-  function setTextTd(td, text) {
-    td.textContent = text;
-    return td;
-  }
-
-  function setHtmlTd(td, html) {
-    td.innerHTML = html;
-    return td;
-  }
-  function resolvePersona(data, key) {
-    return key.self === true
-      ? data
-      : (SC_Personas[data[key.key]] || {});
-  }
-
-  function loadPersonaPhoto(img, personaId) {
-    try {
-      if (personaId) {
-        DB.getAttachment('personas', personaId, 'foto')
-          .then((durl) => {
-            if (durl) img.src = durl;
-          })
-          .catch(() => {});
-      }
-    } catch (e) {}
-  }
   
   function renderCell(col, data) {
     const td = document.createElement('td');
@@ -1275,6 +1245,36 @@ function TS_IndexElement(
       col: col,
     })
     const key = col.key
+    function createTd() {
+      return document.createElement('td');
+    }
+
+    function setTextTd(td, text) {
+      td.textContent = text;
+      return td;
+    }
+
+    function setHtmlTd(td, html) {
+      td.innerHTML = html;
+      return td;
+    }
+    function resolvePersona(data, key) {
+      return key.self === true
+        ? data
+        : (SC_Personas[val] || {});
+    }
+
+    function loadPersonaPhoto(img, personaId) {
+      try {
+        if (personaId) {
+          DB.getAttachment('personas', personaId, 'foto')
+            .then((durl) => {
+              if (durl) img.src = durl;
+            })
+            .catch(() => {});
+        }
+      } catch (e) {}
+    }
     switch (col.type) {
 
       // =========================
@@ -1303,7 +1303,7 @@ function TS_IndexElement(
       case 'text': {
         const td = createTd();
 
-        const rawContent = String(data[key.key] || key.default || '').replace(/\n/g, '<br>');
+        const rawContent = String(val || key.default || '').replace(/\n/g, '<br>');
 
         td.innerHTML = rawContent;
         td.style.whiteSpace = 'normal';
@@ -1319,7 +1319,7 @@ function TS_IndexElement(
       case 'moneda': {
         const td = createTd();
 
-        const valor = parseFloat(data[key.key]);
+        const valor = parseFloat(val);
 
         td.innerText = !isNaN(valor)
           ? valor.toFixed(2) + ' €'
@@ -1336,8 +1336,8 @@ function TS_IndexElement(
       case 'fecha-iso': {
         const td = createTd();
 
-        if (data[key.key]) {
-          const [y, m, d] = data[key.key].split('-');
+        if (val) {
+          const [y, m, d] = val.split('-');
           td.innerText = `${d}/${m}/${y}`;
         }
 
@@ -1351,8 +1351,8 @@ function TS_IndexElement(
       case 'fecha-diff': {
         const td = createTd();
 
-        if (data[key.key]) {
-          const fecha = new Date(data[key.key]);
+        if (val) {
+          const fecha = new Date(val);
           const now = new Date();
 
           const diffDays = Math.floor(Math.abs(now - fecha) / 86400000);
@@ -1380,7 +1380,7 @@ function TS_IndexElement(
       case 'picto': {
         const td = createTd();
 
-        const plate = TS_normalizePictoValue(data[key.key]);
+        const plate = TS_normalizePictoValue(val);
 
         const wrapper = document.createElement('div');
         wrapper.style.display = 'flex';
@@ -1467,7 +1467,7 @@ function TS_IndexElement(
         const td = createTd();
 
         td.style.fontSize = '17px';
-        td.style.maxWidth = '100px';
+        td.style.maxWidth = '150px';
 
         if (urlParams.get('sc_nobtn') === 'yes') {
           td.style.pointerEvents = 'none';
@@ -1497,12 +1497,13 @@ function TS_IndexElement(
               .then(() => toastr.success('Guardado!'))
               .catch(console.warn);
           };
+          b.style.width = "100%";
 
           return b;
         };
 
         ['Pedido', 'En preparación', 'Listo', 'Entregado', 'Deuda']
-          .forEach(s => td.appendChild(mkBtn(s, s)), td.appendChild(document.createElement('br')));
+          .forEach(s => {td.appendChild(mkBtn(s, s)); td.appendChild(document.createElement('br'))});
 
         const paid = document.createElement('button');
         paid.textContent = 'Pagado';
@@ -1525,10 +1526,10 @@ function TS_IndexElement(
 
           setUrlHash('pagos,datafono_prefill,' + payload);
         };
-
-        td.append(data.Fecha);
-        td.append(document.createElement('br'));
+        paid.style.width = "100%";
         td.appendChild(paid);
+        td.append(document.createElement('br'));
+        td.append(data.Fecha);
 
         return td;
         break;
@@ -1574,7 +1575,7 @@ function TS_IndexElement(
 
         const personaId = key.self === true
           ? (data._key || data._id || data.id)
-          : data[key.key];
+          : val;
 
         loadPersonaPhoto(img, personaId);
 
@@ -1639,7 +1640,7 @@ function TS_IndexElement(
 
         const personaId = key.self === true
           ? (data._key || data._id || data.id)
-          : data[key.key];
+          : val;
 
         loadPersonaPhoto(img, personaId);
 
@@ -1660,7 +1661,7 @@ function TS_IndexElement(
 
         const img = document.createElement('img');
 
-        img.src = data[key.key] || 'static/ico/user_generic.png';
+        img.src = val || 'static/ico/user_generic.png';
         img.style.maxHeight = '80px';
         img.style.maxWidth = '80px';
 
@@ -1668,7 +1669,7 @@ function TS_IndexElement(
 
         const personaId = key.self === true
           ? (data._key || data._id || data.id)
-          : data[key.key];
+          : val;
 
         loadPersonaPhoto(img, personaId);
 
