@@ -1215,9 +1215,7 @@ function TS_IndexElement(
     rowId: '_key',
 
     language: {
-      search: "Buscar",
-      zeroRecords: "Sin resultados",
-      loadingRecords: "Cargando..."
+      url: 'static/datatables.es.json',
     }
   });
 
