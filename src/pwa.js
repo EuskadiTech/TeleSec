@@ -127,7 +127,7 @@ async function ActualizarProgramaTeleSec() {
 }
 function showUpdateBar() {
   let snackbar = document.getElementById('snackbar');
-  // snackbar.className = 'show';
+  snackbar.className = 'show';
 }
 
 // The click event on the pop up notification
@@ -149,7 +149,7 @@ if ('serviceWorker' in navigator) {
         switch (newWorker.state) {
           case 'installed':
             if (navigator.serviceWorker.controller) {
-              showUpdateBar();
+              //showUpdateBar();
             }
             break;
         }

@@ -260,7 +260,7 @@ def build_app_bundle(
         chunks.append(f"\n/* ---- {file} ---- */\n")
         chunks.append(file.read_text(encoding="utf-8"))
 
-    write_file(temp, "\n".join(chunks))
+    write_file(temp, replace_handles("\n".join(chunks)))
 
     esbuild(temp, output)
 
