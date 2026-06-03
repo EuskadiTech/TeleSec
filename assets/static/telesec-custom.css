@@ -162,7 +162,7 @@ button:hover,
 /* ============================================================
    Form elements — maintain existing sizing
    ============================================================ */
-#container input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]),
+#container input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="search"]),
 #container select,
 #container textarea {
   font-size: 16px;
