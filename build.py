@@ -260,7 +260,7 @@ def build_app_bundle(
         chunks.append(f"\n/* ---- {file} ---- */\n")
         chunks.append(file.read_text(encoding="utf-8"))
 
-    write_file(temp, replace_handles("\n".join(chunks)))
+    write_file(temp, "\n".join(chunks))
 
     esbuild(temp, output)
 
@@ -464,3 +464,17 @@ for file in src_files:
     )
 
     write_file(dist_path, content)
+
+# =========================================================
+# POST-PROCESS APP BUNDLE (REPLACE HANDLES IF EXISTS)
+# =========================================================
+
+bundle_path = DIST_DIR / "static/app.bundle.js"
+
+if bundle_path.exists() and "%%" in bundle_path.read_text(encoding="utf-8"):
+    print("Post-processing app.bundle.js (replacing handles)...")
+
+    content = bundle_path.read_text(encoding="utf-8")
+    content = replace_handles(content)
+
+    write_file(bundle_path, content)
