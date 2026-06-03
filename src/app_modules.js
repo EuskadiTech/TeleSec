@@ -1807,7 +1807,7 @@ function TS_IndexElement(
 
         if (typeof data === 'string') {
           TS_decrypt(data, SECRET, (decoded, ok) => {
-            console.log(decoded)
+            console.debug("IndexElement db.map", decoded)
             if (decoded) {
               decoded._encrypted__ = ok;
               upsert(decoded, key);

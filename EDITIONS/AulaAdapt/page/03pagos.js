@@ -876,7 +876,7 @@ PAGES.pagos = {
     (async () => {
       const data = await DB.get('pagos', tid);
       function load_data(data) {
-        console.log('Transaction data:', data);
+        console.debug('Transaction data:', data);
         document.getElementById(nameh1).innerText = tid;
         //document.getElementById(field_ticket).innerText = data.Ticket || tid;
 
@@ -1352,7 +1352,7 @@ PAGES.pagos = {
         const gastosHoy = Object.values(periodData.gastosHoy).reduce((a, b) => a + b, 0);
         const gastosAyer = Object.values(periodData.gastosAyer).reduce((a, b) => a + b, 0);
         
-        console.log('Totals:', { totalIngresos, totalGastos, ingresosHoy, ingresosAyer, gastosHoy, gastosAyer });
+        console.debug('Totals:', { totalIngresos, totalGastos, ingresosHoy, ingresosAyer, gastosHoy, gastosAyer });
 
         var trendIngresos = buildTrendText(ingresosHoy, ingresosAyer, ' hoy (vs ayer)');
         var trendGastos = buildTrendText(gastosHoy, gastosAyer, ' hoy (vs ayer)');
