@@ -1703,7 +1703,7 @@ function TS_IndexElement(
     });
 
     if (rowCallback) rowCallback(data, tr);
-    tr.onclick = () => {setUrlHash(pageco, data._key)}
+    tr.onclick = () => {setUrlHash(pageco + ',' + data._key)}
     return tr;
   }
 
@@ -1752,7 +1752,7 @@ function TS_IndexElement(
         // Copiar estilos inline nuevos (si los hubiera)
         existingNode.style.cssText = nuevoTrTemp.style.cssText;
 
-        existingNode.onclick = nuevoTrTemp.onclick
+        existingNode.onclick = () => {setUrlHash(pageco + ',' + key)}
         
         // Sincronizar todos los atributos HTML (como data-*, etc.)
         Array.from(nuevoTrTemp.attributes).forEach(attr => {
