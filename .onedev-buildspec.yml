@@ -1,0 +1,42 @@
+version: 49
+jobs:
+- name: Build & deploy to Onedev
+  steps:
+  - type: CheckoutStep
+    name: download
+    cloneCredential:
+      type: DefaultCredential
+    withLfs: false
+    withSubmodules: true
+    cloneDepth: 1
+    checkoutPath: .
+    condition: SUCCESSFUL
+    optional: false
+  - type: CommandStep
+    name: build
+    runInContainer: true
+    image: nikolaik/python-nodejs:python3.13-nodejs24-slim
+    interpreter:
+      type: DefaultInterpreter
+      commands: |
+        ls -la ; python3 build.py
+    runAs: 0:0
+    useTTY: true
+    condition: SUCCESSFUL
+    optional: false
+  - type: PublishSiteStep
+    name: site
+    sourcePath: dist
+    artifacts: '** *'
+    condition: SUCCESSFUL
+    optional: false
+  jobExecutor: local
+  triggers:
+  - type: BranchUpdateTrigger
+    branches: main
+    userMatch: anyone
+    projects: TeleSec
+  retryCondition: never
+  maxRetries: 3
+  retryDelay: 30
+  timeout: 14400
