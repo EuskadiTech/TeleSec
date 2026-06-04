@@ -76,33 +76,6 @@ def ts_encrypt(input_value: Any, secret: str) -> str:
     return f"RSA{{{b64}}}"
 
 
-def ts_encrypt(input_value: Any, secret: str) -> str:
-    if not isinstance(input_value, str):
-        payload = json.dumps(input_value, separators=(",", ":"), ensure_ascii=False)
-    else:
-        payload = input_value
-
-    payload_bytes = payload.encode("utf-8")
-    salt = os.urandom(8)
-
-    # OpenSSL EVP_BytesToKey (MD5)
-    dx = b""
-    salted = b""
-    while len(salted) < 48:  # 32 key + 16 iv
-        dx = hashlib.md5(dx + secret.encode() + salt).digest()
-        salted += dx
-
-    key = salted[:32]
-    iv = salted[32:48]
-
-    cipher = AES.new(key, AES.MODE_CBC, iv)
-    encrypted = cipher.encrypt(_pkcs7_pad(payload_bytes, 16))
-
-    openssl_blob = b"Salted__" + salt + encrypted
-    b64 = base64.b64encode(openssl_blob).decode("utf-8")
-
-    return f"RSA{{{b64}}}"
-
 @dataclass
 class TeleSecDoc:
     id: str
@@ -230,7 +203,7 @@ class TeleSecCouchDB:
         to_store = data
         is_encrypted_string = isinstance(data, str) and data.startswith("RSA{") and data.endswith("}")
         if encrypt and self.secret and not is_encrypted_string:
-            to_store = ts_encrypt(data, self.secret)
+            to_store = ts_encrypt(data, self.secret.upper())
 
         doc["data"] = to_store
         doc["table"] = table

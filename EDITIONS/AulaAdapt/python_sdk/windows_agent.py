@@ -258,7 +258,7 @@ class TeleSecCouchDB:
         to_store = data
         is_encrypted_string = isinstance(data, str) and data.startswith("RSA{") and data.endswith("}")
         if encrypt and self.secret and not is_encrypted_string:
-            to_store = ts_encrypt(data, self.secret)
+            to_store = ts_encrypt(data, self.secret.upper())
 
         doc["data"] = to_store
         doc["table"] = table
