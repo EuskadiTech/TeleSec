@@ -1,0 +1,38 @@
+{% extends "_base.html" %}
+
+{% block content %}
+
+
+<main class="container">
+    <h2 style="text-align: center;">¡Te damos la bienvenida a la nueva nube de Naiel!</h2>
+    <hr>
+    <h3>Nuestros programas</h3>
+    <div class="menu" role="group">
+        <a role="button" href="/comedor/" style="background: #239F27;">
+            <img src="/static/16w-brands/educacion.svg" style="height: 52px;">
+            Comedor
+        </a>
+    </div>
+    <hr>
+    <h3>Por desarrollar</h3>
+    <div class="menu" role="group">
+        <a role="button" href="/agentes/" style="background: #9F6923;">
+            <img src="/static/16w-brands/agentes.svg" style="height: 52px;">
+            Agentes IA
+        </a>
+        <a role="button" href="/analiticas/" style="background: #9F6923;">
+            <img src="/static/16w-brands/analiticas.svg" style="height: 52px;">
+            Analiticas
+        </a>
+        <a role="button" href="/cuenta/">
+            <img src="/static/16w-brands/cuenta.svg" style="height: 52px;">
+            Cuenta
+        </a>
+        <a role="button" href="/formacion/" style="background: #239F27;">
+            <img src="/static/16w-brands/formacion.svg" style="height: 52px;">
+            Formación
+        </a>
+    </div>
+</main>
+
+{% endblock %}

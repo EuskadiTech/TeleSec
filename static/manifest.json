@@ -1,0 +1,26 @@
+{
+  "theme_color": "#c52f21",
+  "background_color": "#13161e",
+  "icons": [
+    {
+      "purpose": "any",
+      "sizes": "192x192",
+      "src": "/_/launchericon-192x192.png",
+      "type": "image/png"
+    },
+    {
+      "purpose": "any",
+      "sizes": "512x512",
+      "src": "/_/launchericon-512x512.png",
+      "type": "image/png"
+    }
+  ],
+  "orientation": "any",
+  "display": "standalone",
+  "dir": "auto",
+  "lang": "es-ES",
+  "name": "16World",
+  "short_name": "16World",
+  "start_url": "/",
+  "scope": "/"
+}
