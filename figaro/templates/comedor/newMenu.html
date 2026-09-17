@@ -1,0 +1,27 @@
+{% extends "_base.html" %}
+
+{% block content %}
+
+
+<main class="container">
+    <h1></h1>
+    <form method="POST">
+        <fieldset style="width: 300px;">
+            <legend>Nuevo Menú</legend>
+            {{ form.hidden_tag() }}
+            <table>
+                {% for field in form if field.type != 'CSRFTokenField' %}
+                    <tr>
+                        <th scope="col">{{ field.label }}</th>
+                        <td>{{ field() }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+            <div class="buttons">
+                <input type="submit" value="Guardar" class="btn">
+            </div>
+        </fieldset>
+    </form>
+</main>
+
+{% endblock %}

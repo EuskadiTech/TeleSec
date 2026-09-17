@@ -1,21 +1,28 @@
 # app/usuarios/routes.py
-from flask import Blueprint, jsonify, request
-from figaro.extensions import db
+from flask import Blueprint, jsonify, request, g, render_template, redirect, flash
+from figaro.extensions import breadcrumb, db
 from figaro.comedor.models import Menu
+from figaro.comedor.forms import NuevoMenu
 
 # Se define el blueprint
-comedor_bp = Blueprint('usuarios', __name__)
+comedor_bp = Blueprint('comedor', __name__)
 
 @comedor_bp.route('/', methods=['GET'])
-def listar_usuarios():
+@breadcrumb('Comedor', parent='index.index')
+def index():
     # Consulta a la base de datos usando el modelo
     menus = Menu.query.all()
-    return jsonify([{"id": u.id, "nombre": u.nombre} for u in menus])
+    return render_template("comedor/index.html", menus=menus)
 
-@comedor_bp.route('/', methods=['POST'])
-def crear_usuario():
-    datos = request.json
-    nuevo_menu = Menu(nombre=datos['nombre'])
-    db.session.add(nuevo_menu)
-    db.session.commit()
-    return jsonify({"mensaje": "Menú creado con éxito"}), 201
+@comedor_bp.route('/newMenu', methods=['GET', 'POST'])
+@breadcrumb('Nuevo menú', parent='comedor.index')
+def crear_menu():
+    form = NuevoMenu()
+    if form.validate_on_submit():
+        datos = request.form
+        nuevo_menu = Menu(name=datos['name'])
+        db.session.add(nuevo_menu)
+        db.session.commit()
+        flash("Menú guardado.")
+        return redirect('/comedor')
+    return render_template('comedor/newMenu.html', form=form)

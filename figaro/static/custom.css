@@ -1,0 +1,282 @@
+html {
+  height: 100%;
+  font-family:
+    system-ui, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, Helvetica, Arial,
+    "Helvetica Neue", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";
+}
+body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  margin: 0;
+  line-height: 1;
+  font-size: 125%;
+}
+* {
+  margin: 0;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  background-color: var(--pico-primary-background);
+  color: #fff;
+  padding: 5px 7.5px !important;
+  align-items: center;
+}
+header h3 {
+  margin: 0;
+  color: inherit !important;
+}
+main.container {
+  flex: 1;
+  --pico-spacing: 0.5rem;
+}
+footer {
+  padding: 5px !important;
+  margin: 0 !important;
+  /* position: fixed !important;
+    bottom: 0 !important; */
+}
+footer,
+.menu {
+  display: grid;
+  gap: 5px;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+}
+
+footer a[role="button"],
+footer button,
+.menu a[role="button"],
+.menu button {
+  padding: 0.25rem !important;
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  border-radius: var(--pico-border-radius);
+  border: none;
+}
+footer a[role="button"] svg,
+footer button svg,
+.menu a[role="button"] svg,
+.menu button svg {
+  height: 40px;
+  color: inherit;
+}
+
+article b[aria-busy="true"] {
+  filter: brightness(0) invert(0);
+}
+article small {
+  display: block;
+  line-height: 1;
+}
+
+@media (max-width: 600px) {
+  .appheader {
+    display: none;
+  }
+}
+
+/* Pantalla completa fija por encima de PicnicCSS */
+.loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background-color: rgba(
+    255,
+    255,
+    255,
+    0.95
+  ); /* Fondo semitransparente blanco */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999; /* Por encima de los modales de PicnicCSS */
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 0.3s ease,
+    visibility 0.3s ease;
+}
+
+/* ==========================================
+   LOADER OVERLAY - SOPORTE MODO CLARO (Default)
+   ========================================== */
+.loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background-color: rgba(
+    255,
+    255,
+    255,
+    0.95
+  ); /* Fondo claro semitransparente */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 0.3s ease,
+    visibility 0.3s ease;
+}
+
+/* Clase para ocultar el loader */
+.loader-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* Spinner circular */
+.loader-spinner {
+  width: 75px;
+  height: 75px;
+  border: 4px solid #eeeeee; /* Fondo del anillo en modo claro */
+  border-top: 4px solid #0074d9; /* Color principal (Azul PicnicCSS) */
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==========================================
+   SOPORTE MODO OSCURO (Ajuste automático)
+   ========================================== */
+@media (prefers-color-scheme: dark) {
+  .loader-overlay {
+    background-color: rgba(
+      17,
+      17,
+      17,
+      0.95
+    ); /* Fondo oscuro (típico de PicnicCSS oscuro) */
+  }
+
+  .loader-spinner {
+    border-color: #333333; /* Fondo del anillo más oscuro para que contraste */
+    border-top-color: #0074d9; /* Mantiene el color azul eléctrico, ideal para modo oscuro */
+  }
+}
+
+li {
+  margin: 0;
+  border-bottom: 1px solid grey;
+}
+main.container {
+  padding: 15px;
+}
+
+.btn {
+  background-color: #44f;
+  color: #fff;
+  border: 4px solid #0006;
+  font-size: 100%;
+  border-radius: 2.5px;
+  padding: 1% 5%;
+  text-decoration: none;
+}
+
+fieldset {
+  border: 2px solid currentColor;
+  border-radius: 5px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+table input,
+table select {
+  width: calc(100% - 7.5px);
+  font-size: 100%;
+}
+table th {
+  text-align: right;
+  padding-right: 5px;
+}
+th,
+td {
+  padding: 5px;
+}
+
+input,
+select,
+.btn {
+  display: inline-block;
+  border: 1px solid gray;
+}
+.buttons {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+/* Contenedor principal de la navegación */
+nav.breadcrumbnav {
+  margin: 15px;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+  font-size: 0.9rem;
+}
+
+/* Lista ordenada de las migas de pan */
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  background-color: transparent; /* Trasladado del estilo en línea */
+}
+
+/* Estilo para cada ítem (padres e hijo) */
+.breadcrumb-item {
+  display: flex;
+  align-items: center;
+}
+
+/* El separador (/) automático entre elementos */
+.breadcrumb-item + .breadcrumb-item::before {
+  content: "/";
+  padding: 0 0.5rem;
+  color: #6c757d; /* Gris suave para el separador */
+  user-select: none; /* Evita que el usuario seleccione el "/" al arrastrar el ratón */
+}
+
+/* Estilo para los enlaces (Páginas anteriores) */
+.breadcrumb-item a {
+  color: #0066cc; /* Azul moderno */
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+/* Efecto al pasar el ratón por encima del enlace */
+.breadcrumb-item a:hover {
+  color: #004499;
+  text-decoration: underline;
+}
+
+/* Estilo para la página actual (El último elemento) */
+.breadcrumb-item.active {
+  color: #212529; /* Negro/Gris oscuro para denotar que es texto plano */
+  font-weight: 600;
+}

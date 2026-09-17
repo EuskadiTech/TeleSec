@@ -1,0 +1,32 @@
+{% extends "_base.html" %}
+
+{% block content %}
+
+
+<main class="container">
+    <h1>Comedor</h1>
+    <a role="button" href="/comedor/newMenu">Nuevo Menú</a>
+    <h2>Menús</h2>
+    <table border="" style="width: 300px;">
+        <thead>
+            <tr>
+                <th>Menú</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for menu in menus %}
+                <tr>
+                    <th scope="row">
+                        {{ menu.name }}
+                    </th>
+                    <td>
+                        <a href="" class="btn">Abrir</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</main>
+
+{% endblock %}
