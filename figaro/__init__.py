@@ -1,7 +1,7 @@
 # app/__init__.py
 from flask import Flask, request, url_for
 from werkzeug.routing import BuildError
-from figaro.extensions import db, migrate
+from figaro.extensions import db, migrate, upgrade
 from figaro.index.routes import index_bp
 from figaro.comedor.routes import comedor_bp
 from pathlib import Path
@@ -28,6 +28,9 @@ def create_app():
     # Inicializar las extensiones
     db.init_app(app)
     migrate.init_app(app, db) # <--- Inicialización de Flask-Migrate
+
+    with app.app_context():
+        upgrade()
 
     @app.context_processor
     def inject_breadcrumbs():

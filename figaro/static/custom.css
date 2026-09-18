@@ -1,5 +1,6 @@
 html {
   height: 100%;
+  font-family: system-ui, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, Helvetica, Arial, "Helvetica Neue", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 body {
   display: flex;
@@ -139,12 +140,15 @@ main.container {
 }
 
 fieldset {
-  border: 2px solid currentColor;
+  border: 1px solid currentColor;
   border-radius: 5px;
+  width: auto;
+  padding: 5px 12.5px !important;
 }
 table {
-  width: 100%;
+  width: auto;
   border-collapse: collapse;
+  border: none;
 }
 table label {
   display: inline;
@@ -152,8 +156,8 @@ table label {
 table input:not( [type=submit],[type=button],[type=reset],[type=range],[type=file],[readonly] ),
 table textarea,
 table select {
-  /*width: calc(100% - 7.5px);*/
-  width: 100%;
+  width: calc(100% - 9.5px);
+  /* width: 100%; */
   font-size: 1rem;
   margin: 0 !important;
   height: auto !important;
@@ -167,13 +171,10 @@ form th, form td {border: 0 !important; padding: 0 2.5px;}
 table th, table td {
   vertical-align: middle !important;
   padding: 2.5px 5px;
+  border-bottom: 1px solid gray;
 }
 table *[role='button'] {
   padding: 2.5px 5px;
-}
-fieldset {
-  border: 1px solid currentColor !important;
-  padding: 5px 12.5px !important;
 }
 th,
 td {
@@ -191,6 +192,11 @@ select {
   justify-content: flex-start;
   gap: 7.5px;
   flex-wrap: wrap;
+  align-items: flex-start;
+}
+fieldset .buttons {
+  display: inline-flex;
+  justify-content: center;
 }
 
 /* Variables para Modo Claro (por defecto) */
@@ -261,7 +267,7 @@ nav.breadcrumbnav {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 5px;
 }
-button:has(.pictos),
+/* button:has(.pictos),
 a:has(.pictos) {
   width: auto !important;
   min-height: 72px;
@@ -275,7 +281,7 @@ a:has(.pictos) {
   margin: 0 !important;
   line-height: 1;
   gap: 5px;
-}
+} */
 .pictos {
   display: flex;
   flex-direction: row;
@@ -313,3 +319,63 @@ a:has(.pictos) {
   }
 }
 ul, ol {padding-left: 20px;}
+
+.listview {
+  display: inline-flex;
+  flex-direction: column;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid gray;
+  padding: 0;
+  margin: 0;
+}
+.listview a {
+  display: inline-flex;
+  background: linear-gradient(rgb(255, 255, 255), rgb(197, 197, 197));
+  padding: 10px 15px;
+  border-top: 1px solid rgb(204, 204, 204);;
+  color: black;
+  text-decoration: none;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+.listview > b {
+  background: linear-gradient(rgb(163, 199, 255), rgb(64, 169, 210));
+  color: black;
+  padding: 5px;
+  text-align: center;
+}
+.btn {
+  background: linear-gradient(rgb(255, 239, 170), rgb(255, 225, 85));
+  color: black;
+  border: 1px solid rgb(244, 198, 63);
+  font-weight: 600;
+  border-radius: 16px;
+}
+
+
+.viewbtn {
+  display: inline-flex;
+  flex-direction: column;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid gray;
+  text-decoration: none;
+  padding: 0;
+  margin: 0;
+}
+.viewbtn .pictos {
+  display: inline-flex;
+  background: linear-gradient(rgb(255, 255, 255), rgb(197, 197, 197));
+  border-top: 1px solid rgb(204, 204, 204);
+  padding: 5px 10px;
+  gap: 15px;
+  flex: 1;
+}
+.viewbtn .pictos img {background-color: transparent;}
+.viewbtn > b {
+  background: linear-gradient(rgb(166, 255, 163), rgb(64, 210, 73));
+  color: black;
+  padding: 5px;
+  text-align: center;
+}

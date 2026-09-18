@@ -9,13 +9,13 @@
     <link rel="icon" type="image/png" href="{{url_for('static', filename='logo-nopad.png')}}">
     <link rel="apple-touch-icon" href="{{url_for('static', filename='logo.png')}}">
 
-    <link rel="stylesheet" href="{{url_for('static', filename='vendor/blades/blades.min.css')}}">
+    <!-- <link rel="stylesheet" href="{{url_for('static', filename='vendor/blades/blades.min.css')}}"> -->
     <link rel="stylesheet" href="{{url_for('static', filename='custom.css')}}">
-    <link rel="stylesheet" href="{{url_for('static', filename='vendor/leaflet/leaflet.css')}}">
+    <!-- <link rel="stylesheet" href="{{url_for('static', filename='vendor/leaflet/leaflet.css')}}"> -->
     <link rel="stylesheet" href="{{url_for('static', filename='vendor/toastr/toastr.min.css')}}">
 
-    <script src="{{url_for('static', filename='vendor/htmx.min.js')}}"></script>
-    <script src="{{url_for('static', filename='vendor/leaflet/leaflet.js')}}"></script>  
+    <!-- <script src="{{url_for('static', filename='vendor/htmx.min.js')}}"></script> -->
+    <!-- <script src="{{url_for('static', filename='vendor/leaflet/leaflet.js')}}"></script>   -->
     <script src="{{url_for('static', filename='vendor/jquery/jquery-3.7.1.slim.min.js')}}"></script>
     <script src="{{url_for('static', filename='vendor/toastr/toastr.min.js')}}"></script>  
     <script src="{{url_for('static', filename='loader.js')}}"></script>
@@ -31,7 +31,7 @@
     </div>
 
     <header>
-      <a href="/" style="color: white;text-decoration: none;font-weight: bold;display: flex;gap: 5px;align-items: center;">
+      <a href="{{url_for('index.index')}}" style="color: white;text-decoration: none;font-weight: bold;display: flex;gap: 5px;align-items: center;">
         <small style="font-size: 12px; text-align: center;">16w<br>.eu</small>
         Figaró
       </a>

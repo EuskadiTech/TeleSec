@@ -8,73 +8,49 @@
         <h1>Comedor</h1>
     </div>
     <div class="buttons">
-        <a role="button" href="{{url_for('comedor.menu')}}">
+        <a class="viewbtn" href="{{url_for('comedor.menu')}}">
+            <b>Nuevo Menú</b>
             <div class="pictos">
                 <img src="/static/picto/botón de añadir.png">
             </div>
-            Nuevo Menú
         </a>
-        <a role="button" href="{{url_for('comedor.plato')}}">
+        <a class="viewbtn" href="{{url_for('comedor.plato')}}">
+            <b>Nuevo Plato</b>
             <div class="pictos">
-                <img src="/static/picto/plato.png">
                 <img src="/static/picto/botón de añadir.png">
             </div>
-            Nuevo Plato
         </a>
-        <a role="button" href="{{url_for('comedor.quehay')}}">
+        <a class="viewbtn" href="{{url_for('comedor.quehay')}}">
+            <b>¿Que hay de comer?</b>
             <div class="pictos">
                 <img src="/static/picto/comida.png">
                 <img src="/static/picto/qm.png">
             </div>
-            ¿Que hay de comer?
         </a>
-    </div>
-    <h2>Menús</h2>
-    <table style="width: 300px;">
-        <thead>
-            <tr>
-                <th>Menú</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
+        <div class="listview">
+            <b>Menús</b>
             {% for menu in menus %}
-                <tr>
-                    <th scope="row">
+                <a href="{{url_for('comedor.menu', id=menu.id)}}">
+                    <b>
                         {{ menu.name }}
-                    </th>
-                    <td style="text-align: right;">
-                        <a href="{{url_for('comedor.menu', id=menu.id)}}" role="button">Abrir</a>
-                    </td>
-                </tr>
+                    </b>
+                </a>
             {% endfor %}
-        </tbody>
-    </table>
-    <h2>Platos</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Fecha</th>
-                <th style="text-align: left;">Menú</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
+        </div>
+        <div class="listview">
+            <b>Platos</b>
             {% for plato in platos %}
-                <tr>
-                    <th scope="row">
+                <a href="{{url_for('comedor.plato', id=plato.id)}}">
+                    <b>
                         {{ plato.fecha.strftime("%d/%m/%Y") }}
-                    </th>
-                    <td>
+                    </b>
+                    <span>
                         {{ plato.menu.name }}
-                    </td>
-                    <td style="text-align: right;">
-                        <a href="{{url_for('comedor.plato', id=plato.id)}}" role="button">Abrir</a>
-                    </td>
-                </tr>
+                    </span>
+                </a>
             {% endfor %}
-        </tbody>
-    </table>
+        </div>
+    </div>
 </main>
 
 {% endblock %}

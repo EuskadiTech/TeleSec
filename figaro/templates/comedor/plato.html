@@ -3,14 +3,13 @@
 {% block content %}
 
 <main>
-    <h1></h1>
     <form method="POST">
-        <fieldset style="width: 300px;">
+        <fieldset>
             <legend>
                 {% if plato %}
-                    Editar plato
+                    Editar Plato
                 {% else %}
-                    Nuevo plato
+                    Nuevo Plato
                 {% endif %}
             </legend>
             {{ form.hidden_tag() }}
@@ -23,20 +22,26 @@
                 {% endfor %}
             </table>
             <div class="buttons">
-                <button type="submit">
+                <button class="viewbtn" type="submit">
+                    <b>Guardar</b>
                     <div class="pictos">
-                        <img src="/static/picto/guardar.png">
+                        <img src="{{url_for('static', filename='picto/botón de editar.png')}}">
                     </div>
-                    Guardar
                 </button>
                 {% if plato %}
-                <a role="button">
-                    <div class="pictos">
-                        <img src="/static/picto/botón de borrar todo.png">
-                    </div>
-                    Borrar
-                </a>
+                    <a class="viewbtn">
+                        <b>Borrar</b>
+                        <div class="pictos">
+                            <img src="{{url_for('static', filename='picto/botón de borrar todo.png')}}">
+                        </div>
+                    </a>
                 {% endif %}
+                <a class="viewbtn" href="{{url_for('comedor.index')}}">
+                    <b>Cancelar</b>
+                    <div class="pictos">
+                        <img src="{{url_for('static', filename='picto/botón de salir.png')}}">
+                    </div>
+                </a>
             </div>
         </fieldset>
     </form>
