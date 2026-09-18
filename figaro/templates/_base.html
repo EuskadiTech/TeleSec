@@ -1,65 +1,64 @@
 <!doctype html>
 <html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="color-scheme" content="light dark">
+    <link rel="stylesheet" href="/static/custom.css?v=18">
+    <link rel="stylesheet" href="/static/css/blades.min.css">
+    <title>TeleSec</title>
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="apple-touch-icon" href="/static/icon512_rounded.png">
+    
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@4.0.0/dist/htmx.min.js" integrity="sha384-BvJpBiO8Kh31EqtJe5DRIeWrHWnCGkwytKs9NKFi86Hhw96dEqdEMzZDeK9iEGTc" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="/static/loader.js?v=1"></script>
+    {% block head %}{% endblock %}
+  </head>
 
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="color-scheme" content="light dark">
-  <link rel="stylesheet" href="/static/custom.css?v=18">
-  <title>TeleSec</title>
-  <link rel="manifest" href="/static/manifest.json">
-  <link rel="apple-touch-icon" href="/static/icon512_rounded.png">
-  
-  <script src="https://cdn.jsdelivr.net/npm/htmx.org@4.0.0/dist/htmx.min.js" integrity="sha384-BvJpBiO8Kh31EqtJe5DRIeWrHWnCGkwytKs9NKFi86Hhw96dEqdEMzZDeK9iEGTc" crossorigin="anonymous"></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin="" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-  <script src="/static/loader.js?v=1"></script>
-  {% block head %}{% endblock %}
-</head>
+  <body style="--pico-primary-background: #014185;">
+    <div id="page-loader" class="loader-overlay">
+      <div class="loader-spinner"></div>
+      <b style="font-size: 25px;">Cargando...</b>
+      <a onclick="document.getElementById('page-loader').classList.add('hidden');" style="text-decoration: none; opacity: 0.3;">Forzar</a>
+    </div>
 
-<body style="--pico-primary-background: #00324b;">
-  <div id="page-loader" class="loader-overlay">
-    <div class="loader-spinner"></div>
-    <b style="font-size: 25px;">Cargando...</b>
-    <a onclick="document.getElementById('page-loader').classList.add('hidden');" style="text-decoration: none; opacity: 0.3;">Forzar</a>
-  </div>
-
-  <header>
-    <a href="/" style="color: white; text-decoration: none; font-weight: bold;display: flex;align-items: end;">
-      <small style="font-size: 12px;">edu.</small>
-      16w
-      <small style="font-size: 12px;">.eu</small>
-    </a>
-    {% block breadcrumbs %}
-      <nav class="breadcrumbnav">
-        <ol class="breadcrumb">
-            {% for crumb in breadcrumbs if crumb.url != "/" %}
-                {% if loop.last %}
-                    <!-- Último elemento: Página actual -->
-                    <li class="breadcrumb-item active" aria-current="page">
-                        {{ crumb.title }}
-                    </li>
-                {% else %}
-                    <!-- Elementos intermedios con enlace -->
-                    <li class="breadcrumb-item">
-                        <a href="{{ crumb.url }}">{{ crumb.title }}</a>
-                    </li>
-                {% endif %}
-            {% endfor %}
-        </ol>
-      </nav>
-    {% endblock %}
-    <b style="text-align: right;" onclick="location.reload();">@{{g.user_name | default("")}}</b>
-  </header>
-  
-    {% block content %}{% endblock %}
-    {% block foot %}{% endblock %}
+    <header>
+      <a href="/" style="color: white;text-decoration: none;font-weight: bold;display: flex;gap: 5px;align-items: center;">
+        <small style="font-size: 12px; text-align: center;">16w<br>.eu</small>
+        TeleSec
+      </a>
+      {% block breadcrumbs %}
+        <nav class="breadcrumbnav">
+          <ol class="breadcrumb">
+              {% for crumb in breadcrumbs if crumb.url != "/" %}
+                  {% if loop.last %}
+                      <!-- Último elemento: Página actual -->
+                      <li class="breadcrumb-item active" aria-current="page">
+                          {{ crumb.title }}
+                      </li>
+                  {% else %}
+                      <!-- Elementos intermedios con enlace -->
+                      <li class="breadcrumb-item">
+                          <a href="{{ crumb.url }}">{{ crumb.title }}</a>
+                      </li>
+                  {% endif %}
+              {% endfor %}
+          </ol>
+        </nav>
+      {% endblock %}
+      <b style="text-align: right;" onclick="location.reload();">@{{g.user_name | default("")}}</b>
+    </header>
+    
+      {% block content %}{% endblock %}
+      {% block foot %}{% endblock %}
   </body>
 </html>

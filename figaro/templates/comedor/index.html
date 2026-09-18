@@ -3,22 +3,24 @@
 {% block content %}
 
 
-<main class="container">
-    <h1>Comedor</h1>
-    <div class="comgrid">
-        <a class="btn" href="/comedor/newMenu">
+<main>
+    <div class="pictos" style="justify-content: flex-start;">
+        <img src="/static/picto/comida.png">
+        <h1>Comedor</h1>
+    </div>
+    <div class="buttons">
+        <a role="button" href="/comedor/newMenu">
             <div class="pictos">
-                <img src="/static/picto/comida.png">
                 <img src="/static/picto/botón de añadir.png">
             </div>
             Nuevo Menú
         </a>
-        <a class="btn" href="/comedor/newMenu">
+        <a role="button" href="/comedor/newMenu">
             <div class="pictos">
                 <img src="/static/picto/comida.png">
-                <img src="/static/picto/hoy.png">
+                <img src="/static/picto/qm.png">
             </div>
-            Menú de hoy
+            ¿Que hay de comer?
         </a>
     </div>
     <h2>Menús</h2>
@@ -36,7 +38,7 @@
                         {{ menu.name }}
                     </th>
                     <td>
-                        <a href="" class="btn">Abrir</a>
+                        <a href="" role="button">Abrir</a>
                     </td>
                 </tr>
             {% endfor %}

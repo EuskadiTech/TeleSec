@@ -4,12 +4,19 @@ from werkzeug.routing import BuildError
 from figaro.extensions import db, migrate
 from figaro.index.routes import index_bp
 from figaro.comedor.routes import comedor_bp
-from figaro.comedor.models import Menu
+from pathlib import Path
+import sys
+
+if getattr(sys, 'frozen', False):
+    # Ejecutándose como .exe de PyInstaller
+    BASE_DIR = Path(sys.executable).resolve().parent
+else:
+    # Ejecutándose normalmente con Python
+    BASE_DIR = Path(__file__).resolve().parent.parent
 
 def create_app():
     app = Flask(__name__)
-    
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///mi_base_de_datos.db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{BASE_DIR / 'datos.db'}"
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['WTF_CSRF_SECRET_KEY'] = 'pneumonoultramicroscopicsilicovolcanoconiosis'
     app.config['SECRET_KEY'] = 'pneumonoultramicroscopicsilicovolcanoconiosis'

@@ -3,7 +3,7 @@
 {% block content %}
 
 
-<main class="container">
+<main>
     <h1></h1>
     <form method="POST">
         <fieldset style="width: 300px;">
@@ -12,13 +12,24 @@
             <table>
                 {% for field in form if field.type != 'CSRFTokenField' %}
                     <tr>
-                        <th scope="col">{{ field.label }}</th>
+                        <th scope="col">{{ field.label }}{% if field.flags.required %}<span style="color: red">*</span>{% endif %}</th>
                         <td>{{ field() }}</td>
                     </tr>
                 {% endfor %}
             </table>
             <div class="buttons">
-                <input type="submit" value="Guardar" class="btn">
+                <button type="submit">
+                    <div class="pictos">
+                        <img src="/static/picto/guardar.png">
+                    </div>
+                    Guardar
+                </button>
+                <a role="button">
+                    <div class="pictos">
+                        <img src="/static/picto/botón de borrar todo.png">
+                    </div>
+                    Borrar
+                </a>
             </div>
         </fieldset>
     </form>

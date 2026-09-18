@@ -1,10 +1,5 @@
 html {
-  background-color: #fff;
   height: 100%;
-  font-family:
-    system-ui, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, Helvetica, Arial,
-    "Helvetica Neue", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-    "Segoe UI Symbol", "Noto Color Emoji";
 }
 body {
   display: flex;
@@ -12,7 +7,6 @@ body {
   height: 100%;
   margin: 0;
   line-height: 1;
-  font-size: 125%;
 }
 * {
   margin: 0;
@@ -30,8 +24,9 @@ header h3 {
   margin: 0;
   color: inherit !important;
 }
-main.container {
+main {
   flex: 1;
+  padding: 15px;
   --pico-spacing: 0.5rem;
 }
 footer {
@@ -72,12 +67,6 @@ article b[aria-busy="true"] {
 article small {
   display: block;
   line-height: 1;
-}
-
-@media (max-width: 600px) {
-  .breadcrumbnav {
-    /* display: none; */
-  }
 }
 
 /* ==========================================
@@ -131,29 +120,6 @@ article small {
     transform: rotate(360deg);
   }
 }
-
-/* ==========================================
-   SOPORTE MODO OSCURO (Ajuste automático)
-   ========================================== */
-@media (prefers-color-scheme: dark) {
-  html {
-    background-color: #000;
-  }
-  .loader-overlay {
-    background-color: rgba(
-      17,
-      17,
-      17,
-      0.95
-    ); /* Fondo oscuro (típico de PicnicCSS oscuro) */
-  }
-
-  .loader-spinner {
-    border-color: #333333; /* Fondo del anillo más oscuro para que contraste */
-    border-top-color: #0074d9; /* Mantiene el color azul eléctrico, ideal para modo oscuro */
-  }
-}
-
 li {
   margin: 0;
   border-bottom: 1px solid grey;
@@ -166,7 +132,7 @@ main.container {
   background-color: #44f;
   color: #fff;
   border: 4px solid #0006;
-  font-size: 100%;
+  font-size: 1rem;
   border-radius: 2.5px;
   padding: 1% 5%;
   text-decoration: none;
@@ -180,14 +146,34 @@ table {
   width: 100%;
   border-collapse: collapse;
 }
-table input,
+table label {
+  display: inline;
+}
+table input:not( [type=submit],[type=button],[type=reset],[type=range],[type=file],[readonly] ),
+table textarea,
 table select {
-  width: calc(100% - 7.5px);
-  font-size: 100%;
+  /*width: calc(100% - 7.5px);*/
+  width: 100%;
+  font-size: 1rem;
+  margin: 0 !important;
+  height: auto !important;
+  padding: 2.5px 5px !important;
 }
 table th {
   text-align: right;
   padding-right: 5px;
+}
+form th, form td {border: 0 !important; padding: 0 2.5px;}
+table th, table td {
+  vertical-align: middle !important;
+  padding: 2.5px 5px;
+}
+table *[role='button'] {
+  padding: 2.5px 5px;
+}
+fieldset {
+  border: 1px solid currentColor !important;
+  padding: 5px 12.5px !important;
 }
 th,
 td {
@@ -195,16 +181,15 @@ td {
 }
 
 input,
-select,
-.btn {
+textarea,
+select {
   display: inline-block;
-  border: 1px solid gray;
 }
 .buttons {
   display: flex;
   flex-direction: row;
-  justify-content: space-around;
-  gap: 5px;
+  justify-content: flex-start;
+  gap: 7.5px;
   flex-wrap: wrap;
 }
 
@@ -212,20 +197,9 @@ select,
 :root {
   --bc-bg-color: transparent;
   --bc-separator-color: #6c757d; /* Gris medio */
-  --bc-link-color: #0066cc; /* Azul clásico */
-  --bc-link-hover-color: #004499; /* Azul oscuro */
-  --bc-active-color: #212529; /* Gris casi negro */
-}
-
-/* Variables para Modo Oscuro (Activación automática por sistema) */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bc-bg-color: transparent;
-    --bc-separator-color: #a0aec0; /* Gris claro */
-    --bc-link-color: #4da3ff; /* Azul brillante, mejor contraste */
-    --bc-link-hover-color: #80bfff; /* Azul pastel */
-    --bc-active-color: #f7fafc; /* Blanco roto / Suave */
-  }
+  --bc-link-color: #aaf; /* Azul clásico */
+  --bc-link-hover-color: #99f; /* Azul oscuro */
+  --bc-active-color: #fff; /* Gris casi negro */
 }
 
 /* --- Estilos base de los Breadcrumbs --- */
@@ -251,6 +225,8 @@ nav.breadcrumbnav {
   display: flex;
   align-items: center;
   border: none;
+  margin: 0;
+  padding: 0;
 }
 
 /* El separador (/) automático */
@@ -280,18 +256,23 @@ nav.breadcrumbnav {
 
 .comgrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 5px;
 }
-.comgrid .btn {
+button:has(.pictos),
+a:has(.pictos) {
+  width: auto !important;
   min-height: 72px;
   padding: 7.5px;
-  display: flex;
+  display: flex !important;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
   font-size: 22.5px;
   text-align: center;
+  align-items: center;
+  margin: 0 !important;
+  line-height: 1;
+  gap: 5px;
 }
 .pictos {
   display: flex;
@@ -303,7 +284,29 @@ nav.breadcrumbnav {
 .pictos img {
   display: inline-block;
   background-color: white;
-  height: 52px;
+  height: 72px !important;
   border-radius: 5px;
-  padding: 5px;
+  padding: 2px;
+}
+.pictos h1 {margin: 0;}
+
+@media only screen and (prefers-color-scheme: dark) {
+  :host(:not([data-theme])), :scope:not([data-theme]) {
+    color-scheme: dark;
+    --pico-background-color: #000 !important;
+    --pico-color: #fff !important;
+  }
+  .loader-overlay {
+    background-color: rgba(
+      17,
+      17,
+      17,
+      0.95
+    ); /* Fondo oscuro (típico de PicnicCSS oscuro) */
+  }
+
+  .loader-spinner {
+    border-color: #333333; /* Fondo del anillo más oscuro para que contraste */
+    border-top-color: #0074d9; /* Mantiene el color azul eléctrico, ideal para modo oscuro */
+  }
 }
