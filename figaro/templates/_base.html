@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="color-scheme" content="light dark">
   <link rel="stylesheet" href="/static/custom.css?v=18">
-  <title>Figaró</title>
+  <title>TeleSec</title>
   <link rel="manifest" href="/static/manifest.json">
   <link rel="apple-touch-icon" href="/static/icon512_rounded.png">
   
@@ -20,12 +20,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-  <script src="/static/axel.js?v=1"></script>
   <script src="/static/loader.js?v=1"></script>
   {% block head %}{% endblock %}
 </head>
 
-<body style="--pico-primary-background: #9F6923;">
+<body style="--pico-primary-background: #00324b;">
   <div id="page-loader" class="loader-overlay">
     <div class="loader-spinner"></div>
     <b style="font-size: 25px;">Cargando...</b>
@@ -33,40 +32,32 @@
   </div>
 
   <header>
-    <a href="/" style="display: flex; flex-direction: row; gap: 5px; color: #fff; text-decoration: none; width: 175px;">
-      <img src="{{g.app_logo | default('/static/16w-brands/agentes.png')}}" style="height: 40px;">
-      <div style="display: flex; flex-direction: column; align-self: center;">
-        <em style="line-height: 1 !important;">16World</em>
-        <h3 style="line-height: 1 !important;">{{g.app_name | default("SuperGalileo")}}</h3>
-      </div>
+    <a href="/" style="color: white; text-decoration: none; font-weight: bold;display: flex;align-items: end;">
+      <small style="font-size: 12px;">edu.</small>
+      16w
+      <small style="font-size: 12px;">.eu</small>
     </a>
-    <div class="appheader">
-      <a href="/"><img src="/static/16w-brands/16w.svg" style="height: 40px;"></a>
-      <a href="/domo/"><img src="/static/16w-brands/domotica.svg" style="height: 40px;"></a>
-      <a href="/club/"><img src="/static/16w-brands/club.svg" style="height: 40px;"></a>
-      <a href="/alortu/"><img src="/static/16w-brands/educacion.svg" style="height: 40px;"></a>
-    </div>
-    <b style="width: 175px; text-align: right;" onclick="location.reload();">@{{g.user_name | default("")}}</b>
-  </header>
     {% block breadcrumbs %}
       <nav class="breadcrumbnav">
-          <ol class="breadcrumb" style="background-color: transparent; padding-left: 0;">
-              {% for crumb in breadcrumbs %}
-              {% if loop.last %}
-                  <!-- Último elemento: Es la página actual (No lleva enlace y está activo) -->
-                  <li class="breadcrumb-item active" aria-current="page">
-                  <strong>{{ crumb.title }}</strong>
-                  </li>
-              {% else %}
-                  <!-- Elementos intermedios: Llevan enlace a sus respectivas páginas -->
-                  <li class="breadcrumb-item">
-                  <a href="{{ crumb.url }}" class="text-decoration-none text-primary">{{ crumb.title }}</a>
-                  </li>
-              {% endif %}
-              {% endfor %}
-          </ol>
+        <ol class="breadcrumb">
+            {% for crumb in breadcrumbs if crumb.url != "/" %}
+                {% if loop.last %}
+                    <!-- Último elemento: Página actual -->
+                    <li class="breadcrumb-item active" aria-current="page">
+                        {{ crumb.title }}
+                    </li>
+                {% else %}
+                    <!-- Elementos intermedios con enlace -->
+                    <li class="breadcrumb-item">
+                        <a href="{{ crumb.url }}">{{ crumb.title }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ol>
       </nav>
     {% endblock %}
+    <b style="text-align: right;" onclick="location.reload();">@{{g.user_name | default("")}}</b>
+  </header>
   
     {% block content %}{% endblock %}
     {% block foot %}{% endblock %}

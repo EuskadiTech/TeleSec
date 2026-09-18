@@ -1,4 +1,5 @@
 html {
+  background-color: #fff;
   height: 100%;
   font-family:
     system-ui, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, Helvetica, Arial,
@@ -74,33 +75,9 @@ article small {
 }
 
 @media (max-width: 600px) {
-  .appheader {
-    display: none;
+  .breadcrumbnav {
+    /* display: none; */
   }
-}
-
-/* Pantalla completa fija por encima de PicnicCSS */
-.loader-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100vh;
-  background-color: rgba(
-    255,
-    255,
-    255,
-    0.95
-  ); /* Fondo semitransparente blanco */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 99999; /* Por encima de los modales de PicnicCSS */
-  opacity: 1;
-  visibility: visible;
-  transition:
-    opacity 0.3s ease,
-    visibility 0.3s ease;
 }
 
 /* ==========================================
@@ -159,6 +136,9 @@ article small {
    SOPORTE MODO OSCURO (Ajuste automático)
    ========================================== */
 @media (prefers-color-scheme: dark) {
+  html {
+    background-color: #000;
+  }
   .loader-overlay {
     background-color: rgba(
       17,
@@ -228,9 +208,29 @@ select,
   flex-wrap: wrap;
 }
 
-/* Contenedor principal de la navegación */
+/* Variables para Modo Claro (por defecto) */
+:root {
+  --bc-bg-color: transparent;
+  --bc-separator-color: #6c757d; /* Gris medio */
+  --bc-link-color: #0066cc; /* Azul clásico */
+  --bc-link-hover-color: #004499; /* Azul oscuro */
+  --bc-active-color: #212529; /* Gris casi negro */
+}
+
+/* Variables para Modo Oscuro (Activación automática por sistema) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bc-bg-color: transparent;
+    --bc-separator-color: #a0aec0; /* Gris claro */
+    --bc-link-color: #4da3ff; /* Azul brillante, mejor contraste */
+    --bc-link-hover-color: #80bfff; /* Azul pastel */
+    --bc-active-color: #f7fafc; /* Blanco roto / Suave */
+  }
+}
+
+/* --- Estilos base de los Breadcrumbs --- */
+
 nav.breadcrumbnav {
-  margin: 15px;
   font-family:
     system-ui,
     -apple-system,
@@ -238,45 +238,72 @@ nav.breadcrumbnav {
   font-size: 0.9rem;
 }
 
-/* Lista ordenada de las migas de pan */
 .breadcrumb {
   display: flex;
   flex-wrap: wrap;
   list-style: none;
   padding: 0;
   margin: 0;
-  background-color: transparent; /* Trasladado del estilo en línea */
+  background-color: var(--bc-bg-color);
 }
 
-/* Estilo para cada ítem (padres e hijo) */
 .breadcrumb-item {
   display: flex;
   align-items: center;
+  border: none;
 }
 
-/* El separador (/) automático entre elementos */
+/* El separador (/) automático */
 .breadcrumb-item + .breadcrumb-item::before {
   content: "/";
-  padding: 0 0.5rem;
-  color: #6c757d; /* Gris suave para el separador */
-  user-select: none; /* Evita que el usuario seleccione el "/" al arrastrar el ratón */
+  padding: 0 0.15rem;
+  color: var(--bc-separator-color);
+  user-select: none;
 }
 
-/* Estilo para los enlaces (Páginas anteriores) */
+/* Enlaces (Páginas anteriores) */
 .breadcrumb-item a {
-  color: #0066cc; /* Azul moderno */
+  color: var(--bc-link-color);
   text-decoration: none;
-  transition: color 0.2s ease;
 }
 
-/* Efecto al pasar el ratón por encima del enlace */
 .breadcrumb-item a:hover {
-  color: #004499;
+  color: var(--bc-link-hover-color);
   text-decoration: underline;
 }
 
-/* Estilo para la página actual (El último elemento) */
+/* Página actual (El último elemento) */
 .breadcrumb-item.active {
-  color: #212529; /* Negro/Gris oscuro para denotar que es texto plano */
+  color: var(--bc-active-color);
   font-weight: 600;
+}
+
+.comgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 5px;
+}
+.comgrid .btn {
+  min-height: 72px;
+  padding: 7.5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 22.5px;
+  text-align: center;
+}
+.pictos {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.pictos img {
+  display: inline-block;
+  background-color: white;
+  height: 52px;
+  border-radius: 5px;
+  padding: 5px;
 }
