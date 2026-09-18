@@ -1,0 +1,45 @@
+{% extends "_base.html" %}
+
+{% block content %}
+
+<main>
+    <h1></h1>
+    <form method="POST">
+        <fieldset style="width: 300px;">
+            <legend>
+                {% if plato %}
+                    Editar plato
+                {% else %}
+                    Nuevo plato
+                {% endif %}
+            </legend>
+            {{ form.hidden_tag() }}
+            <table>
+                {% for field in form if field.type != 'CSRFTokenField' %}
+                    <tr>
+                        <th scope="col">{{ field.label }}{% if field.flags.required %}<span style="color: red">*</span>{% endif %}</th>
+                        <td>{{ field() }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+            <div class="buttons">
+                <button type="submit">
+                    <div class="pictos">
+                        <img src="/static/picto/guardar.png">
+                    </div>
+                    Guardar
+                </button>
+                {% if plato %}
+                <a role="button">
+                    <div class="pictos">
+                        <img src="/static/picto/botón de borrar todo.png">
+                    </div>
+                    Borrar
+                </a>
+                {% endif %}
+            </div>
+        </fieldset>
+    </form>
+</main>
+
+{% endblock %}

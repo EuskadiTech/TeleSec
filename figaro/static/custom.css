@@ -256,7 +256,7 @@ nav.breadcrumbnav {
 
 .comgrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 5px;
 }
 button:has(.pictos),
@@ -310,3 +310,4 @@ a:has(.pictos) {
     border-top-color: #0074d9; /* Mantiene el color azul eléctrico, ideal para modo oscuro */
   }
 }
+ul, ol {padding-left: 20px;}

@@ -2,20 +2,26 @@
 
 {% block content %}
 
-
 <main>
     <div class="pictos" style="justify-content: flex-start;">
         <img src="/static/picto/comida.png">
         <h1>Comedor</h1>
     </div>
     <div class="buttons">
-        <a role="button" href="/comedor/newMenu">
+        <a role="button" href="{{url_for('comedor.menu')}}">
             <div class="pictos">
                 <img src="/static/picto/botón de añadir.png">
             </div>
             Nuevo Menú
         </a>
-        <a role="button" href="/comedor/newMenu">
+        <a role="button" href="{{url_for('comedor.plato')}}">
+            <div class="pictos">
+                <img src="/static/picto/plato.png">
+                <img src="/static/picto/botón de añadir.png">
+            </div>
+            Nuevo Plato
+        </a>
+        <a role="button" href="{{url_for('comedor.quehay')}}">
             <div class="pictos">
                 <img src="/static/picto/comida.png">
                 <img src="/static/picto/qm.png">
@@ -24,7 +30,7 @@
         </a>
     </div>
     <h2>Menús</h2>
-    <table border="" style="width: 300px;">
+    <table style="width: 300px;">
         <thead>
             <tr>
                 <th>Menú</th>
@@ -37,8 +43,33 @@
                     <th scope="row">
                         {{ menu.name }}
                     </th>
+                    <td style="text-align: right;">
+                        <a href="{{url_for('comedor.menu', id=menu.id)}}" role="button">Abrir</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <h2>Platos</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th style="text-align: left;">Menú</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for plato in platos %}
+                <tr>
+                    <th scope="row">
+                        {{ plato.fecha.strftime("%d/%m/%Y") }}
+                    </th>
                     <td>
-                        <a href="" role="button">Abrir</a>
+                        {{ plato.menu.name }}
+                    </td>
+                    <td style="text-align: right;">
+                        <a href="{{url_for('comedor.plato', id=plato.id)}}" role="button">Abrir</a>
                     </td>
                 </tr>
             {% endfor %}

@@ -1,0 +1,44 @@
+{% extends "_base.html" %}
+
+{% block content %}
+
+<main>
+    <div class="pictos" style="justify-content: flex-start;">
+        <img src="/static/picto/comida.png">
+        <img src="/static/picto/qm.png">
+        <h1>¿Que hay de comer?</h1>
+    </div>
+    <h2>Hoy</h2>
+    <div class="comgrid">
+        {% for plato in platos %}
+        <article>
+            <b>{{plato.menu.name}}</b>
+            <ol>
+                {% for line in plato.platos.split("\n") %}
+                <li>{{line}}</li>
+                {% endfor %}
+            </ol>
+        </article>
+        {% endfor %}
+    </div>
+    <h2>Esta semana</h2>
+    {% for fecha, platos_dia in platos_semana|groupby('fecha') %}
+        <h4 style="color: white;">{{ fecha.strftime('%A %d de %B de %Y') }}</h4>
+
+        <div class="comgrid">
+            {% for plato in platos_dia %}
+            <article>
+                <b>{{ plato.menu.name }}</b>
+                <ol>
+                    {% for line in plato.platos.split("\n") %}
+                    <li>{{ line }}</li>
+                    {% endfor %}
+                </ol>
+            </article>
+            {% endfor %}
+        </div>
+    {% endfor %}
+
+</main>
+
+{% endblock %}

@@ -2,12 +2,17 @@
 
 {% block content %}
 
-
 <main>
     <h1></h1>
     <form method="POST">
         <fieldset style="width: 300px;">
-            <legend>Nuevo Menú</legend>
+            <legend>
+                {% if menu %}
+                    Editar menú
+                {% else %}
+                    Nuevo menú
+                {% endif %}
+            </legend>
             {{ form.hidden_tag() }}
             <table>
                 {% for field in form if field.type != 'CSRFTokenField' %}
@@ -24,12 +29,14 @@
                     </div>
                     Guardar
                 </button>
+                {% if menu %}
                 <a role="button">
                     <div class="pictos">
                         <img src="/static/picto/botón de borrar todo.png">
                     </div>
                     Borrar
                 </a>
+                {% endif %}
             </div>
         </fieldset>
     </form>

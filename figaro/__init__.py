@@ -6,6 +6,10 @@ from figaro.index.routes import index_bp
 from figaro.comedor.routes import comedor_bp
 from pathlib import Path
 import sys
+import locale
+
+# Configurar el idioma a español
+locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
 
 if getattr(sys, 'frozen', False):
     # Ejecutándose como .exe de PyInstaller
