@@ -196,9 +196,9 @@ select {
 /* Variables para Modo Claro (por defecto) */
 :root {
   --bc-bg-color: transparent;
-  --bc-separator-color: #6c757d; /* Gris medio */
-  --bc-link-color: #aaf; /* Azul clásico */
-  --bc-link-hover-color: #99f; /* Azul oscuro */
+  --bc-separator-color: #fff; /* Gris medio */
+  --bc-link-color: #cff; /* Azul clásico */
+  --bc-link-hover-color: #aff; /* Azul oscuro */
   --bc-active-color: #fff; /* Gris casi negro */
 }
 
@@ -232,7 +232,9 @@ nav.breadcrumbnav {
 /* El separador (/) automático */
 .breadcrumb-item + .breadcrumb-item::before {
   content: "/";
-  padding: 0 0.15rem;
+  padding: 0 0.1rem;
+  font-size: 125%;
+  font-weight: 300;
   color: var(--bc-separator-color);
   user-select: none;
 }

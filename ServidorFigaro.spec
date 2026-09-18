@@ -35,5 +35,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['figaro\\static\\picto\\centro de datos.png'],
+    icon=['figaro\\static\\logo.png'],
 )

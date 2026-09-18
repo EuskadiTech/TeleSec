@@ -48,6 +48,7 @@ def quehay():
 
 @comedor_bp.route('/menu/', defaults={'id': None}, methods=['GET', 'POST'])
 @comedor_bp.route('/menu/<int:id>', methods=['GET', 'POST'])
+@breadcrumb('Formulario Menú', parent='comedor.index')
 def menu(id):
 
     menu = Menu.query.get_or_404(id) if id else None
@@ -78,6 +79,7 @@ def menu(id):
 
 @comedor_bp.route('/plato/', defaults={'id': None}, methods=['GET', 'POST'])
 @comedor_bp.route('/plato/<int:id>', methods=['GET', 'POST'])
+@breadcrumb('Formulario Plato', parent='comedor.index')
 def plato(id):
 
     plato = Platos.query.get_or_404(id) if id else None
